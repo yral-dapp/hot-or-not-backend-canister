@@ -1,20 +1,17 @@
 {
-	"configuration": {
-		"ic": "efsfj-sqaaa-aaaap-qatwa-cai"
-	},
-	"data_backup": {
-		"ic": "jwktp-qyaaa-aaaag-abcfa-cai"
-	},
-	"individual_user_template": {
-		"ic": "dc47w-kaaaa-aaaak-qav3q-cai"
-	},
-	"post_cache": {
-		"ic": "y6yjf-jyaaa-aaaal-qbd6q-cai"
-	},
-	"user_index": {
-		"ic": "rimrc-piaaa-aaaao-aaljq-cai"
-	},
-	"webclient": {
-		"ic": "vyatz-hqaaa-aaaam-qauea-cai"
-	}
+  "configuration": {
+    "ic": "efsfj-sqaaa-aaaap-qatwa-cai"
+  },
+  "data_backup": {
+    "ic": "jwktp-qyaaa-aaaag-abcfa-cai"
+  },
+  "individual_user_template": {
+    "ic": "dc47w-kaaaa-aaaak-qav3q-cai"
+  },
+  "post_cache": {
+    "ic": "y6yjf-jyaaa-aaaal-qbd6q-cai"
+  },
+  "user_index": {
+    "ic": "rimrc-piaaa-aaaao-aaljq-cai"
+  }
 }

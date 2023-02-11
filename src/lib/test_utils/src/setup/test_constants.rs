@@ -140,7 +140,7 @@ pub fn get_canister_wasm(canister_type: KnownPrincipalType) -> Vec<u8> {
         std::env::var("CARGO_MANIFEST_DIR")
             .expect("Failed to read CARGO_MANIFEST_DIR env variable"),
     );
-    file_path.push("../../../../target/wasm32-unknown-unknown/release");
+    file_path.push("../../../target/wasm32-unknown-unknown/release");
 
     match canister_type {
         KnownPrincipalType::CanisterIdConfiguration => {

@@ -1,14 +1,14 @@
 [workspace]
 members = [
-  "packages/ic/canister/configuration",
-  "packages/ic/canister/data_backup",
-  "packages/ic/canister/individual_user_template",
-  "packages/ic/canister/post_cache/api",
-  "packages/ic/canister/post_cache/lib",
-  "packages/ic/canister/user_index",
-  "packages/ic/lib/integration_tests",
-  "packages/ic/lib/shared_utils",
-  "packages/ic/lib/test_utils",
+  "src/canister/configuration",
+  "src/canister/data_backup",
+  "src/canister/individual_user_template",
+  "src/canister/post_cache/api",
+  "src/canister/post_cache/lib",
+  "src/canister/user_index",
+  "src/lib/integration_tests",
+  "src/lib/shared_utils",
+  "src/lib/test_utils",
 ]
 
 [workspace.dependencies]
