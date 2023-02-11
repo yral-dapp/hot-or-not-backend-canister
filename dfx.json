@@ -1,0 +1,63 @@
+{
+	"version": 1,
+	"canisters": {
+		"configuration": {
+			"type": "rust",
+			"package": "configuration",
+			"candid": "./packages/ic/canister/configuration/can.did",
+			"declarations": {
+				"node_compatibility": true,
+				"output": "./packages/web-client/declarations/configuration"
+			}
+		},
+		"data_backup": {
+			"type": "rust",
+			"package": "data_backup",
+			"candid": "./packages/ic/canister/data_backup/can.did",
+			"declarations": {
+				"node_compatibility": true,
+				"output": "./packages/web-client/declarations/data_backup"
+			}
+		},
+		"individual_user_template": {
+			"type": "rust",
+			"package": "individual_user_template",
+			"candid": "./packages/ic/canister/individual_user_template/can.did",
+			"declarations": {
+				"node_compatibility": true,
+				"output": "./packages/web-client/declarations/individual_user_template"
+			}
+		},
+		"internet_identity": {
+			"type": "custom",
+			"candid": "internet_identity.did",
+			"wasm": "internet_identity.wasm",
+			"build": "./scripts/canisters/local_deploy/internet_identity.sh"
+		},
+		"post_cache": {
+			"type": "rust",
+			"package": "post_cache",
+			"candid": "./packages/ic/canister/post_cache/api/can.did",
+			"declarations": {
+				"node_compatibility": true,
+				"output": "./packages/web-client/declarations/post_cache"
+			}
+		},
+		"user_index": {
+			"type": "rust",
+			"package": "user_index",
+			"candid": "./packages/ic/canister/user_index/can.did",
+			"declarations": {
+				"node_compatibility": true,
+				"output": "./packages/web-client/declarations/user_index"
+			}
+		},
+		"webclient": {
+			"frontend": {
+				"entrypoint": "./packages/web-client/build/index.html"
+			},
+			"source": ["./packages/web-client/build"],
+			"type": "assets"
+		}
+	}
+}

@@ -1,0 +1,9 @@
+.vscode/
+.DS_Store
+.dfx
+.env
+*.wasm
+target
+internet_identity.old.did
+internet_identity.did
+internet_identity.wasm

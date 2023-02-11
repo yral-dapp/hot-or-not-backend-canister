@@ -1,0 +1,22 @@
+[package]
+name = "post_cache"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+candid = { workspace = true }
+ic-cdk = { workspace = true }
+ic-cdk-macros = { workspace = true }
+ic-stable-memory = { workspace = true }
+post_cache_lib = { path = "../lib" }
+shared_utils = { path = "../../../lib/shared_utils" }
+serde = { workspace = true }
+speedy = { workspace = true }
+
+[dev-dependencies]
+test_utils = { path = "../../../lib/test_utils" }

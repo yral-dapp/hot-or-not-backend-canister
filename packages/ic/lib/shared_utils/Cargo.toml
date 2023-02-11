@@ -1,0 +1,19 @@
+[package]
+name = "shared_utils"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+candid = { workspace = true }
+ic-cdk = { workspace = true, features = ["timers"] }
+ic-stable-memory = { workspace = true }
+ic-stable-structures = { workspace = true }
+serde = { workspace = true }
+speedy = { workspace = true }
+
+[dev-dependencies]
+ic-state-machine-tests = { workspace = true }
+mockall = { workspace = true }
+test_utils = { path = "../test_utils" }

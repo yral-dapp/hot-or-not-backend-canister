@@ -1,0 +1,178 @@
+type AnotherUserFollowedMeError = variant {
+  UserIndexCrossCanisterCallFailed;
+  FollowersListFull;
+  NotAuthorized;
+  UserTryingToFollowMeDoesNotExist;
+};
+type FollowAnotherUserProfileError = variant {
+  UserToFollowDoesNotExist;
+  UserIndexCrossCanisterCallFailed;
+  UserITriedToFollowCrossCanisterCallFailed;
+  UsersICanFollowListIsFull;
+  MyCanisterIDDoesNotMatchMyPrincipalCanisterIDMappingSeenByUserITriedToFollow;
+  UserITriedToFollowDidNotFindMe;
+  NotAuthorized;
+  UserITriedToFollowHasTheirFollowersListFull;
+};
+type GetFollowerOrFollowingError = variant {
+  ReachedEndOfItemsList;
+  InvalidBoundsPassed;
+  ExceededMaxNumberOfItemsAllowedInOneRequest;
+};
+type GetPostsOfUserProfileError = variant {
+  ReachedEndOfItemsList;
+  InvalidBoundsPassed;
+  ExceededMaxNumberOfItemsAllowedInOneRequest;
+};
+type IndividualUserTemplateInitArgs = record {
+  known_principal_ids : opt vec record { KnownPrincipalType; principal };
+  profile_owner : opt principal;
+};
+type KnownPrincipalType = variant {
+  CanisterIdUserIndex;
+  CanisterIdConfiguration;
+  CanisterIdProjectMemberIndex;
+  CanisterIdTopicCacheIndex;
+  CanisterIdRootCanister;
+  CanisterIdDataBackup;
+  CanisterIdPostCache;
+  CanisterIdSNSController;
+  UserIdGlobalSuperAdmin;
+};
+type MintEvent = variant {
+  NewUserSignup : record { new_user_principal_id : principal };
+  Referral : record {
+    referrer_user_principal_id : principal;
+    referee_user_principal_id : principal;
+  };
+};
+type PostDetailsForFrontend = record {
+  id : nat64;
+  status : PostStatus;
+  home_feed_ranking_score : nat64;
+  hashtags : vec text;
+  like_count : nat64;
+  description : text;
+  total_view_count : nat64;
+  created_by_display_name : opt text;
+  created_at : SystemTime;
+  created_by_unique_user_name : opt text;
+  video_uid : text;
+  created_by_user_principal_id : principal;
+  hot_or_not_feed_ranking_score : opt nat64;
+  liked_by_me : bool;
+  created_by_profile_photo_url : opt text;
+};
+type PostDetailsFromFrontend = record {
+  hashtags : vec text;
+  description : text;
+  video_uid : text;
+  creator_consent_for_inclusion_in_hot_or_not : bool;
+};
+type PostStatus = variant {
+  BannedForExplicitness;
+  BannedDueToUserReporting;
+  Uploaded;
+  CheckingExplicitness;
+  ReadyToView;
+  Transcoding;
+  Deleted;
+};
+type PostViewDetailsFromFrontend = variant {
+  WatchedMultipleTimes : record {
+    percentage_watched : nat8;
+    watch_count : nat8;
+  };
+  WatchedPartially : record { percentage_watched : nat8 };
+};
+type Result = variant {
+  Ok : vec PostDetailsForFrontend;
+  Err : GetPostsOfUserProfileError;
+};
+type Result_1 = variant {
+  Ok : vec principal;
+  Err : GetFollowerOrFollowingError;
+};
+type Result_2 = variant {
+  Ok : vec record { nat64; TokenEventV1 };
+  Err : GetFollowerOrFollowingError;
+};
+type Result_3 = variant { Ok : bool; Err : FollowAnotherUserProfileError };
+type Result_4 = variant { Ok : bool; Err : AnotherUserFollowedMeError };
+type Result_5 = variant {
+  Ok : UserProfileDetailsForFrontend;
+  Err : UpdateProfileDetailsError;
+};
+type Result_6 = variant { Ok; Err : UpdateProfileSetUniqueUsernameError };
+type SystemTime = record {
+  nanos_since_epoch : nat32;
+  secs_since_epoch : nat64;
+};
+type TokenEventV1 = variant {
+  Stake;
+  Burn;
+  Mint : record { timestamp : SystemTime; details : MintEvent };
+  Transfer;
+};
+type UpdateProfileDetailsError = variant { NotAuthorized };
+type UpdateProfileSetUniqueUsernameError = variant {
+  UsernameAlreadyTaken;
+  UserIndexCrossCanisterCallFailed;
+  SendingCanisterDoesNotMatchUserCanisterId;
+  NotAuthorized;
+  UserCanisterEntryDoesNotExist;
+};
+type UserProfileDetailsForFrontend = record {
+  unique_user_name : opt text;
+  following_count : nat64;
+  profile_picture_url : opt text;
+  display_name : opt text;
+  principal_id : principal;
+  profile_stats : UserProfileGlobalStats;
+  followers_count : nat64;
+};
+type UserProfileGlobalStats = record {
+  lifetime_earnings : nat64;
+  hots_earned_count : nat64;
+  nots_earned_count : nat64;
+};
+type UserProfileUpdateDetailsFromFrontend = record {
+  profile_picture_url : opt text;
+  display_name : opt text;
+};
+service : (IndividualUserTemplateInitArgs) -> {
+  add_post : (PostDetailsFromFrontend) -> (nat64);
+  get_following_status_do_i_follow_this_user : (principal) -> (bool) query;
+  get_individual_post_details_by_id : (nat64) -> (PostDetailsForFrontend) query;
+  get_posts_of_this_user_profile_with_pagination : (nat64, nat64) -> (
+      Result,
+    ) query;
+  get_principals_i_follow_paginated : (nat64, nat64) -> (Result_1) query;
+  get_principals_that_follow_me_paginated : (nat64, nat64) -> (Result_1) query;
+  get_profile_details : () -> (UserProfileDetailsForFrontend) query;
+  get_rewarded_for_referral : (principal, principal) -> ();
+  get_rewarded_for_signing_up : () -> ();
+  get_user_utility_token_transaction_history_with_pagination : (
+      nat64,
+      nat64,
+    ) -> (Result_2) query;
+  get_utility_token_balance : () -> (nat64) query;
+  get_well_known_principal_value : (KnownPrincipalType) -> (
+      opt principal,
+    ) query;
+  return_cycles_to_user_index_canister : () -> ();
+  update_post_add_view_details : (nat64, PostViewDetailsFromFrontend) -> ();
+  update_post_as_ready_to_view : (nat64) -> ();
+  update_post_increment_share_count : (nat64) -> (nat64);
+  update_post_toggle_like_status_by_caller : (nat64) -> (bool);
+  update_principals_i_follow_toggle_list_with_principal_specified : (
+      principal,
+    ) -> (Result_3);
+  update_principals_that_follow_me_toggle_list_with_specified_principal : (
+      principal,
+    ) -> (Result_4);
+  update_profile_display_details : (UserProfileUpdateDetailsFromFrontend) -> (
+      Result_5,
+    );
+  update_profile_set_unique_username_once : (text) -> (Result_6);
+}

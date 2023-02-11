@@ -1,0 +1,142 @@
+type AllUserData = record {
+  user_principal_id : principal;
+  user_canister_id : principal;
+  canister_data : UserOwnedCanisterData;
+};
+type BackupStatistics = record { number_of_user_entries : nat64 };
+type DataBackupInitArgs = record {
+  known_principal_ids : opt vec record { KnownPrincipalType; principal };
+  access_control_map : opt vec record { principal; vec UserAccessRole };
+};
+type HotOrNotFeedDetails = record {
+  upvotes : vec principal;
+  score : nat64;
+  downvotes : vec principal;
+};
+type KnownPrincipalType = variant {
+  CanisterIdUserIndex;
+  CanisterIdConfiguration;
+  CanisterIdProjectMemberIndex;
+  CanisterIdTopicCacheIndex;
+  CanisterIdRootCanister;
+  CanisterIdDataBackup;
+  CanisterIdPostCache;
+  CanisterIdSNSController;
+  UserIdGlobalSuperAdmin;
+};
+type MintEvent = variant {
+  NewUserSignup : record { new_user_principal_id : principal };
+  Referral : record {
+    referrer_user_principal_id : principal;
+    referee_user_principal_id : principal;
+  };
+};
+type Post = record {
+  id : nat64;
+  status : PostStatus;
+  share_count : nat64;
+  hashtags : vec text;
+  description : text;
+  created_at : SystemTime;
+  likes : vec principal;
+  video_uid : text;
+  view_stats : PostViewStatistics;
+  hot_or_not_feed_details : opt HotOrNotFeedDetails;
+  homefeed_ranking_score : nat64;
+  creator_consent_for_inclusion_in_hot_or_not : bool;
+};
+type PostStatus = variant {
+  BannedForExplicitness;
+  BannedDueToUserReporting;
+  Uploaded;
+  CheckingExplicitness;
+  ReadyToView;
+  Transcoding;
+  Deleted;
+};
+type PostViewStatistics = record {
+  total_view_count : nat64;
+  average_watch_percentage : nat8;
+  threshold_view_count : nat64;
+};
+type ProfileDetails = record {
+  profile_picture_url : opt text;
+  display_name : opt text;
+};
+type SystemTime = record {
+  nanos_since_epoch : nat32;
+  secs_since_epoch : nat64;
+};
+type TokenBalance = record {
+  utility_token_balance : nat64;
+  utility_token_transaction_history_v1 : vec record { nat64; TokenEventV1 };
+  utility_token_transaction_history : vec record { SystemTime; TokenEvent };
+};
+type TokenEvent = variant { Stake; Burn; Mint : MintEvent; Transfer };
+type TokenEventV1 = variant {
+  Stake;
+  Burn;
+  Mint : record { timestamp : SystemTime; details : MintEvent };
+  Transfer;
+};
+type UserAccessRole = variant {
+  CanisterController;
+  ProfileOwner;
+  CanisterAdmin;
+  ProjectCanister;
+};
+type UserOwnedCanisterData = record {
+  unique_user_name : text;
+  principals_i_follow : vec principal;
+  token_data : TokenBalance;
+  all_created_posts : vec record { nat64; Post };
+  profile : ProfileDetails;
+  principals_that_follow_me : vec principal;
+};
+service : (DataBackupInitArgs) -> {
+  get_current_backup_statistics : () -> (BackupStatistics) query;
+  get_individual_users_backup_data_entry : (principal) -> (
+      opt AllUserData,
+    ) query;
+  get_user_roles : (principal) -> (vec UserAccessRole) query;
+  get_well_known_principal_value : (KnownPrincipalType) -> (
+      opt principal,
+    ) query;
+  receive_all_token_transactions_from_individual_user_canister : (
+      vec record { nat64; TokenEventV1 },
+      principal,
+    ) -> ();
+  receive_all_user_posts_from_individual_user_canister : (
+      vec Post,
+      principal,
+    ) -> ();
+  receive_current_token_balance_from_individual_user_canister : (
+      nat64,
+      principal,
+    ) -> ();
+  receive_principals_i_follow_from_individual_user_canister : (
+      vec principal,
+      principal,
+    ) -> ();
+  receive_principals_that_follow_me_from_individual_user_canister : (
+      vec principal,
+      principal,
+    ) -> ();
+  receive_profile_details_from_individual_user_canister : (
+      opt text,
+      opt text,
+      opt text,
+      principal,
+      principal,
+    ) -> ();
+  receive_unique_user_name_to_user_principal_id_mapping_from_user_index_canister : (
+      vec record { text; principal },
+    ) -> ();
+  receive_user_principal_id_to_canister_id_mapping_from_user_index_canister : (
+      vec record { principal; principal },
+    ) -> ();
+  restore_backed_up_data_to_individual_user_canisters : () -> ();
+  send_restore_data_back_to_user_index_canister : () -> ();
+  update_user_add_role : (UserAccessRole, principal) -> ();
+  update_user_remove_role : (UserAccessRole, principal) -> ();
+}
