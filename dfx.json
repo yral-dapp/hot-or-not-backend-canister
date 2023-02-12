@@ -28,12 +28,6 @@
         "output": "./export/declarations/individual_user_template"
       }
     },
-    "internet_identity": {
-      "type": "custom",
-      "candid": "internet_identity.did",
-      "wasm": "internet_identity.wasm",
-      "build": "./scripts/canisters/local_deploy/internet_identity.sh"
-    },
     "post_cache": {
       "type": "rust",
       "package": "post_cache",

@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-dfx deploy --no-wallet internet_identity
 export USER_ID_global_super_admin=$(dfx identity get-principal)
 
 dfx canister create --no-wallet configuration
@@ -146,9 +145,3 @@ dfx canister install user_index --argument "(record {
     };
   };
 })"
-
-dfx generate configuration
-dfx generate data_backup
-dfx generate individual_user_template
-dfx generate post_cache
-dfx generate user_index

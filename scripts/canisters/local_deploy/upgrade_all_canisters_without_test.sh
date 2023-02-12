@@ -26,9 +26,3 @@ dfx canister install post_cache --mode upgrade --argument "(record {
 })"
 dfx canister install user_index --mode upgrade --argument "(record {})"
 dfx canister call user_index update_user_index_upgrade_user_canisters_with_latest_wasm
-
-dfx generate configuration
-dfx generate data_backup
-dfx generate individual_user_template
-dfx generate post_cache
-dfx generate user_index
