@@ -1,9 +1,8 @@
 use candid::Principal;
 use ic_stable_memory::utils::ic_types::SPrincipal;
-use post_cache_lib::CanisterData;
 use shared_utils::access_control::{self, UserAccessRole};
 
-use crate::CANISTER_DATA;
+use crate::{data_model::CanisterData, CANISTER_DATA};
 
 #[ic_cdk_macros::update]
 #[candid::candid_method(update)]
@@ -33,11 +32,12 @@ fn update_user_remove_role_impl(
 #[cfg(test)]
 mod test {
     use ic_stable_memory::utils::ic_types::SPrincipal;
-    use post_cache_lib::CanisterData;
     use shared_utils::access_control::UserAccessRole;
     use test_utils::setup::test_constants::{
         get_alice_principal_id, get_bob_principal_id, get_global_super_admin_principal_id,
     };
+
+    use crate::data_model::CanisterData;
 
     #[test]
     fn test_update_user_add_role_impl() {

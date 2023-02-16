@@ -109,7 +109,7 @@ pub fn get_initialized_env_with_provisioned_known_canisters(
             .clone(),
         get_canister_wasm(KnownPrincipalType::CanisterIdPostCache),
         candid::encode_one(PostCacheInitArgs {
-            known_principal_ids: known_principal_map_with_all_canisters.clone(),
+            known_principal_ids: Some(known_principal_map_with_all_canisters.clone()),
         })
         .unwrap(),
     );

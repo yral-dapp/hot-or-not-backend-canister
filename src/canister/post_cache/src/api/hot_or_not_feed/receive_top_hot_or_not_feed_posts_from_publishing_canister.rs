@@ -1,7 +1,6 @@
-use post_cache_lib::CanisterData;
 use shared_utils::types::top_posts::v0::PostScoreIndexItem;
 
-use crate::CANISTER_DATA;
+use crate::{data_model::CanisterData, CANISTER_DATA};
 
 #[ic_cdk_macros::update]
 #[candid::candid_method(update)]
@@ -45,7 +44,6 @@ mod test {
     use super::*;
     use candid::Principal;
     use ic_stable_memory::utils::ic_types::SPrincipal;
-    use post_cache_lib::CanisterData;
     use shared_utils::types::top_posts::v0::PostScoreIndexItem;
 
     #[test]
