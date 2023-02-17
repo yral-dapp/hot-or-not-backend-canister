@@ -1,4 +1,4 @@
-use crate::{data_model::CanisterDataV2, CANISTER_DATA_V2};
+use crate::{data_model::CanisterData, CANISTER_DATA};
 use shared_utils::{
     pagination::{self, PaginationError},
     types::{
@@ -13,7 +13,7 @@ fn get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed(
     from_inclusive_index: u64,
     to_exclusive_index: u64,
 ) -> Result<Vec<PostScoreIndexItem>, TopPostsFetchError> {
-    CANISTER_DATA_V2.with(|canister_data| {
+    CANISTER_DATA.with(|canister_data| {
         let canister_data = canister_data.borrow();
 
         get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed_impl(
@@ -27,7 +27,7 @@ fn get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed(
 fn get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed_impl(
     from_inclusive_index: u64,
     to_exclusive_index: u64,
-    canister_data: &CanisterDataV2,
+    canister_data: &CanisterData,
 ) -> Result<Vec<PostScoreIndexItem>, TopPostsFetchError> {
     let all_posts = &canister_data.posts_index_sorted_by_home_feed_score;
 
@@ -60,7 +60,7 @@ mod test {
 
     #[test]
     fn test_get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed() {
-        let mut canister_data = CanisterDataV2::default();
+        let mut canister_data = CanisterData::default();
 
         let result =
             super::get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed_impl(

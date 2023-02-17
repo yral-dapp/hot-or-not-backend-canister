@@ -1,19 +1,19 @@
 use candid::Principal;
 use shared_utils::access_control::{self, UserAccessRole};
 
-use crate::{data_model::CanisterDataV2, CANISTER_DATA_V2};
+use crate::{data_model::CanisterData, CANISTER_DATA};
 
 #[ic_cdk_macros::query]
 #[candid::candid_method(query)]
 fn get_user_roles(principal_id: Principal) -> Vec<UserAccessRole> {
-    CANISTER_DATA_V2.with(|canister_data_ref_cell| {
+    CANISTER_DATA.with(|canister_data_ref_cell| {
         get_user_roles_impl(principal_id, &canister_data_ref_cell.borrow())
     })
 }
 
 fn get_user_roles_impl(
     principal_id: Principal,
-    canister_data: &CanisterDataV2,
+    canister_data: &CanisterData,
 ) -> Vec<UserAccessRole> {
     access_control::get_roles_for_principal_id_v2(&canister_data.access_control_map, principal_id)
 }
@@ -28,7 +28,7 @@ mod test {
 
     #[test]
     fn test_get_user_roles_impl() {
-        let mut canister_data = CanisterDataV2::default();
+        let mut canister_data = CanisterData::default();
         canister_data.access_control_map.insert(
             get_global_super_admin_principal_id_v1(),
             vec![

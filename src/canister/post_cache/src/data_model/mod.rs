@@ -7,7 +7,7 @@ use shared_utils::{
 use std::collections::HashMap;
 
 #[derive(Default, CandidType, Deserialize, Serialize)]
-pub struct CanisterDataV2 {
+pub struct CanisterData {
     pub my_known_principal_ids_map: KnownPrincipalMapV1,
     pub access_control_map: HashMap<Principal, Vec<UserAccessRole>>,
     pub posts_index_sorted_by_home_feed_score: PostScoreIndexV1,

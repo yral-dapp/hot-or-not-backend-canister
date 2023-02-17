@@ -1,14 +1,14 @@
 use candid::Principal;
 use shared_utils::access_control::{self, UserAccessRole};
 
-use crate::{data_model::CanisterDataV2, CANISTER_DATA_V2};
+use crate::{data_model::CanisterData, CANISTER_DATA};
 
 #[ic_cdk_macros::update]
 #[candid::candid_method(update)]
 fn update_user_remove_role(role: UserAccessRole, principal_id: Principal) {
     let api_caller = ic_cdk::caller();
 
-    CANISTER_DATA_V2.with(|canister_data_ref_cell| {
+    CANISTER_DATA.with(|canister_data_ref_cell| {
         let mut canister_data = canister_data_ref_cell.borrow_mut();
         update_user_remove_role_impl(role, principal_id, &mut canister_data, api_caller);
     });
@@ -17,7 +17,7 @@ fn update_user_remove_role(role: UserAccessRole, principal_id: Principal) {
 fn update_user_remove_role_impl(
     role: UserAccessRole,
     principal_id: Principal,
-    canister_data: &mut CanisterDataV2,
+    canister_data: &mut CanisterData,
     api_caller: Principal,
 ) {
     access_control::remove_role_from_principal_id_v2(
@@ -39,7 +39,7 @@ mod test {
 
     #[test]
     fn test_update_user_add_role_impl() {
-        let mut canister_data = CanisterDataV2::default();
+        let mut canister_data = CanisterData::default();
         canister_data.access_control_map.insert(
             get_global_super_admin_principal_id_v1(),
             vec![

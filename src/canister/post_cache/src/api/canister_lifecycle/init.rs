@@ -1,12 +1,12 @@
 use shared_utils::common::types::init_args::PostCacheInitArgs;
 
-use crate::{util::access_control, CANISTER_DATA_V2};
+use crate::{util::access_control, CANISTER_DATA};
 
 #[ic_cdk_macros::init]
 #[candid::candid_method(init)]
 fn init(init_args: PostCacheInitArgs) {
     // TODO: populate the canister data access control map
-    CANISTER_DATA_V2.with(|canister_data_ref_cell| {
+    CANISTER_DATA.with(|canister_data_ref_cell| {
         let mut canister_data = canister_data_ref_cell.borrow_mut();
 
         access_control::setup_initial_access_control_v1(

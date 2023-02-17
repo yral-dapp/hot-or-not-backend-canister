@@ -2,7 +2,7 @@ use std::cell::RefCell;
 
 use candid::{export_service, Principal};
 
-use data_model::CanisterDataV2;
+use data_model::CanisterData;
 use shared_utils::{
     access_control::UserAccessRole,
     common::types::init_args::PostCacheInitArgs,
@@ -19,7 +19,7 @@ mod test;
 mod util;
 
 thread_local! {
-    static CANISTER_DATA_V2: RefCell<CanisterDataV2> = RefCell::default();
+    static CANISTER_DATA: RefCell<CanisterData> = RefCell::default();
 }
 
 #[ic_cdk_macros::query(name = "__get_candid_interface_tmp_hack")]
