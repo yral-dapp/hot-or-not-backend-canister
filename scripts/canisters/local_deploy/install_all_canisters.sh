@@ -93,7 +93,7 @@ dfx canister install data_backup --argument "(record {
 })"
 
 dfx canister install post_cache --argument "(record {
-  known_principal_ids = vec {
+  known_principal_ids = opt vec {
     record {
       variant { UserIdGlobalSuperAdmin };
       principal \"$(dfx identity get-principal)\";

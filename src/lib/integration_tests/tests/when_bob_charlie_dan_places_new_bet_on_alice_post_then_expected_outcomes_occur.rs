@@ -6,7 +6,7 @@ use shared_utils::{
     common::types::known_principal::KnownPrincipalType,
     types::{
         canister_specific::post_cache::error_types::TopPostsFetchError,
-        post::PostDetailsFromFrontend, top_posts::v0::PostScoreIndexItem,
+        post::PostDetailsFromFrontend, top_posts::post_score_index_item::v0::PostScoreIndexItem,
     },
 };
 use test_utils::setup::{

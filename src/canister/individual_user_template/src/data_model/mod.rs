@@ -6,7 +6,7 @@ use shared_utils::{
         post::v1::Post as PostV1, token::TokenBalance,
     },
     common::types::known_principal::KnownPrincipalMapV1,
-    types::top_posts::v1::PostScoreIndex,
+    types::top_posts::post_score_index::v0::PostScoreIndex,
 };
 
 use self::{profile::v1::UserProfile as UserProfileV1, version_details::VersionDetails};

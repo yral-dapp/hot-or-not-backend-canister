@@ -1,22 +1,49 @@
-use candid::{CandidType, Deserialize};
-use ic_stable_memory::utils::ic_types::SPrincipal;
-use speedy::{Readable, Writable};
+use candid::{CandidType, Deserialize, Principal};
+use serde::Serialize;
 use std::{
     collections::{btree_map, BTreeMap, HashMap},
     iter::Rev,
     slice, vec,
 };
 
-use super::v0::PostScoreIndexItem;
+use crate::types::top_posts::post_score_index_item::v1::PostScoreIndexItem;
 
-type PublisherCanisterId = SPrincipal;
+use super::v0::PostScoreIndex as PostScoreIndexV0;
+
+type PublisherCanisterId = Principal;
 type PostId = u64;
 type Score = u64;
 
-#[derive(Readable, Writable, Default, Debug, Clone, CandidType, Deserialize)]
+#[derive(Default, Debug, Clone, CandidType, Deserialize, Serialize)]
 pub struct PostScoreIndex {
     pub items_sorted_by_score: BTreeMap<Score, Vec<PostScoreIndexItem>>,
     pub item_presence_index: HashMap<(PublisherCanisterId, PostId), Score>,
+}
+
+impl From<PostScoreIndexV0> for PostScoreIndex {
+    fn from(post_score_index: PostScoreIndexV0) -> Self {
+        let PostScoreIndexV0 {
+            items_sorted_by_score,
+            item_presence_index,
+        } = post_score_index;
+
+        let items_sorted_by_score = items_sorted_by_score
+            .into_iter()
+            .map(|(score, items)| (score, items.into_iter().map(Into::into).collect()))
+            .collect();
+
+        let item_presence_index = item_presence_index
+            .into_iter()
+            .map(|((publisher_canister_id, post_id), score)| {
+                ((publisher_canister_id.0, post_id), score)
+            })
+            .collect();
+
+        Self {
+            items_sorted_by_score,
+            item_presence_index,
+        }
+    }
 }
 
 impl PostScoreIndex {
@@ -152,8 +179,7 @@ mod test {
             item_presence_index: HashMap::new(),
         };
 
-        let publisher_canister_id_1 =
-            SPrincipal(Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap());
+        let publisher_canister_id_1 = Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap();
 
         post_score_index.replace(&PostScoreIndexItem {
             score: 1,
@@ -275,8 +301,7 @@ mod test {
             item_presence_index: HashMap::new(),
         };
 
-        let publisher_canister_id_1 =
-            SPrincipal(Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap());
+        let publisher_canister_id_1 = Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap();
 
         post_score_index.replace(&PostScoreIndexItem {
             score: 1,
@@ -365,8 +390,7 @@ mod test {
             item_presence_index: HashMap::new(),
         };
 
-        let publisher_canister_id_1 =
-            SPrincipal(Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap());
+        let publisher_canister_id_1 = Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap();
 
         post_score_index.replace(&PostScoreIndexItem {
             score: 1,
@@ -525,8 +549,7 @@ mod test {
             item_presence_index: HashMap::new(),
         };
 
-        let publisher_canister_id_1 =
-            SPrincipal(Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap());
+        let publisher_canister_id_1 = Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap();
 
         post_score_index.replace(&PostScoreIndexItem {
             score: 1,

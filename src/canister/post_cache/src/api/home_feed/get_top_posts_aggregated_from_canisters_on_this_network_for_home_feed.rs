@@ -1,9 +1,9 @@
-use crate::{data_model::CanisterData, CANISTER_DATA};
+use crate::{data_model::CanisterDataV2, CANISTER_DATA_V2};
 use shared_utils::{
     pagination::{self, PaginationError},
     types::{
         canister_specific::post_cache::error_types::TopPostsFetchError,
-        top_posts::v0::PostScoreIndexItem,
+        top_posts::post_score_index_item::v1::PostScoreIndexItem,
     },
 };
 
@@ -13,7 +13,7 @@ fn get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed(
     from_inclusive_index: u64,
     to_exclusive_index: u64,
 ) -> Result<Vec<PostScoreIndexItem>, TopPostsFetchError> {
-    CANISTER_DATA.with(|canister_data| {
+    CANISTER_DATA_V2.with(|canister_data| {
         let canister_data = canister_data.borrow();
 
         get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed_impl(
@@ -27,7 +27,7 @@ fn get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed(
 fn get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed_impl(
     from_inclusive_index: u64,
     to_exclusive_index: u64,
-    canister_data: &CanisterData,
+    canister_data: &CanisterDataV2,
 ) -> Result<Vec<PostScoreIndexItem>, TopPostsFetchError> {
     let all_posts = &canister_data.posts_index_sorted_by_home_feed_score;
 
@@ -55,14 +55,12 @@ fn get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed_impl(
 #[cfg(test)]
 mod test {
     use candid::Principal;
-    use ic_stable_memory::utils::ic_types::SPrincipal;
-    use shared_utils::types::top_posts::v0::PostScoreIndexItem;
 
-    use crate::data_model::CanisterData;
+    use super::*;
 
     #[test]
     fn test_get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed() {
-        let mut canister_data = CanisterData::default();
+        let mut canister_data = CanisterDataV2::default();
 
         let result =
             super::get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed_impl(
@@ -79,17 +77,17 @@ mod test {
         let post_score_index_item_1 = PostScoreIndexItem {
             post_id: 1,
             score: 1,
-            publisher_canister_id: SPrincipal(Principal::anonymous()),
+            publisher_canister_id: Principal::anonymous(),
         };
         let post_score_index_item_2 = PostScoreIndexItem {
             post_id: 1,
             score: 2,
-            publisher_canister_id: SPrincipal(Principal::anonymous()),
+            publisher_canister_id: Principal::anonymous(),
         };
         let post_score_index_item_3 = PostScoreIndexItem {
             post_id: 2,
             score: 3,
-            publisher_canister_id: SPrincipal(Principal::anonymous()),
+            publisher_canister_id: Principal::anonymous(),
         };
         canister_data
             .posts_index_sorted_by_home_feed_score
