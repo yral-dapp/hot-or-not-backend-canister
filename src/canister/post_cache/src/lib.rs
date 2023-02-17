@@ -5,11 +5,10 @@ use candid::{export_service, Principal};
 use data_model::CanisterData;
 use shared_utils::{
     access_control::UserAccessRole,
-    common::types::init_args::PostCacheInitArgs,
-    types::{
-        canister_specific::post_cache::error_types::TopPostsFetchError,
-        top_posts::post_score_index_item::v0::PostScoreIndexItem,
+    common::types::{
+        init_args::PostCacheInitArgs, top_posts::post_score_index_item::v1::PostScoreIndexItem,
     },
+    types::canister_specific::post_cache::error_types::TopPostsFetchError,
 };
 
 mod api;
