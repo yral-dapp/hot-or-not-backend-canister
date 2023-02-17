@@ -4,7 +4,7 @@ on:
     branches:
       - main
     paths:
-      - "packages/ic/**"
+      - "src/**"
       - ".github/workflows/all_canisters_main_deploy.yml"
 
 jobs:

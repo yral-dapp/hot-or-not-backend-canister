@@ -4,8 +4,8 @@ on:
     branches-ignore:
       - main
     paths:
-      - 'packages/ic/**'
-      - '.github/workflows/all_canisters_test_suite_on_any_push.yml'
+      - "src/**"
+      - ".github/workflows/all_canisters_test_suite_on_any_push.yml"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

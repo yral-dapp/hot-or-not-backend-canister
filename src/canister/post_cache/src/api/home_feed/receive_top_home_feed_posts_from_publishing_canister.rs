@@ -1,6 +1,6 @@
-use shared_utils::types::top_posts::v0::PostScoreIndexItem;
+use shared_utils::types::top_posts::post_score_index_item::v1::PostScoreIndexItem;
 
-use crate::{data_model::CanisterData, CANISTER_DATA};
+use crate::{data_model::CanisterDataV2, CANISTER_DATA_V2};
 
 #[ic_cdk_macros::update]
 #[candid::candid_method(update)]
@@ -9,7 +9,7 @@ fn receive_top_home_feed_posts_from_publishing_canister(
 ) {
     // TODO: Add access control to allow only project canisters to send this message
 
-    CANISTER_DATA.with(|canister_data| {
+    CANISTER_DATA_V2.with(|canister_data| {
         let mut canister_data = canister_data.borrow_mut();
 
         receive_top_home_feed_posts_from_publishing_canister_impl(
@@ -21,7 +21,7 @@ fn receive_top_home_feed_posts_from_publishing_canister(
 
 fn receive_top_home_feed_posts_from_publishing_canister_impl(
     top_posts_from_publishing_canister: Vec<PostScoreIndexItem>,
-    canister_data: &mut CanisterData,
+    canister_data: &mut CanisterDataV2,
 ) {
     let posts_index_sorted_by_home_feed_score =
         &mut canister_data.posts_index_sorted_by_home_feed_score;
@@ -41,30 +41,29 @@ fn receive_top_home_feed_posts_from_publishing_canister_impl(
 
 #[cfg(test)]
 mod test {
-    use super::*;
     use candid::Principal;
-    use ic_stable_memory::utils::ic_types::SPrincipal;
-    use shared_utils::types::top_posts::v0::PostScoreIndexItem;
+
+    use super::*;
 
     #[test]
     fn test_receive_top_home_feed_posts_from_publishing_canister_impl() {
-        let mut canister_data = CanisterData::default();
+        let mut canister_data = CanisterDataV2::default();
 
         let top_posts_from_publishing_canister = vec![
             PostScoreIndexItem {
                 post_id: 1,
                 score: 1,
-                publisher_canister_id: SPrincipal(Principal::from_text("aaaaa-aa").unwrap()),
+                publisher_canister_id: Principal::from_text("aaaaa-aa").unwrap(),
             },
             PostScoreIndexItem {
                 post_id: 2,
                 score: 2,
-                publisher_canister_id: SPrincipal(Principal::from_text("aaaaa-aa").unwrap()),
+                publisher_canister_id: Principal::from_text("aaaaa-aa").unwrap(),
             },
             PostScoreIndexItem {
                 post_id: 3,
                 score: 3,
-                publisher_canister_id: SPrincipal(Principal::from_text("aaaaa-aa").unwrap()),
+                publisher_canister_id: Principal::from_text("aaaaa-aa").unwrap(),
             },
         ];
 

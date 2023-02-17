@@ -1,20 +1,18 @@
 use std::collections::HashMap;
 
-use ic_stable_memory::utils::ic_types::SPrincipal;
+use candid::Principal;
 use shared_utils::{
     access_control::UserAccessRole, common::types::known_principal::KnownPrincipalMapV1,
     constant::get_global_super_admin_principal_id_v1,
 };
 
 pub fn setup_initial_access_control_v1(
-    user_id_access_control_map: &mut HashMap<SPrincipal, Vec<UserAccessRole>>,
+    user_id_access_control_map: &mut HashMap<Principal, Vec<UserAccessRole>>,
     known_principal_ids: &KnownPrincipalMapV1,
 ) {
     // * add global owner
     user_id_access_control_map.insert(
-        SPrincipal(get_global_super_admin_principal_id_v1(
-            known_principal_ids.clone(),
-        )),
+        get_global_super_admin_principal_id_v1(known_principal_ids.clone()),
         vec![
             UserAccessRole::CanisterController,
             UserAccessRole::CanisterAdmin,
@@ -25,7 +23,7 @@ pub fn setup_initial_access_control_v1(
 #[cfg(test)]
 mod test {
     use shared_utils::common::types::known_principal::KnownPrincipalType;
-    use test_utils::setup::test_constants::get_global_super_admin_principal_id;
+    use test_utils::setup::test_constants::get_global_super_admin_principal_id_v1;
 
     use super::*;
 
@@ -33,16 +31,16 @@ mod test {
     fn test_setup_initial_access_control_v1() {
         let mut user_id_access_control_map = HashMap::new();
         let mut known_principal_ids = KnownPrincipalMapV1::default();
-        let global_super_admin = get_global_super_admin_principal_id();
+        let global_super_admin = get_global_super_admin_principal_id_v1();
         known_principal_ids.insert(
             KnownPrincipalType::UserIdGlobalSuperAdmin,
-            global_super_admin.0,
+            global_super_admin,
         );
 
         setup_initial_access_control_v1(&mut user_id_access_control_map, &known_principal_ids);
 
         assert_eq!(
-            user_id_access_control_map.get(&SPrincipal(global_super_admin.0)),
+            user_id_access_control_map.get(&global_super_admin),
             Some(&vec![
                 UserAccessRole::CanisterController,
                 UserAccessRole::CanisterAdmin,

@@ -1,2 +1,2 @@
-pub mod v0;
-pub mod v1;
+pub mod post_score_index;
+pub mod post_score_index_item;

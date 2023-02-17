@@ -8,7 +8,7 @@ use shared_utils::{
             post_cache::error_types::TopPostsFetchError,
         },
         post::PostDetailsFromFrontend,
-        top_posts::v0::PostScoreIndexItem,
+        top_posts::post_score_index_item::v0::PostScoreIndexItem,
     },
 };
 use std::time::Duration;
