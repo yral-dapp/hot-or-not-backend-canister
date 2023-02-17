@@ -1,1 +1,1 @@
-
+pub mod stable_memory_serializer_deserializer;

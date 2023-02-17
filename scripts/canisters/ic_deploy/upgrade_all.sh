@@ -12,8 +12,6 @@ gzip -f -1 ./target/wasm32-unknown-unknown/release/user_index.wasm
 dfx build --network=ic post_cache
 gzip -f -1 ./target/wasm32-unknown-unknown/release/post_cache.wasm
 
-# cargo test
-
 # dfx canister install configuration --network ic --mode upgrade --argument "(record {})"
 # dfx canister install data_backup --network ic --mode upgrade --argument "(record {})"
 dfx canister install post_cache --network ic --mode upgrade --argument "(record {})"
