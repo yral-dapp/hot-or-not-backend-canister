@@ -4232,10 +4232,8 @@ dependencies = [
  "candid",
  "ic-cdk",
  "ic-cdk-macros",
- "ic-stable-memory",
  "serde",
  "shared_utils",
- "speedy",
  "test_utils",
 ]
 
