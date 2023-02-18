@@ -3,7 +3,7 @@ use shared_utils::common::types::storable_principal::StorablePrincipal;
 
 use crate::{data::memory_layout::CanisterData, CANISTER_DATA};
 
-#[ic_cdk_macros::update]
+#[ic_cdk::update]
 #[candid::candid_method(update)]
 fn receive_principals_i_follow_from_individual_user_canister(
     principals_i_follow_from_individual_user_canister: Vec<Principal>,

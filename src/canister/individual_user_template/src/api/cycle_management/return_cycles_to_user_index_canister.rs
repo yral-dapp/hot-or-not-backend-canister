@@ -5,7 +5,7 @@ use shared_utils::{
 
 use crate::CANISTER_DATA;
 
-#[ic_cdk_macros::update]
+#[ic_cdk::update]
 #[candid::candid_method(update)]
 async fn return_cycles_to_user_index_canister() {
     let api_caller = ic_cdk::caller();

@@ -2,7 +2,7 @@ use shared_utils::common::types::init_args::PostCacheInitArgs;
 
 use crate::{util::access_control, CANISTER_DATA};
 
-#[ic_cdk_macros::init]
+#[ic_cdk::init]
 #[candid::candid_method(init)]
 fn init(init_args: PostCacheInitArgs) {
     // TODO: populate the canister data access control map

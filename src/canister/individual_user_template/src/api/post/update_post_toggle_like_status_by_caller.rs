@@ -2,7 +2,7 @@ use crate::CANISTER_DATA;
 use ic_stable_memory::utils::ic_types::SPrincipal;
 use shared_utils::date_time::system_time;
 
-#[ic_cdk_macros::update]
+#[ic_cdk::update]
 #[candid::candid_method(update)]
 fn update_post_toggle_like_status_by_caller(id: u64) -> bool {
     let caller_id = SPrincipal(ic_cdk::caller());

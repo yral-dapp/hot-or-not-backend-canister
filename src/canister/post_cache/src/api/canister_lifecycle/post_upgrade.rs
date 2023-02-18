@@ -4,7 +4,7 @@ use crate::{data_model::CanisterData, CANISTER_DATA};
 
 use super::pre_upgrade::BUFFER_SIZE_BYTES;
 
-#[ic_cdk_macros::post_upgrade]
+#[ic_cdk::post_upgrade]
 fn post_upgrade() {
     match stable_memory_serializer_deserializer::deserialize_from_stable_memory::<CanisterData>(
         BUFFER_SIZE_BYTES,

@@ -2,7 +2,7 @@ use shared_utils::common::types::known_principal::KnownPrincipalType;
 
 use crate::CANISTER_DATA;
 
-#[ic_cdk_macros::update]
+#[ic_cdk::update]
 #[candid::candid_method(update)]
 fn restore_backed_up_data_to_individual_user_canisters() {
     // * Get the caller principal ID.

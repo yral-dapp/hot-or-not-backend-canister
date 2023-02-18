@@ -3,7 +3,7 @@ use shared_utils::access_control::{self, UserAccessRole};
 
 use crate::{data::CanisterData, CANISTER_DATA};
 
-#[ic_cdk_macros::update]
+#[ic_cdk::update]
 #[candid::candid_method(update)]
 fn toggle_signups_enabled() {
     let api_caller = ic_cdk::caller();

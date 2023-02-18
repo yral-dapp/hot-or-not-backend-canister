@@ -3,7 +3,7 @@ use shared_utils::access_control::{self, UserAccessRole};
 
 use crate::{data_model::CanisterData, CANISTER_DATA};
 
-#[ic_cdk_macros::query]
+#[ic_cdk::query]
 #[candid::candid_method(query)]
 fn get_user_roles(principal_id: Principal) -> Vec<UserAccessRole> {
     CANISTER_DATA.with(|canister_data_ref_cell| {

@@ -6,7 +6,7 @@ use crate::{
     api::well_known_principal::update_locally_stored_well_known_principals, CANISTER_DATA,
 };
 
-#[ic_cdk_macros::post_upgrade]
+#[ic_cdk::post_upgrade]
 fn post_upgrade() {
     restore_data_from_stable_memory();
     refetch_well_known_principals();

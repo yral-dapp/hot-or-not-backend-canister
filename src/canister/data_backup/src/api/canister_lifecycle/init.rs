@@ -2,7 +2,7 @@ use shared_utils::canister_specific::data_backup::types::args::DataBackupInitArg
 
 use crate::{data::heap_data::HeapData, CANISTER_DATA};
 
-#[ic_cdk_macros::init]
+#[ic_cdk::init]
 #[candid::candid_method(init)]
 fn init(init_args: DataBackupInitArgs) {
     CANISTER_DATA.with(|canister_data_ref_cell| {

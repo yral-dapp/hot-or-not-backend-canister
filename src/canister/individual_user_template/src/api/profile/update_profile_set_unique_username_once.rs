@@ -10,7 +10,7 @@ use shared_utils::{
 
 /// # Access Control
 /// Only the user whose profile details are stored in this canister can update their details.
-#[ic_cdk_macros::update]
+#[ic_cdk::update]
 #[candid::candid_method(update)]
 async fn update_profile_set_unique_username_once(
     new_unique_username: String,

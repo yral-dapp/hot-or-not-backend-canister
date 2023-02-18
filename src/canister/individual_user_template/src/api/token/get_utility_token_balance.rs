@@ -1,6 +1,6 @@
 use crate::CANISTER_DATA;
 
-#[ic_cdk_macros::query]
+#[ic_cdk::query]
 #[candid::candid_method(query)]
 fn get_utility_token_balance() -> u64 {
     // let my_token_balance = s!(MyTokenBalance);

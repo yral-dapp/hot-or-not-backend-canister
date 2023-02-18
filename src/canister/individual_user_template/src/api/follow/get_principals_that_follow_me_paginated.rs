@@ -4,7 +4,7 @@ use super::get_principals_i_follow_paginated::GetFollowerOrFollowingError;
 use candid::Principal;
 use shared_utils::pagination::{self, PaginationError};
 
-#[ic_cdk_macros::query]
+#[ic_cdk::query]
 #[candid::candid_method(query)]
 pub fn get_principals_that_follow_me_paginated(
     from_inclusive_index: u64,

@@ -16,7 +16,7 @@ use crate::{
     CANISTER_DATA,
 };
 
-#[ic_cdk_macros::update]
+#[ic_cdk::update]
 #[candid::candid_method(update)]
 async fn update_user_index_upgrade_user_canisters_with_latest_wasm() {
     let api_caller = ic_cdk::caller();

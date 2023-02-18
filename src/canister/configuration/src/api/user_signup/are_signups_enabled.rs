@@ -1,6 +1,6 @@
 use crate::{data::CanisterData, CANISTER_DATA};
 
-#[ic_cdk_macros::query]
+#[ic_cdk::query]
 #[candid::candid_method(query)]
 fn are_signups_enabled() -> bool {
     CANISTER_DATA.with(|canister_data_ref_cell| {

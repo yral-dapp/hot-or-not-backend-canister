@@ -2,7 +2,7 @@ use crate::{util::canister_management::create_users_canister, CANISTER_DATA};
 use candid::Principal;
 use ic_cdk::api::call;
 
-#[ic_cdk_macros::update]
+#[ic_cdk::update]
 #[candid::candid_method(update)]
 async fn get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer(
     referrer: Option<Principal>,

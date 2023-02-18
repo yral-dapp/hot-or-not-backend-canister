@@ -2,7 +2,7 @@ use shared_utils::canister_specific::data_backup::types::backup_statistics::Back
 
 use crate::CANISTER_DATA;
 
-#[ic_cdk_macros::query]
+#[ic_cdk::query]
 #[candid::candid_method(query)]
 fn get_current_backup_statistics() -> BackupStatistics {
     BackupStatistics {

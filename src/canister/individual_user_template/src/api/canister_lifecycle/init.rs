@@ -1,7 +1,7 @@
 use crate::{data_model::CanisterData, CANISTER_DATA};
 use shared_utils::canister_specific::individual_user_template::types::args::IndividualUserTemplateInitArgs;
 
-#[ic_cdk_macros::init]
+#[ic_cdk::init]
 #[candid::candid_method(init)]
 fn init(init_args: IndividualUserTemplateInitArgs) {
     CANISTER_DATA.with(|canister_data_ref_cell| {

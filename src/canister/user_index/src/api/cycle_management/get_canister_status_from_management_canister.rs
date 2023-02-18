@@ -11,7 +11,7 @@ use crate::CANISTER_DATA;
 // TODO: Do this by calling this via the user_index canister
 // TODO: Also investigate why global principal is unable to call this. Are we not setting global principal as a controller when provisioning this canister?
 // TODO: Remove this endpoint altogether if the testing runtime has direct access to this data
-#[ic_cdk_macros::update]
+#[ic_cdk::update]
 #[candid::candid_method(update)]
 async fn get_canister_status_from_management_canister(
     canister_id: Principal,

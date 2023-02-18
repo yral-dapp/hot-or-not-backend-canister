@@ -15,7 +15,7 @@ pub enum AnotherUserFollowedMeError {
 // TODO: implement a separate membership canister that holds entries for all canisters of this project and perform access control
 /// # Access Control
 /// Only allow calls from canisters of this project
-#[ic_cdk_macros::update]
+#[ic_cdk::update]
 #[candid::candid_method(update)]
 async fn update_principals_that_follow_me_toggle_list_with_specified_principal(
     user_principal_id_whos_trying_to_follow_me: Principal,
