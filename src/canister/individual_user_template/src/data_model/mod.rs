@@ -5,8 +5,9 @@ use shared_utils::{
     canister_specific::individual_user_template::types::{
         post::v1::Post as PostV1, token::TokenBalance,
     },
-    common::types::known_principal::KnownPrincipalMapV1,
-    types::top_posts::v1::PostScoreIndex,
+    common::types::{
+        known_principal::KnownPrincipalMapV1, top_posts::post_score_index::v0::PostScoreIndex,
+    },
 };
 
 use self::{profile::v1::UserProfile as UserProfileV1, version_details::VersionDetails};

@@ -1,14 +1,14 @@
 
 
-import user_index_canister = "renrk-eyaaa-aaaaa-aaada-cai";
+import user_index_canister = "rkp4c-7iaaa-aaaaa-aaaca-cai";
 
-identity bob "~/.config/dfx/identity/bob/identity.pem";
+identity bob;
 
 let bob_canister = call user_index_canister.get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer(null);
 
 let response = call bob_canister.get_profile_details();
 
-identity alice "~/.config/dfx/identity/alice/identity.pem";
+identity alice;
 
 let alice_canister = call user_index_canister.get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer(null);
 

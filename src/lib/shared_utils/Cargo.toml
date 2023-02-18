@@ -10,10 +10,11 @@ candid = { workspace = true }
 ic-cdk = { workspace = true, features = ["timers"] }
 ic-stable-memory = { workspace = true }
 ic-stable-structures = { workspace = true }
+rmp-serde = { workspace = true }
 serde = { workspace = true }
 speedy = { workspace = true }
 
 [dev-dependencies]
 ic-state-machine-tests = { workspace = true }
 mockall = { workspace = true }
-test_utils = { path = "../test_utils" }
+test_utils = { workspace = true }

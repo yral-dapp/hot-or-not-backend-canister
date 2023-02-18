@@ -31,7 +31,7 @@
     "post_cache": {
       "type": "rust",
       "package": "post_cache",
-      "candid": "./src/canister/post_cache/api/can.did",
+      "candid": "./src/canister/post_cache/can.did",
       "declarations": {
         "node_compatibility": true,
         "output": "./export/declarations/post_cache"

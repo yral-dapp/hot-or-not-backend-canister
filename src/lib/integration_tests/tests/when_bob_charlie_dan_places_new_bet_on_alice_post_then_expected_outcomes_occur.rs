@@ -3,10 +3,13 @@ use std::time::Duration;
 use candid::Principal;
 use ic_state_machine_tests::{CanisterId, PrincipalId, StateMachine, WasmResult};
 use shared_utils::{
-    common::types::known_principal::KnownPrincipalType,
+    common::types::{
+        known_principal::KnownPrincipalType,
+        top_posts::post_score_index_item::v1::PostScoreIndexItem,
+    },
     types::{
         canister_specific::post_cache::error_types::TopPostsFetchError,
-        post::PostDetailsFromFrontend, top_posts::v0::PostScoreIndexItem,
+        post::PostDetailsFromFrontend,
     },
 };
 use test_utils::setup::{

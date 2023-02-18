@@ -1,5 +1,5 @@
-import user_index_canister = "renrk-eyaaa-aaaaa-aaada-cai";
-identity default "~/.config/dfx/identity/default/identity.pem";
+import user_index_canister = "rkp4c-7iaaa-aaaaa-aaaca-cai";
+identity default;
 
 let my_canister = call user_index_canister.get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer(null);
 

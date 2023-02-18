@@ -1,6 +1,6 @@
 
 
-import user_index_canister = "renrk-eyaaa-aaaaa-aaada-cai";
+import user_index_canister = "rkp4c-7iaaa-aaaaa-aaaca-cai";
 
 identity alice;
 
