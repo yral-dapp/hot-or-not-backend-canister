@@ -13,7 +13,8 @@ members = [
 [workspace.dependencies]
 candid = "0.8.4"
 ciborium = { git = "https://github.com/enarx/ciborium", rev = "e719537c99b564c3674a56defe53713c702c6f46" }
-ic-cdk = "0.6.10"
+ic-cdk = "0.7.0"
+ic-cdk-timers = "0.1.0"
 ic-cron = "0.7.1"
 ic-stable-memory = "0.2.6"
 ic-stable-structures = "0.5.1"

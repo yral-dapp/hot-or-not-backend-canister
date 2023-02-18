@@ -583,7 +583,7 @@ name = "configuration"
 version = "0.1.0"
 dependencies = [
  "candid",
- "ic-cdk 0.6.10",
+ "ic-cdk 0.7.0",
  "serde",
  "shared_utils",
  "test_utils",
@@ -948,7 +948,8 @@ version = "0.1.0"
 dependencies = [
  "candid",
  "ciborium 0.2.0 (git+https://github.com/enarx/ciborium?rev=e719537c99b564c3674a56defe53713c702c6f46)",
- "ic-cdk 0.6.10",
+ "ic-cdk 0.7.0",
+ "ic-cdk-timers",
  "ic-stable-memory",
  "ic-stable-structures 0.5.1",
  "serde",
@@ -1883,12 +1884,10 @@ checksum = "c98b304a2657bad15bcb547625a018e13cf596676d834cfd93023395a6e2e03a"
 dependencies = [
  "candid",
  "cfg-if 1.0.0",
- "futures",
  "ic-cdk-macros",
  "ic0",
  "serde",
  "serde_bytes",
- "slotmap",
 ]
 
 [[package]]
@@ -1916,6 +1915,20 @@ dependencies = [
  "serde",
  "serde_tokenstream",
  "syn 1.0.107",
+]
+
+[[package]]
+name = "ic-cdk-timers"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c400f8048f4f5ba3bd3d5fe9301b9343e8ef2e2749079af8f99d4f317ebbbb14"
+dependencies = [
+ "futures",
+ "ic-cdk 0.7.0",
+ "ic0",
+ "serde",
+ "serde_bytes",
+ "slotmap",
 ]
 
 [[package]]
@@ -3383,7 +3396,8 @@ name = "individual_user_template"
 version = "0.1.0"
 dependencies = [
  "candid",
- "ic-cdk 0.6.10",
+ "ic-cdk 0.7.0",
+ "ic-cdk-timers",
  "ic-cron",
  "ic-stable-memory",
  "serde",
@@ -3406,7 +3420,7 @@ name = "integration_tests"
 version = "0.1.0"
 dependencies = [
  "candid",
- "ic-cdk 0.6.10",
+ "ic-cdk 0.7.0",
  "ic-stable-memory",
  "ic-state-machine-tests",
  "shared_utils",
@@ -4240,7 +4254,7 @@ name = "post_cache"
 version = "0.1.0"
 dependencies = [
  "candid",
- "ic-cdk 0.6.10",
+ "ic-cdk 0.7.0",
  "serde",
  "shared_utils",
  "test_utils",
@@ -4970,7 +4984,8 @@ name = "shared_utils"
 version = "0.1.0"
 dependencies = [
  "candid",
- "ic-cdk 0.6.10",
+ "ic-cdk 0.7.0",
+ "ic-cdk-timers",
  "ic-stable-memory",
  "ic-stable-structures 0.5.1",
  "ic-state-machine-tests",
@@ -5354,7 +5369,7 @@ name = "test_utils"
 version = "0.1.0"
 dependencies = [
  "candid",
- "ic-cdk 0.6.10",
+ "ic-cdk 0.7.0",
  "ic-stable-memory",
  "ic-state-machine-tests",
  "ic-test-state-machine-client",
@@ -5869,7 +5884,8 @@ name = "user_index"
 version = "0.1.0"
 dependencies = [
  "candid",
- "ic-cdk 0.6.10",
+ "ic-cdk 0.7.0",
+ "ic-cdk-timers",
  "ic-stable-memory",
  "serde",
  "shared_utils",
