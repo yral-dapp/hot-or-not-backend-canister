@@ -14,7 +14,7 @@ pub enum GetPostsOfUserProfileError {
     ExceededMaxNumberOfItemsAllowedInOneRequest,
 }
 
-#[ic_cdk_macros::query]
+#[ic_cdk::query]
 #[candid::candid_method(query)]
 fn get_posts_of_this_user_profile_with_pagination(
     from_inclusive_id: u64,

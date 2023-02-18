@@ -5,7 +5,7 @@ use shared_utils::{
     types::canister_specific::post_cache::error_types::TopPostsFetchError,
 };
 
-#[ic_cdk_macros::query]
+#[ic_cdk::query]
 #[candid::candid_method(query)]
 fn get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed(
     from_inclusive_index: u64,

@@ -11,7 +11,7 @@ pub enum UpdateProfileDetailsError {
 
 /// # Access Control
 /// Only the user whose profile details are stored in this canister can update their details.
-#[ic_cdk_macros::update]
+#[ic_cdk::update]
 #[candid::candid_method(update)]
 fn update_profile_display_details(
     user_profile_details: UserProfileUpdateDetailsFromFrontend,

@@ -2,7 +2,7 @@ use shared_utils::canister_specific::user_index::types::args::UserIndexInitArgs;
 
 use crate::{data_model::CanisterData, CANISTER_DATA};
 
-#[ic_cdk_macros::init]
+#[ic_cdk::init]
 #[candid::candid_method(init)]
 fn init(init_args: UserIndexInitArgs) {
     CANISTER_DATA.with(|canister_data_ref_cell| {

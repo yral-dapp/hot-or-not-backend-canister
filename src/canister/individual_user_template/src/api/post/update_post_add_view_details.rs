@@ -5,7 +5,7 @@ use shared_utils::{
 
 use crate::CANISTER_DATA;
 
-#[ic_cdk_macros::update]
+#[ic_cdk::update]
 #[candid::candid_method(update)]
 fn update_post_add_view_details(id: u64, details: PostViewDetailsFromFrontend) {
     CANISTER_DATA.with(|canister_data_ref_cell| {

@@ -10,7 +10,7 @@ pub enum GetFollowerOrFollowingError {
     ExceededMaxNumberOfItemsAllowedInOneRequest,
 }
 
-#[ic_cdk_macros::query]
+#[ic_cdk::query]
 #[candid::candid_method(query)]
 pub fn get_principals_i_follow_paginated(
     from_inclusive_index: u64,

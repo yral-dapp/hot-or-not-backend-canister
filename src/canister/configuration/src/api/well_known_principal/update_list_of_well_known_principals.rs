@@ -11,7 +11,7 @@ pub enum ErrorUpdateListOfWellKnownPrincipals {
     Unauthorized,
 }
 
-#[ic_cdk_macros::update]
+#[ic_cdk::update]
 #[candid::candid_method(update)]
 fn update_list_of_well_known_principals(
     principal_type: KnownPrincipalType,

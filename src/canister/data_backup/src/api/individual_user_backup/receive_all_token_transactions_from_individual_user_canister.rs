@@ -5,7 +5,7 @@ use shared_utils::{
 
 use crate::{data::memory_layout::CanisterData, CANISTER_DATA};
 
-#[ic_cdk_macros::update]
+#[ic_cdk::update]
 #[candid::candid_method(update)]
 fn receive_all_token_transactions_from_individual_user_canister(
     all_token_transactions_from_individual_user_canister_chunk: Vec<(u64, TokenEventV1)>,

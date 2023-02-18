@@ -3,7 +3,7 @@ use shared_utils::common::types::known_principal::KnownPrincipalType;
 
 use crate::{data_model::CanisterData, CANISTER_DATA};
 
-#[ic_cdk_macros::update]
+#[ic_cdk::update]
 #[candid::candid_method(update)]
 fn receive_data_from_backup_canister_and_restore_data_to_heap(
     user_principal_id: Principal,

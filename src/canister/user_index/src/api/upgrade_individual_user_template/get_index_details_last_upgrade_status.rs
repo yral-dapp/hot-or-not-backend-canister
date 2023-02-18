@@ -1,6 +1,6 @@
 use crate::{data_model::canister_upgrade::upgrade_status::UpgradeStatusV1, CANISTER_DATA};
 
-#[ic_cdk_macros::query]
+#[ic_cdk::query]
 #[candid::candid_method(query)]
 fn get_index_details_last_upgrade_status() -> UpgradeStatusV1 {
     CANISTER_DATA.with(|canister_data_ref_cell| {

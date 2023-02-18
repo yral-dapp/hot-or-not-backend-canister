@@ -1,7 +1,7 @@
 use crate::CANISTER_DATA;
 use shared_utils::date_time::system_time;
 
-#[ic_cdk_macros::update]
+#[ic_cdk::update]
 #[candid::candid_method(update)]
 fn update_post_increment_share_count(id: u64) -> u64 {
     CANISTER_DATA.with(|canister_data_ref_cell| {

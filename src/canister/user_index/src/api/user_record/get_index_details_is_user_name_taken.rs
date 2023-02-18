@@ -1,6 +1,6 @@
 use crate::CANISTER_DATA;
 
-#[ic_cdk_macros::query]
+#[ic_cdk::query]
 #[candid::candid_method(query)]
 fn get_index_details_is_user_name_taken(user_name: String) -> bool {
     CANISTER_DATA.with(|canister_data_ref_cell| {

@@ -10,7 +10,7 @@ use shared_utils::{
 use crate::CANISTER_DATA;
 
 // TODO: Convert this to a daily cron job that is then moved to individual canisters
-#[ic_cdk_macros::update]
+#[ic_cdk::update]
 #[candid::candid_method(update)]
 async fn topup_canisters_that_need_it() {
     let api_caller = ic_cdk::caller();

@@ -11,11 +11,9 @@ crate-type = ["cdylib"]
 [dependencies]
 candid = { workspace = true }
 ic-cdk = { workspace = true }
-ic-cdk-macros = { workspace = true }
-ic-stable-memory = { workspace = true }
-shared_utils = { path = "../../lib/shared_utils" }
+ic-cdk-timers = { workspace = true }
+shared_utils = { workspace = true }
 serde = { workspace = true }
-speedy = { workspace = true }
 
 [dev-dependencies]
-test_utils = { path = "../../lib/test_utils" }
+test_utils = { workspace = true }

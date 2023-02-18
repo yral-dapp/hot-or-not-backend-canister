@@ -3,7 +3,7 @@ use shared_utils::types::canister_specific::individual_user_template::post::Post
 
 use crate::CANISTER_DATA;
 
-#[ic_cdk_macros::query]
+#[ic_cdk::query]
 #[candid::candid_method(query)]
 pub fn get_individual_post_details_by_id(post_id: u64) -> PostDetailsForFrontend {
     let api_caller = ic_cdk::caller();

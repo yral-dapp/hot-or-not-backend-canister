@@ -2,7 +2,7 @@ use shared_utils::canister_specific::configuration::types::args::ConfigurationIn
 
 use crate::{data::CanisterData, CANISTER_DATA};
 
-#[ic_cdk_macros::init]
+#[ic_cdk::init]
 #[candid::candid_method(init)]
 fn init(init_args: ConfigurationInitArgs) {
     CANISTER_DATA.with(|canister_data_ref_cell| {

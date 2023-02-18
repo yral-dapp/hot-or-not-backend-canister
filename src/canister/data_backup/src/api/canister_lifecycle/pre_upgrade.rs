@@ -3,7 +3,7 @@ use ic_stable_structures::writer::Writer;
 
 use crate::{data::memory_layout, CANISTER_DATA};
 
-#[ic_cdk_macros::pre_upgrade]
+#[ic_cdk::pre_upgrade]
 fn pre_upgrade() {
     // * Serialize the state.
     let mut state_bytes = vec![];

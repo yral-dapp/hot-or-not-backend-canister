@@ -6,7 +6,7 @@ use shared_utils::{
 
 use crate::CANISTER_DATA;
 
-#[ic_cdk_macros::query]
+#[ic_cdk::query]
 #[candid::candid_method(query)]
 fn get_individual_users_backup_data_entry(
     principal_id_of_user_whose_data_is_being_queried: Principal,

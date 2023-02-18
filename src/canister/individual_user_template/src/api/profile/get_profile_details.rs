@@ -1,7 +1,7 @@
 use crate::CANISTER_DATA;
 use shared_utils::canister_specific::individual_user_template::types::profile::UserProfileDetailsForFrontend;
 
-#[ic_cdk_macros::query]
+#[ic_cdk::query]
 #[candid::candid_method(query)]
 fn get_profile_details() -> UserProfileDetailsForFrontend {
     CANISTER_DATA.with(|canister_data_ref_cell| {

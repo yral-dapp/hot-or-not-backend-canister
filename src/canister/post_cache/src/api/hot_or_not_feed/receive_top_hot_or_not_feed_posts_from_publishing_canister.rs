@@ -2,7 +2,7 @@ use shared_utils::common::types::top_posts::post_score_index_item::v1::PostScore
 
 use crate::{data_model::CanisterData, CANISTER_DATA};
 
-#[ic_cdk_macros::update]
+#[ic_cdk::update]
 #[candid::candid_method(update)]
 fn receive_top_hot_or_not_feed_posts_from_publishing_canister(
     top_posts_from_publishing_canister: Vec<PostScoreIndexItem>,

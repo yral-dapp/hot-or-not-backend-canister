@@ -1,6 +1,7 @@
 use std::collections::{BTreeMap, HashMap};
 
 use candid::{CandidType, Deserialize, Principal};
+use serde::Serialize;
 use shared_utils::{
     access_control::UserAccessRole, common::types::known_principal::KnownPrincipalMapV1,
 };
@@ -9,7 +10,7 @@ use self::canister_upgrade::upgrade_status::UpgradeStatusV1;
 
 pub mod canister_upgrade;
 
-#[derive(Default, CandidType, Deserialize)]
+#[derive(Default, CandidType, Deserialize, Serialize)]
 pub struct CanisterData {
     pub last_run_upgrade_status: UpgradeStatusV1,
     pub known_principal_ids: KnownPrincipalMapV1,

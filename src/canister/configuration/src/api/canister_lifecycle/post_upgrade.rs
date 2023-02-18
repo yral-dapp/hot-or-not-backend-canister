@@ -2,7 +2,7 @@ use ic_cdk::storage;
 
 use crate::CANISTER_DATA;
 
-#[ic_cdk_macros::post_upgrade]
+#[ic_cdk::post_upgrade]
 fn post_upgrade() {
     match storage::stable_restore() {
         Ok((canister_data,)) => {

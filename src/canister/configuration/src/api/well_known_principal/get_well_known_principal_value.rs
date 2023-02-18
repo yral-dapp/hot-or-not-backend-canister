@@ -3,7 +3,7 @@ use shared_utils::common::types::known_principal::KnownPrincipalType;
 
 use crate::{data::CanisterData, CANISTER_DATA};
 
-#[ic_cdk_macros::query]
+#[ic_cdk::query]
 #[candid::candid_method(query)]
 fn get_well_known_principal_value(principal_type: KnownPrincipalType) -> Option<Principal> {
     CANISTER_DATA.with(|canister_data_ref_cell| {

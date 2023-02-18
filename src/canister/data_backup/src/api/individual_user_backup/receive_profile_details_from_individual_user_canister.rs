@@ -6,7 +6,7 @@ use shared_utils::{
 
 use crate::{data::memory_layout::CanisterData, CANISTER_DATA};
 
-#[ic_cdk_macros::update]
+#[ic_cdk::update]
 #[candid::candid_method(update)]
 fn receive_profile_details_from_individual_user_canister(
     display_name: Option<String>,

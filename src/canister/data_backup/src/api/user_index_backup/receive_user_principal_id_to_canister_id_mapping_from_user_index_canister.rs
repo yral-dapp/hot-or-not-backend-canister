@@ -6,7 +6,7 @@ use shared_utils::{
 
 use crate::{data::memory_layout::CanisterData, CANISTER_DATA};
 
-#[ic_cdk_macros::update]
+#[ic_cdk::update]
 #[candid::candid_method(update)]
 fn receive_user_principal_id_to_canister_id_mapping_from_user_index_canister(
     user_principal_id_to_canister_id_tuple_vec: Vec<(Principal, Principal)>,

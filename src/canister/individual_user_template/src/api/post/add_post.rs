@@ -7,7 +7,7 @@ use crate::CANISTER_DATA;
 
 /// # Access Control
 /// Only the user whose profile details are stored in this canister can create a post.
-#[ic_cdk_macros::update]
+#[ic_cdk::update]
 #[candid::candid_method(update)]
 fn add_post(post_details: PostDetailsFromFrontend) -> u64 {
     // * access control

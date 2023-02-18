@@ -8,7 +8,7 @@ use crate::{
     CANISTER_DATA,
 };
 
-#[ic_cdk_macros::post_upgrade]
+#[ic_cdk::post_upgrade]
 fn post_upgrade() {
     restore_data_from_stable_memory();
     refetch_well_known_principals();
@@ -36,7 +36,7 @@ fn restore_data_from_stable_memory() {
 }
 
 fn refetch_well_known_principals() {
-    ic_cdk::timer::set_timer(Duration::from_nanos(10), || {
+    ic_cdk_timers::set_timer(Duration::from_nanos(10), || {
         ic_cdk::spawn(update_locally_stored_well_known_principals::update_locally_stored_well_known_principals())
     });
 }

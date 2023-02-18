@@ -7,7 +7,7 @@ use shared_utils::{
     },
 };
 
-#[ic_cdk_macros::query]
+#[ic_cdk::query]
 #[candid::candid_method(query)]
 fn get_user_utility_token_transaction_history_with_pagination(
     from_inclusive_id: u64,

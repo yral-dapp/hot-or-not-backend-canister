@@ -5,7 +5,7 @@ use shared_utils::{
 
 use crate::CANISTER_DATA;
 
-#[ic_cdk_macros::update]
+#[ic_cdk::update]
 #[candid::candid_method(update)]
 fn update_post_as_ready_to_view(id: u64) {
     let api_caller = ic_cdk::caller();

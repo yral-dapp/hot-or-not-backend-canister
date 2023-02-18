@@ -3,7 +3,7 @@ use shared_utils::common::types::known_principal::KnownPrincipalType;
 
 use crate::CANISTER_DATA;
 
-#[ic_cdk_macros::update]
+#[ic_cdk::update]
 #[candid::candid_method(update)]
 async fn backup_all_individual_user_canisters() {
     let api_caller = ic_cdk::caller();

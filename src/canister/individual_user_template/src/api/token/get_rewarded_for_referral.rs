@@ -7,7 +7,7 @@ use shared_utils::{
     types::utility_token::{v0::MintEvent, v1::TokenEventV1},
 };
 
-#[ic_cdk_macros::update]
+#[ic_cdk::update]
 #[candid::candid_method(update)]
 fn get_rewarded_for_referral(referrer: Principal, referree: Principal) {
     // * access control

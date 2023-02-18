@@ -19,7 +19,7 @@ pub enum FollowAnotherUserProfileError {
 
 /// # Access Control
 /// Only the user whose profile details are stored in this canister can follow another user's profile.
-#[ic_cdk_macros::update]
+#[ic_cdk::update]
 #[candid::candid_method(update)]
 async fn update_principals_i_follow_toggle_list_with_principal_specified(
     user_to_follow: Principal,

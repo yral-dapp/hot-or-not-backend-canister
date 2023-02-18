@@ -3,7 +3,7 @@ use shared_utils::access_control::{self, UserAccessRole};
 
 use crate::{data::heap_data::HeapData, CANISTER_DATA};
 
-#[ic_cdk_macros::update]
+#[ic_cdk::update]
 #[candid::candid_method(update)]
 fn update_user_remove_role(role: UserAccessRole, principal_id: Principal) {
     let api_caller = ic_cdk::caller();
