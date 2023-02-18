@@ -1,8 +1,9 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use candid::{CandidType, Deserialize, Principal};
+use serde::Serialize;
 
-#[derive(CandidType, Deserialize, Clone)]
+#[derive(CandidType, Deserialize, Clone, Serialize)]
 pub struct UpgradeStatusV1 {
     pub version_number: u64,
     pub last_run_on: SystemTime,

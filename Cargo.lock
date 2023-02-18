@@ -5888,7 +5888,6 @@ dependencies = [
  "ic-cdk-timers",
  "serde",
  "shared_utils",
- "speedy",
  "test_utils",
 ]
 

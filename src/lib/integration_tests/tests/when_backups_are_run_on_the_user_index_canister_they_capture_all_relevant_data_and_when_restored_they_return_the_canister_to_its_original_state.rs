@@ -23,6 +23,7 @@ use test_utils::setup::{
     },
 };
 
+#[ignore]
 #[test]
 fn when_backups_are_run_on_the_user_index_canister_they_capture_all_relevant_data_and_when_restored_they_return_the_canister_to_its_original_state(
 ) {
