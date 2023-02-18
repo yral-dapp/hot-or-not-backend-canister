@@ -5886,7 +5886,6 @@ dependencies = [
  "candid",
  "ic-cdk 0.7.0",
  "ic-cdk-timers",
- "ic-stable-memory",
  "serde",
  "shared_utils",
  "speedy",
