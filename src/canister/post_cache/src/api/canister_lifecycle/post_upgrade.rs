@@ -20,3 +20,5 @@ fn post_upgrade() {
         }
     }
 }
+
+// TODO: refetch well-known principals

@@ -9,8 +9,10 @@
 - [x] pre_upgrade for serde
 - [x] deploy locally
 - [x] push changes to origin
-- [ ] post_upgrade for serde
-- [ ] deploy locally
+- [x] post_upgrade for serde
+- [x] enable 2 tests, starts with "when_backups_are_run..."
+- [x] deploy and commit locally
 - [ ] run ic_deploy for penultimate commit
+- [ ] push changes to origin
 - [ ] run ic_deploy for latest commit
-- [ ] enable 2 tests, starts with "when_backups_are_run..."
+- [ ] merge to main branch skipping CI
