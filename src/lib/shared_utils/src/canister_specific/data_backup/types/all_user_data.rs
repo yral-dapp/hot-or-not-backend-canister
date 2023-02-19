@@ -6,9 +6,7 @@ use std::{
 use candid::{CandidType, Decode, Deserialize, Encode, Principal};
 use ic_stable_structures::{BoundedStorable, Storable};
 
-use crate::canister_specific::individual_user_template::types::{
-    post::v1::Post, token::TokenBalance,
-};
+use crate::canister_specific::individual_user_template::types::{post::Post, token::TokenBalance};
 
 #[derive(CandidType, Deserialize)]
 pub struct AllUserData {

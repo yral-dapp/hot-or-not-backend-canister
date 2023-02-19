@@ -1,6 +1,6 @@
 use candid::Principal;
 use shared_utils::{
-    canister_specific::individual_user_template::types::post::v1::Post,
+    canister_specific::individual_user_template::types::post::Post,
     common::types::storable_principal::StorablePrincipal,
 };
 
@@ -71,7 +71,7 @@ mod test {
     use shared_utils::{
         canister_specific::{
             data_backup::types::all_user_data::{AllUserData, UserOwnedCanisterData},
-            individual_user_template::types::post::v0::{HotOrNotFeedDetails, PostViewStatistics},
+            individual_user_template::types::post::{HotOrNotFeedDetails, PostViewStatistics},
         },
         types::canister_specific::individual_user_template::post::PostStatus,
     };

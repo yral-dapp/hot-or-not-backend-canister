@@ -9,7 +9,7 @@ use shared_utils::{
             all_user_data::AllUserData, args::DataBackupInitArgs,
             backup_statistics::BackupStatistics,
         },
-        individual_user_template::types::post::v1::Post,
+        individual_user_template::types::post::Post,
     },
     common::types::known_principal::KnownPrincipalType,
     types::utility_token::v1::TokenEventV1,

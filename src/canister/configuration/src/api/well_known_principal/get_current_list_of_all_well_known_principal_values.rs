@@ -1,5 +1,5 @@
 use candid::Principal;
-use shared_utils::common::types::known_principal::{KnownPrincipalMapV1, KnownPrincipalType};
+use shared_utils::common::types::known_principal::{KnownPrincipalMap, KnownPrincipalType};
 
 use crate::CANISTER_DATA;
 
@@ -13,7 +13,7 @@ fn get_current_list_of_all_well_known_principal_values() -> Vec<(KnownPrincipalT
 }
 
 fn get_current_list_of_all_well_known_principal_values_impl(
-    known_principal_ids: &KnownPrincipalMapV1,
+    known_principal_ids: &KnownPrincipalMap,
 ) -> Vec<(KnownPrincipalType, Principal)> {
     known_principal_ids
         .iter()
@@ -33,7 +33,7 @@ mod test {
 
     #[test]
     fn test_get_well_known_principal_value_impl() {
-        let mut known_principal_ids = KnownPrincipalMapV1::new();
+        let mut known_principal_ids = KnownPrincipalMap::new();
         known_principal_ids.insert(
             KnownPrincipalType::UserIdGlobalSuperAdmin,
             get_global_super_admin_principal_id_v1(),

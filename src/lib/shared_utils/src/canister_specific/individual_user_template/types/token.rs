@@ -1,15 +1,13 @@
-use std::{collections::BTreeMap, time::SystemTime};
+use std::collections::BTreeMap;
 
 use candid::{CandidType, Deserialize};
 use speedy::{Readable, Writable};
 
-use crate::types::utility_token::{v0::TokenEvent, v1::TokenEventV1};
+use crate::types::utility_token::v1::TokenEventV1;
 
 #[derive(Readable, Writable, Default, Clone, Deserialize, CandidType)]
 pub struct TokenBalance {
     pub utility_token_balance: u64,
-    // TODO: remove the redundant older version after verifying nothing breaks.
-    pub utility_token_transaction_history: BTreeMap<SystemTime, TokenEvent>,
     pub utility_token_transaction_history_v1: BTreeMap<u64, TokenEventV1>,
 }
 

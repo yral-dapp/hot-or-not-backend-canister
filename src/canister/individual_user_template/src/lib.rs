@@ -14,7 +14,7 @@ use data_model::CanisterData;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
         args::IndividualUserTemplateInitArgs,
-        post::v0::PostViewDetailsFromFrontend,
+        post::PostViewDetailsFromFrontend,
         profile::{UserProfileDetailsForFrontend, UserProfileUpdateDetailsFromFrontend},
     },
     common::types::known_principal::KnownPrincipalType,

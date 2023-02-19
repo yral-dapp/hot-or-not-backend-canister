@@ -1,8 +1,8 @@
 use candid::{CandidType, Deserialize};
 
-use super::known_principal::KnownPrincipalMapV1;
+use super::known_principal::KnownPrincipalMap;
 
 #[derive(Deserialize, CandidType, Default)]
 pub struct PostCacheInitArgs {
-    pub known_principal_ids: Option<KnownPrincipalMapV1>,
+    pub known_principal_ids: Option<KnownPrincipalMap>,
 }

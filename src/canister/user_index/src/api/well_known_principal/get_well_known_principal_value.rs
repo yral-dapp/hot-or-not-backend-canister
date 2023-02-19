@@ -1,5 +1,5 @@
 use candid::Principal;
-use shared_utils::common::types::known_principal::{KnownPrincipalMapV1, KnownPrincipalType};
+use shared_utils::common::types::known_principal::{KnownPrincipalMap, KnownPrincipalType};
 
 use crate::CANISTER_DATA;
 
@@ -14,7 +14,7 @@ fn get_well_known_principal_value(principal_type: KnownPrincipalType) -> Option<
 
 fn get_well_known_principal_value_impl(
     principal_type: &KnownPrincipalType,
-    known_principal_ids: &KnownPrincipalMapV1,
+    known_principal_ids: &KnownPrincipalMap,
 ) -> Option<Principal> {
     known_principal_ids
         .get(principal_type)
