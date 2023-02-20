@@ -4,7 +4,7 @@ use ic_stable_memory::utils::ic_types::SPrincipal;
 use shared_utils::{
     common::types::known_principal::KnownPrincipalType,
     date_time::system_time,
-    types::utility_token::{v0::MintEvent, v1::TokenEventV1},
+    types::utility_token::{mint_event::MintEvent, token_event::TokenEvent},
 };
 
 #[ic_cdk::update]
@@ -28,7 +28,7 @@ fn get_rewarded_for_referral(referrer: Principal, referree: Principal) {
     CANISTER_DATA.with(|canister_data_ref_cell| {
         let mut canister_data_ref = canister_data_ref_cell.borrow_mut();
         let my_token_balance = canister_data_ref.my_token_balance.clone();
-        let updated_token_balance = my_token_balance.handle_token_event(TokenEventV1::Mint {
+        let updated_token_balance = my_token_balance.handle_token_event(TokenEvent::Mint {
             details: MintEvent::Referral {
                 referrer_user_principal_id: SPrincipal(referrer),
                 referee_user_principal_id: SPrincipal(referree),

@@ -1,5 +1,4 @@
 use candid::{CandidType, Deserialize, Principal};
-use speedy::{Readable, Writable};
 
 #[derive(CandidType, Deserialize, Debug)]
 pub struct UserProfileDetailsForFrontend {
@@ -12,7 +11,7 @@ pub struct UserProfileDetailsForFrontend {
     pub following_count: u64,
 }
 
-#[derive(Readable, Writable, CandidType, Deserialize, Clone, Copy, Debug, Default)]
+#[derive(CandidType, Deserialize, Clone, Copy, Debug, Default)]
 pub struct UserProfileGlobalStats {
     pub lifetime_earnings: u64,
     pub hots_earned_count: u64,

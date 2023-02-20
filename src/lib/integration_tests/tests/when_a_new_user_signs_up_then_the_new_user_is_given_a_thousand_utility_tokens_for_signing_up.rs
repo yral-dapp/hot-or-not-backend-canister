@@ -6,7 +6,7 @@ use shared_utils::{
     common::types::known_principal::KnownPrincipalType,
     types::{
         canister_specific::individual_user_template::error_types::GetUserUtilityTokenTransactionHistoryError,
-        utility_token::{v0::MintEvent, v1::TokenEventV1},
+        utility_token::{mint_event::MintEvent, token_event::TokenEvent},
     },
 };
 use test_utils::setup::{
@@ -96,7 +96,7 @@ fn when_a_new_user_signs_up_then_the_new_user_is_given_a_thousand_utility_tokens
         alice_utility_token_balance_after_calling_get_canister_id_again
     );
 
-    let alice_utility_token_transaction_history_after_signup: Vec<(u64, TokenEventV1)> =
+    let alice_utility_token_transaction_history_after_signup: Vec<(u64, TokenEvent)> =
         state_machine
             .query(
                 CanisterId::new(alice_canister_id.into()).unwrap(),
@@ -105,7 +105,7 @@ fn when_a_new_user_signs_up_then_the_new_user_is_given_a_thousand_utility_tokens
             )
             .map(|reply_payload| {
                 let response: Result<
-                    Vec<(u64, TokenEventV1)>,
+                    Vec<(u64, TokenEvent)>,
                     GetUserUtilityTokenTransactionHistoryError,
                 > = match reply_payload {
                     WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
@@ -139,7 +139,7 @@ fn when_a_new_user_signs_up_then_the_new_user_is_given_a_thousand_utility_tokens
     );
     assert_eq!(
         match alice_utility_token_transaction_history_after_signup[0].1 {
-            TokenEventV1::Mint { details, .. } => details,
+            TokenEvent::Mint { details, .. } => details,
             _ => {
                 MintEvent::NewUserSignup {
                     new_user_principal_id: SPrincipal(Principal::anonymous()),

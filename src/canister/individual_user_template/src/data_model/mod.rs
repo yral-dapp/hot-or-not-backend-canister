@@ -8,7 +8,7 @@ use shared_utils::{
     },
 };
 
-use self::{profile::v1::UserProfile as UserProfileV1, version_details::VersionDetails};
+use self::{profile::v1::UserProfile, version_details::VersionDetails};
 
 pub mod hot_or_not;
 pub mod profile;
@@ -24,6 +24,6 @@ pub struct CanisterData {
     pub posts_index_sorted_by_hot_or_not_feed_score: PostScoreIndex,
     pub principals_i_follow: BTreeSet<Principal>,
     pub principals_that_follow_me: BTreeSet<Principal>,
-    pub profile: UserProfileV1,
+    pub profile: UserProfile,
     pub version_details: VersionDetails,
 }

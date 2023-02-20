@@ -52,7 +52,6 @@ type UserIndexInitArgs = record {
 };
 service : (UserIndexInitArgs) -> {
   backup_all_individual_user_canisters : () -> ();
-  backup_data_to_backup_canister : () -> ();
   get_canister_status_from_management_canister : (principal) -> (
       CanisterStatusResponse,
     );

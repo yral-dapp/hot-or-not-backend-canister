@@ -1,7 +1,5 @@
 use candid::{CandidType, Deserialize};
 use ic_stable_memory::utils::ic_types::SPrincipal;
-use serde::Serialize;
-use speedy::{Readable, Writable};
 use std::{
     collections::HashSet,
     time::{Duration, SystemTime},
@@ -15,7 +13,7 @@ use crate::{
     },
 };
 
-#[derive(Readable, Writable, CandidType, Clone, Deserialize, Debug)]
+#[derive(CandidType, Clone, Deserialize, Debug)]
 pub struct Post {
     pub id: u64,
     pub description: String,
@@ -31,7 +29,7 @@ pub struct Post {
     pub hot_or_not_feed_details: Option<HotOrNotFeedDetails>,
 }
 
-#[derive(Serialize, Deserialize, CandidType)]
+#[derive(Deserialize, CandidType)]
 pub enum PostViewDetailsFromFrontend {
     WatchedPartially {
         percentage_watched: u8,
@@ -42,14 +40,14 @@ pub enum PostViewDetailsFromFrontend {
     },
 }
 
-#[derive(Readable, Writable, CandidType, Clone, Deserialize, Debug)]
+#[derive(CandidType, Clone, Deserialize, Debug)]
 pub struct PostViewStatistics {
     pub total_view_count: u64,
     pub threshold_view_count: u64,
     pub average_watch_percentage: u8,
 }
 
-#[derive(Readable, Writable, CandidType, Clone, Deserialize, Debug)]
+#[derive(CandidType, Clone, Deserialize, Debug)]
 pub struct HotOrNotFeedDetails {
     pub score: u64,
     pub upvotes: HashSet<SPrincipal>,

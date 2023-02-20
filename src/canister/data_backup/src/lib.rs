@@ -12,7 +12,7 @@ use shared_utils::{
         individual_user_template::types::post::Post,
     },
     common::types::known_principal::KnownPrincipalType,
-    types::utility_token::v1::TokenEventV1,
+    types::utility_token::token_event::TokenEvent,
 };
 
 mod api;

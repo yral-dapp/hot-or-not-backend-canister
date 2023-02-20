@@ -1,6 +1,7 @@
 use candid::Principal;
 use shared_utils::{
-    common::types::storable_principal::StorablePrincipal, types::utility_token::v1::TokenEventV1,
+    common::types::storable_principal::StorablePrincipal,
+    types::utility_token::token_event::TokenEvent,
 };
 
 use crate::{data::memory_layout::CanisterData, CANISTER_DATA};
@@ -8,7 +9,7 @@ use crate::{data::memory_layout::CanisterData, CANISTER_DATA};
 #[ic_cdk::update]
 #[candid::candid_method(update)]
 fn receive_all_token_transactions_from_individual_user_canister(
-    all_token_transactions_from_individual_user_canister_chunk: Vec<(u64, TokenEventV1)>,
+    all_token_transactions_from_individual_user_canister_chunk: Vec<(u64, TokenEvent)>,
     canister_owner_principal_id: Principal,
 ) {
     // * Get the caller principal ID.
@@ -26,7 +27,7 @@ fn receive_all_token_transactions_from_individual_user_canister(
 
 fn receive_all_token_transactions_from_individual_user_canister_impl(
     canister_data: &mut CanisterData,
-    all_token_transactions_from_individual_user_canister_chunk: Vec<(u64, TokenEventV1)>,
+    all_token_transactions_from_individual_user_canister_chunk: Vec<(u64, TokenEvent)>,
     caller_principal_id: &Principal,
     canister_owner_principal_id: &Principal,
 ) {
@@ -73,7 +74,7 @@ mod test {
         canister_specific::data_backup::types::all_user_data::{
             AllUserData, UserOwnedCanisterData,
         },
-        types::utility_token::v0::MintEvent,
+        types::utility_token::mint_event::MintEvent,
     };
     use test_utils::setup::test_constants::{
         get_mock_user_alice_canister_id, get_mock_user_alice_principal_id,
@@ -89,7 +90,7 @@ mod test {
         let all_token_transactions_from_individual_user_canister_chunk = vec![
             (
                 0,
-                TokenEventV1::Mint {
+                TokenEvent::Mint {
                     details: MintEvent::NewUserSignup {
                         new_user_principal_id: SPrincipal(get_mock_user_alice_principal_id()),
                     },
@@ -98,7 +99,7 @@ mod test {
             ),
             (
                 1,
-                TokenEventV1::Mint {
+                TokenEvent::Mint {
                     details: MintEvent::Referral {
                         referee_user_principal_id: SPrincipal(get_mock_user_alice_principal_id()),
                         referrer_user_principal_id: SPrincipal(get_mock_user_bob_principal_id()),

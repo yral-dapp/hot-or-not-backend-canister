@@ -94,7 +94,7 @@ type Result_1 = variant {
   Err : GetFollowerOrFollowingError;
 };
 type Result_2 = variant {
-  Ok : vec record { nat64; TokenEventV1 };
+  Ok : vec record { nat64; TokenEvent };
   Err : GetFollowerOrFollowingError;
 };
 type Result_3 = variant { Ok : bool; Err : FollowAnotherUserProfileError };
@@ -108,7 +108,7 @@ type SystemTime = record {
   nanos_since_epoch : nat32;
   secs_since_epoch : nat64;
 };
-type TokenEventV1 = variant {
+type TokenEvent = variant {
   Stake;
   Burn;
   Mint : record { timestamp : SystemTime; details : MintEvent };
@@ -142,6 +142,7 @@ type UserProfileUpdateDetailsFromFrontend = record {
 };
 service : (IndividualUserTemplateInitArgs) -> {
   add_post : (PostDetailsFromFrontend) -> (nat64);
+  backup_data_to_backup_canister : (principal, principal) -> ();
   get_following_status_do_i_follow_this_user : (principal) -> (bool) query;
   get_individual_post_details_by_id : (nat64) -> (PostDetailsForFrontend) query;
   get_posts_of_this_user_profile_with_pagination : (nat64, nat64) -> (

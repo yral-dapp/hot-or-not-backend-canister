@@ -69,11 +69,9 @@ type SystemTime = record {
 };
 type TokenBalance = record {
   utility_token_balance : nat64;
-  utility_token_transaction_history_v1 : vec record { nat64; TokenEventV1 };
-  utility_token_transaction_history : vec record { SystemTime; TokenEvent };
+  utility_token_transaction_history_v1 : vec record { nat64; TokenEvent };
 };
-type TokenEvent = variant { Stake; Burn; Mint : MintEvent; Transfer };
-type TokenEventV1 = variant {
+type TokenEvent = variant {
   Stake;
   Burn;
   Mint : record { timestamp : SystemTime; details : MintEvent };
@@ -103,7 +101,7 @@ service : (DataBackupInitArgs) -> {
       opt principal,
     ) query;
   receive_all_token_transactions_from_individual_user_canister : (
-      vec record { nat64; TokenEventV1 },
+      vec record { nat64; TokenEvent },
       principal,
     ) -> ();
   receive_all_user_posts_from_individual_user_canister : (
@@ -128,12 +126,6 @@ service : (DataBackupInitArgs) -> {
       opt text,
       principal,
       principal,
-    ) -> ();
-  receive_unique_user_name_to_user_principal_id_mapping_from_user_index_canister : (
-      vec record { text; principal },
-    ) -> ();
-  receive_user_principal_id_to_canister_id_mapping_from_user_index_canister : (
-      vec record { principal; principal },
     ) -> ();
   restore_backed_up_data_to_individual_user_canisters : () -> ();
   send_restore_data_back_to_user_index_canister : () -> ();

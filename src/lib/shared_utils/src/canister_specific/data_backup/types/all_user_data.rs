@@ -8,7 +8,7 @@ use ic_stable_structures::{BoundedStorable, Storable};
 
 use crate::canister_specific::individual_user_template::types::{post::Post, token::TokenBalance};
 
-#[derive(CandidType, Deserialize)]
+#[derive(CandidType, Deserialize, Debug)]
 pub struct AllUserData {
     pub user_principal_id: Principal,
     pub user_canister_id: Principal,
@@ -31,7 +31,7 @@ impl BoundedStorable for AllUserData {
     const IS_FIXED_SIZE: bool = false;
 }
 
-#[derive(Deserialize, CandidType, Default)]
+#[derive(Deserialize, CandidType, Default, Debug)]
 pub struct UserOwnedCanisterData {
     pub unique_user_name: String,
     pub all_created_posts: BTreeMap<u64, Post>,
@@ -41,7 +41,7 @@ pub struct UserOwnedCanisterData {
     pub token_data: TokenBalance,
 }
 
-#[derive(Deserialize, CandidType, Default)]
+#[derive(Deserialize, CandidType, Default, Debug)]
 pub struct ProfileDetails {
     pub display_name: Option<String>,
     pub profile_picture_url: Option<String>,

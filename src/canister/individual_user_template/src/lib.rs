@@ -26,7 +26,7 @@ use shared_utils::{
             post::PostDetailsForFrontend,
         },
         post::PostDetailsFromFrontend,
-        utility_token::v1::TokenEventV1,
+        utility_token::token_event::TokenEvent,
     },
 };
 

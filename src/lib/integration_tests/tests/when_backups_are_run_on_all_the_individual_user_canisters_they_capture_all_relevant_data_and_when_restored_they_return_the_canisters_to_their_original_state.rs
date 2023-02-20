@@ -8,7 +8,10 @@ use shared_utils::{
         individual_user_template::types::profile::UserProfileUpdateDetailsFromFrontend,
     },
     common::types::known_principal::KnownPrincipalType,
-    types::post::PostDetailsFromFrontend,
+    types::{
+        canister_specific::individual_user_template::post::PostDetailsForFrontend,
+        post::PostDetailsFromFrontend,
+    },
 };
 use test_utils::setup::{
     env_v0::{
@@ -165,13 +168,6 @@ fn when_backups_are_run_on_all_the_individual_user_canisters_they_capture_all_re
             },))
             .unwrap(),
         )
-        .map(|reply_payload| {
-            let (newly_created_post_id,): (u64,) = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_args(&payload).unwrap(),
-                _ => panic!("\n🛑 add_post failed\n"),
-            };
-            newly_created_post_id
-        })
         .unwrap();
 
     state_machine
@@ -207,6 +203,31 @@ fn when_backups_are_run_on_all_the_individual_user_canisters_they_capture_all_re
         )
         .unwrap();
 
+    let alice_first_post_detail = state_machine
+        .query(
+            CanisterId::new(PrincipalId(alice_canister_id)).unwrap(),
+            "get_individual_post_details_by_id",
+            candid::encode_args((0 as u64,)).unwrap(),
+        )
+        .map(|reply_payload| {
+            let post_details: PostDetailsForFrontend = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 get_individual_post_details_by_id failed\n"),
+            };
+            post_details
+        })
+        .unwrap();
+
+    assert_eq!(
+        alice_first_post_detail.description,
+        "alice post 0 - description"
+    );
+    assert_eq!(
+        alice_first_post_detail.hashtags,
+        vec!["alice-tag-0", "alice-tag-1"]
+    );
+    assert_eq!(alice_first_post_detail.video_uid, "alice-video-0");
+
     state_machine
         .execute_ingress_as(
             PrincipalId(get_global_super_admin_principal_id_v1()),
@@ -220,7 +241,7 @@ fn when_backups_are_run_on_all_the_individual_user_canisters_they_capture_all_re
         .execute_ingress_as(
             PrincipalId(get_global_super_admin_principal_id_v1()),
             user_index_canister_id,
-            "backup_data_to_backup_canister",
+            "backup_all_individual_user_canisters",
             candid::encode_one(()).unwrap(),
         )
         .unwrap();
@@ -229,7 +250,7 @@ fn when_backups_are_run_on_all_the_individual_user_canisters_they_capture_all_re
         .execute_ingress_as(
             PrincipalId(get_global_super_admin_principal_id_v1()),
             user_index_canister_id,
-            "backup_all_individual_user_canisters",
+            "update_user_index_upgrade_user_canisters_with_latest_wasm",
             candid::encode_one(()).unwrap(),
         )
         .unwrap();
@@ -267,6 +288,8 @@ fn when_backups_are_run_on_all_the_individual_user_canisters_they_capture_all_re
         })
         .unwrap()
         .unwrap();
+
+    println!("alice_backup_details = {:?}", alice_backup_details);
 
     assert!(alice_backup_details.user_principal_id == alice_principal_id.0);
     assert!(alice_backup_details.user_canister_id == alice_canister_id);

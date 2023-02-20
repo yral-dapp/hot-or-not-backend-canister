@@ -5,7 +5,7 @@ use shared_utils::common::types::known_principal::KnownPrincipalType;
 use crate::CANISTER_DATA;
 
 #[ic_cdk::update]
-// #[candid::candid_method(update)]
+#[candid::candid_method(update)]
 async fn backup_data_to_backup_canister(
     canister_owner_principal_id: Principal,
     canister_id: Principal,

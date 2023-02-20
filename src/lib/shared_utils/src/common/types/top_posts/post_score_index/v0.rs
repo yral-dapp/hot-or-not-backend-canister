@@ -1,6 +1,5 @@
 use candid::{CandidType, Deserialize};
 use ic_stable_memory::utils::ic_types::SPrincipal;
-use speedy::{Readable, Writable};
 use std::{
     collections::{btree_map, BTreeMap, HashMap},
     iter::Rev,
@@ -13,7 +12,7 @@ type PublisherCanisterId = SPrincipal;
 type PostId = u64;
 type Score = u64;
 
-#[derive(Readable, Writable, Default, Debug, Clone, CandidType, Deserialize)]
+#[derive(Default, Debug, Clone, CandidType, Deserialize)]
 pub struct PostScoreIndex {
     pub items_sorted_by_score: BTreeMap<Score, Vec<PostScoreIndexItem>>,
     pub item_presence_index: HashMap<(PublisherCanisterId, PostId), Score>,

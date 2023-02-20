@@ -3,7 +3,7 @@ use shared_utils::{
     pagination::{self, PaginationError},
     types::{
         canister_specific::individual_user_template::error_types::GetUserUtilityTokenTransactionHistoryError,
-        utility_token::v1::TokenEventV1,
+        utility_token::token_event::TokenEvent,
     },
 };
 
@@ -12,7 +12,7 @@ use shared_utils::{
 fn get_user_utility_token_transaction_history_with_pagination(
     from_inclusive_id: u64,
     to_exclusive_id: u64,
-) -> Result<Vec<(u64, TokenEventV1)>, GetUserUtilityTokenTransactionHistoryError> {
+) -> Result<Vec<(u64, TokenEvent)>, GetUserUtilityTokenTransactionHistoryError> {
     let (from_inclusive_id, to_exclusive_id) = pagination::get_pagination_bounds(
         from_inclusive_id,
         to_exclusive_id,
