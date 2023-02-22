@@ -19,7 +19,13 @@ gzip -f -1 ./target/wasm32-unknown-unknown/release/user_index.wasm
 dfx build post_cache
 gzip -f -1 ./target/wasm32-unknown-unknown/release/post_cache.wasm
 
-cargo test
+if [ $# -ge 1 ] && [ -n "$1" ] && [[ $1 == "--skip-test" ]]
+then
+  echo "Skipping tests"
+else
+  echo "Running tests"
+  cargo test
+fi
 
 dfx canister install configuration --mode upgrade --argument "(record {})"
 dfx canister install data_backup --mode upgrade --argument "(record {})"
