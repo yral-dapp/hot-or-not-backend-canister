@@ -1,5 +1,14 @@
 use candid::{CandidType, Deserialize, Principal};
 
+#[derive(Default, Clone, CandidType, Deserialize, Debug)]
+pub struct UserProfile {
+    pub display_name: Option<String>,
+    pub unique_user_name: Option<String>,
+    pub principal_id: Option<Principal>,
+    pub profile_picture_url: Option<String>,
+    pub profile_stats: UserProfileGlobalStats,
+}
+
 #[derive(CandidType, Deserialize, Debug)]
 pub struct UserProfileDetailsForFrontend {
     pub principal_id: Principal,

@@ -6,7 +6,9 @@ use std::{
 use candid::{CandidType, Decode, Deserialize, Encode, Principal};
 use ic_stable_structures::{BoundedStorable, Storable};
 
-use crate::canister_specific::individual_user_template::types::{post::Post, token::TokenBalance};
+use crate::canister_specific::individual_user_template::types::{
+    post::Post, profile::UserProfile, token::TokenBalance,
+};
 
 #[derive(CandidType, Deserialize, Debug)]
 pub struct AllUserData {
@@ -33,11 +35,10 @@ impl BoundedStorable for AllUserData {
 
 #[derive(Deserialize, CandidType, Default, Debug)]
 pub struct UserOwnedCanisterData {
-    pub unique_user_name: String,
     pub all_created_posts: BTreeMap<u64, Post>,
     pub principals_i_follow: BTreeSet<Principal>,
     pub principals_that_follow_me: BTreeSet<Principal>,
-    pub profile: ProfileDetails,
+    pub profile: UserProfile,
     pub token_data: TokenBalance,
 }
 

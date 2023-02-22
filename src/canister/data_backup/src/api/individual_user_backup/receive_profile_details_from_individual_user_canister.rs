@@ -1,6 +1,9 @@
 use candid::Principal;
 use shared_utils::{
-    canister_specific::data_backup::types::all_user_data::{AllUserData, UserOwnedCanisterData},
+    canister_specific::{
+        data_backup::types::all_user_data::{AllUserData, UserOwnedCanisterData},
+        individual_user_template::types::profile::UserProfile,
+    },
     common::types::storable_principal::StorablePrincipal,
 };
 
@@ -9,9 +12,7 @@ use crate::{data::memory_layout::CanisterData, CANISTER_DATA};
 #[ic_cdk::update]
 #[candid::candid_method(update)]
 fn receive_profile_details_from_individual_user_canister(
-    display_name: Option<String>,
-    profile_picture_url: Option<String>,
-    unique_user_name: Option<String>,
+    profile_data: UserProfile,
     canister_owner_principal_id: Principal,
     canister_id: Principal,
 ) {
@@ -22,9 +23,7 @@ fn receive_profile_details_from_individual_user_canister(
         receive_profile_details_from_individual_user_canister_impl(
             &mut canister_data_ref_cell.borrow_mut(),
             &caller_principal_id,
-            display_name,
-            profile_picture_url,
-            unique_user_name,
+            &profile_data,
             &canister_owner_principal_id,
             &canister_id,
         );
@@ -34,13 +33,12 @@ fn receive_profile_details_from_individual_user_canister(
 fn receive_profile_details_from_individual_user_canister_impl(
     canister_data: &mut CanisterData,
     caller_principal_id: &Principal,
-    display_name: Option<String>,
-    profile_picture_url: Option<String>,
-    unique_user_name: Option<String>,
+    profile_data: &UserProfile,
     canister_owner_principal_id: &Principal,
     canister_id: &Principal,
 ) {
-    if *canister_id != *caller_principal_id {
+    let is_caller_modifying_their_own_canister = *caller_principal_id == *canister_id;
+    if !is_caller_modifying_their_own_canister {
         return;
     }
 
@@ -60,9 +58,7 @@ fn receive_profile_details_from_individual_user_canister_impl(
         }
     };
 
-    entry_to_insert.canister_data.profile.display_name = display_name;
-    entry_to_insert.canister_data.profile.profile_picture_url = profile_picture_url;
-    entry_to_insert.canister_data.unique_user_name = unique_user_name.unwrap_or("".to_string());
+    entry_to_insert.canister_data.profile = profile_data.clone();
 
     canister_data.user_principal_id_to_all_user_data_map.insert(
         StorablePrincipal(*canister_owner_principal_id),
@@ -72,8 +68,9 @@ fn receive_profile_details_from_individual_user_canister_impl(
 
 #[cfg(test)]
 mod test {
-    use shared_utils::canister_specific::data_backup::types::all_user_data::{
-        AllUserData, UserOwnedCanisterData,
+    use shared_utils::canister_specific::{
+        data_backup::types::all_user_data::{AllUserData, UserOwnedCanisterData},
+        individual_user_template::types::profile::UserProfileGlobalStats,
     };
     use test_utils::setup::test_constants::{
         get_mock_user_alice_canister_id, get_mock_user_alice_principal_id,
@@ -90,12 +87,22 @@ mod test {
         let profile_picture_url = Some("https://alice.com".to_string());
         let unique_user_name = Some("alice".to_string());
 
+        let profile_data = UserProfile {
+            display_name: display_name.clone(),
+            unique_user_name: unique_user_name.clone(),
+            principal_id: Some(get_mock_user_alice_principal_id()),
+            profile_picture_url: profile_picture_url.clone(),
+            profile_stats: UserProfileGlobalStats {
+                lifetime_earnings: 1500,
+                hots_earned_count: 10,
+                nots_earned_count: 5,
+            },
+        };
+
         receive_profile_details_from_individual_user_canister_impl(
             &mut canister_data,
             &get_mock_user_bob_canister_id(),
-            display_name.clone(),
-            profile_picture_url.clone(),
-            unique_user_name.clone(),
+            &profile_data,
             &get_mock_user_alice_principal_id(),
             &get_mock_user_alice_canister_id(),
         );
@@ -107,9 +114,7 @@ mod test {
         receive_profile_details_from_individual_user_canister_impl(
             &mut canister_data,
             &get_mock_user_alice_canister_id(),
-            display_name.clone(),
-            profile_picture_url.clone(),
-            unique_user_name.clone(),
+            &profile_data,
             &get_mock_user_alice_principal_id(),
             &get_mock_user_alice_canister_id(),
         );
@@ -144,8 +149,10 @@ mod test {
                 .get(&StorablePrincipal(get_mock_user_alice_principal_id()))
                 .unwrap()
                 .canister_data
-                .unique_user_name,
-            "alice"
+                .profile
+                .unique_user_name
+                .unwrap(),
+            "alice".to_string()
         );
 
         canister_data.user_principal_id_to_all_user_data_map.insert(
@@ -160,9 +167,7 @@ mod test {
         receive_profile_details_from_individual_user_canister_impl(
             &mut canister_data,
             &get_mock_user_alice_canister_id(),
-            display_name.clone(),
-            profile_picture_url.clone(),
-            unique_user_name.clone(),
+            &profile_data,
             &get_mock_user_alice_principal_id(),
             &get_mock_user_alice_canister_id(),
         );
@@ -197,8 +202,10 @@ mod test {
                 .get(&StorablePrincipal(get_mock_user_alice_principal_id()))
                 .unwrap()
                 .canister_data
-                .unique_user_name,
-            "alice"
+                .profile
+                .unique_user_name
+                .unwrap(),
+            "alice".to_string()
         );
     }
 }

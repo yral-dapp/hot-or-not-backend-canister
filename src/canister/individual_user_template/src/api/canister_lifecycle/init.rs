@@ -54,6 +54,7 @@ mod test {
         let init_args = IndividualUserTemplateInitArgs {
             known_principal_ids: Some(known_principal_ids),
             profile_owner: Some(get_mock_user_alice_principal_id()),
+            upgrade_version_number: Some(0),
         };
         let mut data = CanisterData::default();
 

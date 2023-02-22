@@ -16,7 +16,7 @@ pub enum PostStatus {
     Deleted,
 }
 
-#[derive(Serialize, CandidType, Deserialize)]
+#[derive(Serialize, CandidType, Deserialize, Debug)]
 pub struct PostDetailsForFrontend {
     pub id: u64,
     pub created_by_display_name: Option<String>,

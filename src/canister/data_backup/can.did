@@ -59,10 +59,6 @@ type PostViewStatistics = record {
   average_watch_percentage : nat8;
   threshold_view_count : nat64;
 };
-type ProfileDetails = record {
-  profile_picture_url : opt text;
-  display_name : opt text;
-};
 type SystemTime = record {
   nanos_since_epoch : nat32;
   secs_since_epoch : nat64;
@@ -84,12 +80,23 @@ type UserAccessRole = variant {
   ProjectCanister;
 };
 type UserOwnedCanisterData = record {
-  unique_user_name : text;
   principals_i_follow : vec principal;
   token_data : TokenBalance;
   all_created_posts : vec record { nat64; Post };
-  profile : ProfileDetails;
+  profile : UserProfile;
   principals_that_follow_me : vec principal;
+};
+type UserProfile = record {
+  unique_user_name : opt text;
+  profile_picture_url : opt text;
+  display_name : opt text;
+  principal_id : opt principal;
+  profile_stats : UserProfileGlobalStats;
+};
+type UserProfileGlobalStats = record {
+  lifetime_earnings : nat64;
+  hots_earned_count : nat64;
+  nots_earned_count : nat64;
 };
 service : (DataBackupInitArgs) -> {
   get_current_backup_statistics : () -> (BackupStatistics) query;
@@ -121,13 +128,11 @@ service : (DataBackupInitArgs) -> {
       principal,
     ) -> ();
   receive_profile_details_from_individual_user_canister : (
-      opt text,
-      opt text,
-      opt text,
+      UserProfile,
       principal,
       principal,
     ) -> ();
-  restore_backed_up_data_to_individual_user_canisters : () -> ();
+  restore_backed_up_data_to_individual_users_canister : (principal) -> (text);
   send_restore_data_back_to_user_index_canister : () -> ();
   update_user_add_role : (UserAccessRole, principal) -> ();
   update_user_remove_role : (UserAccessRole, principal) -> ();

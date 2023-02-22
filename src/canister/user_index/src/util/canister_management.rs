@@ -54,6 +54,7 @@ pub async fn create_users_canister(profile_owner: Principal) -> Principal {
         known_principal_ids: Some(CANISTER_DATA.with(|canister_data_ref_cell| {
             canister_data_ref_cell.borrow().known_principal_ids.clone()
         })),
+        upgrade_version_number: Some(0),
     };
 
     // * encode argument for user canister init lifecycle method
@@ -76,16 +77,16 @@ pub async fn create_users_canister(profile_owner: Principal) -> Principal {
 pub async fn upgrade_individual_user_canister(
     canister_id: Principal,
     install_mode: CanisterInstallMode,
-    version_number: u64,
+    arg: IndividualUserTemplateInitArgs,
 ) -> Result<(), (RejectionCode, String)> {
-    let arg =
-        candid::encode_args((version_number,)).expect("Failed to serialize the install argument.");
+    let serialized_arg =
+        candid::encode_args((arg,)).expect("Failed to serialize the install argument.");
 
     main::install_code(InstallCodeArgument {
         mode: install_mode,
         canister_id,
         wasm_module: INDIVIDUAL_USER_TEMPLATE_CANISTER_WASM.into(),
-        arg,
+        arg: serialized_arg,
     })
     .await
 }

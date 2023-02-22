@@ -14,19 +14,20 @@ type FollowAnotherUserProfileError = variant {
   NotAuthorized;
   UserITriedToFollowHasTheirFollowersListFull;
 };
-type GetFollowerOrFollowingError = variant {
-  ReachedEndOfItemsList;
-  InvalidBoundsPassed;
-  ExceededMaxNumberOfItemsAllowedInOneRequest;
-};
 type GetPostsOfUserProfileError = variant {
   ReachedEndOfItemsList;
   InvalidBoundsPassed;
   ExceededMaxNumberOfItemsAllowedInOneRequest;
 };
+type HotOrNotFeedDetails = record {
+  upvotes : vec principal;
+  score : nat64;
+  downvotes : vec principal;
+};
 type IndividualUserTemplateInitArgs = record {
   known_principal_ids : opt vec record { KnownPrincipalType; principal };
   profile_owner : opt principal;
+  upgrade_version_number : opt nat64;
 };
 type KnownPrincipalType = variant {
   CanisterIdUserIndex;
@@ -45,6 +46,20 @@ type MintEvent = variant {
     referrer_user_principal_id : principal;
     referee_user_principal_id : principal;
   };
+};
+type Post = record {
+  id : nat64;
+  status : PostStatus;
+  share_count : nat64;
+  hashtags : vec text;
+  description : text;
+  created_at : SystemTime;
+  likes : vec principal;
+  video_uid : text;
+  view_stats : PostViewStatistics;
+  hot_or_not_feed_details : opt HotOrNotFeedDetails;
+  homefeed_ranking_score : nat64;
+  creator_consent_for_inclusion_in_hot_or_not : bool;
 };
 type PostDetailsForFrontend = record {
   id : nat64;
@@ -85,17 +100,22 @@ type PostViewDetailsFromFrontend = variant {
   };
   WatchedPartially : record { percentage_watched : nat8 };
 };
+type PostViewStatistics = record {
+  total_view_count : nat64;
+  average_watch_percentage : nat8;
+  threshold_view_count : nat64;
+};
 type Result = variant {
   Ok : vec PostDetailsForFrontend;
   Err : GetPostsOfUserProfileError;
 };
 type Result_1 = variant {
   Ok : vec principal;
-  Err : GetFollowerOrFollowingError;
+  Err : GetPostsOfUserProfileError;
 };
 type Result_2 = variant {
   Ok : vec record { nat64; TokenEvent };
-  Err : GetFollowerOrFollowingError;
+  Err : GetPostsOfUserProfileError;
 };
 type Result_3 = variant { Ok : bool; Err : FollowAnotherUserProfileError };
 type Result_4 = variant { Ok : bool; Err : AnotherUserFollowedMeError };
@@ -121,6 +141,13 @@ type UpdateProfileSetUniqueUsernameError = variant {
   SendingCanisterDoesNotMatchUserCanisterId;
   NotAuthorized;
   UserCanisterEntryDoesNotExist;
+};
+type UserProfile = record {
+  unique_user_name : opt text;
+  profile_picture_url : opt text;
+  display_name : opt text;
+  principal_id : opt principal;
+  profile_stats : UserProfileGlobalStats;
 };
 type UserProfileDetailsForFrontend = record {
   unique_user_name : opt text;
@@ -161,6 +188,16 @@ service : (IndividualUserTemplateInitArgs) -> {
   get_well_known_principal_value : (KnownPrincipalType) -> (
       opt principal,
     ) query;
+  receive_my_created_posts_from_data_backup_canister : (vec Post) -> ();
+  receive_my_profile_from_data_backup_canister : (UserProfile) -> ();
+  receive_my_utility_token_balance_from_data_backup_canister : (nat64) -> ();
+  receive_my_utility_token_transaction_history_from_data_backup_canister : (
+      vec record { nat64; TokenEvent },
+    ) -> ();
+  receive_principals_i_follow_from_data_backup_canister : (vec principal) -> ();
+  receive_principals_that_follow_me_from_data_backup_canister : (
+      vec principal,
+    ) -> ();
   return_cycles_to_user_index_canister : () -> ();
   update_post_add_view_details : (nat64, PostViewDetailsFromFrontend) -> ();
   update_post_as_ready_to_view : (nat64) -> ();

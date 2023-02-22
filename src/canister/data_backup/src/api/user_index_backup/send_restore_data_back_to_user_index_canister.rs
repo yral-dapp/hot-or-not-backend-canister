@@ -42,7 +42,11 @@ fn send_restore_data_back_to_user_index_canister() {
                         (
                             storable_user_principal_id.0,
                             corresponding_all_user_data.user_canister_id,
-                            corresponding_all_user_data.canister_data.unique_user_name,
+                            corresponding_all_user_data
+                                .canister_data
+                                .profile
+                                .unique_user_name
+                                .unwrap_or("".to_string()),
                         ),
                     )
                     .unwrap_or_default();

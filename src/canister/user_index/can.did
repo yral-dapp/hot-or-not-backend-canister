@@ -1,3 +1,4 @@
+type CanisterInstallMode = variant { reinstall; upgrade; install };
 type CanisterStatusResponse = record {
   status : CanisterStatusType;
   memory_size : nat;
@@ -81,4 +82,9 @@ service : (UserIndexInitArgs) -> {
   update_user_add_role : (UserAccessRole, principal) -> ();
   update_user_index_upgrade_user_canisters_with_latest_wasm : () -> ();
   update_user_remove_role : (UserAccessRole, principal) -> ();
+  upgrade_specific_individual_user_canister_with_latest_wasm : (
+      principal,
+      principal,
+      opt CanisterInstallMode,
+    ) -> (text);
 }

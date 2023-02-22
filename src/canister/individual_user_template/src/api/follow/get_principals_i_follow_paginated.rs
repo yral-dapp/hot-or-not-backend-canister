@@ -1,14 +1,10 @@
-use candid::{CandidType, Principal};
-use shared_utils::pagination::{self, PaginationError};
+use candid::Principal;
+use shared_utils::{
+    canister_specific::individual_user_template::types::error::GetFollowerOrFollowingError,
+    pagination::{self, PaginationError},
+};
 
 use crate::CANISTER_DATA;
-
-#[derive(CandidType)]
-pub enum GetFollowerOrFollowingError {
-    InvalidBoundsPassed,
-    ReachedEndOfItemsList,
-    ExceededMaxNumberOfItemsAllowedInOneRequest,
-}
 
 #[ic_cdk::query]
 #[candid::candid_method(query)]

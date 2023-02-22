@@ -1,18 +1,11 @@
-use candid::CandidType;
 use ic_stable_memory::utils::ic_types::SPrincipal;
 use shared_utils::{
+    canister_specific::individual_user_template::types::error::GetPostsOfUserProfileError,
     pagination::{self, PaginationError},
     types::canister_specific::individual_user_template::post::PostDetailsForFrontend,
 };
 
 use crate::CANISTER_DATA;
-
-#[derive(CandidType)]
-pub enum GetPostsOfUserProfileError {
-    InvalidBoundsPassed,
-    ReachedEndOfItemsList,
-    ExceededMaxNumberOfItemsAllowedInOneRequest,
-}
 
 #[ic_cdk::query]
 #[candid::candid_method(query)]

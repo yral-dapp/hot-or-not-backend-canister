@@ -1,1 +1,7 @@
 pub mod backup_data_to_backup_canister;
+pub mod receive_my_created_posts_from_data_backup_canister;
+pub mod receive_my_profile_from_data_backup_canister;
+pub mod receive_my_utility_token_balance_from_data_backup_canister;
+pub mod receive_my_utility_token_transaction_history_from_data_backup_canister;
+pub mod receive_principals_i_follow_from_data_backup_canister;
+pub mod receive_principals_that_follow_me_from_data_backup_canister;

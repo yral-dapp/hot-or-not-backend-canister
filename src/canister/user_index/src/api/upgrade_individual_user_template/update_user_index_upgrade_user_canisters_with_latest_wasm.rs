@@ -4,6 +4,7 @@ use ic_cdk::api::management_canister::{
 };
 use shared_utils::{
     access_control::{self, UserAccessRole},
+    canister_specific::individual_user_template::types::args::IndividualUserTemplateInitArgs,
     constant::MINIMUM_CYCLES_TO_REVIVE_CANISTER,
     date_time::system_time,
 };
@@ -51,7 +52,11 @@ async fn update_user_index_upgrade_user_canisters_with_latest_wasm() {
         match canister_management::upgrade_individual_user_canister(
             user_canister_id.clone(),
             CanisterInstallMode::Upgrade,
-            saved_upgrade_status.version_number + 1,
+            IndividualUserTemplateInitArgs {
+                known_principal_ids: None,
+                profile_owner: None,
+                upgrade_version_number: Some(saved_upgrade_status.version_number + 1),
+            },
         )
         .await
         {
@@ -85,7 +90,11 @@ async fn update_user_index_upgrade_user_canisters_with_latest_wasm() {
                 match canister_management::upgrade_individual_user_canister(
                     user_canister_id.clone(),
                     CanisterInstallMode::Upgrade,
-                    saved_upgrade_status.version_number + 1,
+                    IndividualUserTemplateInitArgs {
+                        known_principal_ids: None,
+                        profile_owner: None,
+                        upgrade_version_number: Some(saved_upgrade_status.version_number + 1),
+                    },
                 )
                 .await
                 {

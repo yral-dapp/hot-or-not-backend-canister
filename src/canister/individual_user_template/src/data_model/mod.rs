@@ -2,16 +2,17 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use candid::{CandidType, Deserialize, Principal};
 use shared_utils::{
-    canister_specific::individual_user_template::types::{post::Post, token::TokenBalance},
+    canister_specific::individual_user_template::types::{
+        post::Post, profile::UserProfile, token::TokenBalance,
+    },
     common::types::{
         known_principal::KnownPrincipalMap, top_posts::post_score_index::v0::PostScoreIndex,
     },
 };
 
-use self::{profile::v1::UserProfile, version_details::VersionDetails};
+use self::version_details::VersionDetails;
 
 pub mod hot_or_not;
-pub mod profile;
 pub mod version_details;
 
 #[derive(Default, CandidType, Deserialize)]
