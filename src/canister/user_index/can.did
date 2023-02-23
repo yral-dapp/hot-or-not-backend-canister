@@ -35,7 +35,7 @@ type SystemTime = record {
   nanos_since_epoch : nat32;
   secs_since_epoch : nat64;
 };
-type UpgradeStatusV1 = record {
+type UpgradeStatus = record {
   version_number : nat64;
   last_run_on : SystemTime;
   failed_canister_ids : vec record { principal; principal };
@@ -57,7 +57,7 @@ service : (UserIndexInitArgs) -> {
       CanisterStatusResponse,
     );
   get_index_details_is_user_name_taken : (text) -> (bool) query;
-  get_index_details_last_upgrade_status : () -> (UpgradeStatusV1) query;
+  get_index_details_last_upgrade_status : () -> (UpgradeStatus) query;
   get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer : (
       opt principal,
     ) -> (principal);
@@ -80,7 +80,7 @@ service : (UserIndexInitArgs) -> {
       principal,
     ) -> (Result);
   update_user_add_role : (UserAccessRole, principal) -> ();
-  update_user_index_upgrade_user_canisters_with_latest_wasm : () -> ();
+  update_user_index_upgrade_user_canisters_with_latest_wasm : () -> (text);
   update_user_remove_role : (UserAccessRole, principal) -> ();
   upgrade_specific_individual_user_canister_with_latest_wasm : (
       principal,

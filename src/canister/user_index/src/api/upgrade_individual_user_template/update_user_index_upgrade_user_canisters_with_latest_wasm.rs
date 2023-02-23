@@ -3,32 +3,31 @@ use ic_cdk::api::management_canister::{
     provisional::CanisterIdRecord,
 };
 use shared_utils::{
-    access_control::{self, UserAccessRole},
     canister_specific::individual_user_template::types::args::IndividualUserTemplateInitArgs,
-    constant::MINIMUM_CYCLES_TO_REVIVE_CANISTER,
-    date_time::system_time,
+    common::types::known_principal::KnownPrincipalType,
+    constant::MINIMUM_CYCLES_TO_REVIVE_CANISTER, date_time::system_time,
 };
 
 use crate::{
-    data_model::canister_upgrade::upgrade_status::UpgradeStatusV1, util::canister_management,
+    data_model::canister_upgrade::upgrade_status::UpgradeStatus, util::canister_management,
     CANISTER_DATA,
 };
 
 #[ic_cdk::update]
 #[candid::candid_method(update)]
-async fn update_user_index_upgrade_user_canisters_with_latest_wasm() {
+async fn update_user_index_upgrade_user_canisters_with_latest_wasm() -> String {
     let api_caller = ic_cdk::caller();
 
-    let access_control_map = CANISTER_DATA
-        .with(|canister_data_ref_cell| canister_data_ref_cell.borrow().access_control_map.clone());
+    let known_principal_ids = CANISTER_DATA
+        .with(|canister_data_ref_cell| canister_data_ref_cell.borrow().known_principal_ids.clone());
 
-    // TODO: update the return type of this method so that unauthorized callers are informed accordingly
-    if !access_control::does_principal_have_role_v2(
-        &access_control_map,
-        UserAccessRole::CanisterAdmin,
-        api_caller,
-    ) {
-        panic!("Unauthorized caller");
+    if known_principal_ids
+        .get(&KnownPrincipalType::UserIdGlobalSuperAdmin)
+        .unwrap()
+        .clone()
+        != api_caller
+    {
+        return "Unauthorized caller".to_string();
     };
 
     let mut upgrade_count = 0;
@@ -64,13 +63,6 @@ async fn update_user_index_upgrade_user_canisters_with_latest_wasm() {
                 upgrade_count += 1;
             }
             Err(e) => {
-                ic_cdk::print(format!(
-                    "🥫 Failed to upgrade canister {:?} belonging to user {:?} with error: {:?}",
-                    user_canister_id.to_text(),
-                    user_principal_id.to_text(),
-                    e
-                ));
-
                 let response_result = main::canister_status(CanisterIdRecord {
                     canister_id: user_canister_id.clone(),
                 })
@@ -102,6 +94,12 @@ async fn update_user_index_upgrade_user_canisters_with_latest_wasm() {
                         upgrade_count += 1;
                     }
                     Err(_) => {
+                        ic_cdk::print(format!(
+                            "🥫 Failed to upgrade canister {:?} belonging to user {:?} with error: {:?}",
+                            user_canister_id.to_text(),
+                            user_principal_id.to_text(),
+                            e
+                        ));
                         // TODO: update schema to accept failure reason
                         failed_canister_ids
                             .push((user_principal_id.clone(), user_canister_id.clone()));
@@ -110,6 +108,7 @@ async fn update_user_index_upgrade_user_canisters_with_latest_wasm() {
             }
         }
 
+        // * Enable for data backup
         // let upgrade_response: CallResult<()> = call::call(
         //     user_canister_id.clone(),
         //     "backup_data_to_backup_canister",
@@ -131,7 +130,7 @@ async fn update_user_index_upgrade_user_canisters_with_latest_wasm() {
         });
     }
 
-    let new_upgrade_status = UpgradeStatusV1 {
+    let new_upgrade_status = UpgradeStatus {
         version_number: saved_upgrade_status.version_number + 1,
         last_run_on: system_time::get_current_system_time_from_ic(),
         successful_upgrade_count: upgrade_count,
@@ -141,4 +140,6 @@ async fn update_user_index_upgrade_user_canisters_with_latest_wasm() {
     CANISTER_DATA.with(|canister_data_ref_cell| {
         canister_data_ref_cell.borrow_mut().last_run_upgrade_status = new_upgrade_status;
     });
+
+    return "Success".to_string();
 }

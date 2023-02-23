@@ -7,6 +7,8 @@ use shared_utils::{
 
 use crate::{util::canister_management, CANISTER_DATA};
 
+// * dfx canister call user_index upgrade_specific_individual_user_canister_with_latest_wasm '(principal "<user_principal_id>", principal "<user_canister_id>", null)' --network ic
+
 #[ic_cdk::update]
 #[candid::candid_method(update)]
 async fn upgrade_specific_individual_user_canister_with_latest_wasm(
@@ -19,7 +21,6 @@ async fn upgrade_specific_individual_user_canister_with_latest_wasm(
     let known_principal_ids = CANISTER_DATA
         .with(|canister_data_ref_cell| canister_data_ref_cell.borrow().known_principal_ids.clone());
 
-    // TODO: update the return type of this method so that unauthorized callers are informed accordingly
     if known_principal_ids
         .get(&KnownPrincipalType::UserIdGlobalSuperAdmin)
         .unwrap()

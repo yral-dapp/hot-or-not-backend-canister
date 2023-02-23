@@ -28,7 +28,7 @@ impl Storable for AllUserData {
 }
 
 impl BoundedStorable for AllUserData {
-    // * 100 kB = 100_000 B
+    // * 100 kB = 100_000 Bytes
     const MAX_SIZE: u32 = 100_000;
     const IS_FIXED_SIZE: bool = false;
 }

@@ -4,14 +4,14 @@ use candid::{CandidType, Deserialize, Principal};
 use serde::Serialize;
 
 #[derive(CandidType, Deserialize, Clone, Serialize)]
-pub struct UpgradeStatusV1 {
+pub struct UpgradeStatus {
     pub version_number: u64,
     pub last_run_on: SystemTime,
     pub successful_upgrade_count: u32,
     pub failed_canister_ids: Vec<(Principal, Principal)>,
 }
 
-impl Default for UpgradeStatusV1 {
+impl Default for UpgradeStatus {
     fn default() -> Self {
         Self {
             version_number: 0,
