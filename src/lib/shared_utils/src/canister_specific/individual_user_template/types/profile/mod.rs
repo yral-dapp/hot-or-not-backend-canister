@@ -1,6 +1,7 @@
 use candid::{CandidType, Deserialize, Principal};
+use serde::Serialize;
 
-#[derive(Default, Clone, CandidType, Deserialize, Debug)]
+#[derive(Default, Clone, CandidType, Deserialize, Debug, Serialize)]
 pub struct UserProfile {
     pub display_name: Option<String>,
     pub unique_user_name: Option<String>,
@@ -20,7 +21,7 @@ pub struct UserProfileDetailsForFrontend {
     pub following_count: u64,
 }
 
-#[derive(CandidType, Deserialize, Clone, Copy, Debug, Default)]
+#[derive(CandidType, Deserialize, Clone, Copy, Debug, Default, Serialize)]
 pub struct UserProfileGlobalStats {
     pub lifetime_earnings: u64,
     pub hots_earned_count: u64,

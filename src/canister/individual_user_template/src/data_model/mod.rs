@@ -1,6 +1,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use candid::{CandidType, Deserialize, Principal};
+use serde::Serialize;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
         post::Post, profile::UserProfile, token::TokenBalance,
@@ -15,7 +16,7 @@ use self::version_details::VersionDetails;
 pub mod hot_or_not;
 pub mod version_details;
 
-#[derive(Default, CandidType, Deserialize)]
+#[derive(Default, CandidType, Deserialize, Serialize)]
 pub struct CanisterData {
     // Key is Post ID
     pub all_created_posts: BTreeMap<u64, Post>,

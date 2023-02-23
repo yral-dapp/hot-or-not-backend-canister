@@ -1,10 +1,11 @@
 use std::collections::BTreeMap;
 
 use candid::{CandidType, Deserialize};
+use serde::Serialize;
 
 use crate::types::utility_token::token_event::TokenEvent;
 
-#[derive(Default, Clone, Deserialize, CandidType, Debug)]
+#[derive(Default, Clone, Deserialize, CandidType, Debug, Serialize)]
 pub struct TokenBalance {
     pub utility_token_balance: u64,
     pub utility_token_transaction_history_v1: BTreeMap<u64, TokenEvent>,

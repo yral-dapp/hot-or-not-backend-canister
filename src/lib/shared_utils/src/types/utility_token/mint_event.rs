@@ -1,7 +1,8 @@
 use candid::{CandidType, Deserialize, Principal};
 use ic_stable_memory::utils::ic_types::SPrincipal;
+use serde::Serialize;
 
-#[derive(Clone, Copy, CandidType, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, CandidType, Deserialize, Debug, PartialEq, Eq, Serialize)]
 pub enum MintEvent {
     NewUserSignup {
         new_user_principal_id: SPrincipal,

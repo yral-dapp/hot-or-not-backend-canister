@@ -1,8 +1,9 @@
 use candid::{CandidType, Deserialize};
 use ic_stable_memory::utils::ic_types::SPrincipal;
+use serde::Serialize;
 use std::cmp::Ordering;
 
-#[derive(Clone, CandidType, Deserialize, Debug)]
+#[derive(Clone, CandidType, Deserialize, Debug, Serialize)]
 pub struct PostScoreIndexItem {
     pub score: u64,
     pub post_id: u64,

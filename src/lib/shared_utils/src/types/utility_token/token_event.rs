@@ -1,10 +1,11 @@
 use std::time::SystemTime;
 
 use candid::{CandidType, Deserialize};
+use serde::Serialize;
 
 use super::mint_event::MintEvent;
 
-#[derive(Clone, Copy, CandidType, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, CandidType, Deserialize, Debug, PartialEq, Eq, Serialize)]
 pub enum TokenEvent {
     Mint {
         details: MintEvent,

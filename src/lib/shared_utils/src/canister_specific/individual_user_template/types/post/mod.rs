@@ -1,5 +1,6 @@
 use candid::{CandidType, Deserialize};
 use ic_stable_memory::utils::ic_types::SPrincipal;
+use serde::Serialize;
 use std::{
     collections::HashSet,
     time::{Duration, SystemTime},
@@ -13,7 +14,7 @@ use crate::{
     },
 };
 
-#[derive(CandidType, Clone, Deserialize, Debug)]
+#[derive(CandidType, Clone, Deserialize, Debug, Serialize)]
 pub struct Post {
     pub id: u64,
     pub description: String,
@@ -40,14 +41,14 @@ pub enum PostViewDetailsFromFrontend {
     },
 }
 
-#[derive(CandidType, Clone, Deserialize, Debug)]
+#[derive(CandidType, Clone, Deserialize, Debug, Serialize)]
 pub struct PostViewStatistics {
     pub total_view_count: u64,
     pub threshold_view_count: u64,
     pub average_watch_percentage: u8,
 }
 
-#[derive(CandidType, Clone, Deserialize, Debug)]
+#[derive(CandidType, Clone, Deserialize, Debug, Serialize)]
 pub struct HotOrNotFeedDetails {
     pub score: u64,
     pub upvotes: HashSet<SPrincipal>,
