@@ -138,8 +138,8 @@ async fn update_user_index_upgrade_user_canisters_with_latest_wasm() -> String {
     };
 
     CANISTER_DATA.with(|canister_data_ref_cell| {
-        canister_data_ref_cell.borrow_mut().last_run_upgrade_status = new_upgrade_status;
+        canister_data_ref_cell.borrow_mut().last_run_upgrade_status = new_upgrade_status.clone();
     });
 
-    return "Success".to_string();
+    return new_upgrade_status.to_string();
 }
