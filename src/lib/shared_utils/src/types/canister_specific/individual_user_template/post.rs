@@ -2,9 +2,8 @@ use std::time::SystemTime;
 
 use candid::{CandidType, Deserialize, Principal};
 use serde::Serialize;
-use speedy::{Readable, Writable};
 
-#[derive(Readable, Writable, Serialize, Deserialize, CandidType, Clone, Default, Debug)]
+#[derive(Serialize, Deserialize, CandidType, Clone, Default, Debug)]
 pub enum PostStatus {
     #[default]
     Uploaded,

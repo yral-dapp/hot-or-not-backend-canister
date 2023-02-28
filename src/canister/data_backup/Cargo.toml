@@ -14,9 +14,8 @@ ciborium = { workspace = true }
 ic-cdk = { workspace = true }
 ic-cdk-timers = { workspace = true }
 ic-stable-structures = { workspace = true }
-shared_utils = { path = "../../lib/shared_utils" }
 serde = { workspace = true }
+shared_utils = { workspace = true }
 
 [dev-dependencies]
-test_utils = { path = "../../lib/test_utils" }
-ic-stable-memory = { workspace = true }
+test_utils = { workspace = true }

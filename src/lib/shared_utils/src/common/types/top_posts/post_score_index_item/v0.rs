@@ -1,23 +1,12 @@
 use candid::{CandidType, Deserialize, Principal};
-use ic_stable_memory::utils::ic_types::SPrincipal;
-use serde::{Deserializer, Serialize};
+use serde::Serialize;
 use std::cmp::Ordering;
 
 #[derive(Clone, CandidType, Deserialize, Debug, Serialize)]
 pub struct PostScoreIndexItem {
     pub score: u64,
     pub post_id: u64,
-    #[serde(deserialize_with = "principal_deserializer")]
     pub publisher_canister_id: Principal,
-}
-
-fn principal_deserializer<'de, D>(deserializer: D) -> Result<Principal, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let previous = SPrincipal::deserialize(deserializer)?;
-
-    Ok(previous.0)
 }
 
 impl Ord for PostScoreIndexItem {

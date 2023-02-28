@@ -1,6 +1,5 @@
 use candid::{CandidType, Deserialize, Principal};
-use ic_stable_memory::utils::ic_types::SPrincipal;
-use serde::{Deserializer, Serialize};
+use serde::Serialize;
 use std::{
     collections::{btree_map, BTreeMap, HashMap},
     iter::Rev,
@@ -16,22 +15,7 @@ type Score = u64;
 #[derive(Default, Debug, Clone, CandidType, Deserialize, Serialize)]
 pub struct PostScoreIndex {
     pub items_sorted_by_score: BTreeMap<Score, Vec<PostScoreIndexItem>>,
-    #[serde(deserialize_with = "principal_deserializer")]
     pub item_presence_index: HashMap<(PublisherCanisterId, PostId), Score>,
-}
-
-fn principal_deserializer<'de, D>(
-    deserializer: D,
-) -> Result<HashMap<(PublisherCanisterId, PostId), Score>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let previous = HashMap::<(SPrincipal, PostId), Score>::deserialize(deserializer)?;
-
-    Ok(previous
-        .into_iter()
-        .map(|((principal, post_id), score)| ((principal.0, post_id), score))
-        .collect())
 }
 
 impl PostScoreIndex {

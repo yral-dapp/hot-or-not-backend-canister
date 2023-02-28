@@ -8,9 +8,8 @@ edition = "2021"
 [dependencies]
 candid = { workspace = true }
 ic-cdk = { workspace = true }
-ic-stable-memory = { workspace = true }
-shared_utils = { path = "../shared_utils" }
+shared_utils = { workspace = true }
 
 [dev-dependencies]
 ic-state-machine-tests = { workspace = true }
-test_utils = { path = "../test_utils" }
+test_utils = { workspace = true }

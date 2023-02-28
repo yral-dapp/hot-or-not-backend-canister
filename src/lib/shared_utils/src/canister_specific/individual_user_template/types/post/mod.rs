@@ -1,6 +1,5 @@
 use candid::{CandidType, Deserialize, Principal};
-use ic_stable_memory::utils::ic_types::SPrincipal;
-use serde::{Deserializer, Serialize};
+use serde::Serialize;
 use std::{
     collections::HashSet,
     time::{Duration, SystemTime},
@@ -22,22 +21,12 @@ pub struct Post {
     pub video_uid: String,
     pub status: PostStatus,
     pub created_at: SystemTime,
-    #[serde(deserialize_with = "principal_deserializer")]
     pub likes: HashSet<Principal>,
     pub share_count: u64,
     pub view_stats: PostViewStatistics,
     pub homefeed_ranking_score: u64,
     pub creator_consent_for_inclusion_in_hot_or_not: bool,
     pub hot_or_not_feed_details: Option<HotOrNotFeedDetails>,
-}
-
-fn principal_deserializer<'de, D>(deserializer: D) -> Result<HashSet<Principal>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let previous: HashSet<SPrincipal> = HashSet::deserialize(deserializer)?;
-
-    Ok(previous.into_iter().map(|principal| principal.0).collect())
 }
 
 #[derive(Deserialize, CandidType)]
@@ -61,9 +50,7 @@ pub struct PostViewStatistics {
 #[derive(CandidType, Clone, Deserialize, Debug, Serialize)]
 pub struct HotOrNotFeedDetails {
     pub score: u64,
-    #[serde(deserialize_with = "principal_deserializer")]
     pub upvotes: HashSet<Principal>,
-    #[serde(deserialize_with = "principal_deserializer")]
     pub downvotes: HashSet<Principal>,
     // TODO: consider video age, remove after 48 hours
 }

@@ -1,28 +1,15 @@
 use candid::{CandidType, Deserialize, Principal};
-use ic_stable_memory::utils::ic_types::SPrincipal;
-use serde::{Deserializer, Serialize};
+use serde::Serialize;
 
 #[derive(Clone, Copy, CandidType, Deserialize, Debug, PartialEq, Eq, Serialize)]
 pub enum MintEvent {
     NewUserSignup {
-        #[serde(deserialize_with = "principal_deserializer")]
         new_user_principal_id: Principal,
     },
     Referral {
-        #[serde(deserialize_with = "principal_deserializer")]
         referee_user_principal_id: Principal,
-        #[serde(deserialize_with = "principal_deserializer")]
         referrer_user_principal_id: Principal,
     },
-}
-
-fn principal_deserializer<'de, D>(deserializer: D) -> Result<Principal, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let previous = SPrincipal::deserialize(deserializer)?;
-
-    Ok(previous.0)
 }
 
 #[derive(Clone, Copy, CandidType, Deserialize, Debug, PartialEq, Eq)]

@@ -583,7 +583,7 @@ name = "configuration"
 version = "0.1.0"
 dependencies = [
  "candid",
- "ic-cdk 0.7.0",
+ "ic-cdk",
  "serde",
  "shared_utils",
  "test_utils",
@@ -948,9 +948,8 @@ version = "0.1.0"
 dependencies = [
  "candid",
  "ciborium 0.2.0 (git+https://github.com/enarx/ciborium?rev=e719537c99b564c3674a56defe53713c702c6f46)",
- "ic-cdk 0.7.0",
+ "ic-cdk",
  "ic-cdk-timers",
- "ic-stable-memory",
  "ic-stable-structures 0.5.1",
  "serde",
  "shared_utils",
@@ -1040,12 +1039,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "56254986775e3233ffa9c4d7d3faaf6d36a2c09d30b20687e9f88bc8bafc16c8"
 
 [[package]]
-name = "difflib"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6184e33543162437515c2e2b48714794e37845ec9851711914eec9d308f6ebe8"
-
-[[package]]
 name = "digest"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1084,12 +1077,6 @@ dependencies = [
  "redox_users",
  "winapi",
 ]
-
-[[package]]
-name = "downcast"
-version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1435fa1053d8b2fbbe9be7e97eca7f33d37b28409959813daefc1446a14247f1"
 
 [[package]]
 name = "ed25519-consensus"
@@ -1308,12 +1295,6 @@ checksum = "a9c384f161156f5260c24a097c56119f9be8c798586aecc13afbcbe7b7e26bf8"
 dependencies = [
  "percent-encoding",
 ]
-
-[[package]]
-name = "fragile"
-version = "2.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6c2141d6d6c8512188a7891b4b01590a45f6dac67afb4f255c4124dbb86d4eaa"
 
 [[package]]
 name = "funty"
@@ -1878,20 +1859,6 @@ dependencies = [
 
 [[package]]
 name = "ic-cdk"
-version = "0.6.10"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c98b304a2657bad15bcb547625a018e13cf596676d834cfd93023395a6e2e03a"
-dependencies = [
- "candid",
- "cfg-if 1.0.0",
- "ic-cdk-macros",
- "ic0",
- "serde",
- "serde_bytes",
-]
-
-[[package]]
-name = "ic-cdk"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bb6d60ecf5b27833f0fe213ed481dcb6d25219abcfd0582eb8a77b20938aae00"
@@ -1924,7 +1891,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c400f8048f4f5ba3bd3d5fe9301b9343e8ef2e2749079af8f99d4f317ebbbb14"
 dependencies = [
  "futures",
- "ic-cdk 0.7.0",
+ "ic-cdk",
  "ic0",
  "serde",
  "serde_bytes",
@@ -3032,18 +2999,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ic-stable-memory"
-version = "0.2.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6a0e5efdec5d2c70c952b0ff3efbaf93ba56e321dbd52578d9a17e482274f4b3"
-dependencies = [
- "candid",
- "ic-cdk 0.6.10",
- "serde",
- "speedy",
-]
-
-[[package]]
 name = "ic-stable-structures"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3217,7 +3172,7 @@ checksum = "23516d69aeb4968ff884b700f41df8adae0733480d0bca6c6b4ff93d2b37003b"
 dependencies = [
  "candid",
  "ciborium 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "ic-cdk 0.7.0",
+ "ic-cdk",
  "serde",
  "serde_bytes",
 ]
@@ -3384,7 +3339,7 @@ name = "individual_user_template"
 version = "0.1.0"
 dependencies = [
  "candid",
- "ic-cdk 0.7.0",
+ "ic-cdk",
  "ic-cdk-timers",
  "serde",
  "shared_utils",
@@ -3405,8 +3360,7 @@ name = "integration_tests"
 version = "0.1.0"
 dependencies = [
  "candid",
- "ic-cdk 0.7.0",
- "ic-stable-memory",
+ "ic-cdk",
  "ic-state-machine-tests",
  "shared_utils",
  "test_utils",
@@ -3702,33 +3656,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "mockall"
-version = "0.11.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "50e4a1c770583dac7ab5e2f6c139153b783a53a1bbee9729613f193e59828326"
-dependencies = [
- "cfg-if 1.0.0",
- "downcast",
- "fragile",
- "lazy_static",
- "mockall_derive",
- "predicates",
- "predicates-tree",
-]
-
-[[package]]
-name = "mockall_derive"
-version = "0.11.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "832663583d5fa284ca8810bf7015e46c9fff9622d3cf34bd1eea5003fec06dd0"
-dependencies = [
- "cfg-if 1.0.0",
- "proc-macro2",
- "quote 1.0.23",
- "syn 1.0.107",
-]
-
-[[package]]
 name = "multimap"
 version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3765,12 +3692,6 @@ dependencies = [
  "memchr",
  "version_check",
 ]
-
-[[package]]
-name = "normalize-line-endings"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "61807f77802ff30975e01f4f071c8ba10c022052f98b3294119f3e615d13e5be"
 
 [[package]]
 name = "num-bigint"
@@ -4239,7 +4160,7 @@ name = "post_cache"
 version = "0.1.0"
 dependencies = [
  "candid",
- "ic-cdk 0.7.0",
+ "ic-cdk",
  "serde",
  "shared_utils",
  "test_utils",
@@ -4256,36 +4177,6 @@ name = "precomputed-hash"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "925383efa346730478fb4838dbe9137d2a47675ad789c546d150a6e1dd4ab31c"
-
-[[package]]
-name = "predicates"
-version = "2.1.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "59230a63c37f3e18569bdb90e4a89cbf5bf8b06fea0b84e65ea10cc4df47addd"
-dependencies = [
- "difflib",
- "float-cmp",
- "itertools",
- "normalize-line-endings",
- "predicates-core",
- "regex",
-]
-
-[[package]]
-name = "predicates-core"
-version = "1.0.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "72f883590242d3c6fc5bf50299011695fa6590c2c70eac95ee1bdb9a733ad1a2"
-
-[[package]]
-name = "predicates-tree"
-version = "1.0.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "54ff541861505aabf6ea722d2131ee980b8276e10a1297b94e896dd8b621850d"
-dependencies = [
- "predicates-core",
- "termtree",
-]
 
 [[package]]
 name = "pretty"
@@ -4969,15 +4860,12 @@ name = "shared_utils"
 version = "0.1.0"
 dependencies = [
  "candid",
- "ic-cdk 0.7.0",
+ "ic-cdk",
  "ic-cdk-timers",
- "ic-stable-memory",
  "ic-stable-structures 0.5.1",
  "ic-state-machine-tests",
- "mockall",
  "rmp-serde",
  "serde",
- "speedy",
  "test_utils",
 ]
 
@@ -5116,27 +5004,6 @@ checksum = "02e2d2db9033d13a1567121ddd7a095ee144db4e1ca1b1bda3419bc0da294ebd"
 dependencies = [
  "libc",
  "winapi",
-]
-
-[[package]]
-name = "speedy"
-version = "0.8.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "37d686619bd990cf4d94762d6a2ea473f5a8abe206c9289417bf2945dbff9909"
-dependencies = [
- "memoffset 0.7.1",
- "speedy-derive",
-]
-
-[[package]]
-name = "speedy-derive"
-version = "0.8.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eb2b4a1060801de1cc846aaae9e4255b04d809a1c5977de2b6cc9a2820d8a4f7"
-dependencies = [
- "proc-macro2",
- "quote 1.0.23",
- "syn 1.0.107",
 ]
 
 [[package]]
@@ -5344,18 +5211,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "termtree"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "95059e91184749cb66be6dc994f67f182b6d897cb3df74a5bf66b5e709295fd8"
-
-[[package]]
 name = "test_utils"
 version = "0.1.0"
 dependencies = [
  "candid",
- "ic-cdk 0.7.0",
- "ic-stable-memory",
+ "ic-cdk",
  "ic-state-machine-tests",
  "ic-test-state-machine-client",
  "shared_utils",
@@ -5869,7 +5729,7 @@ name = "user_index"
 version = "0.1.0"
 dependencies = [
  "candid",
- "ic-cdk 0.7.0",
+ "ic-cdk",
  "ic-cdk-timers",
  "serde",
  "shared_utils",
