@@ -1,6 +1,5 @@
 use crate::CANISTER_DATA;
 use candid::Principal;
-use ic_stable_memory::utils::ic_types::SPrincipal;
 use shared_utils::{
     common::types::known_principal::KnownPrincipalType,
     date_time::system_time,
@@ -30,8 +29,8 @@ fn get_rewarded_for_referral(referrer: Principal, referree: Principal) {
         let my_token_balance = canister_data_ref.my_token_balance.clone();
         let updated_token_balance = my_token_balance.handle_token_event(TokenEvent::Mint {
             details: MintEvent::Referral {
-                referrer_user_principal_id: SPrincipal(referrer),
-                referee_user_principal_id: SPrincipal(referree),
+                referrer_user_principal_id: referrer,
+                referee_user_principal_id: referree,
             },
             timestamp: system_time::get_current_system_time_from_ic(),
         });

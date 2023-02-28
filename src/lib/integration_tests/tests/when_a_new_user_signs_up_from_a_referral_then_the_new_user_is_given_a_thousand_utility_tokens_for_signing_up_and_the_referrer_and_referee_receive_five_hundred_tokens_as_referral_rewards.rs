@@ -1,5 +1,4 @@
 use candid::Principal;
-use ic_stable_memory::utils::ic_types::SPrincipal;
 use ic_state_machine_tests::{CanisterId, StateMachine, WasmResult};
 
 use shared_utils::{
@@ -236,12 +235,12 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
             TokenEvent::Mint { details, .. } => details,
             _ => {
                 MintEvent::NewUserSignup {
-                    new_user_principal_id: SPrincipal(Principal::anonymous()),
+                    new_user_principal_id: Principal::anonymous(),
                 }
             }
         },
         MintEvent::NewUserSignup {
-            new_user_principal_id: SPrincipal(alice_principal_id.0)
+            new_user_principal_id: alice_principal_id.0
         },
     );
     assert_eq!(alice_utility_token_balance_after_referral, 1500);
@@ -255,12 +254,12 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
             TokenEvent::Mint { details, .. } => details,
             _ => {
                 MintEvent::NewUserSignup {
-                    new_user_principal_id: SPrincipal(Principal::anonymous()),
+                    new_user_principal_id: Principal::anonymous(),
                 }
             }
         },
         MintEvent::NewUserSignup {
-            new_user_principal_id: SPrincipal(alice_principal_id.0)
+            new_user_principal_id: alice_principal_id.0
         },
     );
     assert_eq!(
@@ -268,14 +267,14 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
             TokenEvent::Mint { details, .. } => details,
             _ => {
                 MintEvent::Referral {
-                    referee_user_principal_id: SPrincipal(Principal::anonymous()),
-                    referrer_user_principal_id: SPrincipal(Principal::anonymous()),
+                    referee_user_principal_id: Principal::anonymous(),
+                    referrer_user_principal_id: Principal::anonymous(),
                 }
             }
         },
         MintEvent::Referral {
-            referrer_user_principal_id: SPrincipal(alice_principal_id.0),
-            referee_user_principal_id: SPrincipal(bob_principal_id.0),
+            referrer_user_principal_id: alice_principal_id.0,
+            referee_user_principal_id: bob_principal_id.0,
         },
     );
     assert_eq!(
@@ -287,12 +286,12 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
             TokenEvent::Mint { details, .. } => details,
             _ => {
                 MintEvent::NewUserSignup {
-                    new_user_principal_id: SPrincipal(Principal::anonymous()),
+                    new_user_principal_id: Principal::anonymous(),
                 }
             }
         },
         MintEvent::NewUserSignup {
-            new_user_principal_id: SPrincipal(bob_principal_id.0)
+            new_user_principal_id: bob_principal_id.0
         },
     );
     assert_eq!(
@@ -300,14 +299,14 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
             TokenEvent::Mint { details, .. } => details,
             _ => {
                 MintEvent::Referral {
-                    referee_user_principal_id: SPrincipal(Principal::anonymous()),
-                    referrer_user_principal_id: SPrincipal(Principal::anonymous()),
+                    referee_user_principal_id: Principal::anonymous(),
+                    referrer_user_principal_id: Principal::anonymous(),
                 }
             }
         },
         MintEvent::Referral {
-            referrer_user_principal_id: SPrincipal(alice_principal_id.0),
-            referee_user_principal_id: SPrincipal(bob_principal_id.0),
+            referrer_user_principal_id: alice_principal_id.0,
+            referee_user_principal_id: bob_principal_id.0,
         },
     );
 }

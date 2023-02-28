@@ -1987,18 +1987,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ic-cron"
-version = "0.7.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2dc61fe01f92a88bbf2a7368975770a7eaeecb632186c94ceefeccf44e0b544e"
-dependencies = [
- "candid",
- "ic-cdk 0.6.10",
- "ic-cdk-macros",
- "serde",
-]
-
-[[package]]
 name = "ic-crypto"
 version = "0.8.0"
 source = "git+https://github.com/dfinity/ic?rev=36f4a1c2903aed012b95b3b073e052c4036aef09#36f4a1c2903aed012b95b3b073e052c4036aef09"
@@ -3398,11 +3386,8 @@ dependencies = [
  "candid",
  "ic-cdk 0.7.0",
  "ic-cdk-timers",
- "ic-cron",
- "ic-stable-memory",
  "serde",
  "shared_utils",
- "speedy",
  "test_utils",
 ]
 

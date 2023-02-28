@@ -1,5 +1,4 @@
 use crate::CANISTER_DATA;
-use ic_stable_memory::utils::ic_types::SPrincipal;
 use shared_utils::{
     common::types::known_principal::KnownPrincipalType,
     date_time::system_time,
@@ -30,7 +29,7 @@ fn get_rewarded_for_signing_up() {
         let profile = canister_data_ref.profile.clone();
         let updated_token_balance = my_token_balance.handle_token_event(TokenEvent::Mint {
             details: MintEvent::NewUserSignup {
-                new_user_principal_id: SPrincipal(profile.principal_id.unwrap()),
+                new_user_principal_id: profile.principal_id.unwrap(),
             },
             timestamp: system_time::get_current_system_time_from_ic(),
         });

@@ -69,7 +69,6 @@ fn receive_all_token_transactions_from_individual_user_canister_impl(
 mod test {
     use std::time::SystemTime;
 
-    use ic_stable_memory::utils::ic_types::SPrincipal;
     use shared_utils::{
         canister_specific::data_backup::types::all_user_data::{
             AllUserData, UserOwnedCanisterData,
@@ -92,7 +91,7 @@ mod test {
                 0,
                 TokenEvent::Mint {
                     details: MintEvent::NewUserSignup {
-                        new_user_principal_id: SPrincipal(get_mock_user_alice_principal_id()),
+                        new_user_principal_id: get_mock_user_alice_principal_id(),
                     },
                     timestamp: SystemTime::now(),
                 },
@@ -101,8 +100,8 @@ mod test {
                 1,
                 TokenEvent::Mint {
                     details: MintEvent::Referral {
-                        referee_user_principal_id: SPrincipal(get_mock_user_alice_principal_id()),
-                        referrer_user_principal_id: SPrincipal(get_mock_user_bob_principal_id()),
+                        referee_user_principal_id: get_mock_user_alice_principal_id(),
+                        referrer_user_principal_id: get_mock_user_bob_principal_id(),
                     },
                     timestamp: SystemTime::now(),
                 },

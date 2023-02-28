@@ -35,7 +35,7 @@ impl From<PostScoreIndexV0> for PostScoreIndex {
         let item_presence_index = item_presence_index
             .into_iter()
             .map(|((publisher_canister_id, post_id), score)| {
-                ((publisher_canister_id.0, post_id), score)
+                ((publisher_canister_id, post_id), score)
             })
             .collect();
 

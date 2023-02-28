@@ -1,5 +1,4 @@
 use candid::Principal;
-use ic_stable_memory::utils::ic_types::SPrincipal;
 use ic_state_machine_tests::{CanisterId, StateMachine, WasmResult};
 
 use shared_utils::{
@@ -142,12 +141,12 @@ fn when_a_new_user_signs_up_then_the_new_user_is_given_a_thousand_utility_tokens
             TokenEvent::Mint { details, .. } => details,
             _ => {
                 MintEvent::NewUserSignup {
-                    new_user_principal_id: SPrincipal(Principal::anonymous()),
+                    new_user_principal_id: Principal::anonymous(),
                 }
             }
         },
         MintEvent::NewUserSignup {
-            new_user_principal_id: SPrincipal(alice_principal_id.0)
+            new_user_principal_id: alice_principal_id.0
         },
     );
 }

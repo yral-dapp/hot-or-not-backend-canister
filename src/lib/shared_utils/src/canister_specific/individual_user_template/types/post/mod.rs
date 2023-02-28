@@ -1,6 +1,6 @@
-use candid::{CandidType, Deserialize};
+use candid::{CandidType, Deserialize, Principal};
 use ic_stable_memory::utils::ic_types::SPrincipal;
-use serde::Serialize;
+use serde::{Deserializer, Serialize};
 use std::{
     collections::HashSet,
     time::{Duration, SystemTime},
@@ -22,12 +22,22 @@ pub struct Post {
     pub video_uid: String,
     pub status: PostStatus,
     pub created_at: SystemTime,
-    pub likes: HashSet<SPrincipal>,
+    #[serde(deserialize_with = "principal_deserializer")]
+    pub likes: HashSet<Principal>,
     pub share_count: u64,
     pub view_stats: PostViewStatistics,
     pub homefeed_ranking_score: u64,
     pub creator_consent_for_inclusion_in_hot_or_not: bool,
     pub hot_or_not_feed_details: Option<HotOrNotFeedDetails>,
+}
+
+fn principal_deserializer<'de, D>(deserializer: D) -> Result<HashSet<Principal>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let previous: HashSet<SPrincipal> = HashSet::deserialize(deserializer)?;
+
+    Ok(previous.into_iter().map(|principal| principal.0).collect())
 }
 
 #[derive(Deserialize, CandidType)]
@@ -51,8 +61,10 @@ pub struct PostViewStatistics {
 #[derive(CandidType, Clone, Deserialize, Debug, Serialize)]
 pub struct HotOrNotFeedDetails {
     pub score: u64,
-    pub upvotes: HashSet<SPrincipal>,
-    pub downvotes: HashSet<SPrincipal>,
+    #[serde(deserialize_with = "principal_deserializer")]
+    pub upvotes: HashSet<Principal>,
+    #[serde(deserialize_with = "principal_deserializer")]
+    pub downvotes: HashSet<Principal>,
     // TODO: consider video age, remove after 48 hours
 }
 
@@ -99,7 +111,7 @@ impl Post {
 
     pub fn toggle_like_status(
         &mut self,
-        user_principal_id: &SPrincipal,
+        user_principal_id: &Principal,
         time_provider: &impl Fn() -> SystemTime,
     ) -> bool {
         // if liked, return true & if unliked, return false
@@ -269,7 +281,7 @@ impl Post {
     pub fn get_post_details_for_frontend_for_this_post(
         &self,
         user_profile: UserProfileDetailsForFrontend,
-        caller: SPrincipal,
+        caller: Principal,
     ) -> PostDetailsForFrontend {
         PostDetailsForFrontend {
             id: self.id,

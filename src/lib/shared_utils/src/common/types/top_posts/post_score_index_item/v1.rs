@@ -14,7 +14,7 @@ impl From<super::v0::PostScoreIndexItem> for PostScoreIndexItem {
         Self {
             score: item.score,
             post_id: item.post_id,
-            publisher_canister_id: item.publisher_canister_id.0,
+            publisher_canister_id: item.publisher_canister_id,
         }
     }
 }
