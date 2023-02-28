@@ -2,13 +2,13 @@ use std::collections::HashMap;
 
 use candid::Principal;
 use shared_utils::{
-    access_control::UserAccessRole, common::types::known_principal::KnownPrincipalMapV1,
+    access_control::UserAccessRole, common::types::known_principal::KnownPrincipalMap,
     constant::get_global_super_admin_principal_id_v1,
 };
 
 pub fn setup_initial_access_control_v1(
     user_id_access_control_map: &mut HashMap<Principal, Vec<UserAccessRole>>,
-    known_principal_ids: &KnownPrincipalMapV1,
+    known_principal_ids: &KnownPrincipalMap,
 ) {
     // * add global owner
     user_id_access_control_map.insert(
@@ -30,7 +30,7 @@ mod test {
     #[test]
     fn test_setup_initial_access_control_v1() {
         let mut user_id_access_control_map = HashMap::new();
-        let mut known_principal_ids = KnownPrincipalMapV1::default();
+        let mut known_principal_ids = KnownPrincipalMap::default();
         let global_super_admin = get_global_super_admin_principal_id_v1();
         known_principal_ids.insert(
             KnownPrincipalType::UserIdGlobalSuperAdmin,

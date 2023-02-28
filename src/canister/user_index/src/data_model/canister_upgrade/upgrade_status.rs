@@ -1,17 +1,26 @@
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::{
+    fmt::Display,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 use candid::{CandidType, Deserialize, Principal};
 use serde::Serialize;
 
-#[derive(CandidType, Deserialize, Clone, Serialize)]
-pub struct UpgradeStatusV1 {
+#[derive(CandidType, Deserialize, Clone, Serialize, Debug)]
+pub struct UpgradeStatus {
     pub version_number: u64,
     pub last_run_on: SystemTime,
     pub successful_upgrade_count: u32,
     pub failed_canister_ids: Vec<(Principal, Principal)>,
 }
 
-impl Default for UpgradeStatusV1 {
+impl Display for UpgradeStatus {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:#?}", self)
+    }
+}
+
+impl Default for UpgradeStatus {
     fn default() -> Self {
         Self {
             version_number: 0,

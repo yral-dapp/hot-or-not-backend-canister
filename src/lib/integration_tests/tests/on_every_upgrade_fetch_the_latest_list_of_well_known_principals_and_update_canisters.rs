@@ -10,7 +10,7 @@ use shared_utils::{
         configuration::types::args::ConfigurationInitArgs,
         data_backup::types::args::DataBackupInitArgs,
     },
-    common::types::known_principal::{KnownPrincipalMapV1, KnownPrincipalType},
+    common::types::known_principal::{KnownPrincipalMap, KnownPrincipalType},
 };
 use test_utils::setup::test_constants::{
     get_canister_wasm, get_global_super_admin_principal_id_v1,
@@ -33,7 +33,7 @@ fn on_every_upgrade_fetch_the_latest_list_of_well_known_principals_and_update_ca
     };
 
     // * Provision canisters
-    let mut known_principal_map_with_all_canisters = KnownPrincipalMapV1::default();
+    let mut known_principal_map_with_all_canisters = KnownPrincipalMap::default();
     known_principal_map_with_all_canisters.insert(
         KnownPrincipalType::UserIdGlobalSuperAdmin,
         get_global_super_admin_principal_id_v1(),
@@ -88,7 +88,7 @@ fn on_every_upgrade_fetch_the_latest_list_of_well_known_principals_and_update_ca
         .unwrap(),
     );
 
-    let mut incomplete_known_principal_map = KnownPrincipalMapV1::default();
+    let mut incomplete_known_principal_map = KnownPrincipalMap::default();
     incomplete_known_principal_map.insert(
         KnownPrincipalType::UserIdGlobalSuperAdmin,
         known_principal_map_with_all_canisters

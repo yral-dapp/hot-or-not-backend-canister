@@ -1,5 +1,5 @@
 use shared_utils::{
-    canister_specific::individual_user_template::types::post::v1::Post, date_time::system_time,
+    canister_specific::individual_user_template::types::post::Post, date_time::system_time,
     types::post::PostDetailsFromFrontend,
 };
 

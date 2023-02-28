@@ -1,5 +1,14 @@
 use candid::{CandidType, Deserialize, Principal};
-use speedy::{Readable, Writable};
+use serde::Serialize;
+
+#[derive(Default, Clone, CandidType, Deserialize, Debug, Serialize)]
+pub struct UserProfile {
+    pub display_name: Option<String>,
+    pub unique_user_name: Option<String>,
+    pub principal_id: Option<Principal>,
+    pub profile_picture_url: Option<String>,
+    pub profile_stats: UserProfileGlobalStats,
+}
 
 #[derive(CandidType, Deserialize, Debug)]
 pub struct UserProfileDetailsForFrontend {
@@ -12,7 +21,7 @@ pub struct UserProfileDetailsForFrontend {
     pub following_count: u64,
 }
 
-#[derive(Readable, Writable, CandidType, Deserialize, Clone, Copy, Debug, Default)]
+#[derive(CandidType, Deserialize, Clone, Copy, Debug, Default, Serialize)]
 pub struct UserProfileGlobalStats {
     pub lifetime_earnings: u64,
     pub hots_earned_count: u64,

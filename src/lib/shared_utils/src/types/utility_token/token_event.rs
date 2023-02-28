@@ -1,12 +1,12 @@
 use std::time::SystemTime;
 
 use candid::{CandidType, Deserialize};
-use speedy::{Readable, Writable};
+use serde::Serialize;
 
-use super::v0::MintEvent;
+use super::mint_event::MintEvent;
 
-#[derive(Readable, Writable, Clone, Copy, CandidType, Deserialize, Debug, PartialEq, Eq)]
-pub enum TokenEventV1 {
+#[derive(Clone, Copy, CandidType, Deserialize, Debug, PartialEq, Eq, Serialize)]
+pub enum TokenEvent {
     Mint {
         details: MintEvent,
         timestamp: SystemTime,
@@ -16,16 +16,16 @@ pub enum TokenEventV1 {
     Stake,
 }
 
-impl TokenEventV1 {
+impl TokenEvent {
     pub fn get_token_amount_for_token_event(self: &Self) -> u64 {
         match self {
-            TokenEventV1::Mint { details, .. } => match details {
+            TokenEvent::Mint { details, .. } => match details {
                 MintEvent::NewUserSignup { .. } => 1000,
                 MintEvent::Referral { .. } => 500,
             },
-            TokenEventV1::Burn => 0,
-            TokenEventV1::Transfer => 0,
-            TokenEventV1::Stake => 0,
+            TokenEvent::Burn => 0,
+            TokenEvent::Transfer => 0,
+            TokenEvent::Stake => 0,
         }
     }
 }

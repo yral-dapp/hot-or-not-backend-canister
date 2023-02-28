@@ -1,2 +1,2 @@
-pub mod v0;
-pub mod v1;
+pub mod mint_event;
+pub mod token_event;

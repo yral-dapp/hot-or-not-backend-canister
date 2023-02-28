@@ -2,9 +2,8 @@ use std::time::SystemTime;
 
 use candid::{CandidType, Deserialize, Principal};
 use serde::Serialize;
-use speedy::{Readable, Writable};
 
-#[derive(Readable, Writable, Serialize, Deserialize, CandidType, Clone, Default, Debug)]
+#[derive(Serialize, Deserialize, CandidType, Clone, Default, Debug)]
 pub enum PostStatus {
     #[default]
     Uploaded,
@@ -16,7 +15,7 @@ pub enum PostStatus {
     Deleted,
 }
 
-#[derive(Serialize, CandidType, Deserialize)]
+#[derive(Serialize, CandidType, Deserialize, Debug)]
 pub struct PostDetailsForFrontend {
     pub id: u64,
     pub created_by_display_name: Option<String>,

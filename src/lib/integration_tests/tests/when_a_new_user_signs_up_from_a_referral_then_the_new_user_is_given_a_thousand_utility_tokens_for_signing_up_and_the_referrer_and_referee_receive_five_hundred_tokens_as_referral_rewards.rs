@@ -1,12 +1,11 @@
 use candid::Principal;
-use ic_stable_memory::utils::ic_types::SPrincipal;
 use ic_state_machine_tests::{CanisterId, StateMachine, WasmResult};
 
 use shared_utils::{
     common::types::known_principal::KnownPrincipalType,
     types::{
         canister_specific::individual_user_template::error_types::GetUserUtilityTokenTransactionHistoryError,
-        utility_token::{v0::MintEvent, v1::TokenEventV1},
+        utility_token::{mint_event::MintEvent, token_event::TokenEvent},
     },
 };
 use test_utils::setup::{
@@ -93,7 +92,7 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
         alice_utility_token_balance_after_calling_get_canister_id_again
     );
 
-    let alice_utility_token_transaction_history_after_signup: Vec<(u64, TokenEventV1)> =
+    let alice_utility_token_transaction_history_after_signup: Vec<(u64, TokenEvent)> =
         state_machine
             .query(
                 CanisterId::new(alice_canister_id.into()).unwrap(),
@@ -102,7 +101,7 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
             )
             .map(|reply_payload| {
                 let response: Result<
-                    Vec<(u64, TokenEventV1)>,
+                    Vec<(u64, TokenEvent)>,
                     GetUserUtilityTokenTransactionHistoryError,
                 > = match reply_payload {
                     WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
@@ -163,7 +162,7 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
         })
         .unwrap();
 
-    let alice_utility_token_transaction_history_after_referral: Vec<(u64, TokenEventV1)> =
+    let alice_utility_token_transaction_history_after_referral: Vec<(u64, TokenEvent)> =
         state_machine
             .query(
                 CanisterId::new(alice_canister_id.into()).unwrap(),
@@ -172,7 +171,7 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
             )
             .map(|reply_payload| {
                 let response: Result<
-                    Vec<(u64, TokenEventV1)>,
+                    Vec<(u64, TokenEvent)>,
                     GetUserUtilityTokenTransactionHistoryError,
                 > = match reply_payload {
                     WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
@@ -190,7 +189,7 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
         alice_utility_token_transaction_history_after_referral
     );
 
-    let bob_utility_token_transaction_history_after_referral: Vec<(u64, TokenEventV1)> =
+    let bob_utility_token_transaction_history_after_referral: Vec<(u64, TokenEvent)> =
         state_machine
             .query(
                 CanisterId::new(bob_canister_id.into()).unwrap(),
@@ -199,7 +198,7 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
             )
             .map(|reply_payload| {
                 let response: Result<
-                    Vec<(u64, TokenEventV1)>,
+                    Vec<(u64, TokenEvent)>,
                     GetUserUtilityTokenTransactionHistoryError,
                 > = match reply_payload {
                     WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
@@ -233,15 +232,15 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
     );
     assert_eq!(
         match alice_utility_token_transaction_history_after_signup[0].1 {
-            TokenEventV1::Mint { details, .. } => details,
+            TokenEvent::Mint { details, .. } => details,
             _ => {
                 MintEvent::NewUserSignup {
-                    new_user_principal_id: SPrincipal(Principal::anonymous()),
+                    new_user_principal_id: Principal::anonymous(),
                 }
             }
         },
         MintEvent::NewUserSignup {
-            new_user_principal_id: SPrincipal(alice_principal_id.0)
+            new_user_principal_id: alice_principal_id.0
         },
     );
     assert_eq!(alice_utility_token_balance_after_referral, 1500);
@@ -252,30 +251,30 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
     );
     assert_eq!(
         match alice_utility_token_transaction_history_after_referral[0].1 {
-            TokenEventV1::Mint { details, .. } => details,
+            TokenEvent::Mint { details, .. } => details,
             _ => {
                 MintEvent::NewUserSignup {
-                    new_user_principal_id: SPrincipal(Principal::anonymous()),
+                    new_user_principal_id: Principal::anonymous(),
                 }
             }
         },
         MintEvent::NewUserSignup {
-            new_user_principal_id: SPrincipal(alice_principal_id.0)
+            new_user_principal_id: alice_principal_id.0
         },
     );
     assert_eq!(
         match alice_utility_token_transaction_history_after_referral[1].1 {
-            TokenEventV1::Mint { details, .. } => details,
+            TokenEvent::Mint { details, .. } => details,
             _ => {
                 MintEvent::Referral {
-                    referee_user_principal_id: SPrincipal(Principal::anonymous()),
-                    referrer_user_principal_id: SPrincipal(Principal::anonymous()),
+                    referee_user_principal_id: Principal::anonymous(),
+                    referrer_user_principal_id: Principal::anonymous(),
                 }
             }
         },
         MintEvent::Referral {
-            referrer_user_principal_id: SPrincipal(alice_principal_id.0),
-            referee_user_principal_id: SPrincipal(bob_principal_id.0),
+            referrer_user_principal_id: alice_principal_id.0,
+            referee_user_principal_id: bob_principal_id.0,
         },
     );
     assert_eq!(
@@ -284,30 +283,30 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
     );
     assert_eq!(
         match bob_utility_token_transaction_history_after_referral[0].1 {
-            TokenEventV1::Mint { details, .. } => details,
+            TokenEvent::Mint { details, .. } => details,
             _ => {
                 MintEvent::NewUserSignup {
-                    new_user_principal_id: SPrincipal(Principal::anonymous()),
+                    new_user_principal_id: Principal::anonymous(),
                 }
             }
         },
         MintEvent::NewUserSignup {
-            new_user_principal_id: SPrincipal(bob_principal_id.0)
+            new_user_principal_id: bob_principal_id.0
         },
     );
     assert_eq!(
         match bob_utility_token_transaction_history_after_referral[1].1 {
-            TokenEventV1::Mint { details, .. } => details,
+            TokenEvent::Mint { details, .. } => details,
             _ => {
                 MintEvent::Referral {
-                    referee_user_principal_id: SPrincipal(Principal::anonymous()),
-                    referrer_user_principal_id: SPrincipal(Principal::anonymous()),
+                    referee_user_principal_id: Principal::anonymous(),
+                    referrer_user_principal_id: Principal::anonymous(),
                 }
             }
         },
         MintEvent::Referral {
-            referrer_user_principal_id: SPrincipal(alice_principal_id.0),
-            referee_user_principal_id: SPrincipal(bob_principal_id.0),
+            referrer_user_principal_id: alice_principal_id.0,
+            referee_user_principal_id: bob_principal_id.0,
         },
     );
 }

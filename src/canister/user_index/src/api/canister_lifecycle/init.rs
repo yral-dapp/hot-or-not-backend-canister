@@ -37,7 +37,7 @@ mod test {
 
     use shared_utils::{
         access_control::UserAccessRole,
-        common::types::known_principal::{KnownPrincipalMapV1, KnownPrincipalType},
+        common::types::known_principal::{KnownPrincipalMap, KnownPrincipalType},
     };
     use test_utils::setup::test_constants::{
         get_global_super_admin_principal_id_v1, get_mock_canister_id_configuration,
@@ -49,7 +49,7 @@ mod test {
     #[test]
     fn test_init_impl() {
         // * Add some known principals
-        let mut known_principal_ids = KnownPrincipalMapV1::new();
+        let mut known_principal_ids = KnownPrincipalMap::new();
         known_principal_ids.insert(
             KnownPrincipalType::UserIdGlobalSuperAdmin,
             get_global_super_admin_principal_id_v1(),

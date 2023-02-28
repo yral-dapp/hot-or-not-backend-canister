@@ -1,6 +1,5 @@
-use candid::{CandidType, Deserialize};
-use ic_stable_memory::utils::ic_types::SPrincipal;
-use speedy::{Readable, Writable};
+use candid::{CandidType, Deserialize, Principal};
+use serde::Serialize;
 use std::{
     collections::{btree_map, BTreeMap, HashMap},
     iter::Rev,
@@ -9,11 +8,11 @@ use std::{
 
 use crate::common::types::top_posts::post_score_index_item::v0::PostScoreIndexItem;
 
-type PublisherCanisterId = SPrincipal;
+type PublisherCanisterId = Principal;
 type PostId = u64;
 type Score = u64;
 
-#[derive(Readable, Writable, Default, Debug, Clone, CandidType, Deserialize)]
+#[derive(Default, Debug, Clone, CandidType, Deserialize, Serialize)]
 pub struct PostScoreIndex {
     pub items_sorted_by_score: BTreeMap<Score, Vec<PostScoreIndexItem>>,
     pub item_presence_index: HashMap<(PublisherCanisterId, PostId), Score>,
@@ -152,8 +151,7 @@ mod test {
             item_presence_index: HashMap::new(),
         };
 
-        let publisher_canister_id_1 =
-            SPrincipal(Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap());
+        let publisher_canister_id_1 = Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap();
 
         post_score_index.replace(&PostScoreIndexItem {
             score: 1,
@@ -275,8 +273,7 @@ mod test {
             item_presence_index: HashMap::new(),
         };
 
-        let publisher_canister_id_1 =
-            SPrincipal(Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap());
+        let publisher_canister_id_1 = Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap();
 
         post_score_index.replace(&PostScoreIndexItem {
             score: 1,
@@ -365,8 +362,7 @@ mod test {
             item_presence_index: HashMap::new(),
         };
 
-        let publisher_canister_id_1 =
-            SPrincipal(Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap());
+        let publisher_canister_id_1 = Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap();
 
         post_score_index.replace(&PostScoreIndexItem {
             score: 1,
@@ -525,8 +521,7 @@ mod test {
             item_presence_index: HashMap::new(),
         };
 
-        let publisher_canister_id_1 =
-            SPrincipal(Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap());
+        let publisher_canister_id_1 = Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap();
 
         post_score_index.replace(&PostScoreIndexItem {
             score: 1,

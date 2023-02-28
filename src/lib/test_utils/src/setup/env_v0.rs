@@ -12,7 +12,7 @@ use shared_utils::{
     },
     common::types::{
         init_args::PostCacheInitArgs,
-        known_principal::{KnownPrincipalMapV1, KnownPrincipalType},
+        known_principal::{KnownPrincipalMap, KnownPrincipalType},
     },
 };
 
@@ -24,7 +24,7 @@ use super::test_constants::{
 
 pub fn get_initialized_env_with_provisioned_known_canisters(
     state_machine: &StateMachine,
-) -> KnownPrincipalMapV1 {
+) -> KnownPrincipalMap {
     let canister_provisioner = |cycles: Cycles| {
         state_machine.create_canister_with_cycles(
             cycles,
@@ -36,7 +36,7 @@ pub fn get_initialized_env_with_provisioned_known_canisters(
     };
 
     // * Provision canisters
-    let mut known_principal_map_with_all_canisters = KnownPrincipalMapV1::default();
+    let mut known_principal_map_with_all_canisters = KnownPrincipalMap::default();
     known_principal_map_with_all_canisters.insert(
         KnownPrincipalType::UserIdGlobalSuperAdmin,
         get_global_super_admin_principal_id_v1(),
@@ -163,7 +163,7 @@ mod test {
 
     #[test]
     fn test_get_canister_id_of_specific_type_from_principal_id_map() {
-        let mut principal_id_map = KnownPrincipalMapV1::default();
+        let mut principal_id_map = KnownPrincipalMap::default();
         principal_id_map.insert(
             KnownPrincipalType::CanisterIdConfiguration,
             get_mock_canister_id_configuration(),

@@ -5,7 +5,7 @@ use shared_utils::common::types::known_principal::KnownPrincipalType;
 use crate::CANISTER_DATA;
 
 #[ic_cdk::update]
-// #[candid::candid_method(update)]
+#[candid::candid_method(update)]
 async fn backup_data_to_backup_canister(
     canister_owner_principal_id: Principal,
     canister_id: Principal,
@@ -30,9 +30,29 @@ async fn backup_data_to_backup_canister(
             .unwrap()
     });
 
-    if api_caller != user_index_canister_principal_id
-        && api_caller != global_super_admin_principal_id
-    {
+    let is_caller_user_index_canister = api_caller == user_index_canister_principal_id;
+    ic_cdk::print(format!(
+        "🥫 is_caller_user_index_canister: {}",
+        is_caller_user_index_canister
+    ));
+    let is_caller_global_super_admin = api_caller == global_super_admin_principal_id;
+    ic_cdk::print(format!(
+        "🥫 is_caller_global_super_admin: {}",
+        is_caller_global_super_admin
+    ));
+    let does_passed_canister_id_match_this_users_canister_id = canister_id == ic_cdk::id();
+    ic_cdk::print(format!("🥫 canister_id: {}", canister_id));
+    ic_cdk::print(format!("🥫 ic_cdk::id(): {}", ic_cdk::id()));
+    ic_cdk::print(format!(
+        "🥫 does_passed_canister_id_match_this_users_canister_id: {}",
+        does_passed_canister_id_match_this_users_canister_id
+    ));
+
+    if !is_caller_user_index_canister && !is_caller_global_super_admin {
+        return;
+    }
+
+    if !does_passed_canister_id_match_this_users_canister_id {
         return;
     }
 
@@ -42,6 +62,12 @@ async fn backup_data_to_backup_canister(
         .unwrap()
         .clone();
 
+    ic_cdk::print(format!(
+        "🥫 Backing up data for canister with id: {}",
+        canister_id
+    ));
+
+    // TODO: backup and restore UserProfileGlobalStats. This is not done yet.
     send_profile_data(
         &data_backup_canister_id,
         &canister_owner_principal_id,
@@ -70,7 +96,7 @@ async fn send_profile_data(
     let _response: () = call::call(
             data_backup_canister_id.clone(),
             "receive_profile_details_from_individual_user_canister",
-            (profile_data.display_name, profile_data.profile_picture_url, profile_data.unique_user_name, *canister_owner_principal_id, *canister_id),
+            (profile_data, *canister_owner_principal_id, *canister_id),
         )
         .await
         .expect("Failed to call the receive_profile_details_from_individual_user_canister method on the data_backup canister");

@@ -1,4 +1,3 @@
-use ic_stable_memory::utils::ic_types::SPrincipal;
 use shared_utils::types::canister_specific::individual_user_template::post::PostDetailsForFrontend;
 
 use crate::CANISTER_DATA;
@@ -30,7 +29,7 @@ pub fn get_individual_post_details_by_id(post_id: u64) -> PostDetailsForFrontend
             status: post.status.clone(),
             total_view_count: post.view_stats.total_view_count,
             like_count: post.likes.len() as u64,
-            liked_by_me: post.likes.contains(&SPrincipal(api_caller)),
+            liked_by_me: post.likes.contains(&api_caller),
             home_feed_ranking_score: post.homefeed_ranking_score,
             hot_or_not_feed_ranking_score: post
                 .hot_or_not_feed_details

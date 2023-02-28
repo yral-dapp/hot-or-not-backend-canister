@@ -1,8 +1,8 @@
-use crate::{data_model::canister_upgrade::upgrade_status::UpgradeStatusV1, CANISTER_DATA};
+use crate::{data_model::canister_upgrade::upgrade_status::UpgradeStatus, CANISTER_DATA};
 
 #[ic_cdk::query]
 #[candid::candid_method(query)]
-fn get_index_details_last_upgrade_status() -> UpgradeStatusV1 {
+fn get_index_details_last_upgrade_status() -> UpgradeStatus {
     CANISTER_DATA.with(|canister_data_ref_cell| {
         canister_data_ref_cell
             .borrow()

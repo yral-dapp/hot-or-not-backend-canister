@@ -1,13 +1,12 @@
-use candid::{CandidType, Deserialize};
-use ic_stable_memory::utils::ic_types::SPrincipal;
-use speedy::{Readable, Writable};
+use candid::{CandidType, Deserialize, Principal};
+use serde::Serialize;
 use std::cmp::Ordering;
 
-#[derive(Readable, Writable, Clone, CandidType, Deserialize, Debug)]
+#[derive(Clone, CandidType, Deserialize, Debug, Serialize)]
 pub struct PostScoreIndexItem {
     pub score: u64,
     pub post_id: u64,
-    pub publisher_canister_id: SPrincipal,
+    pub publisher_canister_id: Principal,
 }
 
 impl Ord for PostScoreIndexItem {
@@ -45,7 +44,6 @@ impl Eq for PostScoreIndexItem {}
 #[cfg(test)]
 pub(crate) mod test {
     use candid::Principal;
-    use ic_stable_memory::utils::ic_types::SPrincipal;
 
     use super::PostScoreIndexItem;
     use std::collections::BTreeSet;
@@ -57,16 +55,12 @@ pub(crate) mod test {
             PostScoreIndexItem {
                 score: 1,
                 post_id: 1,
-                publisher_canister_id: SPrincipal(
-                    Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap(),
-                ),
+                publisher_canister_id: Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap(),
             },
             PostScoreIndexItem {
                 score: 1,
                 post_id: 1,
-                publisher_canister_id: SPrincipal(
-                    Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap(),
-                ),
+                publisher_canister_id: Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap(),
             }
         );
 
@@ -75,16 +69,12 @@ pub(crate) mod test {
             PostScoreIndexItem {
                 score: 1,
                 post_id: 1,
-                publisher_canister_id: SPrincipal(
-                    Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap(),
-                ),
+                publisher_canister_id: Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap(),
             },
             PostScoreIndexItem {
                 score: 2,
                 post_id: 1,
-                publisher_canister_id: SPrincipal(
-                    Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap(),
-                ),
+                publisher_canister_id: Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap(),
             }
         );
 
@@ -93,16 +83,12 @@ pub(crate) mod test {
             PostScoreIndexItem {
                 score: 1,
                 post_id: 1,
-                publisher_canister_id: SPrincipal(
-                    Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap(),
-                ),
+                publisher_canister_id: Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap(),
             },
             PostScoreIndexItem {
                 score: 1,
                 post_id: 2,
-                publisher_canister_id: SPrincipal(
-                    Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap(),
-                ),
+                publisher_canister_id: Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap(),
             }
         );
     }
@@ -113,23 +99,17 @@ pub(crate) mod test {
         set.replace(PostScoreIndexItem {
             score: 18_446_744_073_709_493_716,
             post_id: 36,
-            publisher_canister_id: SPrincipal(
-                Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap(),
-            ),
+            publisher_canister_id: Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap(),
         });
         set.replace(PostScoreIndexItem {
             score: 18_446_744_073_704_278_166,
             post_id: 36,
-            publisher_canister_id: SPrincipal(
-                Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap(),
-            ),
+            publisher_canister_id: Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap(),
         });
         set.replace(PostScoreIndexItem {
             score: 18_446_744_073_605_493_716,
             post_id: 36,
-            publisher_canister_id: SPrincipal(
-                Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap(),
-            ),
+            publisher_canister_id: Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap(),
         });
 
         println!("{:?}", set);
@@ -139,23 +119,17 @@ pub(crate) mod test {
         set.replace(PostScoreIndexItem {
             score: 18_446_744_073_709_493_716,
             post_id: 36,
-            publisher_canister_id: SPrincipal(
-                Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap(),
-            ),
+            publisher_canister_id: Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap(),
         });
         set.replace(PostScoreIndexItem {
             score: 18_446_744_073_704_278_166,
             post_id: 36,
-            publisher_canister_id: SPrincipal(
-                Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap(),
-            ),
+            publisher_canister_id: Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap(),
         });
         set.replace(PostScoreIndexItem {
             score: 18_446_744_073_605_493_716,
             post_id: 36,
-            publisher_canister_id: SPrincipal(
-                Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap(),
-            ),
+            publisher_canister_id: Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap(),
         });
 
         assert_eq!(set.len(), 1);
@@ -163,24 +137,18 @@ pub(crate) mod test {
         set.replace(PostScoreIndexItem {
             score: 18_446_744_073_704_278_166,
             post_id: 31,
-            publisher_canister_id: SPrincipal(
-                Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap(),
-            ),
+            publisher_canister_id: Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap(),
         });
         set.replace(PostScoreIndexItem {
             score: 18_446,
             post_id: 31,
-            publisher_canister_id: SPrincipal(
-                Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap(),
-            ),
+            publisher_canister_id: Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap(),
         });
 
         let second_item = set.get(&PostScoreIndexItem {
             score: 18_446,
             post_id: 31,
-            publisher_canister_id: SPrincipal(
-                Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap(),
-            ),
+            publisher_canister_id: Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap(),
         });
 
         assert_eq!(set.len(), 2);
@@ -194,23 +162,17 @@ pub(crate) mod test {
         set.replace(PostScoreIndexItem {
             score: 1,
             post_id: 1,
-            publisher_canister_id: SPrincipal(
-                Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap(),
-            ),
+            publisher_canister_id: Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap(),
         });
         set.replace(PostScoreIndexItem {
             score: 2,
             post_id: 2,
-            publisher_canister_id: SPrincipal(
-                Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap(),
-            ),
+            publisher_canister_id: Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap(),
         });
         set.replace(PostScoreIndexItem {
             score: 3,
             post_id: 3,
-            publisher_canister_id: SPrincipal(
-                Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap(),
-            ),
+            publisher_canister_id: Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap(),
         });
 
         assert_eq!(set.len(), 3);
@@ -218,23 +180,17 @@ pub(crate) mod test {
         set.replace(PostScoreIndexItem {
             score: 4,
             post_id: 1,
-            publisher_canister_id: SPrincipal(
-                Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap(),
-            ),
+            publisher_canister_id: Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap(),
         });
         set.replace(PostScoreIndexItem {
             score: 5,
             post_id: 2,
-            publisher_canister_id: SPrincipal(
-                Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap(),
-            ),
+            publisher_canister_id: Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap(),
         });
         set.replace(PostScoreIndexItem {
             score: 6,
             post_id: 3,
-            publisher_canister_id: SPrincipal(
-                Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap(),
-            ),
+            publisher_canister_id: Principal::from_text("w4nuc-waaaa-aaaao-aal2a-cai").unwrap(),
         });
 
         // println!("{:#?}", set);

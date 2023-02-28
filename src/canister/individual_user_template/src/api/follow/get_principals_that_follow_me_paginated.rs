@@ -1,8 +1,10 @@
 use crate::CANISTER_DATA;
 
-use super::get_principals_i_follow_paginated::GetFollowerOrFollowingError;
 use candid::Principal;
-use shared_utils::pagination::{self, PaginationError};
+use shared_utils::{
+    canister_specific::individual_user_template::types::error::GetFollowerOrFollowingError,
+    pagination::{self, PaginationError},
+};
 
 #[ic_cdk::query]
 #[candid::candid_method(query)]
