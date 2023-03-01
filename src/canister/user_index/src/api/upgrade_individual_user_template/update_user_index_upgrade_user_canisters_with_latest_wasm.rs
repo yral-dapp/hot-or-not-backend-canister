@@ -4,8 +4,8 @@ use ic_cdk::api::management_canister::{
 };
 use shared_utils::{
     canister_specific::individual_user_template::types::args::IndividualUserTemplateInitArgs,
-    common::types::known_principal::KnownPrincipalType,
-    constant::MINIMUM_CYCLES_TO_REVIVE_CANISTER, date_time::system_time,
+    common::{types::known_principal::KnownPrincipalType, utils::system_time},
+    constant::MINIMUM_CYCLES_TO_REVIVE_CANISTER,
 };
 
 use crate::{

@@ -56,7 +56,7 @@ fn get_posts_of_this_user_profile_with_pagination(
                     liked_by_me: post.likes.contains(&api_caller),
                     home_feed_ranking_score: post.homefeed_ranking_score,
                     hot_or_not_feed_ranking_score: post
-                        .hot_or_not_feed_details
+                        .hot_or_not_details
                         .as_ref()
                         .map(|details| details.score),
                 }

@@ -4,6 +4,15 @@ type AnotherUserFollowedMeError = variant {
   NotAuthorized;
   UserTryingToFollowMeDoesNotExist;
 };
+type BetDetails = record { bet_direction : BetDirection; amount : nat64 };
+type BetDirection = variant { Hot; Not };
+type BettingStatus = variant {
+  BettingOpen : record {
+    number_of_participants : nat8;
+    started_at : SystemTime;
+  };
+  BettingClosed;
+};
 type FollowAnotherUserProfileError = variant {
   UserToFollowDoesNotExist;
   UserIndexCrossCanisterCallFailed;
@@ -19,9 +28,10 @@ type GetPostsOfUserProfileError = variant {
   InvalidBoundsPassed;
   ExceededMaxNumberOfItemsAllowedInOneRequest;
 };
-type HotOrNotFeedDetails = record {
+type HotOrNotDetails = record {
   upvotes : vec principal;
   score : nat64;
+  slot_history : vec record { nat8; SlotDetails };
   downvotes : vec principal;
 };
 type IndividualUserTemplateInitArgs = record {
@@ -57,7 +67,7 @@ type Post = record {
   likes : vec principal;
   video_uid : text;
   view_stats : PostViewStatistics;
-  hot_or_not_feed_details : opt HotOrNotFeedDetails;
+  hot_or_not_details : opt HotOrNotDetails;
   homefeed_ranking_score : nat64;
   creator_consent_for_inclusion_in_hot_or_not : bool;
 };
@@ -124,6 +134,8 @@ type Result_5 = variant {
   Err : UpdateProfileDetailsError;
 };
 type Result_6 = variant { Ok; Err : UpdateProfileSetUniqueUsernameError };
+type RoomDetails = record { bets_made : vec record { principal; BetDetails } };
+type SlotDetails = record { room_details : vec record { nat8; RoomDetails } };
 type SystemTime = record {
   nanos_since_epoch : nat32;
   secs_since_epoch : nat64;
@@ -171,6 +183,7 @@ service : (IndividualUserTemplateInitArgs) -> {
   add_post : (PostDetailsFromFrontend) -> (nat64);
   backup_data_to_backup_canister : (principal, principal) -> ();
   get_following_status_do_i_follow_this_user : (principal) -> (bool) query;
+  get_hot_or_not_bet_details_for_this_post : (nat64) -> (BettingStatus) query;
   get_individual_post_details_by_id : (nat64) -> (PostDetailsForFrontend) query;
   get_posts_of_this_user_profile_with_pagination : (nat64, nat64) -> (
       Result,

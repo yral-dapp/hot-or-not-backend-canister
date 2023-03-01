@@ -1,16 +1,22 @@
 use candid::{CandidType, Deserialize, Principal};
 use serde::Serialize;
 use std::{
-    collections::HashSet,
+    collections::{BTreeMap, HashSet},
     time::{Duration, SystemTime},
 };
 
 use crate::{
     canister_specific::individual_user_template::types::profile::UserProfileDetailsForFrontend,
+    common::utils::system_time::SystemTimeProvider,
     types::{
         canister_specific::individual_user_template::post::{PostDetailsForFrontend, PostStatus},
         post::PostDetailsFromFrontend,
     },
+};
+
+use super::hot_or_not::{
+    BetDirection, BettingStatus, DURATION_OF_EACH_SLOT_IN_SECONDS,
+    TOTAL_DURATION_OF_ALL_SLOTS_IN_SECONDS,
 };
 
 #[derive(CandidType, Clone, Deserialize, Debug, Serialize)]
@@ -26,7 +32,8 @@ pub struct Post {
     pub view_stats: PostViewStatistics,
     pub homefeed_ranking_score: u64,
     pub creator_consent_for_inclusion_in_hot_or_not: bool,
-    pub hot_or_not_feed_details: Option<HotOrNotFeedDetails>,
+    #[serde(alias = "hot_or_not_feed_details")]
+    pub hot_or_not_details: Option<HotOrNotDetails>,
 }
 
 #[derive(Deserialize, CandidType)]
@@ -40,19 +47,45 @@ pub enum PostViewDetailsFromFrontend {
     },
 }
 
-#[derive(CandidType, Clone, Deserialize, Debug, Serialize)]
+#[derive(CandidType, Clone, Deserialize, Debug, Serialize, Default)]
 pub struct PostViewStatistics {
     pub total_view_count: u64,
     pub threshold_view_count: u64,
     pub average_watch_percentage: u8,
 }
 
-#[derive(CandidType, Clone, Deserialize, Debug, Serialize)]
-pub struct HotOrNotFeedDetails {
+#[derive(CandidType, Clone, Deserialize, Debug, Serialize, Default)]
+pub struct HotOrNotDetails {
     pub score: u64,
+    // TODO: remove these completely on the next
+    #[serde(skip_serializing)]
     pub upvotes: HashSet<Principal>,
+    #[serde(skip_serializing)]
     pub downvotes: HashSet<Principal>,
-    // TODO: consider video age, remove after 48 hours
+    #[serde(default)]
+    pub slot_history: BTreeMap<SlotId, SlotDetails>,
+}
+
+pub type SlotId = u8;
+
+#[derive(CandidType, Clone, Deserialize, Default, Debug, Serialize)]
+pub struct SlotDetails {
+    pub room_details: BTreeMap<RoomId, RoomDetails>,
+}
+
+pub type RoomId = u8;
+
+#[derive(CandidType, Clone, Deserialize, Default, Debug, Serialize)]
+pub struct RoomDetails {
+    pub bets_made: BTreeMap<BetMaker, BetDetails>,
+}
+
+pub type BetMaker = Principal;
+
+#[derive(CandidType, Clone, Deserialize, Debug, Serialize)]
+pub struct BetDetails {
+    pub amount: u64,
+    pub bet_direction: BetDirection,
 }
 
 impl Post {
@@ -78,14 +111,15 @@ impl Post {
             homefeed_ranking_score: 0,
             creator_consent_for_inclusion_in_hot_or_not: post_details_from_frontend
                 .creator_consent_for_inclusion_in_hot_or_not,
-            hot_or_not_feed_details: None,
+            hot_or_not_details: None,
         };
 
         if post.creator_consent_for_inclusion_in_hot_or_not {
-            post.hot_or_not_feed_details = Some(HotOrNotFeedDetails {
+            post.hot_or_not_details = Some(HotOrNotDetails {
                 score: 0,
                 upvotes: HashSet::new(),
                 downvotes: HashSet::new(),
+                slot_history: BTreeMap::new(),
             });
         }
 
@@ -169,21 +203,16 @@ impl Post {
     }
 
     pub fn recalculate_hot_or_not_feed_score(&mut self, time_provider: &impl Fn() -> SystemTime) {
-        if self.hot_or_not_feed_details.is_some() {
+        if self.hot_or_not_details.is_some() {
             let likes_component = match self.view_stats.total_view_count {
                 0 => 0,
                 _ => 1000 * self.likes.len() as u64 * 10 / self.view_stats.total_view_count,
             };
 
             let absolute_calc_for_hots_ratio =
-                (((((self.hot_or_not_feed_details.as_ref().unwrap().upvotes.len() as u64)
-                    / (self.hot_or_not_feed_details.as_ref().unwrap().upvotes.len() as u64
-                        + self
-                            .hot_or_not_feed_details
-                            .as_ref()
-                            .unwrap()
-                            .downvotes
-                            .len() as u64
+                (((((self.hot_or_not_details.as_ref().unwrap().upvotes.len() as u64)
+                    / (self.hot_or_not_details.as_ref().unwrap().upvotes.len() as u64
+                        + self.hot_or_not_details.as_ref().unwrap().downvotes.len() as u64
                         + 1))
                     * 1000)
                     - 500) as i64)
@@ -196,13 +225,8 @@ impl Post {
             let post_share_component =
                 1000 * self.share_count * 100 / self.view_stats.total_view_count;
             let hot_or_not_participation_component = 1000
-                * ((self.hot_or_not_feed_details.as_ref().unwrap().upvotes.len() as u64
-                    + self
-                        .hot_or_not_feed_details
-                        .as_ref()
-                        .unwrap()
-                        .downvotes
-                        .len() as u64)
+                * ((self.hot_or_not_details.as_ref().unwrap().upvotes.len() as u64
+                    + self.hot_or_not_details.as_ref().unwrap().downvotes.len() as u64)
                     / self.view_stats.total_view_count);
 
             let current_time = time_provider();
@@ -213,7 +237,7 @@ impl Post {
                 / (60 * 60 * 4);
             let age_of_video_component = (1000 - 50 * subtracting_factor).max(0);
 
-            self.hot_or_not_feed_details.as_mut().unwrap().score = likes_component
+            self.hot_or_not_details.as_mut().unwrap().score = likes_component
                 + hots_ratio_component
                 + threshold_views_component
                 + average_percent_viewed_component
@@ -286,10 +310,60 @@ impl Post {
             liked_by_me: self.likes.contains(&caller),
             home_feed_ranking_score: self.homefeed_ranking_score,
             hot_or_not_feed_ranking_score: self
-                .hot_or_not_feed_details
+                .hot_or_not_details
                 .as_ref()
                 .map(|details| details.score),
         }
+    }
+
+    pub fn get_hot_or_not_betting_status_for_this_post(
+        &self,
+        current_time_when_request_being_made: &SystemTimeProvider,
+    ) -> BettingStatus {
+        let betting_status = match current_time_when_request_being_made()
+            .duration_since(self.created_at)
+            .unwrap()
+            .as_secs()
+        {
+            // * contest is still ongoing
+            0..=TOTAL_DURATION_OF_ALL_SLOTS_IN_SECONDS => {
+                let started_at = self.created_at;
+                let numerator = current_time_when_request_being_made()
+                    .duration_since(started_at)
+                    .unwrap()
+                    .as_secs();
+                let denominator = DURATION_OF_EACH_SLOT_IN_SECONDS;
+                let currently_ongoing_slot = ((numerator / denominator)
+                    + if numerator % denominator != 0 { 1 } else { 0 })
+                    as u8;
+
+                let temp_hot_or_not_default = &HotOrNotDetails::default();
+                let temp_slot_details_default = &SlotDetails::default();
+                let room_details = &self
+                    .hot_or_not_details
+                    .as_ref()
+                    .unwrap_or(temp_hot_or_not_default)
+                    .slot_history
+                    .get(&currently_ongoing_slot)
+                    .unwrap_or(temp_slot_details_default)
+                    .room_details;
+
+                let temp_room_details_default = &RoomDetails::default();
+                let currently_active_room = room_details
+                    .last_key_value()
+                    .unwrap_or((&1, temp_room_details_default))
+                    .1;
+                let number_of_participants = currently_active_room.bets_made.len() as u8;
+                BettingStatus::BettingOpen {
+                    started_at,
+                    number_of_participants,
+                }
+            }
+            // * contest is over
+            _ => BettingStatus::BettingClosed,
+        };
+
+        betting_status
     }
 }
 
@@ -310,6 +384,6 @@ mod test {
             &|| SystemTime::now(),
         );
 
-        assert_eq!(post.hot_or_not_feed_details.unwrap().score, 0);
+        assert_eq!(post.hot_or_not_details.unwrap().score, 0);
     }
 }

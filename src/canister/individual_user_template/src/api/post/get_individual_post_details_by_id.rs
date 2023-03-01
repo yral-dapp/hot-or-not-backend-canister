@@ -32,7 +32,7 @@ pub fn get_individual_post_details_by_id(post_id: u64) -> PostDetailsForFrontend
             liked_by_me: post.likes.contains(&api_caller),
             home_feed_ranking_score: post.homefeed_ranking_score,
             hot_or_not_feed_ranking_score: post
-                .hot_or_not_feed_details
+                .hot_or_not_details
                 .as_ref()
                 .map(|details| details.score),
         }

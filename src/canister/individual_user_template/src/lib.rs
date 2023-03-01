@@ -13,6 +13,7 @@ use shared_utils::{
     canister_specific::individual_user_template::types::{
         args::IndividualUserTemplateInitArgs,
         error::{GetFollowerOrFollowingError, GetPostsOfUserProfileError},
+        hot_or_not::BettingStatus,
         post::{Post, PostViewDetailsFromFrontend},
         profile::{
             UserProfile, UserProfileDetailsForFrontend, UserProfileUpdateDetailsFromFrontend,

@@ -66,12 +66,15 @@ fn receive_all_user_posts_from_individual_user_canister_impl(
 
 #[cfg(test)]
 mod test {
-    use std::{collections::HashSet, time::SystemTime};
+    use std::{
+        collections::{BTreeMap, HashSet},
+        time::SystemTime,
+    };
 
     use shared_utils::{
         canister_specific::{
             data_backup::types::all_user_data::{AllUserData, UserOwnedCanisterData},
-            individual_user_template::types::post::{HotOrNotFeedDetails, PostViewStatistics},
+            individual_user_template::types::post::{HotOrNotDetails, PostViewStatistics},
         },
         types::canister_specific::individual_user_template::post::PostStatus,
     };
@@ -103,10 +106,11 @@ mod test {
                 },
                 homefeed_ranking_score: 1000,
                 creator_consent_for_inclusion_in_hot_or_not: true,
-                hot_or_not_feed_details: Some(HotOrNotFeedDetails {
+                hot_or_not_details: Some(HotOrNotDetails {
                     score: 1000,
                     upvotes: HashSet::new(),
                     downvotes: HashSet::new(),
+                    slot_history: BTreeMap::new(),
                 }),
             },
             Post {
@@ -125,10 +129,11 @@ mod test {
                 },
                 homefeed_ranking_score: 1000,
                 creator_consent_for_inclusion_in_hot_or_not: true,
-                hot_or_not_feed_details: Some(HotOrNotFeedDetails {
+                hot_or_not_details: Some(HotOrNotDetails {
                     score: 1000,
                     upvotes: HashSet::new(),
                     downvotes: HashSet::new(),
+                    slot_history: BTreeMap::new(),
                 }),
             },
         ];

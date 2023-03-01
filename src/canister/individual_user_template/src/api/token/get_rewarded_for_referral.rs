@@ -1,8 +1,7 @@
 use crate::CANISTER_DATA;
 use candid::Principal;
 use shared_utils::{
-    common::types::known_principal::KnownPrincipalType,
-    date_time::system_time,
+    common::{types::known_principal::KnownPrincipalType, utils::system_time},
     types::utility_token::{mint_event::MintEvent, token_event::TokenEvent},
 };
 

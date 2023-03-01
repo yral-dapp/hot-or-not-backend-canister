@@ -1,6 +1,6 @@
 use shared_utils::{
     canister_specific::individual_user_template::types::post::PostViewDetailsFromFrontend,
-    date_time::system_time,
+    common::utils::system_time,
 };
 
 use crate::CANISTER_DATA;
