@@ -1,4 +1,4 @@
-pub mod args;
+pub mod arg;
 pub mod error;
 pub mod hot_or_not;
 pub mod post;

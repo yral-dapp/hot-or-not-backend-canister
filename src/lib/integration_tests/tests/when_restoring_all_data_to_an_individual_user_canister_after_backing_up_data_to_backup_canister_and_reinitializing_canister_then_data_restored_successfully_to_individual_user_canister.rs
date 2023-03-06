@@ -7,15 +7,13 @@ use shared_utils::{
         data_backup::types::{all_user_data::AllUserData, backup_statistics::BackupStatistics},
         individual_user_template::types::{
             error::{GetFollowerOrFollowingError, GetPostsOfUserProfileError},
+            post::{PostDetailsForFrontend, PostDetailsFromFrontend},
             profile::{UserProfileDetailsForFrontend, UserProfileUpdateDetailsFromFrontend},
         },
     },
     common::types::known_principal::KnownPrincipalType,
     types::{
-        canister_specific::individual_user_template::{
-            error_types::GetUserUtilityTokenTransactionHistoryError, post::PostDetailsForFrontend,
-        },
-        post::PostDetailsFromFrontend,
+        canister_specific::individual_user_template::error_types::GetUserUtilityTokenTransactionHistoryError,
         utility_token::token_event::TokenEvent,
     },
 };

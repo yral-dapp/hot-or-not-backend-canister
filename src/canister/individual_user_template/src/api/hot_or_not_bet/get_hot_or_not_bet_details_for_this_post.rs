@@ -1,6 +1,9 @@
+use std::time::SystemTime;
+
+use candid::Principal;
 use shared_utils::{
     canister_specific::individual_user_template::types::hot_or_not::BettingStatus,
-    common::utils::system_time::{self, SystemTimeProvider},
+    common::utils::system_time::{self},
 };
 
 use crate::{data_model::CanisterData, CANISTER_DATA};
@@ -8,10 +11,13 @@ use crate::{data_model::CanisterData, CANISTER_DATA};
 #[ic_cdk::query]
 #[candid::candid_method(query)]
 fn get_hot_or_not_bet_details_for_this_post(post_id: u64) -> BettingStatus {
+    let request_maker = ic_cdk::caller();
+
     CANISTER_DATA.with(|canister_data_ref_cell| {
         get_hot_or_not_bet_details_for_this_post_impl(
             &canister_data_ref_cell.borrow(),
-            &system_time::get_current_system_time_from_ic,
+            &system_time::get_current_system_time_from_ic(),
+            &request_maker,
             post_id,
         )
     })
@@ -19,14 +25,15 @@ fn get_hot_or_not_bet_details_for_this_post(post_id: u64) -> BettingStatus {
 
 fn get_hot_or_not_bet_details_for_this_post_impl(
     canister_data: &CanisterData,
-    time_provider: &SystemTimeProvider,
+    current_time: &SystemTime,
+    request_maker: &Principal,
     post_id: u64,
 ) -> BettingStatus {
     canister_data
         .all_created_posts
         .get(&post_id)
         .unwrap()
-        .get_hot_or_not_betting_status_for_this_post(time_provider)
+        .get_hot_or_not_betting_status_for_this_post(current_time, request_maker)
 }
 
 #[cfg(test)]
@@ -36,11 +43,9 @@ mod test {
         time::{Duration, SystemTime},
     };
 
-    use shared_utils::{
-        canister_specific::individual_user_template::types::post::{
-            HotOrNotDetails, Post, PostViewStatistics,
-        },
-        types::canister_specific::individual_user_template::post::PostStatus,
+    use shared_utils::canister_specific::individual_user_template::types::{
+        hot_or_not::HotOrNotDetails,
+        post::{Post, PostStatus, PostViewStatistics},
     };
 
     use super::*;
@@ -68,10 +73,10 @@ mod test {
             },
         );
 
-        // TODO: flesh out this test
         let result = get_hot_or_not_bet_details_for_this_post_impl(
             &canister_data,
-            &|| SystemTime::now(),
+            &SystemTime::now(),
+            &Principal::anonymous(),
             post_id,
         );
         match result {
@@ -81,11 +86,10 @@ mod test {
 
         let result = get_hot_or_not_bet_details_for_this_post_impl(
             &canister_data,
-            &|| {
-                SystemTime::now()
-                    .checked_add(Duration::from_secs(60 * 60 * 48 + 10))
-                    .unwrap()
-            },
+            &SystemTime::now()
+                .checked_add(Duration::from_secs(60 * 60 * 48 + 10))
+                .unwrap(),
+            &Principal::anonymous(),
             post_id,
         );
         match result {

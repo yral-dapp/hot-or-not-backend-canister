@@ -63,7 +63,7 @@ type PostViewStatistics = record {
   threshold_view_count : nat64;
 };
 type RoomDetails = record { bets_made : vec record { principal; BetDetails } };
-type SlotDetails = record { room_details : vec record { nat8; RoomDetails } };
+type SlotDetails = record { room_details : vec record { nat64; RoomDetails } };
 type SystemTime = record {
   nanos_since_epoch : nat32;
   secs_since_epoch : nat64;

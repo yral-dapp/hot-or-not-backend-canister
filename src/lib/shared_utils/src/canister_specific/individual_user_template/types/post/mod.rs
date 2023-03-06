@@ -8,16 +8,9 @@ use std::{
 use crate::{
     canister_specific::individual_user_template::types::profile::UserProfileDetailsForFrontend,
     common::utils::system_time::SystemTimeProvider,
-    types::{
-        canister_specific::individual_user_template::post::{PostDetailsForFrontend, PostStatus},
-        post::PostDetailsFromFrontend,
-    },
 };
 
-use super::hot_or_not::{
-    BetDirection, BettingStatus, DURATION_OF_EACH_SLOT_IN_SECONDS,
-    TOTAL_DURATION_OF_ALL_SLOTS_IN_SECONDS,
-};
+use super::hot_or_not::{BettingStatus, HotOrNotDetails};
 
 #[derive(CandidType, Clone, Deserialize, Debug, Serialize)]
 pub struct Post {
@@ -54,53 +47,133 @@ pub struct PostViewStatistics {
     pub average_watch_percentage: u8,
 }
 
-#[derive(CandidType, Clone, Deserialize, Debug, Serialize, Default)]
-pub struct HotOrNotDetails {
-    pub score: u64,
-    // TODO: remove these completely on the next
-    #[serde(skip_serializing)]
-    pub upvotes: HashSet<Principal>,
-    #[serde(skip_serializing)]
-    pub downvotes: HashSet<Principal>,
-    #[serde(default)]
-    pub slot_history: BTreeMap<SlotId, SlotDetails>,
+#[derive(Serialize, Deserialize, CandidType, Clone, Default, Debug)]
+pub enum PostStatus {
+    #[default]
+    Uploaded,
+    Transcoding,
+    CheckingExplicitness,
+    BannedForExplicitness,
+    ReadyToView,
+    BannedDueToUserReporting,
+    Deleted,
 }
 
-pub type SlotId = u8;
-
-#[derive(CandidType, Clone, Deserialize, Default, Debug, Serialize)]
-pub struct SlotDetails {
-    pub room_details: BTreeMap<RoomId, RoomDetails>,
+#[derive(Serialize, CandidType, Deserialize, Debug)]
+pub struct PostDetailsForFrontend {
+    pub id: u64,
+    pub created_by_display_name: Option<String>,
+    pub created_by_unique_user_name: Option<String>,
+    pub created_by_user_principal_id: Principal,
+    pub created_by_profile_photo_url: Option<String>,
+    pub created_at: SystemTime,
+    pub description: String,
+    pub hashtags: Vec<String>,
+    pub video_uid: String,
+    pub status: PostStatus,
+    pub total_view_count: u64,
+    pub like_count: u64,
+    pub liked_by_me: bool,
+    pub home_feed_ranking_score: u64,
+    pub hot_or_not_feed_ranking_score: Option<u64>,
+    pub hot_or_not_betting_status: Option<BettingStatus>,
 }
 
-pub type RoomId = u8;
-
-#[derive(CandidType, Clone, Deserialize, Default, Debug, Serialize)]
-pub struct RoomDetails {
-    pub bets_made: BTreeMap<BetMaker, BetDetails>,
-}
-
-pub type BetMaker = Principal;
-
-#[derive(CandidType, Clone, Deserialize, Debug, Serialize)]
-pub struct BetDetails {
-    pub amount: u64,
-    pub bet_direction: BetDirection,
+#[derive(Serialize, CandidType, Deserialize)]
+pub struct PostDetailsFromFrontend {
+    pub description: String,
+    pub hashtags: Vec<String>,
+    pub video_uid: String,
+    pub creator_consent_for_inclusion_in_hot_or_not: bool,
 }
 
 impl Post {
+    pub fn add_view_details(
+        &mut self,
+        details: PostViewDetailsFromFrontend,
+        time_provider: &impl Fn() -> SystemTime,
+    ) {
+        match details {
+            PostViewDetailsFromFrontend::WatchedPartially { percentage_watched } => {
+                assert!(percentage_watched <= 100 && percentage_watched > 0);
+                self.view_stats.average_watch_percentage =
+                    self.recalculate_average_watched(percentage_watched, 1);
+                self.view_stats.total_view_count += 1;
+                if percentage_watched > 20 {
+                    self.view_stats.threshold_view_count += 1;
+                }
+            }
+            PostViewDetailsFromFrontend::WatchedMultipleTimes {
+                watch_count,
+                percentage_watched,
+            } => {
+                assert!(percentage_watched <= 100 && percentage_watched > 0);
+                self.view_stats.average_watch_percentage =
+                    self.recalculate_average_watched(percentage_watched, watch_count);
+                self.view_stats.total_view_count += watch_count as u64;
+                if watch_count > 1 {
+                    self.view_stats.threshold_view_count += (watch_count - 1) as u64;
+                }
+                if percentage_watched > 20 {
+                    self.view_stats.threshold_view_count += 1;
+                }
+            }
+        }
+
+        self.recalculate_home_feed_score(time_provider);
+    }
+
+    pub fn get_post_details_for_frontend_for_this_post(
+        &self,
+        user_profile: UserProfileDetailsForFrontend,
+        caller: Principal,
+        time_provider: &SystemTimeProvider,
+    ) -> PostDetailsForFrontend {
+        PostDetailsForFrontend {
+            id: self.id,
+            created_by_display_name: user_profile.display_name,
+            created_by_unique_user_name: user_profile.unique_user_name,
+            created_by_user_principal_id: user_profile.principal_id,
+            created_by_profile_photo_url: user_profile.profile_picture_url,
+            created_at: self.created_at,
+            description: self.description.clone(),
+            hashtags: self.hashtags.clone(),
+            video_uid: self.video_uid.clone(),
+            status: self.status.clone(),
+            total_view_count: self.view_stats.total_view_count,
+            like_count: self.likes.len() as u64,
+            liked_by_me: self.likes.contains(&caller),
+            home_feed_ranking_score: self.homefeed_ranking_score,
+            hot_or_not_feed_ranking_score: self
+                .hot_or_not_details
+                .as_ref()
+                .map(|details| details.score),
+            hot_or_not_betting_status: if self.creator_consent_for_inclusion_in_hot_or_not {
+                Some(self.get_hot_or_not_betting_status_for_this_post(&time_provider(), &caller))
+            } else {
+                None
+            },
+        }
+    }
+
+    pub fn increment_share_count(&mut self, time_provider: &impl Fn() -> SystemTime) -> u64 {
+        self.share_count += 1;
+        self.recalculate_home_feed_score(time_provider);
+        self.share_count
+    }
+
     pub fn new(
         id: u64,
         post_details_from_frontend: PostDetailsFromFrontend,
-        time_provider: &impl Fn() -> SystemTime,
+        current_time: SystemTime,
     ) -> Self {
-        let mut post = Post {
+        Post {
             id,
             description: post_details_from_frontend.description,
             hashtags: post_details_from_frontend.hashtags,
             video_uid: post_details_from_frontend.video_uid,
             status: PostStatus::Uploaded,
-            created_at: time_provider(),
+            created_at: current_time,
             likes: HashSet::new(),
             share_count: 0,
             view_stats: PostViewStatistics {
@@ -111,50 +184,19 @@ impl Post {
             homefeed_ranking_score: 0,
             creator_consent_for_inclusion_in_hot_or_not: post_details_from_frontend
                 .creator_consent_for_inclusion_in_hot_or_not,
-            hot_or_not_details: None,
-        };
-
-        if post.creator_consent_for_inclusion_in_hot_or_not {
-            post.hot_or_not_details = Some(HotOrNotDetails {
-                score: 0,
-                upvotes: HashSet::new(),
-                downvotes: HashSet::new(),
-                slot_history: BTreeMap::new(),
-            });
+            hot_or_not_details: if post_details_from_frontend
+                .creator_consent_for_inclusion_in_hot_or_not
+            {
+                Some(HotOrNotDetails {
+                    score: 0,
+                    upvotes: HashSet::new(),
+                    downvotes: HashSet::new(),
+                    slot_history: BTreeMap::new(),
+                })
+            } else {
+                None
+            },
         }
-
-        post
-    }
-
-    pub fn update_status(&mut self, status: PostStatus) {
-        self.status = status;
-    }
-
-    pub fn toggle_like_status(
-        &mut self,
-        user_principal_id: &Principal,
-        time_provider: &impl Fn() -> SystemTime,
-    ) -> bool {
-        // if liked, return true & if unliked, return false
-        if self.likes.contains(user_principal_id) {
-            self.likes.remove(user_principal_id);
-
-            self.recalculate_home_feed_score(time_provider);
-
-            return false;
-        } else {
-            self.likes.insert(user_principal_id.clone());
-
-            self.recalculate_home_feed_score(time_provider);
-
-            return true;
-        }
-    }
-
-    pub fn increment_share_count(&mut self, time_provider: &impl Fn() -> SystemTime) -> u64 {
-        self.share_count += 1;
-        self.recalculate_home_feed_score(time_provider);
-        self.share_count
     }
 
     fn recalculate_average_watched(&self, percentage_watched: u8, additional_views: u8) -> u8 {
@@ -254,122 +296,64 @@ impl Post {
         }
     }
 
-    pub fn add_view_details(
+    pub fn toggle_like_status(
         &mut self,
-        details: PostViewDetailsFromFrontend,
+        user_principal_id: &Principal,
         time_provider: &impl Fn() -> SystemTime,
-    ) {
-        match details {
-            PostViewDetailsFromFrontend::WatchedPartially { percentage_watched } => {
-                assert!(percentage_watched <= 100 && percentage_watched > 0);
-                self.view_stats.average_watch_percentage =
-                    self.recalculate_average_watched(percentage_watched, 1);
-                self.view_stats.total_view_count += 1;
-                if percentage_watched > 20 {
-                    self.view_stats.threshold_view_count += 1;
-                }
-            }
-            PostViewDetailsFromFrontend::WatchedMultipleTimes {
-                watch_count,
-                percentage_watched,
-            } => {
-                assert!(percentage_watched <= 100 && percentage_watched > 0);
-                self.view_stats.average_watch_percentage =
-                    self.recalculate_average_watched(percentage_watched, watch_count);
-                self.view_stats.total_view_count += watch_count as u64;
-                if watch_count > 1 {
-                    self.view_stats.threshold_view_count += (watch_count - 1) as u64;
-                }
-                if percentage_watched > 20 {
-                    self.view_stats.threshold_view_count += 1;
-                }
-            }
-        }
+    ) -> bool {
+        // if liked, return true & if unliked, return false
+        if self.likes.contains(user_principal_id) {
+            self.likes.remove(user_principal_id);
 
-        self.recalculate_home_feed_score(time_provider);
-    }
+            self.recalculate_home_feed_score(time_provider);
 
-    pub fn get_post_details_for_frontend_for_this_post(
-        &self,
-        user_profile: UserProfileDetailsForFrontend,
-        caller: Principal,
-    ) -> PostDetailsForFrontend {
-        PostDetailsForFrontend {
-            id: self.id,
-            created_by_display_name: user_profile.display_name,
-            created_by_unique_user_name: user_profile.unique_user_name,
-            created_by_user_principal_id: user_profile.principal_id,
-            created_by_profile_photo_url: user_profile.profile_picture_url,
-            created_at: self.created_at,
-            description: self.description.clone(),
-            hashtags: self.hashtags.clone(),
-            video_uid: self.video_uid.clone(),
-            status: self.status.clone(),
-            total_view_count: self.view_stats.total_view_count,
-            like_count: self.likes.len() as u64,
-            liked_by_me: self.likes.contains(&caller),
-            home_feed_ranking_score: self.homefeed_ranking_score,
-            hot_or_not_feed_ranking_score: self
-                .hot_or_not_details
-                .as_ref()
-                .map(|details| details.score),
+            return false;
+        } else {
+            self.likes.insert(user_principal_id.clone());
+
+            self.recalculate_home_feed_score(time_provider);
+
+            return true;
         }
     }
 
-    pub fn get_hot_or_not_betting_status_for_this_post(
-        &self,
-        current_time_when_request_being_made: &SystemTimeProvider,
-    ) -> BettingStatus {
-        let betting_status = match current_time_when_request_being_made()
-            .duration_since(self.created_at)
-            .unwrap()
-            .as_secs()
-        {
-            // * contest is still ongoing
-            0..=TOTAL_DURATION_OF_ALL_SLOTS_IN_SECONDS => {
-                let started_at = self.created_at;
-                let numerator = current_time_when_request_being_made()
-                    .duration_since(started_at)
-                    .unwrap()
-                    .as_secs();
-                let denominator = DURATION_OF_EACH_SLOT_IN_SECONDS;
-                let currently_ongoing_slot = ((numerator / denominator)
-                    + if numerator % denominator != 0 { 1 } else { 0 })
-                    as u8;
-
-                let temp_hot_or_not_default = &HotOrNotDetails::default();
-                let temp_slot_details_default = &SlotDetails::default();
-                let room_details = &self
-                    .hot_or_not_details
-                    .as_ref()
-                    .unwrap_or(temp_hot_or_not_default)
-                    .slot_history
-                    .get(&currently_ongoing_slot)
-                    .unwrap_or(temp_slot_details_default)
-                    .room_details;
-
-                let temp_room_details_default = &RoomDetails::default();
-                let currently_active_room = room_details
-                    .last_key_value()
-                    .unwrap_or((&1, temp_room_details_default))
-                    .1;
-                let number_of_participants = currently_active_room.bets_made.len() as u8;
-                BettingStatus::BettingOpen {
-                    started_at,
-                    number_of_participants,
-                }
-            }
-            // * contest is over
-            _ => BettingStatus::BettingClosed,
-        };
-
-        betting_status
+    pub fn update_status(&mut self, status: PostStatus) {
+        self.status = status;
     }
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
+
+    #[test]
+    fn test_new() {
+        let post = Post::new(
+            0,
+            PostDetailsFromFrontend {
+                description: "This is a new post".to_string(),
+                hashtags: vec!["#fun".to_string(), "#post".to_string()],
+                video_uid: "abcd1234".to_string(),
+                creator_consent_for_inclusion_in_hot_or_not: false,
+            },
+            SystemTime::now(),
+        );
+
+        assert!(post.hot_or_not_details.is_none());
+
+        let post = Post::new(
+            0,
+            PostDetailsFromFrontend {
+                description: "This is a new post".to_string(),
+                hashtags: vec!["#fun".to_string(), "#post".to_string()],
+                video_uid: "abcd1234".to_string(),
+                creator_consent_for_inclusion_in_hot_or_not: true,
+            },
+            SystemTime::now(),
+        );
+
+        assert!(post.hot_or_not_details.is_some());
+    }
 
     #[test]
     fn when_new_post_created_then_their_hot_or_not_feed_score_is_calculated() {
@@ -381,7 +365,7 @@ mod test {
                 video_uid: "abcd#1234".into(),
                 creator_consent_for_inclusion_in_hot_or_not: true,
             },
-            &|| SystemTime::now(),
+            SystemTime::now(),
         );
 
         assert_eq!(post.hot_or_not_details.unwrap().score, 0);

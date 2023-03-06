@@ -13,3 +13,11 @@ pub enum GetFollowerOrFollowingError {
     ReachedEndOfItemsList,
     ExceededMaxNumberOfItemsAllowedInOneRequest,
 }
+
+#[derive(CandidType, PartialEq, Eq, Debug)]
+pub enum BetOnCurrentlyViewingPostError {
+    UserNotLoggedIn,
+    InsufficientBalance,
+    BettingClosed,
+    UserAlreadyParticipatedInThisPost,
+}

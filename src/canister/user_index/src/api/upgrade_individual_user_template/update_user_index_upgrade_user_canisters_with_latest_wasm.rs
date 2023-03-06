@@ -3,7 +3,7 @@ use ic_cdk::api::management_canister::{
     provisional::CanisterIdRecord,
 };
 use shared_utils::{
-    canister_specific::individual_user_template::types::args::IndividualUserTemplateInitArgs,
+    canister_specific::individual_user_template::types::arg::IndividualUserTemplateInitArgs,
     common::{types::known_principal::KnownPrincipalType, utils::system_time},
     constant::MINIMUM_CYCLES_TO_REVIVE_CANISTER,
 };
