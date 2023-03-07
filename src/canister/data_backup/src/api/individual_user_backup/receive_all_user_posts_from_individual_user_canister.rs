@@ -66,10 +66,7 @@ fn receive_all_user_posts_from_individual_user_canister_impl(
 
 #[cfg(test)]
 mod test {
-    use std::{
-        collections::{BTreeMap, HashSet},
-        time::SystemTime,
-    };
+    use std::{collections::HashSet, time::SystemTime};
 
     use shared_utils::canister_specific::{
         data_backup::types::all_user_data::{AllUserData, UserOwnedCanisterData},
@@ -108,9 +105,7 @@ mod test {
                 creator_consent_for_inclusion_in_hot_or_not: true,
                 hot_or_not_details: Some(HotOrNotDetails {
                     score: 1000,
-                    upvotes: HashSet::new(),
-                    downvotes: HashSet::new(),
-                    slot_history: BTreeMap::new(),
+                    ..Default::default()
                 }),
             },
             Post {
@@ -131,9 +126,7 @@ mod test {
                 creator_consent_for_inclusion_in_hot_or_not: true,
                 hot_or_not_details: Some(HotOrNotDetails {
                     score: 1000,
-                    upvotes: HashSet::new(),
-                    downvotes: HashSet::new(),
-                    slot_history: BTreeMap::new(),
+                    ..Default::default()
                 }),
             },
         ];

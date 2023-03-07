@@ -1,3 +1,8 @@
+type AggregateStats = record {
+  total_number_of_not_bets : nat64;
+  total_amount_bet : nat64;
+  total_number_of_hot_bets : nat64;
+};
 type AllUserData = record {
   user_principal_id : principal;
   user_canister_id : principal;
@@ -11,10 +16,9 @@ type DataBackupInitArgs = record {
   access_control_map : opt vec record { principal; vec UserAccessRole };
 };
 type HotOrNotDetails = record {
-  upvotes : vec principal;
+  aggregate_stats : AggregateStats;
   score : nat64;
   slot_history : vec record { nat8; SlotDetails };
-  downvotes : vec principal;
 };
 type KnownPrincipalType = variant {
   CanisterIdUserIndex;
