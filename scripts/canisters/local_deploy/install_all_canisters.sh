@@ -16,6 +16,8 @@ export CANISTER_ID_user_index=$(dfx canister id user_index)
 
 export LOCAL_TOP_POSTS_SYNC_INTERVAL="10000000000"
 
+dfx deploy --no-wallet internet_identity
+
 dfx build configuration
 gzip -f -1 ./target/wasm32-unknown-unknown/release/configuration.wasm
 dfx build data_backup
