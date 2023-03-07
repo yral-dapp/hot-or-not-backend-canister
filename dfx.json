@@ -45,6 +45,12 @@
         "node_compatibility": true,
         "output": "./export/declarations/user_index"
       }
+    },
+    "internet_identity": {
+      "type": "custom",
+      "candid": "internet_identity.did",
+      "wasm": "internet_identity.wasm",
+      "build": "./scripts/canisters/local_deploy/internet_identity.sh"
     }
   }
 }
