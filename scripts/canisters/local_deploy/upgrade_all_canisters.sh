@@ -1,6 +1,24 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+usage() { 
+  printf "Usage: \n[-s Skip test] \n[-h Display help] \n"; 
+  exit 0; 
+}
+
+skip_test=false
+
+while getopts "sh" arg; do
+  case $arg in
+    s)
+      skip_test=true
+      ;;
+    h) 
+      usage
+      ;;
+  esac
+done
+
 export CANISTER_ID_configuration=$(dfx canister id configuration)
 export CANISTER_ID_data_backup=$(dfx canister id data_backup)
 export CANISTER_ID_post_cache=$(dfx canister id post_cache)
@@ -19,11 +37,8 @@ gzip -f -1 ./target/wasm32-unknown-unknown/release/user_index.wasm
 dfx build post_cache
 gzip -f -1 ./target/wasm32-unknown-unknown/release/post_cache.wasm
 
-if [ $# -ge 1 ] && [ -n "$1" ] && [[ $1 == "--skip-test" ]]
+if [[ $skip_test != true ]] 
 then
-  echo "Skipping tests"
-else
-  echo "Running tests"
   cargo test
 fi
 

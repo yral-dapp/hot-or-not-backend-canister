@@ -1,7 +1,29 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+usage() { 
+  printf "Usage: \n[-s Skip test] \n[-i Install internet identity canister] \n[-h Display help] \n"; 
+  exit 0; 
+}
+
+skip_test=false
+install_ii=false
+
 export USER_ID_global_super_admin=$(dfx identity get-principal)
+
+while getopts "sih" arg; do
+  case $arg in
+    i) 
+      install_ii=true
+      ;;
+    s)
+      skip_test=true
+      ;;
+    h) 
+      usage
+      ;;
+  esac
+done
 
 dfx canister create --no-wallet configuration
 dfx canister create --no-wallet data_backup
@@ -27,11 +49,13 @@ gzip -f -1 ./target/wasm32-unknown-unknown/release/user_index.wasm
 dfx build post_cache
 gzip -f -1 ./target/wasm32-unknown-unknown/release/post_cache.wasm
 
-if [ $# -ge 1 ] && [ -n "$1" ] && [[ $1 == "--skip-test" ]]
+if [[ $install_ii == true ]]
 then
-  echo "Skipping tests"
-else
-  echo "Running tests"
+  dfx deploy --no-wallet internet_identity
+fi
+
+if [[ $skip_test != true ]] 
+then
   cargo test
 fi
 

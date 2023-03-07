@@ -4,3 +4,4 @@
 .env
 *.wasm
 target
+internet_identity.did
