@@ -5,28 +5,30 @@ use api::{
         update_principals_i_follow_toggle_list_with_principal_specified::FollowAnotherUserProfileError,
         update_principals_that_follow_me_toggle_list_with_specified_principal::AnotherUserFollowedMeError,
     },
+    hot_or_not_bet::bet_on_currently_viewing_hot_or_not_post::PlaceBetArg,
     profile::update_profile_display_details::UpdateProfileDetailsError,
 };
 use candid::{export_service, Principal};
 use data_model::CanisterData;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
-        args::IndividualUserTemplateInitArgs,
-        error::{GetFollowerOrFollowingError, GetPostsOfUserProfileError},
-        post::{Post, PostViewDetailsFromFrontend},
+        arg::IndividualUserTemplateInitArgs,
+        error::{
+            BetOnCurrentlyViewingPostError, GetFollowerOrFollowingError, GetPostsOfUserProfileError,
+        },
+        hot_or_not::BettingStatus,
+        post::{
+            Post, PostDetailsForFrontend, PostDetailsFromFrontend, PostViewDetailsFromFrontend,
+        },
         profile::{
             UserProfile, UserProfileDetailsForFrontend, UserProfileUpdateDetailsFromFrontend,
         },
     },
     common::types::known_principal::KnownPrincipalType,
     types::{
-        canister_specific::individual_user_template::{
-            error_types::{
-                GetUserUtilityTokenTransactionHistoryError, UpdateProfileSetUniqueUsernameError,
-            },
-            post::PostDetailsForFrontend,
+        canister_specific::individual_user_template::error_types::{
+            GetUserUtilityTokenTransactionHistoryError, UpdateProfileSetUniqueUsernameError,
         },
-        post::PostDetailsFromFrontend,
         utility_token::token_event::TokenEvent,
     },
 };

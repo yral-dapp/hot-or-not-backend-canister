@@ -1,17 +1,14 @@
 use candid::Principal;
 use ic_state_machine_tests::{CanisterId, PrincipalId, StateMachine, WasmResult};
 use shared_utils::{
+    canister_specific::individual_user_template::types::post::{
+        PostDetailsForFrontend, PostDetailsFromFrontend,
+    },
     common::types::{
         known_principal::KnownPrincipalType,
         top_posts::post_score_index_item::v1::PostScoreIndexItem,
     },
-    types::{
-        canister_specific::{
-            individual_user_template::post::PostDetailsForFrontend,
-            post_cache::error_types::TopPostsFetchError,
-        },
-        post::PostDetailsFromFrontend,
-    },
+    types::canister_specific::post_cache::error_types::TopPostsFetchError,
 };
 use std::time::Duration;
 use test_utils::setup::{

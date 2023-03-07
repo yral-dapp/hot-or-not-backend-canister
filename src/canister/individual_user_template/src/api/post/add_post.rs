@@ -1,11 +1,11 @@
 use shared_utils::{
-    canister_specific::individual_user_template::types::post::Post, date_time::system_time,
-    types::post::PostDetailsFromFrontend,
+    canister_specific::individual_user_template::types::post::{Post, PostDetailsFromFrontend},
+    common::utils::system_time,
 };
 
 use crate::CANISTER_DATA;
 
-/// # Access Control
+/// #### Access Control
 /// Only the user whose profile details are stored in this canister can create a post.
 #[ic_cdk::update]
 #[candid::candid_method(update)]
@@ -27,9 +27,10 @@ fn add_post(post_details: PostDetailsFromFrontend) -> u64 {
     let mut post = Post::new(
         id,
         post_details,
-        &system_time::get_current_system_time_from_ic,
+        system_time::get_current_system_time_from_ic(),
     );
 
+    // TODO: redo this so that we can calculate scores as part of the Post::new() function
     post.recalculate_home_feed_score(&system_time::get_current_system_time_from_ic);
     post.recalculate_hot_or_not_feed_score(&system_time::get_current_system_time_from_ic);
 

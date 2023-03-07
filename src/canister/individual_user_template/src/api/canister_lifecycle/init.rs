@@ -1,5 +1,5 @@
 use crate::{data_model::CanisterData, CANISTER_DATA};
-use shared_utils::canister_specific::individual_user_template::types::args::IndividualUserTemplateInitArgs;
+use shared_utils::canister_specific::individual_user_template::types::arg::IndividualUserTemplateInitArgs;
 
 #[ic_cdk::init]
 #[candid::candid_method(init)]

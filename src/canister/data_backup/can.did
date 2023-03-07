@@ -4,13 +4,16 @@ type AllUserData = record {
   canister_data : UserOwnedCanisterData;
 };
 type BackupStatistics = record { number_of_user_entries : nat64 };
+type BetDetails = record { bet_direction : BetDirection; amount : nat64 };
+type BetDirection = variant { Hot; Not };
 type DataBackupInitArgs = record {
   known_principal_ids : opt vec record { KnownPrincipalType; principal };
   access_control_map : opt vec record { principal; vec UserAccessRole };
 };
-type HotOrNotFeedDetails = record {
+type HotOrNotDetails = record {
   upvotes : vec principal;
   score : nat64;
+  slot_history : vec record { nat8; SlotDetails };
   downvotes : vec principal;
 };
 type KnownPrincipalType = variant {
@@ -41,7 +44,7 @@ type Post = record {
   likes : vec principal;
   video_uid : text;
   view_stats : PostViewStatistics;
-  hot_or_not_feed_details : opt HotOrNotFeedDetails;
+  hot_or_not_details : opt HotOrNotDetails;
   homefeed_ranking_score : nat64;
   creator_consent_for_inclusion_in_hot_or_not : bool;
 };
@@ -59,6 +62,8 @@ type PostViewStatistics = record {
   average_watch_percentage : nat8;
   threshold_view_count : nat64;
 };
+type RoomDetails = record { bets_made : vec record { principal; BetDetails } };
+type SlotDetails = record { room_details : vec record { nat64; RoomDetails } };
 type SystemTime = record {
   nanos_since_epoch : nat32;
   secs_since_epoch : nat64;

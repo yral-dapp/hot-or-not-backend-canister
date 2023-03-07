@@ -3,14 +3,12 @@ use std::time::Duration;
 use candid::Principal;
 use ic_state_machine_tests::{CanisterId, PrincipalId, StateMachine, WasmResult};
 use shared_utils::{
+    canister_specific::individual_user_template::types::post::PostDetailsFromFrontend,
     common::types::{
         known_principal::KnownPrincipalType,
         top_posts::post_score_index_item::v1::PostScoreIndexItem,
     },
-    types::{
-        canister_specific::post_cache::error_types::TopPostsFetchError,
-        post::PostDetailsFromFrontend,
-    },
+    types::canister_specific::post_cache::error_types::TopPostsFetchError,
 };
 use test_utils::setup::{
     env_v0::{
@@ -20,7 +18,7 @@ use test_utils::setup::{
     test_constants::get_alice_principal_id,
 };
 
-// TODO: reenable
+// TODO: reenable after fixing feeds and then implement the rest of the test
 #[ignore]
 #[test]
 fn when_bob_charlie_dan_places_new_bet_on_alice_post_then_expected_outcomes_occur() {

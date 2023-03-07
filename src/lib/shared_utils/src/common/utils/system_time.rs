@@ -1,6 +1,8 @@
 use ic_cdk::api;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
+pub type SystemTimeProvider = dyn Fn() -> SystemTime;
+
 pub fn get_current_system_time_from_ic() -> SystemTime {
     UNIX_EPOCH
         .checked_add(Duration::new(

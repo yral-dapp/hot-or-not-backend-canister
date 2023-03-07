@@ -8,7 +8,7 @@ use ic_cdk::api::{
     },
 };
 use shared_utils::{
-    canister_specific::individual_user_template::types::args::IndividualUserTemplateInitArgs,
+    canister_specific::individual_user_template::types::arg::IndividualUserTemplateInitArgs,
     common::types::known_principal::KnownPrincipalType,
 };
 

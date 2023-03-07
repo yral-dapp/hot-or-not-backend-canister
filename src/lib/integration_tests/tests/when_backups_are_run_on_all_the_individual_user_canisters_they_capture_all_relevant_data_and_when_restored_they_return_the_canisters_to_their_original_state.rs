@@ -5,13 +5,12 @@ use ic_state_machine_tests::{
 use shared_utils::{
     canister_specific::{
         data_backup::types::{all_user_data::AllUserData, backup_statistics::BackupStatistics},
-        individual_user_template::types::profile::UserProfileUpdateDetailsFromFrontend,
+        individual_user_template::types::{
+            post::{PostDetailsForFrontend, PostDetailsFromFrontend},
+            profile::UserProfileUpdateDetailsFromFrontend,
+        },
     },
     common::types::known_principal::KnownPrincipalType,
-    types::{
-        canister_specific::individual_user_template::post::PostDetailsForFrontend,
-        post::PostDetailsFromFrontend,
-    },
 };
 use test_utils::setup::{
     env_v0::{

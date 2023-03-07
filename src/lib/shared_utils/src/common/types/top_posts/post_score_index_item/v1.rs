@@ -2,6 +2,7 @@ use candid::{CandidType, Deserialize, Principal};
 use serde::Serialize;
 use std::cmp::Ordering;
 
+// TODO: remove this since v0 is the same
 #[derive(Clone, CandidType, Deserialize, Debug, Serialize)]
 pub struct PostScoreIndexItem {
     pub score: u64,

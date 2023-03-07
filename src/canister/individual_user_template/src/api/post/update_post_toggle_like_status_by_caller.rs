@@ -1,5 +1,6 @@
+use shared_utils::common::utils::system_time;
+
 use crate::CANISTER_DATA;
-use shared_utils::date_time::system_time;
 
 #[ic_cdk::update]
 #[candid::candid_method(update)]

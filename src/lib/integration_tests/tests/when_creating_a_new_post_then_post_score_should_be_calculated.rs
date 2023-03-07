@@ -1,11 +1,10 @@
 use candid::Principal;
 use ic_state_machine_tests::{CanisterId, PrincipalId, StateMachine, WasmResult};
 use shared_utils::{
-    common::types::known_principal::KnownPrincipalType,
-    types::{
-        canister_specific::individual_user_template::post::PostDetailsForFrontend,
-        post::PostDetailsFromFrontend,
+    canister_specific::individual_user_template::types::post::{
+        PostDetailsForFrontend, PostDetailsFromFrontend,
     },
+    common::types::known_principal::KnownPrincipalType,
 };
 use test_utils::setup::{
     env_v0::{

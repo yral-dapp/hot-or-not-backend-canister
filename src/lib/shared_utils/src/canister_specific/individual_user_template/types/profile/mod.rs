@@ -12,13 +12,13 @@ pub struct UserProfile {
 
 #[derive(CandidType, Deserialize, Debug)]
 pub struct UserProfileDetailsForFrontend {
-    pub principal_id: Principal,
     pub display_name: Option<String>,
-    pub unique_user_name: Option<String>,
-    pub profile_picture_url: Option<String>,
-    pub profile_stats: UserProfileGlobalStats,
     pub followers_count: u64,
     pub following_count: u64,
+    pub principal_id: Principal,
+    pub profile_picture_url: Option<String>,
+    pub profile_stats: UserProfileGlobalStats,
+    pub unique_user_name: Option<String>,
 }
 
 #[derive(CandidType, Deserialize, Clone, Copy, Debug, Default, Serialize)]
