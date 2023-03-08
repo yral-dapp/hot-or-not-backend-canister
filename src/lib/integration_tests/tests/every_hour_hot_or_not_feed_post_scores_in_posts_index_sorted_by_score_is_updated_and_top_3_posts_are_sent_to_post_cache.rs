@@ -12,7 +12,7 @@ use shared_utils::{
 };
 use std::time::Duration;
 use test_utils::setup::{
-    env_v0::{
+    env::v0::{
         get_canister_id_of_specific_type_from_principal_id_map,
         get_initialized_env_with_provisioned_known_canisters,
     },
@@ -24,7 +24,6 @@ use test_utils::setup::{
 #[test]
 fn every_hour_hot_or_not_feed_post_scores_in_posts_index_sorted_by_score_is_updated_and_top_3_posts_are_sent_to_post_cache(
 ) {
-    // * Arrange
     let state_machine = StateMachine::new();
     let known_principal_map = get_initialized_env_with_provisioned_known_canisters(&state_machine);
     let user_index_canister_id = get_canister_id_of_specific_type_from_principal_id_map(

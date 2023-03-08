@@ -3,7 +3,7 @@ use std::{env, path::Path};
 use ic_test_state_machine_client::StateMachine;
 
 /// The path to the state machine binary to run the tests with
-pub static STATE_MACHINE_BINARY: &str = "../../ic-test-state-machine";
+pub static STATE_MACHINE_BINARY: &str = "../../../ic-test-state-machine";
 
 pub fn get_new_state_machine() -> StateMachine {
     let path = match env::var_os("STATE_MACHINE_BINARY") {
@@ -21,7 +21,7 @@ pub fn get_new_state_machine() -> StateMachine {
         I looked for it at {:?}. You can specify another path with the environment variable STATE_MACHINE_BINARY (note that I run from {:?}).
 
         Run the following command to get the binary:
-            curl -sLO https://download.dfinity.systems/ic/$commit/binaries/$platform/ic-test-state-machine.gz
+            curl -sLO https://download.dfinity.systems/ic/a8da3aa23dc6f8f4708cb0cb8edce84c5bd8f225/binaries/x86_64-linux/ic-test-state-machine.gz
             gzip -d ic-test-state-machine.gz
             chmod +x ic-test-state-machine
         where $commit can be read from `.ic-commit` and $platform is 'x86_64-linux' for Linux and 'x86_64-darwin' for Intel/rosetta-enabled Darwin.
