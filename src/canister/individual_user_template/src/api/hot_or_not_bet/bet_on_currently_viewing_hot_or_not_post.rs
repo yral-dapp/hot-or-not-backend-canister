@@ -82,7 +82,7 @@ mod test {
                     video_uid: "abcd#1234".into(),
                     creator_consent_for_inclusion_in_hot_or_not: true,
                 },
-                SystemTime::now(),
+                &SystemTime::now(),
             ),
         );
 

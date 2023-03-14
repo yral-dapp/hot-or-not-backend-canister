@@ -3,7 +3,10 @@ use std::{collections::BTreeMap, time::SystemTime};
 use candid::{CandidType, Deserialize, Principal};
 use serde::Serialize;
 
-use super::{error::BetOnCurrentlyViewingPostError, post::Post};
+use super::{
+    error::BetOnCurrentlyViewingPostError,
+    post::{score_deserializer, FeedScore, Post},
+};
 
 #[derive(CandidType, PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub enum BettingStatus {
@@ -57,7 +60,8 @@ pub struct HotOrNotBetId {
 
 #[derive(CandidType, Clone, Deserialize, Debug, Serialize, Default)]
 pub struct HotOrNotDetails {
-    pub score: u64,
+    #[serde(deserialize_with = "score_deserializer")]
+    pub score: FeedScore,
     #[serde(default)]
     pub aggregate_stats: AggregateStats,
     pub slot_history: BTreeMap<SlotId, SlotDetails>,
@@ -296,7 +300,7 @@ mod test {
                 video_uid: "abcd#1234".into(),
                 creator_consent_for_inclusion_in_hot_or_not: true,
             },
-            SystemTime::now(),
+            &SystemTime::now(),
         );
 
         let result = post.get_hot_or_not_betting_status_for_this_post(
@@ -504,7 +508,7 @@ mod test {
                 video_uid: "abcd#1234".into(),
                 creator_consent_for_inclusion_in_hot_or_not: true,
             },
-            SystemTime::now(),
+            &SystemTime::now(),
         );
 
         let result =
@@ -536,7 +540,7 @@ mod test {
                 video_uid: "abcd#1234".into(),
                 creator_consent_for_inclusion_in_hot_or_not: true,
             },
-            SystemTime::now(),
+            &SystemTime::now(),
         );
 
         assert!(post.hot_or_not_details.is_some());

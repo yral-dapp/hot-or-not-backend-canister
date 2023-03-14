@@ -6,7 +6,7 @@ use std::{
     slice, vec,
 };
 
-use crate::common::types::top_posts::post_score_index_item::v0::PostScoreIndexItem;
+use crate::common::types::top_posts::post_score_index_item::PostScoreIndexItem;
 
 type PublisherCanisterId = Principal;
 type PostId = u64;

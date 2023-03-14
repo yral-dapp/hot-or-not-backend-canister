@@ -56,7 +56,7 @@ fn get_posts_of_this_user_profile_with_pagination(
                         unique_user_name: profile.unique_user_name.clone(),
                     },
                     api_caller,
-                    &system_time::get_current_system_time_from_ic,
+                    &system_time::get_current_system_time_from_ic(),
                 )
             })
         })

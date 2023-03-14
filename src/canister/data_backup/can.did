@@ -15,9 +15,14 @@ type DataBackupInitArgs = record {
   known_principal_ids : opt vec record { KnownPrincipalType; principal };
   access_control_map : opt vec record { principal; vec UserAccessRole };
 };
+type FeedScore = record {
+  current_score : nat64;
+  last_synchronized_at : SystemTime;
+  last_synchronized_score : nat64;
+};
 type HotOrNotDetails = record {
   aggregate_stats : AggregateStats;
-  score : nat64;
+  score : FeedScore;
   slot_history : vec record { nat8; SlotDetails };
 };
 type KnownPrincipalType = variant {
@@ -49,7 +54,7 @@ type Post = record {
   video_uid : text;
   view_stats : PostViewStatistics;
   hot_or_not_details : opt HotOrNotDetails;
-  homefeed_ranking_score : nat64;
+  homefeed_ranking_score : FeedScore;
   creator_consent_for_inclusion_in_hot_or_not : bool;
 };
 type PostStatus = variant {

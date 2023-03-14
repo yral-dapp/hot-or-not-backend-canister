@@ -950,7 +950,7 @@ dependencies = [
  "ciborium 0.2.0 (git+https://github.com/enarx/ciborium?rev=e719537c99b564c3674a56defe53713c702c6f46)",
  "ic-cdk",
  "ic-cdk-timers",
- "ic-stable-structures 0.5.1",
+ "ic-stable-structures 0.5.2",
  "serde",
  "shared_utils",
  "test_utils",
@@ -3006,9 +3006,9 @@ checksum = "9c8ded18fe296ff693ba8d8fd9890189ea28df4fc75d8b009523e15918452d8b"
 
 [[package]]
 name = "ic-stable-structures"
-version = "0.5.1"
+version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1c44a6b5418cf179c13d3d6a09de56aa258d74bf45b7992871935f7e27f51700"
+checksum = "7d43ba7c5067d1360860e2234d93411d2126c8eac788467966ed1383161f91fc"
 
 [[package]]
 name = "ic-state-layout"
@@ -4862,7 +4862,7 @@ dependencies = [
  "candid",
  "ic-cdk",
  "ic-cdk-timers",
- "ic-stable-structures 0.5.1",
+ "ic-stable-structures 0.5.2",
  "ic-state-machine-tests",
  "rmp-serde",
  "serde",

@@ -16,7 +16,7 @@ fn update_post_add_view_details(id: u64, details: PostViewDetailsFromFrontend) {
             .unwrap()
             .clone();
 
-        post_to_update.add_view_details(details, &system_time::get_current_system_time_from_ic);
+        post_to_update.add_view_details(&details, &system_time::get_current_system_time_from_ic());
 
         canister_data_ref_cell
             .borrow_mut()
