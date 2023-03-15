@@ -13,7 +13,6 @@ use shared_utils::{
 
 use self::version_details::VersionDetails;
 
-pub mod hot_or_not;
 pub mod version_details;
 
 #[derive(Default, Deserialize, Serialize)]

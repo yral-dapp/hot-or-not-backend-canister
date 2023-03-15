@@ -16,7 +16,7 @@ use shared_utils::{
     },
 };
 
-use super::test_constants::{
+use crate::setup::test_constants::{
     get_canister_wasm, get_global_super_admin_principal_id_v1,
     CANISTER_INITIAL_CYCLES_FOR_NON_SPAWNING_CANISTERS,
     CANISTER_INITIAL_CYCLES_FOR_SPAWNING_CANISTERS,

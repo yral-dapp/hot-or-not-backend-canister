@@ -1,7 +1,4 @@
-use std::{
-    collections::{BTreeMap, HashSet},
-    time::SystemTime,
-};
+use std::{collections::BTreeMap, time::SystemTime};
 
 use candid::{CandidType, Deserialize, Principal};
 use serde::Serialize;
@@ -61,13 +58,16 @@ pub struct HotOrNotBetId {
 #[derive(CandidType, Clone, Deserialize, Debug, Serialize, Default)]
 pub struct HotOrNotDetails {
     pub score: u64,
-    // TODO: remove these completely on the next
-    #[serde(skip_serializing)]
-    pub upvotes: HashSet<Principal>,
-    #[serde(skip_serializing)]
-    pub downvotes: HashSet<Principal>,
     #[serde(default)]
+    pub aggregate_stats: AggregateStats,
     pub slot_history: BTreeMap<SlotId, SlotDetails>,
+}
+
+#[derive(CandidType, Clone, Deserialize, Debug, Serialize, Default)]
+pub struct AggregateStats {
+    pub total_number_of_hot_bets: u64,
+    pub total_number_of_not_bets: u64,
+    pub total_amount_bet: u64,
 }
 
 pub type SlotId = u8;
@@ -205,6 +205,7 @@ impl Post {
                 let room_details = slot_history.room_details.entry(ongoing_room).or_default();
                 let bets_made_currently = &mut room_details.bets_made;
 
+                // * Update slot history details
                 if bets_made_currently.len() < 100 {
                     bets_made_currently.insert(
                         api_caller.clone(),
@@ -228,15 +229,19 @@ impl Post {
                         .insert(new_room_number, RoomDetails { bets_made });
                 }
 
+                // * Update aggregate stats
+                hot_or_not_details.aggregate_stats.total_amount_bet += bet_amount;
+                match bet_direction {
+                    BetDirection::Hot => {
+                        hot_or_not_details.aggregate_stats.total_number_of_hot_bets += 1;
+                    }
+                    BetDirection::Not => {
+                        hot_or_not_details.aggregate_stats.total_number_of_not_bets += 1;
+                    }
+                }
+
                 self.hot_or_not_details = Some(hot_or_not_details);
 
-                // Ok(BettingStatus::BettingOpen {
-                //     started_at: self.created_at,
-                //     number_of_participants: bets_made_currently.len() as u8,
-                //     ongoing_slot,
-                //     ongoing_room,
-                //     has_this_user_participated_in_this_post: Some(true),
-                // })
                 let slot_history = &self.hot_or_not_details.as_ref().unwrap().slot_history;
                 let started_at = self.created_at;
                 let number_of_participants = slot_history
@@ -589,6 +594,15 @@ mod test {
                 .unwrap()
                 .bet_direction,
             BetDirection::Hot
+        );
+        assert_eq!(hot_or_not_details.aggregate_stats.total_amount_bet, 100);
+        assert_eq!(
+            hot_or_not_details.aggregate_stats.total_number_of_hot_bets,
+            1
+        );
+        assert_eq!(
+            hot_or_not_details.aggregate_stats.total_number_of_not_bets,
+            0
         );
 
         let result = post.place_hot_or_not_bet(

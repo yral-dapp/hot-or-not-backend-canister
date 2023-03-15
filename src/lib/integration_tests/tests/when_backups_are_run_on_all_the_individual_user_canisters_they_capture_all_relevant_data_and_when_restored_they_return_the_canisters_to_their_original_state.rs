@@ -13,7 +13,7 @@ use shared_utils::{
     common::types::known_principal::KnownPrincipalType,
 };
 use test_utils::setup::{
-    env_v0::{
+    env::v0::{
         get_canister_id_of_specific_type_from_principal_id_map,
         get_initialized_env_with_provisioned_known_canisters,
     },

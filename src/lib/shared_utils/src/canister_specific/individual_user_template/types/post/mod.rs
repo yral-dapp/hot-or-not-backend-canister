@@ -1,7 +1,7 @@
 use candid::{CandidType, Deserialize, Principal};
 use serde::Serialize;
 use std::{
-    collections::{BTreeMap, HashSet},
+    collections::HashSet,
     time::{Duration, SystemTime},
 };
 
@@ -25,7 +25,7 @@ pub struct Post {
     pub view_stats: PostViewStatistics,
     pub homefeed_ranking_score: u64,
     pub creator_consent_for_inclusion_in_hot_or_not: bool,
-    #[serde(alias = "hot_or_not_feed_details")]
+    // #[serde(alias = "hot_or_not_feed_details")]
     pub hot_or_not_details: Option<HotOrNotDetails>,
 }
 
@@ -187,12 +187,7 @@ impl Post {
             hot_or_not_details: if post_details_from_frontend
                 .creator_consent_for_inclusion_in_hot_or_not
             {
-                Some(HotOrNotDetails {
-                    score: 0,
-                    upvotes: HashSet::new(),
-                    downvotes: HashSet::new(),
-                    slot_history: BTreeMap::new(),
-                })
+                Some(HotOrNotDetails::default())
             } else {
                 None
             },
@@ -251,14 +246,28 @@ impl Post {
                 _ => 1000 * self.likes.len() as u64 * 10 / self.view_stats.total_view_count,
             };
 
-            let absolute_calc_for_hots_ratio =
-                (((((self.hot_or_not_details.as_ref().unwrap().upvotes.len() as u64)
-                    / (self.hot_or_not_details.as_ref().unwrap().upvotes.len() as u64
-                        + self.hot_or_not_details.as_ref().unwrap().downvotes.len() as u64
-                        + 1))
-                    * 1000)
-                    - 500) as i64)
-                    .abs();
+            let absolute_calc_for_hots_ratio = (((((self
+                .hot_or_not_details
+                .as_ref()
+                .unwrap()
+                .aggregate_stats
+                .total_number_of_hot_bets)
+                / (self
+                    .hot_or_not_details
+                    .as_ref()
+                    .unwrap()
+                    .aggregate_stats
+                    .total_number_of_hot_bets
+                    + self
+                        .hot_or_not_details
+                        .as_ref()
+                        .unwrap()
+                        .aggregate_stats
+                        .total_number_of_not_bets
+                    + 1))
+                * 1000)
+                - 500) as i64)
+                .abs();
             let hots_ratio_component = 1000 * (1000 - (absolute_calc_for_hots_ratio as u64 * 2));
             let threshold_views_component =
                 1000 * self.view_stats.threshold_view_count / self.view_stats.total_view_count;
@@ -267,8 +276,18 @@ impl Post {
             let post_share_component =
                 1000 * self.share_count * 100 / self.view_stats.total_view_count;
             let hot_or_not_participation_component = 1000
-                * ((self.hot_or_not_details.as_ref().unwrap().upvotes.len() as u64
-                    + self.hot_or_not_details.as_ref().unwrap().downvotes.len() as u64)
+                * ((self
+                    .hot_or_not_details
+                    .as_ref()
+                    .unwrap()
+                    .aggregate_stats
+                    .total_number_of_hot_bets
+                    + self
+                        .hot_or_not_details
+                        .as_ref()
+                        .unwrap()
+                        .aggregate_stats
+                        .total_number_of_not_bets)
                     / self.view_stats.total_view_count);
 
             let current_time = time_provider();
