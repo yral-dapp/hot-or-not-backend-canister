@@ -45,7 +45,7 @@ mod test {
 
     use shared_utils::canister_specific::individual_user_template::types::{
         hot_or_not::HotOrNotDetails,
-        post::{Post, PostStatus, PostViewStatistics},
+        post::{FeedScore, Post, PostStatus, PostViewStatistics},
     };
 
     use super::*;
@@ -68,6 +68,7 @@ mod test {
                 share_count: 0,
                 view_stats: PostViewStatistics::default(),
                 homefeed_ranking_score: 0,
+                home_feed_score: FeedScore::default(),
                 creator_consent_for_inclusion_in_hot_or_not: true,
                 hot_or_not_details: Some(HotOrNotDetails::default()),
             },

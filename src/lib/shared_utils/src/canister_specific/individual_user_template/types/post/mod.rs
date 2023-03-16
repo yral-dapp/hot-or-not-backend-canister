@@ -5,10 +5,7 @@ use std::{
     time::{Duration, SystemTime},
 };
 
-use crate::{
-    canister_specific::individual_user_template::types::profile::UserProfileDetailsForFrontend,
-    common::utils::system_time::SystemTimeProvider,
-};
+use crate::canister_specific::individual_user_template::types::profile::UserProfileDetailsForFrontend;
 
 use super::hot_or_not::{BettingStatus, HotOrNotDetails};
 
@@ -23,9 +20,29 @@ pub struct Post {
     pub likes: HashSet<Principal>,
     pub share_count: u64,
     pub view_stats: PostViewStatistics,
+    #[serde(skip_serializing)]
     pub homefeed_ranking_score: u64,
+    #[serde(default)]
+    pub home_feed_score: FeedScore,
     pub creator_consent_for_inclusion_in_hot_or_not: bool,
     pub hot_or_not_details: Option<HotOrNotDetails>,
+}
+
+#[derive(CandidType, Clone, Deserialize, Debug, Serialize)]
+pub struct FeedScore {
+    pub current_score: u64,
+    pub last_synchronized_score: u64,
+    pub last_synchronized_at: SystemTime,
+}
+
+impl Default for FeedScore {
+    fn default() -> Self {
+        FeedScore {
+            current_score: 0,
+            last_synchronized_score: 0,
+            last_synchronized_at: SystemTime::UNIX_EPOCH,
+        }
+    }
 }
 
 #[derive(Deserialize, CandidType)]
@@ -142,11 +159,18 @@ impl Post {
             total_view_count: self.view_stats.total_view_count,
             like_count: self.likes.len() as u64,
             liked_by_me: self.likes.contains(&caller),
-            home_feed_ranking_score: self.homefeed_ranking_score,
-            hot_or_not_feed_ranking_score: self
-                .hot_or_not_details
-                .as_ref()
-                .map(|details| details.score),
+            home_feed_ranking_score: self.home_feed_score.current_score,
+            hot_or_not_feed_ranking_score: if self.hot_or_not_details.is_some() {
+                Some(
+                    self.hot_or_not_details
+                        .as_ref()
+                        .unwrap()
+                        .hot_or_not_feed_score
+                        .current_score,
+                )
+            } else {
+                None
+            },
             hot_or_not_betting_status: if self.creator_consent_for_inclusion_in_hot_or_not {
                 Some(self.get_hot_or_not_betting_status_for_this_post(current_time, &caller))
             } else {
@@ -181,6 +205,7 @@ impl Post {
                 average_watch_percentage: 0,
             },
             homefeed_ranking_score: 0,
+            home_feed_score: FeedScore::default(),
             creator_consent_for_inclusion_in_hot_or_not: post_details_from_frontend
                 .creator_consent_for_inclusion_in_hot_or_not,
             hot_or_not_details: if post_details_from_frontend
@@ -269,7 +294,7 @@ impl Post {
         //     hot_or_not_participation_component
         // );
 
-        self.homefeed_ranking_score = likes_component
+        self.home_feed_score.current_score = likes_component
             + threshold_views_component
             + average_percent_viewed_component
             + post_share_component
@@ -344,7 +369,11 @@ impl Post {
             //     hot_or_not_score_component
             // );
 
-            self.hot_or_not_details.as_mut().unwrap().score = likes_component
+            self.hot_or_not_details
+                .as_mut()
+                .unwrap()
+                .hot_or_not_feed_score
+                .current_score = likes_component
                 + threshold_views_component
                 + average_percent_viewed_component
                 + post_share_component
@@ -429,8 +458,14 @@ mod test {
             &SystemTime::now(),
         );
 
-        assert!(post.homefeed_ranking_score > 0);
-        assert!(post.hot_or_not_details.unwrap().score > 0);
+        assert!(post.home_feed_score.current_score > 0);
+        assert!(
+            post.hot_or_not_details
+                .unwrap()
+                .hot_or_not_feed_score
+                .current_score
+                > 0
+        );
     }
 
     #[test]
@@ -502,8 +537,8 @@ mod test {
 
         post.recalculate_home_feed_score(&recalculation_time);
 
-        println!("🧪 Homefeed score: {}", post.homefeed_ranking_score);
-        assert_eq!(post.homefeed_ranking_score, 8_790);
+        println!("🧪 Homefeed score: {}", post.home_feed_score.current_score);
+        assert_eq!(post.home_feed_score.current_score, 8_790);
     }
 
     #[test]
@@ -575,8 +610,8 @@ mod test {
 
         post.recalculate_home_feed_score(&recalculation_time);
 
-        println!("🧪 Homefeed score: {}", post.homefeed_ranking_score);
-        assert_eq!(post.homefeed_ranking_score, 4_120);
+        println!("🧪 Homefeed score: {}", post.home_feed_score.current_score);
+        assert_eq!(post.home_feed_score.current_score, 4_120);
     }
 
     #[test]
@@ -651,8 +686,8 @@ mod test {
 
         post.recalculate_home_feed_score(&recalculation_time);
 
-        println!("🧪 Homefeed score: {}", post.homefeed_ranking_score);
-        assert_eq!(post.homefeed_ranking_score, 3_824);
+        println!("🧪 Homefeed score: {}", post.home_feed_score.current_score);
+        assert_eq!(post.home_feed_score.current_score, 3_824);
     }
 
     #[test]
@@ -728,8 +763,8 @@ mod test {
 
         post.recalculate_home_feed_score(&recalculation_time);
 
-        println!("🧪 Homefeed score: {}", post.homefeed_ranking_score);
-        assert_eq!(post.homefeed_ranking_score, 3_710);
+        println!("🧪 Homefeed score: {}", post.home_feed_score.current_score);
+        assert_eq!(post.home_feed_score.current_score, 3_710);
     }
 
     #[test]
@@ -805,8 +840,8 @@ mod test {
 
         post.recalculate_home_feed_score(&recalculation_time);
 
-        println!("🧪 Homefeed score: {}", post.homefeed_ranking_score);
-        assert_eq!(post.homefeed_ranking_score, 2_839);
+        println!("🧪 Homefeed score: {}", post.home_feed_score.current_score);
+        assert_eq!(post.home_feed_score.current_score, 2_839);
     }
 
     #[test]
@@ -882,8 +917,8 @@ mod test {
 
         post.recalculate_home_feed_score(&recalculation_time);
 
-        println!("🧪 Homefeed score: {}", post.homefeed_ranking_score);
-        assert_eq!(post.homefeed_ranking_score, 4_226);
+        println!("🧪 Homefeed score: {}", post.home_feed_score.current_score);
+        assert_eq!(post.home_feed_score.current_score, 4_226);
     }
 
     #[test]
@@ -959,8 +994,8 @@ mod test {
 
         post.recalculate_home_feed_score(&recalculation_time);
 
-        println!("🧪 Homefeed score: {}", post.homefeed_ranking_score);
-        assert_eq!(post.homefeed_ranking_score, 1_698);
+        println!("🧪 Homefeed score: {}", post.home_feed_score.current_score);
+        assert_eq!(post.home_feed_score.current_score, 1_698);
     }
 
     #[test]
@@ -1036,8 +1071,8 @@ mod test {
 
         post.recalculate_home_feed_score(&recalculation_time);
 
-        println!("🧪 Homefeed score: {}", post.homefeed_ranking_score);
-        assert_eq!(post.homefeed_ranking_score, 1_198);
+        println!("🧪 Homefeed score: {}", post.home_feed_score.current_score);
+        assert_eq!(post.home_feed_score.current_score, 1_198);
     }
 
     #[test]
@@ -1113,8 +1148,8 @@ mod test {
 
         post.recalculate_home_feed_score(&recalculation_time);
 
-        println!("🧪 Homefeed score: {}", post.homefeed_ranking_score);
-        assert_eq!(post.homefeed_ranking_score, 1_820);
+        println!("🧪 Homefeed score: {}", post.home_feed_score.current_score);
+        assert_eq!(post.home_feed_score.current_score, 1_820);
     }
 
     #[test]
@@ -1190,8 +1225,8 @@ mod test {
 
         post.recalculate_home_feed_score(&recalculation_time);
 
-        println!("🧪 Homefeed score: {}", post.homefeed_ranking_score);
-        assert_eq!(post.homefeed_ranking_score, 1_520);
+        println!("🧪 Homefeed score: {}", post.home_feed_score.current_score);
+        assert_eq!(post.home_feed_score.current_score, 1_520);
     }
 
     #[test]
@@ -1265,9 +1300,20 @@ mod test {
 
         println!(
             "🧪 Hot or Not score: {}",
-            post.hot_or_not_details.as_ref().unwrap().score
+            post.hot_or_not_details
+                .as_ref()
+                .unwrap()
+                .hot_or_not_feed_score
+                .current_score
         );
-        assert_eq!(post.hot_or_not_details.as_ref().unwrap().score, 10_035);
+        assert_eq!(
+            post.hot_or_not_details
+                .as_ref()
+                .unwrap()
+                .hot_or_not_feed_score
+                .current_score,
+            10_035
+        );
     }
 
     #[test]
@@ -1341,9 +1387,20 @@ mod test {
 
         println!(
             "🧪 Hot or Not feed score: {}",
-            post.hot_or_not_details.as_ref().unwrap().score
+            post.hot_or_not_details
+                .as_ref()
+                .unwrap()
+                .hot_or_not_feed_score
+                .current_score
         );
-        assert_eq!(post.hot_or_not_details.as_ref().unwrap().score, 5_120);
+        assert_eq!(
+            post.hot_or_not_details
+                .as_ref()
+                .unwrap()
+                .hot_or_not_feed_score
+                .current_score,
+            5_120
+        );
     }
 
     #[test]
@@ -1420,9 +1477,20 @@ mod test {
 
         println!(
             "🧪 Hot or Not feed score: {}",
-            post.hot_or_not_details.as_ref().unwrap().score
+            post.hot_or_not_details
+                .as_ref()
+                .unwrap()
+                .hot_or_not_feed_score
+                .current_score
         );
-        assert_eq!(post.hot_or_not_details.as_ref().unwrap().score, 5_024);
+        assert_eq!(
+            post.hot_or_not_details
+                .as_ref()
+                .unwrap()
+                .hot_or_not_feed_score
+                .current_score,
+            5_024
+        );
     }
 
     #[test]
@@ -1500,9 +1568,20 @@ mod test {
 
         println!(
             "🧪 Hot or Not feed score: {}",
-            post.hot_or_not_details.as_ref().unwrap().score
+            post.hot_or_not_details
+                .as_ref()
+                .unwrap()
+                .hot_or_not_feed_score
+                .current_score
         );
-        assert_eq!(post.hot_or_not_details.as_ref().unwrap().score, 5_060);
+        assert_eq!(
+            post.hot_or_not_details
+                .as_ref()
+                .unwrap()
+                .hot_or_not_feed_score
+                .current_score,
+            5_060
+        );
     }
 
     #[test]
@@ -1580,9 +1659,20 @@ mod test {
 
         println!(
             "🧪 Hot or Not feed score: {}",
-            post.hot_or_not_details.as_ref().unwrap().score
+            post.hot_or_not_details
+                .as_ref()
+                .unwrap()
+                .hot_or_not_feed_score
+                .current_score
         );
-        assert_eq!(post.hot_or_not_details.as_ref().unwrap().score, 4_306);
+        assert_eq!(
+            post.hot_or_not_details
+                .as_ref()
+                .unwrap()
+                .hot_or_not_feed_score
+                .current_score,
+            4_306
+        );
     }
 
     #[test]
@@ -1660,9 +1750,20 @@ mod test {
 
         println!(
             "🧪 Hot or Not feed score: {}",
-            post.hot_or_not_details.as_ref().unwrap().score
+            post.hot_or_not_details
+                .as_ref()
+                .unwrap()
+                .hot_or_not_feed_score
+                .current_score
         );
-        assert_eq!(post.hot_or_not_details.as_ref().unwrap().score, 5_426);
+        assert_eq!(
+            post.hot_or_not_details
+                .as_ref()
+                .unwrap()
+                .hot_or_not_feed_score
+                .current_score,
+            5_426
+        );
     }
 
     #[test]
@@ -1740,9 +1841,20 @@ mod test {
 
         println!(
             "🧪 Hot or Not feed score: {}",
-            post.hot_or_not_details.as_ref().unwrap().score
+            post.hot_or_not_details
+                .as_ref()
+                .unwrap()
+                .hot_or_not_feed_score
+                .current_score
         );
-        assert_eq!(post.hot_or_not_details.as_ref().unwrap().score, 2_758);
+        assert_eq!(
+            post.hot_or_not_details
+                .as_ref()
+                .unwrap()
+                .hot_or_not_feed_score
+                .current_score,
+            2_758
+        );
     }
 
     #[test]
@@ -1820,9 +1932,20 @@ mod test {
 
         println!(
             "🧪 Hot or Not feed score: {}",
-            post.hot_or_not_details.as_ref().unwrap().score
+            post.hot_or_not_details
+                .as_ref()
+                .unwrap()
+                .hot_or_not_feed_score
+                .current_score
         );
-        assert_eq!(post.hot_or_not_details.as_ref().unwrap().score, 2_308);
+        assert_eq!(
+            post.hot_or_not_details
+                .as_ref()
+                .unwrap()
+                .hot_or_not_feed_score
+                .current_score,
+            2_308
+        );
     }
 
     #[test]
@@ -1900,9 +2023,20 @@ mod test {
 
         println!(
             "🧪 Hot or Not feed score: {}",
-            post.hot_or_not_details.as_ref().unwrap().score
+            post.hot_or_not_details
+                .as_ref()
+                .unwrap()
+                .hot_or_not_feed_score
+                .current_score
         );
-        assert_eq!(post.hot_or_not_details.as_ref().unwrap().score, 3_070);
+        assert_eq!(
+            post.hot_or_not_details
+                .as_ref()
+                .unwrap()
+                .hot_or_not_feed_score
+                .current_score,
+            3_070
+        );
     }
 
     #[test]
@@ -1980,8 +2114,19 @@ mod test {
 
         println!(
             "🧪 Hot or Not feed score: {}",
-            post.hot_or_not_details.as_ref().unwrap().score
+            post.hot_or_not_details
+                .as_ref()
+                .unwrap()
+                .hot_or_not_feed_score
+                .current_score
         );
-        assert_eq!(post.hot_or_not_details.as_ref().unwrap().score, 2_840);
+        assert_eq!(
+            post.hot_or_not_details
+                .as_ref()
+                .unwrap()
+                .hot_or_not_feed_score
+                .current_score,
+            2_840
+        );
     }
 }

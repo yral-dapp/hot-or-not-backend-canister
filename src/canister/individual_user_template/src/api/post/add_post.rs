@@ -9,7 +9,7 @@ use crate::CANISTER_DATA;
 /// Only the user whose profile details are stored in this canister can create a post.
 #[deprecated(note = "This function is deprecated. Use add_post_v2 instead.")]
 #[ic_cdk::update]
-// #[candid::candid_method(update)]
+#[candid::candid_method(update)]
 fn add_post(post_details: PostDetailsFromFrontend) -> u64 {
     // * access control
     let current_caller = ic_cdk::caller();
