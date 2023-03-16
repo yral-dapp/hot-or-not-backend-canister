@@ -25,7 +25,7 @@ jobs:
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Install DFX
-        run: DFX_VERSION=0.12.1 sh -ci "$(curl -fsSL https://smartcontracts.org/install.sh)"
+        run: DFX_VERSION=0.13.1 sh -ci "$(curl -fsSL https://smartcontracts.org/install.sh)"
       - name: Initialize DFX identities
         run: dfx identity list
       - name: Import DFX identity

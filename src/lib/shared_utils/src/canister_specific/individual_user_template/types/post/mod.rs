@@ -25,7 +25,6 @@ pub struct Post {
     pub view_stats: PostViewStatistics,
     pub homefeed_ranking_score: u64,
     pub creator_consent_for_inclusion_in_hot_or_not: bool,
-    // #[serde(alias = "hot_or_not_feed_details")]
     pub hot_or_not_details: Option<HotOrNotDetails>,
 }
 
