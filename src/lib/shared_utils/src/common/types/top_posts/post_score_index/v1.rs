@@ -6,7 +6,7 @@ use std::{
     slice, vec,
 };
 
-use crate::common::types::top_posts::post_score_index_item::v1::PostScoreIndexItem;
+use crate::common::types::top_posts::post_score_index_item::PostScoreIndexItem;
 
 use super::v0::PostScoreIndex as PostScoreIndexV0;
 

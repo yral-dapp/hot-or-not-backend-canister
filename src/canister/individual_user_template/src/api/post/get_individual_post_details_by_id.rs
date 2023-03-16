@@ -34,7 +34,7 @@ pub fn get_individual_post_details_by_id(post_id: u64) -> PostDetailsForFrontend
                 unique_user_name: profile.unique_user_name.clone(),
             },
             api_caller,
-            &system_time::get_current_system_time_from_ic,
+            &system_time::get_current_system_time_from_ic(),
         )
     })
 }

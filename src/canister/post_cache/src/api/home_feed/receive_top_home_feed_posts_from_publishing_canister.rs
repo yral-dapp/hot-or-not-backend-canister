@@ -1,4 +1,4 @@
-use shared_utils::common::types::top_posts::post_score_index_item::v1::PostScoreIndexItem;
+use shared_utils::common::types::top_posts::post_score_index_item::PostScoreIndexItem;
 
 use crate::{data_model::CanisterData, CANISTER_DATA};
 
