@@ -259,7 +259,4 @@ service : (IndividualUserTemplateInitArgs) -> {
       Result_7,
     );
   update_profile_set_unique_username_once : (text) -> (Result_8);
-  update_scores_and_share_with_post_cache_if_difference_beyond_threshold : (
-      nat64,
-    ) -> ();
 }

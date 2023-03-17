@@ -45,6 +45,7 @@ service : (PostCacheInitArgs) -> {
   receive_top_hot_or_not_feed_posts_from_publishing_canister : (
       vec PostScoreIndexItem,
     ) -> ();
+  remove_all_feed_entries : () -> ();
   update_user_add_role : (UserAccessRole, principal) -> ();
   update_user_remove_role : (UserAccessRole, principal) -> ();
 }

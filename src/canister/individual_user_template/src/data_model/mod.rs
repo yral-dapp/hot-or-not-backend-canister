@@ -7,7 +7,7 @@ use shared_utils::{
         post::Post, profile::UserProfile, token::TokenBalance,
     },
     common::types::{
-        known_principal::KnownPrincipalMap, top_posts::post_score_index::v0::PostScoreIndex,
+        known_principal::KnownPrincipalMap, top_posts::post_score_index::PostScoreIndex,
     },
 };
 

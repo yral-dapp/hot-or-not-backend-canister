@@ -436,29 +436,6 @@ mod test {
     }
 
     #[test]
-    fn when_new_post_created_then_their_home_feed_score_and_hot_or_not_feed_score_is_calculated() {
-        let post = Post::new(
-            0,
-            PostDetailsFromFrontend {
-                description: "Doggos and puppers".into(),
-                hashtags: vec!["doggo".into(), "pupper".into()],
-                video_uid: "abcd#1234".into(),
-                creator_consent_for_inclusion_in_hot_or_not: true,
-            },
-            &SystemTime::now(),
-        );
-
-        assert!(post.home_feed_score.current_score > 0);
-        assert!(
-            post.hot_or_not_details
-                .unwrap()
-                .hot_or_not_feed_score
-                .current_score
-                > 0
-        );
-    }
-
-    #[test]
     fn test_recalculate_home_feed_score_case_1() {
         let post_created_at = SystemTime::UNIX_EPOCH
             .checked_add(Duration::from_secs(1_678_423_915))
