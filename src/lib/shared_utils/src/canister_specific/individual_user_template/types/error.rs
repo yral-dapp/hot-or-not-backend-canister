@@ -14,7 +14,7 @@ pub enum GetFollowerOrFollowingError {
     ExceededMaxNumberOfItemsAllowedInOneRequest,
 }
 
-#[derive(CandidType, PartialEq, Eq, Debug)]
+#[derive(CandidType, PartialEq, Eq, Debug, Deserialize)]
 pub enum BetOnCurrentlyViewingPostError {
     UserNotLoggedIn,
     InsufficientBalance,

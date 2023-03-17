@@ -5,14 +5,13 @@ use api::{
         update_principals_i_follow_toggle_list_with_principal_specified::FollowAnotherUserProfileError,
         update_principals_that_follow_me_toggle_list_with_specified_principal::AnotherUserFollowedMeError,
     },
-    hot_or_not_bet::bet_on_currently_viewing_hot_or_not_post::PlaceBetArg,
     profile::update_profile_display_details::UpdateProfileDetailsError,
 };
 use candid::{export_service, Principal};
 use data_model::CanisterData;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
-        arg::IndividualUserTemplateInitArgs,
+        arg::{IndividualUserTemplateInitArgs, PlaceBetArg},
         error::{
             BetOnCurrentlyViewingPostError, GetFollowerOrFollowingError, GetPostsOfUserProfileError,
         },

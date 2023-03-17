@@ -51,6 +51,7 @@ pub enum PostViewDetailsFromFrontend {
         percentage_watched: u8,
     },
     WatchedMultipleTimes {
+        // * only send complete watches as part of this count
         watch_count: u8,
         percentage_watched: u8,
     },
@@ -104,16 +105,12 @@ pub struct PostDetailsFromFrontend {
 }
 
 impl Post {
-    pub fn add_view_details(
-        &mut self,
-        details: &PostViewDetailsFromFrontend,
-        current_time: &SystemTime,
-    ) {
+    pub fn add_view_details(&mut self, details: &PostViewDetailsFromFrontend) {
         match details {
             PostViewDetailsFromFrontend::WatchedPartially { percentage_watched } => {
                 assert!(*percentage_watched <= 100 && *percentage_watched > 0);
                 self.view_stats.average_watch_percentage =
-                    self.recalculate_average_watched(*percentage_watched, 1);
+                    self.recalculate_average_watched(*percentage_watched, 0);
                 self.view_stats.total_view_count += 1;
                 if *percentage_watched > 20 {
                     self.view_stats.threshold_view_count += 1;
@@ -126,17 +123,13 @@ impl Post {
                 assert!(*percentage_watched <= 100 && *percentage_watched > 0);
                 self.view_stats.average_watch_percentage =
                     self.recalculate_average_watched(*percentage_watched, *watch_count);
-                self.view_stats.total_view_count += *watch_count as u64;
-                if *watch_count > 1 {
-                    self.view_stats.threshold_view_count += (watch_count - 1) as u64;
-                }
+                self.view_stats.total_view_count += (*watch_count + 1) as u64;
+                self.view_stats.threshold_view_count += *watch_count as u64;
                 if *percentage_watched > 20 {
                     self.view_stats.threshold_view_count += 1;
                 }
             }
         }
-
-        self.recalculate_home_feed_score(current_time);
     }
 
     pub fn get_post_details_for_frontend_for_this_post(
@@ -179,9 +172,8 @@ impl Post {
         }
     }
 
-    pub fn increment_share_count(&mut self, current_time: &SystemTime) -> u64 {
+    pub fn increment_share_count(&mut self) -> u64 {
         self.share_count += 1;
-        self.recalculate_home_feed_score(current_time);
         self.share_count
     }
 
@@ -190,7 +182,7 @@ impl Post {
         post_details_from_frontend: PostDetailsFromFrontend,
         current_time: &SystemTime,
     ) -> Self {
-        let mut post = Post {
+        Post {
             id,
             description: post_details_from_frontend.description,
             hashtags: post_details_from_frontend.hashtags,
@@ -200,7 +192,7 @@ impl Post {
             likes: HashSet::new(),
             share_count: 0,
             view_stats: PostViewStatistics {
-                total_view_count: 1, // To not have divide by zero errors
+                total_view_count: 0,
                 threshold_view_count: 0,
                 average_watch_percentage: 0,
             },
@@ -215,21 +207,29 @@ impl Post {
             } else {
                 None
             },
-        };
-        post.recalculate_home_feed_score(current_time);
-        post.recalculate_hot_or_not_feed_score(current_time);
-
-        post
+        }
     }
 
-    fn recalculate_average_watched(&self, percentage_watched: u8, additional_views: u8) -> u8 {
-        (((self.view_stats.average_watch_percentage as u64 * self.view_stats.total_view_count)
-            + (100 * (additional_views - 1)) as u64
-            + percentage_watched as u64)
-            / (self.view_stats.total_view_count + additional_views as u64)) as u8
+    fn recalculate_average_watched(&self, percentage_watched: u8, full_view_count: u8) -> u8 {
+        let earlier_sum_component =
+            self.view_stats.average_watch_percentage as u64 * self.view_stats.total_view_count;
+        let current_full_view_component = 100 * full_view_count as u64;
+        let current_total_dividend =
+            earlier_sum_component + current_full_view_component + percentage_watched as u64;
+        let current_total_divisor = self.view_stats.total_view_count + full_view_count as u64 + 1;
+        let recalculated_average = (current_total_dividend / current_total_divisor) as u8;
+        // ic_cdk::print(std::format!(
+        //     "🥫 recalculated_average: {}",
+        //     recalculated_average
+        // ));
+        recalculated_average
     }
 
     pub fn recalculate_home_feed_score(&mut self, current_time: &SystemTime) {
+        // ic_cdk::print(std::format!(
+        //     "🥫 post from home feed score recalculation: {:?}",
+        //     self
+        // ));
         let likes_component = match self.view_stats.total_view_count {
             0 => 0,
             _ => (1000 * 10 * self.likes.len() as u64) / self.view_stats.total_view_count,
@@ -382,23 +382,13 @@ impl Post {
         }
     }
 
-    pub fn toggle_like_status(
-        &mut self,
-        user_principal_id: &Principal,
-        current_time: &SystemTime,
-    ) -> bool {
+    pub fn toggle_like_status(&mut self, user_principal_id: &Principal) -> bool {
         // if liked, return true & if unliked, return false
         if self.likes.contains(user_principal_id) {
             self.likes.remove(user_principal_id);
-
-            self.recalculate_home_feed_score(current_time);
-
             return false;
         } else {
             self.likes.insert(user_principal_id.clone());
-
-            self.recalculate_home_feed_score(current_time);
-
             return true;
         }
     }
@@ -2128,5 +2118,117 @@ mod test {
                 .current_score,
             2_840
         );
+    }
+
+    #[test]
+    fn test_recalculate_average_watched_case_1() {
+        let post_created_at = SystemTime::UNIX_EPOCH
+            .checked_add(Duration::from_secs(1_673_117_006))
+            .unwrap();
+        let mut post = Post::new(
+            0,
+            PostDetailsFromFrontend {
+                description: "Doggos and puppers".into(),
+                hashtags: vec!["doggo".into(), "pupper".into()],
+                video_uid: "abcd#1234".into(),
+                creator_consent_for_inclusion_in_hot_or_not: true,
+            },
+            &post_created_at,
+        );
+
+        assert_eq!(post.view_stats.average_watch_percentage, 0);
+
+        post.add_view_details(&PostViewDetailsFromFrontend::WatchedPartially {
+            percentage_watched: 98,
+        });
+
+        assert_eq!(post.view_stats.average_watch_percentage, 98);
+
+        post.add_view_details(&PostViewDetailsFromFrontend::WatchedMultipleTimes {
+            watch_count: 1,
+            percentage_watched: 86,
+        });
+
+        assert_eq!(post.view_stats.average_watch_percentage, 94);
+
+        post.add_view_details(&PostViewDetailsFromFrontend::WatchedMultipleTimes {
+            watch_count: 4,
+            percentage_watched: 81,
+        });
+
+        assert_eq!(post.view_stats.average_watch_percentage, 95);
+
+        post.add_view_details(&PostViewDetailsFromFrontend::WatchedMultipleTimes {
+            watch_count: 4,
+            percentage_watched: 28,
+        });
+
+        assert_eq!(post.view_stats.average_watch_percentage, 91);
+
+        post.add_view_details(&PostViewDetailsFromFrontend::WatchedMultipleTimes {
+            watch_count: 4,
+            percentage_watched: 1,
+        });
+
+        assert_eq!(post.view_stats.average_watch_percentage, 88);
+
+        post.add_view_details(&PostViewDetailsFromFrontend::WatchedMultipleTimes {
+            watch_count: 1,
+            percentage_watched: 43,
+        });
+
+        assert_eq!(post.view_stats.average_watch_percentage, 86);
+
+        post.add_view_details(&PostViewDetailsFromFrontend::WatchedMultipleTimes {
+            watch_count: 2,
+            percentage_watched: 20,
+        });
+
+        assert_eq!(post.view_stats.average_watch_percentage, 84);
+
+        post.add_view_details(&PostViewDetailsFromFrontend::WatchedPartially {
+            percentage_watched: 38,
+        });
+
+        assert_eq!(post.view_stats.average_watch_percentage, 82);
+
+        post.add_view_details(&PostViewDetailsFromFrontend::WatchedMultipleTimes {
+            watch_count: 2,
+            percentage_watched: 18,
+        });
+
+        assert_eq!(post.view_stats.average_watch_percentage, 80);
+
+        post.add_view_details(&PostViewDetailsFromFrontend::WatchedMultipleTimes {
+            watch_count: 3,
+            percentage_watched: 84,
+        });
+
+        assert_eq!(post.view_stats.average_watch_percentage, 82);
+
+        post.add_view_details(&PostViewDetailsFromFrontend::WatchedPartially {
+            percentage_watched: 79,
+        });
+
+        assert_eq!(post.view_stats.average_watch_percentage, 81);
+
+        post.add_view_details(&PostViewDetailsFromFrontend::WatchedPartially {
+            percentage_watched: 76,
+        });
+
+        assert_eq!(post.view_stats.average_watch_percentage, 80);
+
+        post.add_view_details(&PostViewDetailsFromFrontend::WatchedMultipleTimes {
+            watch_count: 4,
+            percentage_watched: 20,
+        });
+
+        assert_eq!(post.view_stats.average_watch_percentage, 80);
+
+        post.add_view_details(&PostViewDetailsFromFrontend::WatchedPartially {
+            percentage_watched: 1,
+        });
+
+        assert_eq!(post.view_stats.average_watch_percentage, 77);
     }
 }

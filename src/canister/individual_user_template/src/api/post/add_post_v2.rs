@@ -7,6 +7,8 @@ use shared_utils::{
 
 use crate::{data_model::CanisterData, CANISTER_DATA};
 
+use super::update_scores_and_share_with_post_cache_if_difference_beyond_threshold::update_scores_and_share_with_post_cache_if_difference_beyond_threshold;
+
 /// #### Access Control
 /// Only the user whose profile details are stored in this canister can create a post.
 #[ic_cdk::update]
@@ -23,36 +25,21 @@ fn add_post_v2(post_details: PostDetailsFromFrontend) -> Result<u64, String> {
         );
     };
 
-    CANISTER_DATA.with(|canister_data_ref_cell| {
+    let response = CANISTER_DATA.with(|canister_data_ref_cell| {
         add_post_v2_impl(
             &mut canister_data_ref_cell.borrow_mut(),
             post_details,
             &system_time::get_current_system_time_from_ic(),
         )
-    })
+    });
 
-    // let id = CANISTER_DATA
-    //     .with(|canister_data_ref_cell| canister_data_ref_cell.borrow().all_created_posts.len())
-    //     as u64;
+    if response.is_ok() {
+        update_scores_and_share_with_post_cache_if_difference_beyond_threshold(
+            response.clone().unwrap(),
+        );
+    }
 
-    // let mut post = Post::new(
-    //     id,
-    //     post_details,
-    //     system_time::get_current_system_time_from_ic(),
-    // );
-
-    // // TODO: redo this so that we can calculate scores as part of the Post::new() function
-    // post.recalculate_home_feed_score(&system_time::get_current_system_time_from_ic);
-    // post.recalculate_hot_or_not_feed_score(&system_time::get_current_system_time_from_ic);
-
-    // CANISTER_DATA.with(|canister_data_ref_cell| {
-    //     canister_data_ref_cell
-    //         .borrow_mut()
-    //         .all_created_posts
-    //         .insert(id, post)
-    // });
-
-    // Ok(id)
+    response
 }
 
 fn add_post_v2_impl(
