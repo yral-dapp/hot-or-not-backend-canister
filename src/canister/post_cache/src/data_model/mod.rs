@@ -3,7 +3,7 @@ use serde::Serialize;
 use shared_utils::{
     access_control::UserAccessRole,
     common::types::{
-        known_principal::KnownPrincipalMap, top_posts::post_score_index::v1::PostScoreIndex,
+        known_principal::KnownPrincipalMap, top_posts::post_score_index::PostScoreIndex,
     },
 };
 use std::collections::HashMap;

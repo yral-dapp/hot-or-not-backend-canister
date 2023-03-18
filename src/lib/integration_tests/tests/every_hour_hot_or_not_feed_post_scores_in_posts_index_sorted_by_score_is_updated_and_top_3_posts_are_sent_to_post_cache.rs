@@ -5,8 +5,7 @@ use shared_utils::{
         PostDetailsForFrontend, PostDetailsFromFrontend,
     },
     common::types::{
-        known_principal::KnownPrincipalType,
-        top_posts::post_score_index_item::v1::PostScoreIndexItem,
+        known_principal::KnownPrincipalType, top_posts::post_score_index_item::PostScoreIndexItem,
     },
     types::canister_specific::post_cache::error_types::TopPostsFetchError,
 };

@@ -1,20 +1,15 @@
-use candid::{CandidType, Deserialize, Principal};
+use candid::Principal;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
-        error::BetOnCurrentlyViewingPostError,
-        hot_or_not::{BetDirection, BettingStatus},
+        arg::PlaceBetArg, error::BetOnCurrentlyViewingPostError, hot_or_not::BettingStatus,
     },
     common::utils::system_time::{self, SystemTimeProvider},
 };
 
-use crate::{data_model::CanisterData, CANISTER_DATA};
-
-#[derive(Deserialize, CandidType)]
-pub struct PlaceBetArg {
-    post_id: u64,
-    bet_amount: u64,
-    bet_direction: BetDirection,
-}
+use crate::{
+    api::post::update_scores_and_share_with_post_cache_if_difference_beyond_threshold::update_scores_and_share_with_post_cache_if_difference_beyond_threshold,
+    data_model::CanisterData, CANISTER_DATA,
+};
 
 #[ic_cdk::update]
 #[candid::candid_method(update)]
@@ -27,14 +22,22 @@ fn bet_on_currently_viewing_post(
         return Err(BetOnCurrentlyViewingPostError::UserNotLoggedIn);
     }
 
-    CANISTER_DATA.with(|canister_data_ref_cell| {
+    let response = CANISTER_DATA.with(|canister_data_ref_cell| {
         bet_on_currently_viewing_post_impl(
             &mut canister_data_ref_cell.borrow_mut(),
             &api_caller,
-            place_bet_arg,
+            place_bet_arg.clone(),
             &system_time::get_current_system_time_from_ic,
         )
-    })
+    });
+
+    if response.is_ok() {
+        update_scores_and_share_with_post_cache_if_difference_beyond_threshold(
+            place_bet_arg.post_id,
+        );
+    }
+
+    response
 }
 
 fn bet_on_currently_viewing_post_impl(
@@ -62,8 +65,9 @@ fn bet_on_currently_viewing_post_impl(
 mod test {
     use std::time::SystemTime;
 
-    use shared_utils::canister_specific::individual_user_template::types::post::{
-        Post, PostDetailsFromFrontend,
+    use shared_utils::canister_specific::individual_user_template::types::{
+        hot_or_not::BetDirection,
+        post::{Post, PostDetailsFromFrontend},
     };
     use test_utils::setup::test_constants::get_mock_user_alice_principal_id;
 
@@ -82,7 +86,7 @@ mod test {
                     video_uid: "abcd#1234".into(),
                     creator_consent_for_inclusion_in_hot_or_not: true,
                 },
-                SystemTime::now(),
+                &SystemTime::now(),
             ),
         );
 

@@ -72,7 +72,7 @@ mod test {
         data_backup::types::all_user_data::{AllUserData, UserOwnedCanisterData},
         individual_user_template::types::{
             hot_or_not::HotOrNotDetails,
-            post::{PostStatus, PostViewStatistics},
+            post::{FeedScore, PostStatus, PostViewStatistics},
         },
     };
     use test_utils::setup::test_constants::{
@@ -101,12 +101,10 @@ mod test {
                     threshold_view_count: 0,
                     average_watch_percentage: 0,
                 },
-                homefeed_ranking_score: 1000,
+                homefeed_ranking_score: 0,
+                home_feed_score: FeedScore::default(),
                 creator_consent_for_inclusion_in_hot_or_not: true,
-                hot_or_not_details: Some(HotOrNotDetails {
-                    score: 1000,
-                    ..Default::default()
-                }),
+                hot_or_not_details: Some(HotOrNotDetails::default()),
             },
             Post {
                 id: 1,
@@ -122,12 +120,10 @@ mod test {
                     threshold_view_count: 0,
                     average_watch_percentage: 0,
                 },
-                homefeed_ranking_score: 1000,
+                homefeed_ranking_score: 0,
+                home_feed_score: FeedScore::default(),
                 creator_consent_for_inclusion_in_hot_or_not: true,
-                hot_or_not_details: Some(HotOrNotDetails {
-                    score: 1000,
-                    ..Default::default()
-                }),
+                hot_or_not_details: Some(HotOrNotDetails::default()),
             },
         ];
 

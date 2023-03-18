@@ -27,6 +27,11 @@ type BettingStatus = variant {
   };
   BettingClosed;
 };
+type FeedScore = record {
+  current_score : nat64;
+  last_synchronized_at : SystemTime;
+  last_synchronized_score : nat64;
+};
 type FollowAnotherUserProfileError = variant {
   UserToFollowDoesNotExist;
   UserIndexCrossCanisterCallFailed;
@@ -43,6 +48,7 @@ type GetPostsOfUserProfileError = variant {
   ExceededMaxNumberOfItemsAllowedInOneRequest;
 };
 type HotOrNotDetails = record {
+  hot_or_not_feed_score : FeedScore;
   aggregate_stats : AggregateStats;
   score : nat64;
   slot_history : vec record { nat8; SlotDetails };
@@ -84,6 +90,7 @@ type Post = record {
   created_at : SystemTime;
   likes : vec principal;
   video_uid : text;
+  home_feed_score : FeedScore;
   view_stats : PostViewStatistics;
   hot_or_not_details : opt HotOrNotDetails;
   homefeed_ranking_score : nat64;
@@ -134,29 +141,30 @@ type PostViewStatistics = record {
   average_watch_percentage : nat8;
   threshold_view_count : nat64;
 };
-type Result = variant {
+type Result = variant { Ok : nat64; Err : text };
+type Result_1 = variant {
   Ok : BettingStatus;
   Err : BetOnCurrentlyViewingPostError;
 };
-type Result_1 = variant {
+type Result_2 = variant {
   Ok : vec PostDetailsForFrontend;
   Err : GetPostsOfUserProfileError;
 };
-type Result_2 = variant {
+type Result_3 = variant {
   Ok : vec principal;
   Err : GetPostsOfUserProfileError;
 };
-type Result_3 = variant {
+type Result_4 = variant {
   Ok : vec record { nat64; TokenEvent };
   Err : GetPostsOfUserProfileError;
 };
-type Result_4 = variant { Ok : bool; Err : FollowAnotherUserProfileError };
-type Result_5 = variant { Ok : bool; Err : AnotherUserFollowedMeError };
-type Result_6 = variant {
+type Result_5 = variant { Ok : bool; Err : FollowAnotherUserProfileError };
+type Result_6 = variant { Ok : bool; Err : AnotherUserFollowedMeError };
+type Result_7 = variant {
   Ok : UserProfileDetailsForFrontend;
   Err : UpdateProfileDetailsError;
 };
-type Result_7 = variant { Ok; Err : UpdateProfileSetUniqueUsernameError };
+type Result_8 = variant { Ok; Err : UpdateProfileSetUniqueUsernameError };
 type RoomDetails = record { bets_made : vec record { principal; BetDetails } };
 type SlotDetails = record { room_details : vec record { nat64; RoomDetails } };
 type SystemTime = record {
@@ -204,23 +212,24 @@ type UserProfileUpdateDetailsFromFrontend = record {
 };
 service : (IndividualUserTemplateInitArgs) -> {
   add_post : (PostDetailsFromFrontend) -> (nat64);
+  add_post_v2 : (PostDetailsFromFrontend) -> (Result);
   backup_data_to_backup_canister : (principal, principal) -> ();
-  bet_on_currently_viewing_post : (PlaceBetArg) -> (Result);
+  bet_on_currently_viewing_post : (PlaceBetArg) -> (Result_1);
   get_following_status_do_i_follow_this_user : (principal) -> (bool) query;
   get_hot_or_not_bet_details_for_this_post : (nat64) -> (BettingStatus) query;
   get_individual_post_details_by_id : (nat64) -> (PostDetailsForFrontend) query;
   get_posts_of_this_user_profile_with_pagination : (nat64, nat64) -> (
-      Result_1,
+      Result_2,
     ) query;
-  get_principals_i_follow_paginated : (nat64, nat64) -> (Result_2) query;
-  get_principals_that_follow_me_paginated : (nat64, nat64) -> (Result_2) query;
+  get_principals_i_follow_paginated : (nat64, nat64) -> (Result_3) query;
+  get_principals_that_follow_me_paginated : (nat64, nat64) -> (Result_3) query;
   get_profile_details : () -> (UserProfileDetailsForFrontend) query;
   get_rewarded_for_referral : (principal, principal) -> ();
   get_rewarded_for_signing_up : () -> ();
   get_user_utility_token_transaction_history_with_pagination : (
       nat64,
       nat64,
-    ) -> (Result_3) query;
+    ) -> (Result_4) query;
   get_utility_token_balance : () -> (nat64) query;
   get_well_known_principal_value : (KnownPrincipalType) -> (
       opt principal,
@@ -242,12 +251,12 @@ service : (IndividualUserTemplateInitArgs) -> {
   update_post_toggle_like_status_by_caller : (nat64) -> (bool);
   update_principals_i_follow_toggle_list_with_principal_specified : (
       principal,
-    ) -> (Result_4);
+    ) -> (Result_5);
   update_principals_that_follow_me_toggle_list_with_specified_principal : (
       principal,
-    ) -> (Result_5);
+    ) -> (Result_6);
   update_profile_display_details : (UserProfileUpdateDetailsFromFrontend) -> (
-      Result_6,
+      Result_7,
     );
-  update_profile_set_unique_username_once : (text) -> (Result_7);
+  update_profile_set_unique_username_once : (text) -> (Result_8);
 }

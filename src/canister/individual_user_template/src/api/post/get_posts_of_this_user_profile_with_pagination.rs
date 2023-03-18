@@ -31,6 +31,7 @@ fn get_posts_of_this_user_profile_with_pagination(
     })?;
 
     let api_caller = ic_cdk::caller();
+    let current_time = system_time::get_current_system_time_from_ic();
 
     Ok((from_inclusive_id..to_exclusive_id)
         .map(|id| {
@@ -56,7 +57,7 @@ fn get_posts_of_this_user_profile_with_pagination(
                         unique_user_name: profile.unique_user_name.clone(),
                     },
                     api_caller,
-                    &system_time::get_current_system_time_from_ic,
+                    &current_time,
                 )
             })
         })

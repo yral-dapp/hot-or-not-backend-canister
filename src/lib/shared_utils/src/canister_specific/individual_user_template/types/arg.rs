@@ -2,6 +2,8 @@ use candid::{CandidType, Deserialize, Principal};
 
 use crate::common::types::known_principal::KnownPrincipalMap;
 
+use super::hot_or_not::BetDirection;
+
 #[derive(Deserialize, CandidType)]
 pub struct IndividualUserTemplateInitArgs {
     pub known_principal_ids: Option<KnownPrincipalMap>,
@@ -17,4 +19,11 @@ impl IndividualUserTemplateInitArgs {
             upgrade_version_number: Some(0),
         }
     }
+}
+
+#[derive(Deserialize, CandidType, Clone)]
+pub struct PlaceBetArg {
+    pub post_id: u64,
+    pub bet_amount: u64,
+    pub bet_direction: BetDirection,
 }

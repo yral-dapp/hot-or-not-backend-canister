@@ -1,6 +1,6 @@
 use crate::{data_model::CanisterData, CANISTER_DATA};
 use shared_utils::{
-    common::types::top_posts::post_score_index_item::v1::PostScoreIndexItem,
+    common::types::top_posts::post_score_index_item::PostScoreIndexItem,
     pagination::{self, PaginationError},
     types::canister_specific::post_cache::error_types::TopPostsFetchError,
 };
