@@ -67,7 +67,6 @@ mod test {
                 likes: HashSet::new(),
                 share_count: 0,
                 view_stats: PostViewStatistics::default(),
-                homefeed_ranking_score: 0,
                 home_feed_score: FeedScore::default(),
                 creator_consent_for_inclusion_in_hot_or_not: true,
                 hot_or_not_details: Some(HotOrNotDetails::default()),

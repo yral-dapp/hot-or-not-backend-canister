@@ -60,9 +60,6 @@ pub struct HotOrNotBetId {
 
 #[derive(CandidType, Clone, Deserialize, Debug, Serialize, Default)]
 pub struct HotOrNotDetails {
-    #[serde(skip_serializing)]
-    pub score: u64,
-    #[serde(default)]
     pub hot_or_not_feed_score: FeedScore,
     pub aggregate_stats: AggregateStats,
     pub slot_history: BTreeMap<SlotId, SlotDetails>,

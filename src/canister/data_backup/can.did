@@ -23,7 +23,6 @@ type FeedScore = record {
 type HotOrNotDetails = record {
   hot_or_not_feed_score : FeedScore;
   aggregate_stats : AggregateStats;
-  score : nat64;
   slot_history : vec record { nat8; SlotDetails };
 };
 type KnownPrincipalType = variant {
@@ -56,7 +55,6 @@ type Post = record {
   home_feed_score : FeedScore;
   view_stats : PostViewStatistics;
   hot_or_not_details : opt HotOrNotDetails;
-  homefeed_ranking_score : nat64;
   creator_consent_for_inclusion_in_hot_or_not : bool;
 };
 type PostStatus = variant {
