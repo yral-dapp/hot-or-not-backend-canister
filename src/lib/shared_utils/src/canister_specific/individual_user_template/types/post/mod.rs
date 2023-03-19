@@ -20,9 +20,6 @@ pub struct Post {
     pub likes: HashSet<Principal>,
     pub share_count: u64,
     pub view_stats: PostViewStatistics,
-    #[serde(skip_serializing)]
-    pub homefeed_ranking_score: u64,
-    #[serde(default)]
     pub home_feed_score: FeedScore,
     pub creator_consent_for_inclusion_in_hot_or_not: bool,
     pub hot_or_not_details: Option<HotOrNotDetails>,
@@ -196,7 +193,6 @@ impl Post {
                 threshold_view_count: 0,
                 average_watch_percentage: 0,
             },
-            homefeed_ranking_score: 0,
             home_feed_score: FeedScore::default(),
             creator_consent_for_inclusion_in_hot_or_not: post_details_from_frontend
                 .creator_consent_for_inclusion_in_hot_or_not,
