@@ -4161,6 +4161,7 @@ version = "0.1.0"
 dependencies = [
  "candid",
  "ic-cdk",
+ "ic-cdk-timers",
  "serde",
  "shared_utils",
  "test_utils",

@@ -12,7 +12,7 @@ fn remove_all_feed_entries() {
     let super_admin_user = CANISTER_DATA.with(|canister_data_ref_cell| {
         canister_data_ref_cell
             .borrow()
-            .my_known_principal_ids_map
+            .known_principal_ids
             .get(&KnownPrincipalType::UserIdGlobalSuperAdmin)
             .unwrap()
             .clone()

@@ -27,4 +27,11 @@ gzip -f -1 ./target/wasm32-unknown-unknown/release/post_cache.wasm
 #   };
 # })"
 
-dfx canister install data_backup --network ic --mode upgrade --argument "(record { })"
+# dfx canister install post_cache --mode reinstall --network ic --argument "(record {
+#   known_principal_ids = opt vec {
+#     record {
+#       variant { CanisterIdConfiguration };
+#       principal \"$(dfx canister id configuration --network ic)\";
+#     };
+#   };
+# })"
