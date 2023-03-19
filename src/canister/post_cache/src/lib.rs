@@ -6,7 +6,8 @@ use data_model::CanisterData;
 use shared_utils::{
     access_control::UserAccessRole,
     common::types::{
-        init_args::PostCacheInitArgs, top_posts::post_score_index_item::PostScoreIndexItem,
+        init_args::PostCacheInitArgs, known_principal::KnownPrincipalType,
+        top_posts::post_score_index_item::PostScoreIndexItem,
     },
     types::canister_specific::post_cache::error_types::TopPostsFetchError,
 };

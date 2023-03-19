@@ -39,6 +39,9 @@ service : (PostCacheInitArgs) -> {
       nat64,
     ) -> (Result) query;
   get_user_roles : (principal) -> (vec UserAccessRole) query;
+  get_well_known_principal_value : (KnownPrincipalType) -> (
+      opt principal,
+    ) query;
   receive_top_home_feed_posts_from_publishing_canister : (
       vec PostScoreIndexItem,
     ) -> ();

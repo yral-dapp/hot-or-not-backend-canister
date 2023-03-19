@@ -16,6 +16,4 @@ pub enum KnownPrincipalType {
     CanisterIdUserIndex,
 }
 
-// TODO: Migrate implementers to V1
-// pub type KnownPrincipalMap = HashMap<KnownPrincipalType, SPrincipal>;
 pub type KnownPrincipalMap = HashMap<KnownPrincipalType, Principal>;
