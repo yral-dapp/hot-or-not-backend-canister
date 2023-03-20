@@ -86,7 +86,7 @@ fn when_backups_are_run_on_all_the_individual_user_canisters_they_capture_all_re
         .execute_ingress_as(
             alice_principal_id,
             CanisterId::new(PrincipalId(alice_canister_id)).unwrap(),
-            "add_post",
+            "add_post_v2",
             candid::encode_args((PostDetailsFromFrontend {
                 description: "alice post 0 - description".to_string(),
                 hashtags: vec!["alice-tag-0".to_string(), "alice-tag-1".to_string()],
@@ -96,19 +96,20 @@ fn when_backups_are_run_on_all_the_individual_user_canisters_they_capture_all_re
             .unwrap(),
         )
         .map(|reply_payload| {
-            let (newly_created_post_id,): (u64,) = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_args(&payload).unwrap(),
-                _ => panic!("\n🛑 add_post failed\n"),
+            let newly_created_post_id: Result<u64, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 add_post_v2 failed\n"),
             };
             newly_created_post_id
         })
+        .unwrap()
         .unwrap();
 
     state_machine
         .execute_ingress_as(
             alice_principal_id,
             CanisterId::new(PrincipalId(alice_canister_id)).unwrap(),
-            "add_post",
+            "add_post_v2",
             candid::encode_args((PostDetailsFromFrontend {
                 description: "alice post 1 - description".to_string(),
                 hashtags: vec!["alice-tag-2".to_string(), "alice-tag-3".to_string()],
@@ -158,7 +159,7 @@ fn when_backups_are_run_on_all_the_individual_user_canisters_they_capture_all_re
         .execute_ingress_as(
             bob_principal_id,
             CanisterId::new(PrincipalId(bob_canister_id)).unwrap(),
-            "add_post",
+            "add_post_v2",
             candid::encode_args((PostDetailsFromFrontend {
                 description: "bob post 0 - description".to_string(),
                 hashtags: vec!["bob-tag-0".to_string(), "bob-tag-1".to_string()],
@@ -173,7 +174,7 @@ fn when_backups_are_run_on_all_the_individual_user_canisters_they_capture_all_re
         .execute_ingress_as(
             bob_principal_id,
             CanisterId::new(PrincipalId(bob_canister_id)).unwrap(),
-            "add_post",
+            "add_post_v2",
             candid::encode_args((PostDetailsFromFrontend {
                 description: "bob post 1 - description".to_string(),
                 hashtags: vec!["bob-tag-2".to_string(), "bob-tag-3".to_string()],

@@ -23,12 +23,6 @@ type TopPostsFetchError = variant {
   InvalidBoundsPassed;
   ExceededMaxNumberOfItemsAllowedInOneRequest;
 };
-type UserAccessRole = variant {
-  CanisterController;
-  ProfileOwner;
-  CanisterAdmin;
-  ProjectCanister;
-};
 service : (PostCacheInitArgs) -> {
   get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed : (
       nat64,
@@ -38,7 +32,6 @@ service : (PostCacheInitArgs) -> {
       nat64,
       nat64,
     ) -> (Result) query;
-  get_user_roles : (principal) -> (vec UserAccessRole) query;
   get_well_known_principal_value : (KnownPrincipalType) -> (
       opt principal,
     ) query;
@@ -49,6 +42,4 @@ service : (PostCacheInitArgs) -> {
       vec PostScoreIndexItem,
     ) -> ();
   remove_all_feed_entries : () -> ();
-  update_user_add_role : (UserAccessRole, principal) -> ();
-  update_user_remove_role : (UserAccessRole, principal) -> ();
 }
