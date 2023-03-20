@@ -43,7 +43,7 @@ fn when_creating_a_new_post_then_post_score_should_be_calculated() {
         .execute_ingress_as(
             alice_principal_id,
             CanisterId::new(PrincipalId(alice_canister_id)).unwrap(),
-            "add_post",
+            "add_post_v2",
             candid::encode_args((PostDetailsFromFrontend {
                 description: "This is a fun video to watch".to_string(),
                 hashtags: vec!["fun".to_string(), "video".to_string()],
@@ -53,11 +53,11 @@ fn when_creating_a_new_post_then_post_score_should_be_calculated() {
             .unwrap(),
         )
         .map(|reply_payload| {
-            let (newly_created_post_id,): (u64,) = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_args(&payload).unwrap(),
+            let newly_created_post_id_result: Result<u64, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
                 _ => panic!("\n🛑 add_post failed\n"),
             };
-            newly_created_post_id
+            newly_created_post_id_result.unwrap()
         })
         .unwrap();
 

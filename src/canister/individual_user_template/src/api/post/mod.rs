@@ -1,4 +1,3 @@
-pub mod add_post;
 pub mod add_post_v2;
 pub mod get_entire_individual_post_detail_by_id;
 pub mod get_individual_post_details_by_id;

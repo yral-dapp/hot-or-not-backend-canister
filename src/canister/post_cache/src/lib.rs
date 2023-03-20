@@ -4,7 +4,6 @@ use candid::{export_service, Principal};
 
 use data_model::CanisterData;
 use shared_utils::{
-    access_control::UserAccessRole,
     common::types::{
         init_args::PostCacheInitArgs, known_principal::KnownPrincipalType,
         top_posts::post_score_index_item::PostScoreIndexItem,
