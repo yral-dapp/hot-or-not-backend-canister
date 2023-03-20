@@ -11,7 +11,8 @@ use std::collections::HashMap;
 #[derive(Default, CandidType, Deserialize, Serialize)]
 pub struct CanisterData {
     pub known_principal_ids: KnownPrincipalMap,
-    // TODO: remove this field
+    // TODO: Remove this field on next upgrade
+    #[serde(skip_serializing)]
     pub access_control_map: HashMap<Principal, Vec<UserAccessRole>>,
     pub posts_index_sorted_by_home_feed_score: PostScoreIndex,
     pub posts_index_sorted_by_hot_or_not_feed_score: PostScoreIndex,
