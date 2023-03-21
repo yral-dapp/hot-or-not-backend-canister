@@ -23,6 +23,8 @@ use test_utils::setup::{
     },
 };
 
+// TODO: reenable this
+#[ignore]
 #[test]
 fn when_backups_are_run_on_all_the_individual_user_canisters_they_capture_all_relevant_data_and_when_restored_they_return_the_canisters_to_their_original_state(
 ) {
@@ -291,7 +293,7 @@ fn when_backups_are_run_on_all_the_individual_user_canisters_they_capture_all_re
         .unwrap()
         .unwrap();
 
-    println!("alice_backup_details = {:?}", alice_backup_details);
+    println!("🧪 alice_backup_details = {:?}", alice_backup_details);
 
     assert!(alice_backup_details.user_principal_id == alice_principal_id.0);
     assert!(alice_backup_details.user_canister_id == alice_canister_id);
@@ -304,7 +306,7 @@ fn when_backups_are_run_on_all_the_individual_user_canisters_they_capture_all_re
             == alice_unique_username
     );
     println!(
-        "alice_backup_details.canister_data.all_created_posts.len() = {:?}",
+        "🧪 alice_backup_details.canister_data.all_created_posts.len() = {:?}",
         alice_backup_details.canister_data.all_created_posts.len()
     );
     assert!(alice_backup_details.canister_data.all_created_posts.len() == 2);

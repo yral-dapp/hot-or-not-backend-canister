@@ -3362,6 +3362,7 @@ dependencies = [
  "candid",
  "ic-cdk",
  "ic-state-machine-tests",
+ "ic-test-state-machine-client",
  "shared_utils",
  "test_utils",
 ]

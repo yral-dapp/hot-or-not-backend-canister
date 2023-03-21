@@ -8,12 +8,10 @@ use shared_utils::{
     access_control::UserAccessRole,
     canister_specific::{
         configuration::types::args::ConfigurationInitArgs,
-        data_backup::types::args::DataBackupInitArgs, user_index::types::args::UserIndexInitArgs,
+        data_backup::types::args::DataBackupInitArgs, post_cache::types::arg::PostCacheInitArgs,
+        user_index::types::args::UserIndexInitArgs,
     },
-    common::types::{
-        init_args::PostCacheInitArgs,
-        known_principal::{KnownPrincipalMap, KnownPrincipalType},
-    },
+    common::types::known_principal::{KnownPrincipalMap, KnownPrincipalType},
 };
 
 use crate::setup::test_constants::{
