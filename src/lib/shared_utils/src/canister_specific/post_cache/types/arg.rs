@@ -1,6 +1,6 @@
 use candid::{CandidType, Deserialize};
 
-use super::known_principal::KnownPrincipalMap;
+use crate::common::types::known_principal::KnownPrincipalMap;
 
 #[derive(Deserialize, CandidType, Default)]
 pub struct PostCacheInitArgs {

@@ -34,12 +34,6 @@ fn when_restoring_all_data_to_an_individual_user_canister_after_backing_up_data_
     // * Arrange
     let state_machine = StateMachine::new();
     let known_principal_map = get_initialized_env_with_provisioned_known_canisters(&state_machine);
-    known_principal_map
-        .iter()
-        .for_each(|(principal_type, known_principal)| {
-            println!("🧪 principal_type: {:?}", principal_type);
-            println!("🧪 known_principal: {:?}", known_principal.to_text());
-        });
     let user_index_canister_id = get_canister_id_of_specific_type_from_principal_id_map(
         &known_principal_map,
         KnownPrincipalType::CanisterIdUserIndex,

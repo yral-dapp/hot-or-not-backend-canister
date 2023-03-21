@@ -1,4 +1,4 @@
-use shared_utils::common::types::init_args::PostCacheInitArgs;
+use shared_utils::canister_specific::post_cache::types::arg::PostCacheInitArgs;
 
 use crate::CANISTER_DATA;
 

@@ -1,12 +1,31 @@
-use std::{env, path::Path};
+use std::{collections::HashMap, env, path::Path};
 
+use candid::Principal;
+use ic_cdk::api::management_canister::provisional::CanisterSettings;
 use ic_test_state_machine_client::StateMachine;
+use shared_utils::{
+    access_control::UserAccessRole,
+    canister_specific::{
+        configuration::types::args::ConfigurationInitArgs,
+        data_backup::types::args::DataBackupInitArgs, post_cache::types::arg::PostCacheInitArgs,
+        user_index::types::args::UserIndexInitArgs,
+    },
+    common::types::known_principal::{KnownPrincipalMap, KnownPrincipalType},
+};
+
+use crate::setup::test_constants::{
+    get_canister_wasm, get_global_super_admin_principal_id_v1,
+    v1::{
+        CANISTER_INITIAL_CYCLES_FOR_NON_SPAWNING_CANISTERS,
+        CANISTER_INITIAL_CYCLES_FOR_SPAWNING_CANISTERS,
+    },
+};
 
 /// The path to the state machine binary to run the tests with
 pub static STATE_MACHINE_BINARY: &str = "../../../ic-test-state-machine";
 
 pub fn get_new_state_machine() -> StateMachine {
-    let path = match env::var_os("STATE_MACHINE_BINARY") {
+    let path = match env::var_os("DFX_IC_STATE_MACHINE_TESTS_PATH") {
         None => STATE_MACHINE_BINARY.to_string(),
         Some(path) => path
             .clone()
@@ -31,121 +50,115 @@ pub fn get_new_state_machine() -> StateMachine {
     StateMachine::new(&path, false)
 }
 
-// pub fn get_initialized_env_with_provisioned_known_canisters(
-//     state_machine: &StateMachine,
-// ) -> HashMap<KnownPrincipalType, Principal> {
-//     let canister_provisioner = |cycles: Cycles| {
-//         // state_machine.create_canister_with_cycles(
-//         //     cycles,
-//         //     Some(CanisterSettingsArgs {
-//         //         controllers: Some(vec![PrincipalId(get_global_super_admin_principal_id_v1())]),
-//         //         ..Default::default()
-//         //     }),
-//         // )
-//         state_machine.create_canister()
-//     };
+pub fn get_initialized_env_with_provisioned_known_canisters(
+    state_machine: &StateMachine,
+) -> KnownPrincipalMap {
+    let canister_provisioner = |cycle_amount: u128| {
+        let settings = Some(CanisterSettings {
+            controllers: Some(vec![get_global_super_admin_principal_id_v1()]),
+            ..Default::default()
+        });
+        let canister_id = state_machine.create_canister_with_settings(settings);
+        state_machine.add_cycles(canister_id, cycle_amount);
+        canister_id
+    };
 
-//     // * Provision canisters
-//     let mut known_principal_map_with_all_canisters = HashMap<KnownPrincipalType, Principal>::default();
-//     known_principal_map_with_all_canisters.insert(
-//         KnownPrincipalType::UserIdGlobalSuperAdmin,
-//         get_global_super_admin_principal_id_v1(),
-//     );
-//     known_principal_map_with_all_canisters.insert(
-//         KnownPrincipalType::CanisterIdConfiguration,
-//         canister_provisioner(CANISTER_INITIAL_CYCLES_FOR_NON_SPAWNING_CANISTERS)
-//             .get()
-//             .0,
-//     );
-//     known_principal_map_with_all_canisters.insert(
-//         KnownPrincipalType::CanisterIdDataBackup,
-//         canister_provisioner(CANISTER_INITIAL_CYCLES_FOR_NON_SPAWNING_CANISTERS)
-//             .get()
-//             .0,
-//     );
-//     known_principal_map_with_all_canisters.insert(
-//         KnownPrincipalType::CanisterIdPostCache,
-//         canister_provisioner(CANISTER_INITIAL_CYCLES_FOR_NON_SPAWNING_CANISTERS)
-//             .get()
-//             .0,
-//     );
-//     known_principal_map_with_all_canisters.insert(
-//         KnownPrincipalType::CanisterIdUserIndex,
-//         canister_provisioner(CANISTER_INITIAL_CYCLES_FOR_SPAWNING_CANISTERS)
-//             .get()
-//             .0,
-//     );
+    // * Provision canisters
+    let mut known_principal_map_with_all_canisters = KnownPrincipalMap::default();
+    known_principal_map_with_all_canisters.insert(
+        KnownPrincipalType::UserIdGlobalSuperAdmin,
+        get_global_super_admin_principal_id_v1(),
+    );
+    known_principal_map_with_all_canisters.insert(
+        KnownPrincipalType::CanisterIdConfiguration,
+        canister_provisioner(CANISTER_INITIAL_CYCLES_FOR_NON_SPAWNING_CANISTERS),
+    );
+    known_principal_map_with_all_canisters.insert(
+        KnownPrincipalType::CanisterIdDataBackup,
+        canister_provisioner(CANISTER_INITIAL_CYCLES_FOR_NON_SPAWNING_CANISTERS),
+    );
+    known_principal_map_with_all_canisters.insert(
+        KnownPrincipalType::CanisterIdPostCache,
+        canister_provisioner(CANISTER_INITIAL_CYCLES_FOR_NON_SPAWNING_CANISTERS),
+    );
+    known_principal_map_with_all_canisters.insert(
+        KnownPrincipalType::CanisterIdUserIndex,
+        canister_provisioner(CANISTER_INITIAL_CYCLES_FOR_SPAWNING_CANISTERS),
+    );
 
-//     // * Install canisters
-//     let canister_installer = |canister_id: Principal, canister_wasm: Vec<u8>, payload: Vec<u8>| {
-//         state_machine
-//             .install_wasm_in_mode(
-//                 CanisterId::new(PrincipalId(canister_id)).unwrap(),
-//                 CanisterInstallMode::Install,
-//                 canister_wasm,
-//                 payload,
-//             )
-//             .ok()
-//     };
+    // * Install canisters
+    let canister_installer = |canister_id: Principal, wasm_module: Vec<u8>, arg: Vec<u8>| {
+        state_machine.install_canister(canister_id, wasm_module, arg);
+    };
 
-//     canister_installer(
-//         known_principal_map_with_all_canisters
-//             .get(&KnownPrincipalType::CanisterIdConfiguration)
-//             .unwrap()
-//             .clone(),
-//         get_canister_wasm(KnownPrincipalType::CanisterIdConfiguration),
-//         candid::encode_one(ConfigurationInitArgs {
-//             known_principal_ids: Some(known_principal_map_with_all_canisters.clone()),
-//             ..Default::default()
-//         })
-//         .unwrap(),
-//     );
-//     canister_installer(
-//         known_principal_map_with_all_canisters
-//             .get(&KnownPrincipalType::CanisterIdDataBackup)
-//             .unwrap()
-//             .clone(),
-//         get_canister_wasm(KnownPrincipalType::CanisterIdDataBackup),
-//         candid::encode_one(DataBackupInitArgs {
-//             known_principal_ids: Some(known_principal_map_with_all_canisters.clone()),
-//             ..Default::default()
-//         })
-//         .unwrap(),
-//     );
-//     canister_installer(
-//         known_principal_map_with_all_canisters
-//             .get(&KnownPrincipalType::CanisterIdPostCache)
-//             .unwrap()
-//             .clone(),
-//         get_canister_wasm(KnownPrincipalType::CanisterIdPostCache),
-//         candid::encode_one(PostCacheInitArgs {
-//             known_principal_ids: known_principal_map_with_all_canisters.clone(),
-//         })
-//         .unwrap(),
-//     );
+    canister_installer(
+        known_principal_map_with_all_canisters
+            .get(&KnownPrincipalType::CanisterIdConfiguration)
+            .unwrap()
+            .clone(),
+        get_canister_wasm(KnownPrincipalType::CanisterIdConfiguration),
+        candid::encode_one(ConfigurationInitArgs {
+            known_principal_ids: Some(known_principal_map_with_all_canisters.clone()),
+            ..Default::default()
+        })
+        .unwrap(),
+    );
+    canister_installer(
+        known_principal_map_with_all_canisters
+            .get(&KnownPrincipalType::CanisterIdDataBackup)
+            .unwrap()
+            .clone(),
+        get_canister_wasm(KnownPrincipalType::CanisterIdDataBackup),
+        candid::encode_one(DataBackupInitArgs {
+            known_principal_ids: Some(known_principal_map_with_all_canisters.clone()),
+            ..Default::default()
+        })
+        .unwrap(),
+    );
+    canister_installer(
+        known_principal_map_with_all_canisters
+            .get(&KnownPrincipalType::CanisterIdPostCache)
+            .unwrap()
+            .clone(),
+        get_canister_wasm(KnownPrincipalType::CanisterIdPostCache),
+        candid::encode_one(PostCacheInitArgs {
+            known_principal_ids: Some(known_principal_map_with_all_canisters.clone()),
+        })
+        .unwrap(),
+    );
 
-//     let mut user_index_access_control_map = HashMap::new();
-//     user_index_access_control_map.insert(
-//         get_global_super_admin_principal_id_v1(),
-//         vec![
-//             UserAccessRole::CanisterAdmin,
-//             UserAccessRole::CanisterController,
-//         ],
-//     );
+    let mut user_index_access_control_map = HashMap::new();
+    user_index_access_control_map.insert(
+        get_global_super_admin_principal_id_v1(),
+        vec![
+            UserAccessRole::CanisterAdmin,
+            UserAccessRole::CanisterController,
+        ],
+    );
 
-//     canister_installer(
-//         known_principal_map_with_all_canisters
-//             .get(&KnownPrincipalType::CanisterIdUserIndex)
-//             .unwrap()
-//             .clone(),
-//         get_canister_wasm(KnownPrincipalType::CanisterIdUserIndex),
-//         candid::encode_one(UserIndexInitArgs {
-//             known_principal_ids: Some(known_principal_map_with_all_canisters.clone()),
-//             access_control_map: Some(user_index_access_control_map),
-//             ..Default::default()
-//         })
-//         .unwrap(),
-//     );
+    canister_installer(
+        known_principal_map_with_all_canisters
+            .get(&KnownPrincipalType::CanisterIdUserIndex)
+            .unwrap()
+            .clone(),
+        get_canister_wasm(KnownPrincipalType::CanisterIdUserIndex),
+        candid::encode_one(UserIndexInitArgs {
+            known_principal_ids: Some(known_principal_map_with_all_canisters.clone()),
+            access_control_map: Some(user_index_access_control_map),
+            ..Default::default()
+        })
+        .unwrap(),
+    );
 
-//     known_principal_map_with_all_canisters
-// }
+    known_principal_map_with_all_canisters
+}
+
+pub fn get_canister_id_of_specific_type_from_principal_id_map(
+    principal_id_map: &KnownPrincipalMap,
+    canister_type: KnownPrincipalType,
+) -> Principal {
+    principal_id_map
+        .get(&canister_type)
+        .expect("Canister type not found in principal id map")
+        .clone()
+}

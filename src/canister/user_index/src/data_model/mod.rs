@@ -14,6 +14,8 @@ pub mod canister_upgrade;
 pub struct CanisterData {
     pub last_run_upgrade_status: UpgradeStatus,
     pub known_principal_ids: KnownPrincipalMap,
+    // TODO: remove this field on next upgrade
+    #[serde(skip_serializing)]
     pub access_control_map: HashMap<Principal, Vec<UserAccessRole>>,
     pub user_principal_id_to_canister_id_map: BTreeMap<Principal, Principal>,
     pub unique_user_name_to_user_principal_id_map: BTreeMap<String, Principal>,

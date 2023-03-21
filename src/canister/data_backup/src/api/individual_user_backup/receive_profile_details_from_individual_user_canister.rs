@@ -154,6 +154,50 @@ mod test {
                 .unwrap(),
             "alice".to_string()
         );
+        assert_eq!(
+            canister_data
+                .user_principal_id_to_all_user_data_map
+                .get(&StorablePrincipal(get_mock_user_alice_principal_id()))
+                .unwrap()
+                .canister_data
+                .profile
+                .principal_id
+                .unwrap(),
+            get_mock_user_alice_principal_id()
+        );
+        assert_eq!(
+            canister_data
+                .user_principal_id_to_all_user_data_map
+                .get(&StorablePrincipal(get_mock_user_alice_principal_id()))
+                .unwrap()
+                .canister_data
+                .profile
+                .profile_stats
+                .lifetime_earnings,
+            1500
+        );
+        assert_eq!(
+            canister_data
+                .user_principal_id_to_all_user_data_map
+                .get(&StorablePrincipal(get_mock_user_alice_principal_id()))
+                .unwrap()
+                .canister_data
+                .profile
+                .profile_stats
+                .hots_earned_count,
+            10
+        );
+        assert_eq!(
+            canister_data
+                .user_principal_id_to_all_user_data_map
+                .get(&StorablePrincipal(get_mock_user_alice_principal_id()))
+                .unwrap()
+                .canister_data
+                .profile
+                .profile_stats
+                .nots_earned_count,
+            5
+        );
 
         canister_data.user_principal_id_to_all_user_data_map.insert(
             StorablePrincipal(get_mock_user_alice_principal_id()),

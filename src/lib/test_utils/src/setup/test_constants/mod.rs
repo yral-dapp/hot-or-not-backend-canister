@@ -3,6 +3,8 @@ use ic_state_machine_tests::{CanisterId, Cycles, PrincipalId};
 use shared_utils::common::types::known_principal::KnownPrincipalType;
 use std::{fs::File, io::Read, path::PathBuf};
 
+pub mod v1;
+
 pub const CANISTER_INITIAL_CYCLES_FOR_SPAWNING_CANISTERS: Cycles = Cycles::new(20_000_000_000_000); // 20T
 pub const CANISTER_INITIAL_CYCLES_FOR_NON_SPAWNING_CANISTERS: Cycles =
     Cycles::new(2_000_000_000_000); // 2T
