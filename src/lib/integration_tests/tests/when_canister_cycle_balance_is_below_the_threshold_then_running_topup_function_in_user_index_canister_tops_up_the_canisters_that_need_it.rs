@@ -47,11 +47,11 @@ fn when_canister_cycle_balance_is_below_the_configured_or_freezing_threshold_the
             candid::encode_one(alice_canister_id).unwrap(),
         )
         .map(|reply_payload| {
-            let (response,): (CanisterStatusResponse,) = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_args(&payload).unwrap(),
+            let response: Result<CanisterStatusResponse, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
                 _ => panic!("\n🛑 get_canister_status_from_management_canister failed\n"),
             };
-            response.cycles
+            response.unwrap().cycles
         })
         .unwrap();
 
@@ -85,11 +85,11 @@ fn when_canister_cycle_balance_is_below_the_configured_or_freezing_threshold_the
             candid::encode_one(alice_canister_id).unwrap(),
         )
         .map(|reply_payload| {
-            let (response,): (CanisterStatusResponse,) = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_args(&payload).unwrap(),
+            let response: Result<CanisterStatusResponse, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
                 _ => panic!("\n🛑 get_canister_status_from_management_canister failed\n"),
             };
-            response.cycles
+            response.unwrap().cycles
         })
         .unwrap();
 
@@ -115,11 +115,11 @@ fn when_canister_cycle_balance_is_below_the_configured_or_freezing_threshold_the
             candid::encode_one(alice_canister_id).unwrap(),
         )
         .map(|reply_payload| {
-            let (response,): (CanisterStatusResponse,) = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_args(&payload).unwrap(),
+            let response: Result<CanisterStatusResponse, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
                 _ => panic!("\n🛑 get_canister_status_from_management_canister failed\n"),
             };
-            response.cycles
+            response.unwrap().cycles
         })
         .unwrap();
 
