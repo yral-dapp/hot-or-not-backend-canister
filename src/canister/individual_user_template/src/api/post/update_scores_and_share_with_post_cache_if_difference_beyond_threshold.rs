@@ -18,7 +18,7 @@ use shared_utils::{
 
 use crate::{data_model::CanisterData, CANISTER_DATA};
 
-pub fn update_scores_and_share_with_post_cache_if_difference_beyond_threshold(post_id: u64) {
+pub fn update_scores_and_share_with_post_cache_if_difference_beyond_threshold(post_id: &u64) {
     let current_time = system_time::get_current_system_time_from_ic();
     let canisters_own_principal_id = ic_cdk::id();
 
@@ -28,7 +28,7 @@ pub fn update_scores_and_share_with_post_cache_if_difference_beyond_threshold(po
     ) = CANISTER_DATA.with(|canister_data_ref_cell| {
         update_home_feed_and_hot_or_not_feed_score_and_get_post_index_item_to_send(
             &mut canister_data_ref_cell.borrow_mut(),
-            post_id,
+            *post_id,
             current_time,
             canisters_own_principal_id,
         )
@@ -170,7 +170,7 @@ mod test {
             0,
             Post::new(
                 0,
-                PostDetailsFromFrontend {
+                &PostDetailsFromFrontend {
                     description: "This is a new post".to_string(),
                     hashtags: vec!["#fun".to_string(), "#post".to_string()],
                     video_uid: "abcd1234".to_string(),

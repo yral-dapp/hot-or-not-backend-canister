@@ -31,9 +31,15 @@ fn bet_on_currently_viewing_post(
         )
     });
 
+    // TODO: notify user's canister that bet was placed
+    // TODO: get bet maker's canister from frontend
+    // TODO: at bet maker's canister, send the current caller's principal and validate
+    // TODO: if bet maker has enough balance. Also, if the bet maker's principal being sent is the
+    // TODO: same as the principal saved in the canister. If yes, then save the post_id, slot_id, room_id,
+
     if response.is_ok() {
         update_scores_and_share_with_post_cache_if_difference_beyond_threshold(
-            place_bet_arg.post_id,
+            &place_bet_arg.post_id,
         );
     }
 
@@ -52,6 +58,7 @@ fn bet_on_currently_viewing_post_impl(
         bet_direction,
     } = place_bet_arg;
 
+    // TODO: change faulty logic. The tokens being checked here is the post creator's tokens, not the bet maker's tokens
     if canister_data.my_token_balance.get_utility_token_balance() < bet_amount {
         return Err(BetOnCurrentlyViewingPostError::InsufficientBalance);
     }
@@ -80,7 +87,7 @@ mod test {
             0,
             Post::new(
                 0,
-                PostDetailsFromFrontend {
+                &PostDetailsFromFrontend {
                     description: "Doggos and puppers".into(),
                     hashtags: vec!["doggo".into(), "pupper".into()],
                     video_uid: "abcd#1234".into(),

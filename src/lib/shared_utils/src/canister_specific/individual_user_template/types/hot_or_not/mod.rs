@@ -84,6 +84,8 @@ pub type RoomId = u64;
 #[derive(CandidType, Clone, Deserialize, Default, Debug, Serialize)]
 pub struct RoomDetails {
     pub bets_made: BTreeMap<BetMaker, BetDetails>,
+    // #[serde(default)]
+    pub bet_outcome: RoomBetPossibleOutcomes,
 }
 
 pub type BetMaker = Principal;
@@ -92,6 +94,15 @@ pub type BetMaker = Principal;
 pub struct BetDetails {
     pub amount: u64,
     pub bet_direction: BetDirection,
+}
+
+#[derive(CandidType, Clone, Default, Debug, Deserialize, Serialize)]
+pub enum RoomBetPossibleOutcomes {
+    #[default]
+    BetOngoing,
+    HotWon,
+    NotWon,
+    Draw,
 }
 
 impl Post {
@@ -226,9 +237,13 @@ impl Post {
                             bet_direction: bet_direction.clone(),
                         },
                     );
-                    slot_history
-                        .room_details
-                        .insert(new_room_number, RoomDetails { bets_made });
+                    slot_history.room_details.insert(
+                        new_room_number,
+                        RoomDetails {
+                            bets_made,
+                            ..Default::default()
+                        },
+                    );
                 }
 
                 // * Update aggregate stats
@@ -276,6 +291,30 @@ impl Post {
             BettingStatus::BettingClosed => Err(BetOnCurrentlyViewingPostError::BettingClosed),
         }
     }
+
+    pub fn tabulate_hot_or_not_outcome_for_slot(&mut self, slot_id: &u8) {
+        let slot_to_tabulate = self
+            .hot_or_not_details
+            .as_mut()
+            .unwrap()
+            .slot_history
+            .get_mut(slot_id)
+            .unwrap();
+
+        slot_to_tabulate
+            .room_details
+            .iter()
+            .for_each(|(room_id, room_detail)| {
+                let hot_vote_count_in_room =
+                    room_detail
+                        .bets_made
+                        .iter()
+                        .fold(0, |acc, (_, bet_details)| match bet_details.bet_direction {
+                            BetDirection::Hot => acc + 1,
+                            BetDirection::Not => acc,
+                        });
+            })
+    }
 }
 
 #[cfg(test)]
@@ -292,7 +331,7 @@ mod test {
     fn test_get_hot_or_not_betting_status_for_this_post() {
         let mut post = Post::new(
             0,
-            PostDetailsFromFrontend {
+            &PostDetailsFromFrontend {
                 description: "Doggos and puppers".into(),
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
@@ -500,7 +539,7 @@ mod test {
     fn test_has_this_principal_already_bet_on_this_post() {
         let mut post = Post::new(
             0,
-            PostDetailsFromFrontend {
+            &PostDetailsFromFrontend {
                 description: "Doggos and puppers".into(),
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
@@ -532,7 +571,7 @@ mod test {
     fn test_place_hot_or_not_bet() {
         let mut post = Post::new(
             0,
-            PostDetailsFromFrontend {
+            &PostDetailsFromFrontend {
                 description: "Doggos and puppers".into(),
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
@@ -614,5 +653,112 @@ mod test {
             &SystemTime::now(),
         );
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_tabulate_hot_or_not_outcome_for_slot_case_1() {
+        let post_creation_time = SystemTime::now();
+        let mut post = Post::new(
+            0,
+            &PostDetailsFromFrontend {
+                description: "Doggos and puppers".into(),
+                hashtags: vec!["doggo".into(), "pupper".into()],
+                video_uid: "abcd#1234".into(),
+                creator_consent_for_inclusion_in_hot_or_not: true,
+            },
+            &post_creation_time,
+        );
+
+        assert!(post.hot_or_not_details.is_some());
+
+        let data_set: Vec<(u64, BetDirection, u64, u64)> = vec![
+            (1, BetDirection::Not, 10, 18),
+            (2, BetDirection::Hot, 100, 0),
+            (3, BetDirection::Hot, 100, 0),
+            (4, BetDirection::Not, 100, 180),
+            (5, BetDirection::Hot, 10, 0),
+            (6, BetDirection::Not, 100, 180),
+            (7, BetDirection::Not, 50, 90),
+            (8, BetDirection::Not, 100, 180),
+            (9, BetDirection::Hot, 50, 0),
+            (10, BetDirection::Not, 50, 90),
+            (11, BetDirection::Not, 100, 180),
+            (12, BetDirection::Not, 10, 18),
+            (13, BetDirection::Hot, 100, 0),
+            (14, BetDirection::Not, 10, 18),
+            (15, BetDirection::Hot, 50, 0),
+            (16, BetDirection::Hot, 10, 0),
+            (17, BetDirection::Hot, 10, 0),
+            (18, BetDirection::Hot, 100, 0),
+            (19, BetDirection::Not, 10, 18),
+            (20, BetDirection::Hot, 50, 0),
+            (21, BetDirection::Hot, 10, 0),
+            (22, BetDirection::Not, 50, 90),
+            (23, BetDirection::Not, 50, 90),
+            (24, BetDirection::Hot, 100, 0),
+            (25, BetDirection::Not, 50, 90),
+            (26, BetDirection::Not, 10, 18),
+            (27, BetDirection::Not, 10, 18),
+            (28, BetDirection::Not, 50, 90),
+            (29, BetDirection::Hot, 50, 0),
+            (30, BetDirection::Not, 100, 180),
+            (31, BetDirection::Not, 50, 90),
+            (32, BetDirection::Not, 50, 90),
+            (33, BetDirection::Hot, 100, 0),
+            (34, BetDirection::Not, 10, 18),
+            (35, BetDirection::Not, 10, 18),
+            (36, BetDirection::Not, 100, 180),
+            (37, BetDirection::Hot, 10, 0),
+            (38, BetDirection::Not, 100, 180),
+            (39, BetDirection::Not, 50, 90),
+            (40, BetDirection::Hot, 100, 0),
+            (41, BetDirection::Hot, 50, 0),
+            (42, BetDirection::Not, 10, 18),
+            (43, BetDirection::Hot, 50, 0),
+            (44, BetDirection::Not, 10, 18),
+            (45, BetDirection::Not, 10, 18),
+            (46, BetDirection::Hot, 100, 0),
+            (47, BetDirection::Hot, 50, 0),
+            (48, BetDirection::Hot, 50, 0),
+            (49, BetDirection::Not, 100, 180),
+            (50, BetDirection::Hot, 10, 0),
+            (51, BetDirection::Not, 50, 90),
+            (52, BetDirection::Hot, 10, 0),
+            (53, BetDirection::Not, 50, 90),
+            (54, BetDirection::Not, 10, 18),
+            (55, BetDirection::Hot, 100, 0),
+            (56, BetDirection::Hot, 50, 0),
+            (57, BetDirection::Not, 50, 90),
+            (58, BetDirection::Not, 10, 18),
+            (59, BetDirection::Not, 50, 90),
+            (60, BetDirection::Hot, 10, 0),
+            (61, BetDirection::Not, 10, 18),
+            (62, BetDirection::Not, 50, 90),
+            (63, BetDirection::Not, 50, 90),
+            (64, BetDirection::Not, 10, 18),
+            (65, BetDirection::Not, 10, 18),
+            (66, BetDirection::Not, 100, 180),
+            (67, BetDirection::Hot, 100, 0),
+            (68, BetDirection::Not, 10, 18),
+            (69, BetDirection::Not, 10, 18),
+            (70, BetDirection::Not, 50, 90),
+            (71, BetDirection::Not, 100, 180),
+            (72, BetDirection::Not, 10, 18),
+            (73, BetDirection::Not, 10, 18),
+            (74, BetDirection::Hot, 10, 0),
+            (75, BetDirection::Not, 10, 18),
+        ];
+
+        data_set
+            .iter()
+            .for_each(|(user_id, bet_direction, bet_amount, _)| {
+                let result = post.place_hot_or_not_bet(
+                    &Principal::self_authenticating(&user_id.to_ne_bytes()),
+                    *bet_amount,
+                    bet_direction,
+                    &post_creation_time,
+                );
+                assert!(result.is_ok());
+            });
     }
 }
