@@ -11,8 +11,10 @@ use crate::{
     data_model::CanisterData, CANISTER_DATA,
 };
 
+// TODO: Access control. Inspect if incoming request coming from fleet canister
+
 #[ic_cdk::update]
-#[candid::candid_method(update)]
+// #[candid::candid_method(update)]
 fn bet_on_currently_viewing_post(
     place_bet_arg: PlaceBetArg,
 ) -> Result<BettingStatus, BetOnCurrentlyViewingPostError> {
@@ -20,6 +22,29 @@ fn bet_on_currently_viewing_post(
 
     if api_caller == Principal::anonymous() {
         return Err(BetOnCurrentlyViewingPostError::UserNotLoggedIn);
+    }
+
+    let profile_owner = CANISTER_DATA.with(|canister_data_ref_cell| {
+        canister_data_ref_cell
+            .borrow()
+            .profile
+            .principal_id
+            .ok_or(BetOnCurrentlyViewingPostError::UserPrincipalNotSet)
+    })?;
+
+    if api_caller != profile_owner {
+        return Err(BetOnCurrentlyViewingPostError::Unauthorized);
+    }
+
+    let utlility_token_balance = CANISTER_DATA.with(|canister_data_ref_cell| {
+        canister_data_ref_cell
+            .borrow()
+            .my_token_balance
+            .get_utility_token_balance()
+    });
+
+    if utlility_token_balance < place_bet_arg.bet_amount {
+        return Err(BetOnCurrentlyViewingPostError::InsufficientBalance);
     }
 
     let response = CANISTER_DATA.with(|canister_data_ref_cell| {
@@ -56,12 +81,10 @@ fn bet_on_currently_viewing_post_impl(
         post_id,
         bet_amount,
         bet_direction,
+        ..
     } = place_bet_arg;
 
     // TODO: change faulty logic. The tokens being checked here is the post creator's tokens, not the bet maker's tokens
-    if canister_data.my_token_balance.get_utility_token_balance() < bet_amount {
-        return Err(BetOnCurrentlyViewingPostError::InsufficientBalance);
-    }
 
     let post = canister_data.all_created_posts.get_mut(&post_id).unwrap();
 

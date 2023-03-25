@@ -23,6 +23,7 @@ impl IndividualUserTemplateInitArgs {
 
 #[derive(Deserialize, CandidType, Clone)]
 pub struct PlaceBetArg {
+    pub canister_id: Principal,
     pub post_id: u64,
     pub bet_amount: u64,
     pub bet_direction: BetDirection,
