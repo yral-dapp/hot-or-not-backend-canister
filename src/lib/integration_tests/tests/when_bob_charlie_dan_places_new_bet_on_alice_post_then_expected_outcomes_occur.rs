@@ -20,7 +20,7 @@ use test_utils::setup::{
         get_initialized_env_with_provisioned_known_canisters,
     },
     test_constants::{
-        get_alice_principal_id, get_mock_user_alice_principal_id, get_mock_user_bob_principal_id,
+        get_mock_user_alice_principal_id, get_mock_user_bob_principal_id,
         get_mock_user_charlie_principal_id, get_mock_user_dan_principal_id,
     },
 };
@@ -37,7 +37,10 @@ fn when_bob_charlie_dan_places_new_bet_on_alice_post_then_expected_outcomes_occu
         &known_principal_map,
         KnownPrincipalType::CanisterIdPostCache,
     );
-    let alice_principal_id = get_alice_principal_id();
+    let alice_principal_id = PrincipalId(get_mock_user_alice_principal_id());
+    let bob_principal_id = PrincipalId(get_mock_user_bob_principal_id());
+    let charlie_principal_id = PrincipalId(get_mock_user_charlie_principal_id());
+    let dan_principal_id = PrincipalId(get_mock_user_dan_principal_id());
 
     println!("🧪 user_index_canister_id: {:?}", user_index_canister_id);
 
@@ -52,6 +55,45 @@ fn when_bob_charlie_dan_places_new_bet_on_alice_post_then_expected_outcomes_occu
             _ => panic!("\n🛑 get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer failed\n"),
         };
         alice_canister_id
+    }).unwrap();
+
+    let bob_canister_id = state_machine.execute_ingress_as(
+        bob_principal_id,
+        user_index_canister_id,
+        "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer",
+        candid::encode_one(()).unwrap(),
+    ).map(|reply_payload| {
+        let (bob_canister_id,): (Principal,) = match reply_payload {
+            WasmResult::Reply(payload) => candid::decode_args(&payload).unwrap(),
+            _ => panic!("\n🛑 get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer failed\n"),
+        };
+        bob_canister_id
+    }).unwrap();
+
+    let charlie_canister_id = state_machine.execute_ingress_as(
+        charlie_principal_id,
+        user_index_canister_id,
+        "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer",
+        candid::encode_one(()).unwrap(),
+    ).map(|reply_payload| {
+        let (charlie_canister_id,): (Principal,) = match reply_payload {
+            WasmResult::Reply(payload) => candid::decode_args(&payload).unwrap(),
+            _ => panic!("\n🛑 get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer failed\n"),
+        };
+        charlie_canister_id
+    }).unwrap();
+
+    let dan_canister_id = state_machine.execute_ingress_as(
+        dan_principal_id,
+        user_index_canister_id,
+        "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer",
+        candid::encode_one(()).unwrap(),
+    ).map(|reply_payload| {
+        let (dan_canister_id,): (Principal,) = match reply_payload {
+            WasmResult::Reply(payload) => candid::decode_args(&payload).unwrap(),
+            _ => panic!("\n🛑 get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer failed\n"),
+        };
+        dan_canister_id
     }).unwrap();
 
     println!("🧪 alice_canister_id: {:?}", alice_canister_id.to_text());
@@ -259,6 +301,7 @@ fn when_bob_charlie_dan_places_new_bet_on_alice_post_then_expected_outcomes_occu
 
     // * Bob bets on the post
     let bob_place_bet_arg = PlaceBetArg {
+        post_canister_id: returned_post.publisher_canister_id,
         post_id: returned_post.post_id,
         bet_amount: 50,
         bet_direction: BetDirection::Hot,
@@ -267,7 +310,7 @@ fn when_bob_charlie_dan_places_new_bet_on_alice_post_then_expected_outcomes_occu
     let bet_status = state_machine
         .execute_ingress_as(
             PrincipalId(get_mock_user_bob_principal_id()),
-            CanisterId::new(PrincipalId(returned_post.publisher_canister_id)).unwrap(),
+            CanisterId::new(PrincipalId(bob_canister_id)).unwrap(),
             "bet_on_currently_viewing_post",
             candid::encode_one(bob_place_bet_arg).unwrap(),
         )
@@ -280,6 +323,7 @@ fn when_bob_charlie_dan_places_new_bet_on_alice_post_then_expected_outcomes_occu
             bet_status
         })
         .unwrap();
+    println!("🧪 bet_status: {:?}", bet_status);
     assert!(bet_status.is_ok());
     assert_eq!(
         bet_status.unwrap(),
@@ -401,6 +445,7 @@ fn when_bob_charlie_dan_places_new_bet_on_alice_post_then_expected_outcomes_occu
 
     // * Charlie bets on the post
     let charlie_place_bet_arg = PlaceBetArg {
+        post_canister_id: returned_post.publisher_canister_id,
         post_id: returned_post.post_id,
         bet_amount: 100,
         bet_direction: BetDirection::Not,
@@ -409,7 +454,7 @@ fn when_bob_charlie_dan_places_new_bet_on_alice_post_then_expected_outcomes_occu
     let bet_status = state_machine
         .execute_ingress_as(
             PrincipalId(get_mock_user_charlie_principal_id()),
-            CanisterId::new(PrincipalId(returned_post.publisher_canister_id)).unwrap(),
+            CanisterId::new(PrincipalId(charlie_canister_id)).unwrap(),
             "bet_on_currently_viewing_post",
             candid::encode_one(charlie_place_bet_arg).unwrap(),
         )
@@ -669,6 +714,7 @@ fn when_bob_charlie_dan_places_new_bet_on_alice_post_then_expected_outcomes_occu
 
     // * Dan bets on the post
     let dan_place_bet_arg = PlaceBetArg {
+        post_canister_id: returned_post.publisher_canister_id,
         post_id: returned_post.post_id,
         bet_amount: 10,
         bet_direction: BetDirection::Hot,
@@ -677,7 +723,7 @@ fn when_bob_charlie_dan_places_new_bet_on_alice_post_then_expected_outcomes_occu
     let bet_status = state_machine
         .execute_ingress_as(
             PrincipalId(get_mock_user_dan_principal_id()),
-            CanisterId::new(PrincipalId(returned_post.publisher_canister_id)).unwrap(),
+            CanisterId::new(PrincipalId(dan_canister_id)).unwrap(),
             "bet_on_currently_viewing_post",
             candid::encode_one(dan_place_bet_arg).unwrap(),
         )
@@ -871,31 +917,4 @@ fn when_bob_charlie_dan_places_new_bet_on_alice_post_then_expected_outcomes_occu
     assert_eq!(returned_post.post_id, newly_created_post_id);
     assert_eq!(returned_post.score, 16_036);
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
-
-    // let alice_first_post_detail = state_machine
-    //     .query(
-    //         CanisterId::new(PrincipalId(returned_post.publisher_canister_id)).unwrap(),
-    //         "get_individual_post_details_by_id",
-    //         candid::encode_args((returned_post.post_id,)).unwrap(),
-    //     )
-    //     .map(|reply_payload| {
-    //         let post_details: PostDetailsForFrontend = match reply_payload {
-    //             WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-    //             _ => panic!("\n🛑 get_individual_post_details_by_id failed\n"),
-    //         };
-    //         post_details
-    //     })
-    //     .unwrap();
-
-    // println!("🧪 alice_first_post_detail: {:?}", alice_first_post_detail);
-    // assert_eq!(alice_first_post_detail.home_feed_ranking_score, 7_840);
-    // assert_eq!(
-    //     alice_first_post_detail.hot_or_not_feed_ranking_score,
-    //     Some(6_840)
-    // );
-    // assert_eq!(alice_first_post_detail.home_feed_ranking_score, 3000);
-    // assert_eq!(
-    //     alice_first_post_detail.hot_or_not_feed_ranking_score,
-    //     Some(3000)
-    // );
 }

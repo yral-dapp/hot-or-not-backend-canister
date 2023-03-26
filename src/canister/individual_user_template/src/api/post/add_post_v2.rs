@@ -1,4 +1,4 @@
-use std::time::{Duration, SystemTime};
+use std::time::SystemTime;
 
 use shared_utils::{
     canister_specific::individual_user_template::types::post::{Post, PostDetailsFromFrontend},
@@ -78,11 +78,12 @@ fn add_post_to_memory(
     Ok(new_post_id)
 }
 
-fn tabulate_hot_or_not_outcome_for_post_slot(
-    canister_data: &mut CanisterData,
-    post_id: u64,
-    slot_id: u8,
-) {
-    let post_to_tabulate_results_for = canister_data.all_created_posts.get_mut(&post_id).unwrap();
-    post_to_tabulate_results_for.tabulate_hot_or_not_outcome_for_slot(&slot_id);
-}
+// TODO: enable
+// fn tabulate_hot_or_not_outcome_for_post_slot(
+//     canister_data: &mut CanisterData,
+//     post_id: u64,
+//     slot_id: u8,
+// ) {
+//     let post_to_tabulate_results_for = canister_data.all_created_posts.get_mut(&post_id).unwrap();
+//     post_to_tabulate_results_for.tabulate_hot_or_not_outcome_for_slot(&slot_id);
+// }

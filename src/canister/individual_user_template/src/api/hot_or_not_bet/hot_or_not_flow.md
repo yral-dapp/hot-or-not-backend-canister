@@ -1,4 +1,4 @@
-# Scenarios
+# Process Flow
 
 - Anonymous/authenticated user queries a post for hot or not details
 - Authenticated user places a bet on a post

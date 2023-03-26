@@ -12,9 +12,12 @@ type AnotherUserFollowedMeError = variant {
 type BetDetails = record { bet_direction : BetDirection; amount : nat64 };
 type BetDirection = variant { Hot; Not };
 type BetOnCurrentlyViewingPostError = variant {
+  UserPrincipalNotSet;
   InsufficientBalance;
   UserAlreadyParticipatedInThisPost;
   BettingClosed;
+  Unauthorized;
+  PostCreatorCanisterCallFailed;
   UserNotLoggedIn;
 };
 type BettingStatus = variant {
@@ -79,6 +82,7 @@ type PlaceBetArg = record {
   bet_amount : nat64;
   post_id : nat64;
   bet_direction : BetDirection;
+  post_canister_id : principal;
 };
 type Post = record {
   id : nat64;
@@ -237,6 +241,7 @@ service : (IndividualUserTemplateInitArgs) -> {
   get_well_known_principal_value : (KnownPrincipalType) -> (
       opt principal,
     ) query;
+  receive_bet_from_bet_makers_canister : (PlaceBetArg, principal) -> (Result_1);
   receive_my_created_posts_from_data_backup_canister : (vec Post) -> ();
   receive_my_profile_from_data_backup_canister : (UserProfile) -> ();
   receive_my_utility_token_balance_from_data_backup_canister : (nat64) -> ();

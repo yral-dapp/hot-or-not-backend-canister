@@ -22,4 +22,5 @@ pub enum BetOnCurrentlyViewingPostError {
     UserAlreadyParticipatedInThisPost,
     UserNotLoggedIn,
     UserPrincipalNotSet,
+    PostCreatorCanisterCallFailed,
 }
