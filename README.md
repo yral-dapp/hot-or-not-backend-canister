@@ -1,18 +1,6 @@
-# Hot or Not backend canister
+# On a new OS, this needs to be setup
 
-- Respond with get details of the bet on successful
-  - user bet info
-    - direction
-    - amount
-  - user actual alloted room/slot
-  - outcome
-
-User bet details
-
-- when i bet
-
-Outcome
-
-- win/lose/draw
-  - Win
-    - amount
+```bash
+sudo nix-channel --add https:///nixos.org/channels/nixos-22.11
+sudo nix-channel --update nixos-22.11
+```

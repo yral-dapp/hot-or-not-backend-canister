@@ -176,14 +176,14 @@ impl Post {
 
     pub fn new(
         id: u64,
-        post_details_from_frontend: PostDetailsFromFrontend,
+        post_details_from_frontend: &PostDetailsFromFrontend,
         current_time: &SystemTime,
     ) -> Self {
         Post {
             id,
-            description: post_details_from_frontend.description,
-            hashtags: post_details_from_frontend.hashtags,
-            video_uid: post_details_from_frontend.video_uid,
+            description: (*post_details_from_frontend.description).to_string(),
+            hashtags: (*post_details_from_frontend.hashtags).to_vec(),
+            video_uid: (*post_details_from_frontend.video_uid).to_string(),
             status: PostStatus::Uploaded,
             created_at: current_time.clone(),
             likes: HashSet::new(),
@@ -406,7 +406,7 @@ mod test {
     fn test_new() {
         let post = Post::new(
             0,
-            PostDetailsFromFrontend {
+            &PostDetailsFromFrontend {
                 description: "This is a new post".to_string(),
                 hashtags: vec!["#fun".to_string(), "#post".to_string()],
                 video_uid: "abcd1234".to_string(),
@@ -419,7 +419,7 @@ mod test {
 
         let post = Post::new(
             0,
-            PostDetailsFromFrontend {
+            &PostDetailsFromFrontend {
                 description: "This is a new post".to_string(),
                 hashtags: vec!["#fun".to_string(), "#post".to_string()],
                 video_uid: "abcd1234".to_string(),
@@ -444,7 +444,7 @@ mod test {
             .unwrap();
         let mut post = Post::new(
             0,
-            PostDetailsFromFrontend {
+            &PostDetailsFromFrontend {
                 description: "Doggos and puppers".into(),
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
@@ -517,7 +517,7 @@ mod test {
             .unwrap();
         let mut post = Post::new(
             0,
-            PostDetailsFromFrontend {
+            &PostDetailsFromFrontend {
                 description: "Doggos and puppers".into(),
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
@@ -590,7 +590,7 @@ mod test {
             .unwrap();
         let mut post = Post::new(
             0,
-            PostDetailsFromFrontend {
+            &PostDetailsFromFrontend {
                 description: "Doggos and puppers".into(),
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
@@ -666,7 +666,7 @@ mod test {
             .unwrap();
         let mut post = Post::new(
             0,
-            PostDetailsFromFrontend {
+            &PostDetailsFromFrontend {
                 description: "Doggos and puppers".into(),
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
@@ -743,7 +743,7 @@ mod test {
             .unwrap();
         let mut post = Post::new(
             0,
-            PostDetailsFromFrontend {
+            &PostDetailsFromFrontend {
                 description: "Doggos and puppers".into(),
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
@@ -820,7 +820,7 @@ mod test {
             .unwrap();
         let mut post = Post::new(
             0,
-            PostDetailsFromFrontend {
+            &PostDetailsFromFrontend {
                 description: "Doggos and puppers".into(),
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
@@ -897,7 +897,7 @@ mod test {
             .unwrap();
         let mut post = Post::new(
             0,
-            PostDetailsFromFrontend {
+            &PostDetailsFromFrontend {
                 description: "Doggos and puppers".into(),
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
@@ -974,7 +974,7 @@ mod test {
             .unwrap();
         let mut post = Post::new(
             0,
-            PostDetailsFromFrontend {
+            &PostDetailsFromFrontend {
                 description: "Doggos and puppers".into(),
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
@@ -1051,7 +1051,7 @@ mod test {
             .unwrap();
         let mut post = Post::new(
             0,
-            PostDetailsFromFrontend {
+            &PostDetailsFromFrontend {
                 description: "Doggos and puppers".into(),
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
@@ -1128,7 +1128,7 @@ mod test {
             .unwrap();
         let mut post = Post::new(
             0,
-            PostDetailsFromFrontend {
+            &PostDetailsFromFrontend {
                 description: "Doggos and puppers".into(),
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
@@ -1205,7 +1205,7 @@ mod test {
             .unwrap();
         let mut post = Post::new(
             0,
-            PostDetailsFromFrontend {
+            &PostDetailsFromFrontend {
                 description: "Doggos and puppers".into(),
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
@@ -1292,7 +1292,7 @@ mod test {
             .unwrap();
         let mut post = Post::new(
             0,
-            PostDetailsFromFrontend {
+            &PostDetailsFromFrontend {
                 description: "Doggos and puppers".into(),
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
@@ -1379,7 +1379,7 @@ mod test {
             .unwrap();
         let mut post = Post::new(
             0,
-            PostDetailsFromFrontend {
+            &PostDetailsFromFrontend {
                 description: "Doggos and puppers".into(),
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
@@ -1469,7 +1469,7 @@ mod test {
             .unwrap();
         let mut post = Post::new(
             0,
-            PostDetailsFromFrontend {
+            &PostDetailsFromFrontend {
                 description: "Doggos and puppers".into(),
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
@@ -1560,7 +1560,7 @@ mod test {
             .unwrap();
         let mut post = Post::new(
             0,
-            PostDetailsFromFrontend {
+            &PostDetailsFromFrontend {
                 description: "Doggos and puppers".into(),
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
@@ -1651,7 +1651,7 @@ mod test {
             .unwrap();
         let mut post = Post::new(
             0,
-            PostDetailsFromFrontend {
+            &PostDetailsFromFrontend {
                 description: "Doggos and puppers".into(),
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
@@ -1742,7 +1742,7 @@ mod test {
             .unwrap();
         let mut post = Post::new(
             0,
-            PostDetailsFromFrontend {
+            &PostDetailsFromFrontend {
                 description: "Doggos and puppers".into(),
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
@@ -1833,7 +1833,7 @@ mod test {
             .unwrap();
         let mut post = Post::new(
             0,
-            PostDetailsFromFrontend {
+            &PostDetailsFromFrontend {
                 description: "Doggos and puppers".into(),
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
@@ -1924,7 +1924,7 @@ mod test {
             .unwrap();
         let mut post = Post::new(
             0,
-            PostDetailsFromFrontend {
+            &PostDetailsFromFrontend {
                 description: "Doggos and puppers".into(),
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
@@ -2015,7 +2015,7 @@ mod test {
             .unwrap();
         let mut post = Post::new(
             0,
-            PostDetailsFromFrontend {
+            &PostDetailsFromFrontend {
                 description: "Doggos and puppers".into(),
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
@@ -2100,7 +2100,7 @@ mod test {
             .unwrap();
         let mut post = Post::new(
             0,
-            PostDetailsFromFrontend {
+            &PostDetailsFromFrontend {
                 description: "Doggos and puppers".into(),
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),

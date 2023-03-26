@@ -12,9 +12,12 @@ type AnotherUserFollowedMeError = variant {
 type BetDetails = record { bet_direction : BetDirection; amount : nat64 };
 type BetDirection = variant { Hot; Not };
 type BetOnCurrentlyViewingPostError = variant {
+  UserPrincipalNotSet;
   InsufficientBalance;
   UserAlreadyParticipatedInThisPost;
   BettingClosed;
+  Unauthorized;
+  PostCreatorCanisterCallFailed;
   UserNotLoggedIn;
 };
 type BettingStatus = variant {
@@ -79,6 +82,7 @@ type PlaceBetArg = record {
   bet_amount : nat64;
   post_id : nat64;
   bet_direction : BetDirection;
+  post_canister_id : principal;
 };
 type Post = record {
   id : nat64;
@@ -164,7 +168,11 @@ type Result_8 = variant {
   Err : UpdateProfileDetailsError;
 };
 type Result_9 = variant { Ok; Err : UpdateProfileSetUniqueUsernameError };
-type RoomDetails = record { bets_made : vec record { principal; BetDetails } };
+type RoomBetPossibleOutcomes = variant { HotWon; BetOngoing; Draw; NotWon };
+type RoomDetails = record {
+  bets_made : vec record { principal; BetDetails };
+  bet_outcome : RoomBetPossibleOutcomes;
+};
 type SlotDetails = record { room_details : vec record { nat64; RoomDetails } };
 type SystemTime = record {
   nanos_since_epoch : nat32;
@@ -233,6 +241,7 @@ service : (IndividualUserTemplateInitArgs) -> {
   get_well_known_principal_value : (KnownPrincipalType) -> (
       opt principal,
     ) query;
+  receive_bet_from_bet_makers_canister : (PlaceBetArg, principal) -> (Result_1);
   receive_my_created_posts_from_data_backup_canister : (vec Post) -> ();
   receive_my_profile_from_data_backup_canister : (UserProfile) -> ();
   receive_my_utility_token_balance_from_data_backup_canister : (nat64) -> ();

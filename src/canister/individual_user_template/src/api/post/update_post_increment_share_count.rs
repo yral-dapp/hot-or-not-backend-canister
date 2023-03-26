@@ -23,7 +23,7 @@ fn update_post_increment_share_count(id: u64) -> u64 {
         updated_share_count
     });
 
-    update_scores_and_share_with_post_cache_if_difference_beyond_threshold(id);
+    update_scores_and_share_with_post_cache_if_difference_beyond_threshold(&id);
 
     response
 }

@@ -3,37 +3,38 @@ use ic_cdk::api::management_canister::{
     main::{self, CanisterStatusResponse},
     provisional::CanisterIdRecord,
 };
-use shared_utils::access_control::{self, UserAccessRole};
+use shared_utils::common::types::known_principal::KnownPrincipalType;
 
 use crate::CANISTER_DATA;
 
 // TODO: move this to the individual canisters
 // TODO: Do this by calling this via the user_index canister
-// TODO: Also investigate why global principal is unable to call this. Are we not setting global principal as a controller when provisioning this canister?
-// TODO: Remove this endpoint altogether if the testing runtime has direct access to this data
 #[ic_cdk::update]
 #[candid::candid_method(update)]
 async fn get_canister_status_from_management_canister(
     canister_id: Principal,
-) -> CanisterStatusResponse {
+) -> Result<CanisterStatusResponse, String> {
     let api_caller = ic_cdk::caller();
 
-    let access_control_map = CANISTER_DATA
-        .with(|canister_data_ref_cell| canister_data_ref_cell.borrow().access_control_map.clone());
+    let global_super_admin = CANISTER_DATA.with(|canister_data_ref_cell| {
+        canister_data_ref_cell
+            .borrow()
+            .known_principal_ids
+            .get(&KnownPrincipalType::UserIdGlobalSuperAdmin)
+            .unwrap()
+            .clone()
+    });
 
-    // TODO: update the return type of this method so that unauthorized callers are informed accordingly
-    if !access_control::does_principal_have_role_v2(
-        &access_control_map,
-        UserAccessRole::CanisterAdmin,
-        api_caller,
-    ) {
-        panic!("Unauthorized caller");
-    };
+    if api_caller != global_super_admin {
+        return Err(format!(
+            "Only the global super admin can call this method. Caller: {:?}",
+            api_caller
+        ));
+    }
 
-    let (response,): (CanisterStatusResponse,) =
-        main::canister_status(CanisterIdRecord { canister_id })
-            .await
-            .unwrap();
+    let (response,) = main::canister_status(CanisterIdRecord { canister_id })
+        .await
+        .map_err(|e| format!("Error calling canister_status: {:?}", e))?;
 
-    response
+    Ok(response)
 }

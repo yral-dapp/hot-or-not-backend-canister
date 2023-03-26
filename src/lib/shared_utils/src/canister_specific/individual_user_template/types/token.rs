@@ -8,6 +8,7 @@ use crate::types::utility_token::token_event::TokenEvent;
 #[derive(Default, Clone, Deserialize, CandidType, Debug, Serialize)]
 pub struct TokenBalance {
     pub utility_token_balance: u64,
+    // TODO: remove v1 from name
     pub utility_token_transaction_history_v1: BTreeMap<u64, TokenEvent>,
 }
 

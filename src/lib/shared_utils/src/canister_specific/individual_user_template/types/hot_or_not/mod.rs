@@ -84,6 +84,8 @@ pub type RoomId = u64;
 #[derive(CandidType, Clone, Deserialize, Default, Debug, Serialize)]
 pub struct RoomDetails {
     pub bets_made: BTreeMap<BetMaker, BetDetails>,
+    // #[serde(default)]
+    pub bet_outcome: RoomBetPossibleOutcomes,
 }
 
 pub type BetMaker = Principal;
@@ -94,63 +96,73 @@ pub struct BetDetails {
     pub bet_direction: BetDirection,
 }
 
+#[derive(CandidType, Clone, Default, Debug, Deserialize, Serialize)]
+pub enum RoomBetPossibleOutcomes {
+    #[default]
+    BetOngoing,
+    HotWon,
+    NotWon,
+    Draw,
+}
+
 impl Post {
     pub fn get_hot_or_not_betting_status_for_this_post(
         &self,
         current_time_when_request_being_made: &SystemTime,
-        current_request_maker: &Principal,
+        bet_maker_principal_id: &Principal,
     ) -> BettingStatus {
-        let betting_status = match current_time_when_request_being_made
-            .duration_since(self.created_at)
-            .unwrap()
-            .as_secs()
-        {
-            // * contest is still ongoing
-            0..=TOTAL_DURATION_OF_ALL_SLOTS_IN_SECONDS => {
-                let started_at = self.created_at;
-                let numerator = current_time_when_request_being_made
-                    .duration_since(started_at)
-                    .unwrap()
-                    .as_secs();
+        let betting_status =
+            match current_time_when_request_being_made
+                .duration_since(self.created_at)
+                .unwrap()
+                .as_secs()
+            {
+                // * contest is still ongoing
+                0..=TOTAL_DURATION_OF_ALL_SLOTS_IN_SECONDS => {
+                    let started_at = self.created_at;
+                    let numerator = current_time_when_request_being_made
+                        .duration_since(started_at)
+                        .unwrap()
+                        .as_secs();
 
-                let denominator = DURATION_OF_EACH_SLOT_IN_SECONDS;
-                let currently_ongoing_slot = ((numerator / denominator) + 1) as u8;
+                    let denominator = DURATION_OF_EACH_SLOT_IN_SECONDS;
+                    let currently_ongoing_slot = ((numerator / denominator) + 1) as u8;
 
-                let temp_hot_or_not_default = &HotOrNotDetails::default();
-                let temp_slot_details_default = &SlotDetails::default();
-                let room_details = &self
-                    .hot_or_not_details
-                    .as_ref()
-                    .unwrap_or(temp_hot_or_not_default)
-                    .slot_history
-                    .get(&currently_ongoing_slot)
-                    .unwrap_or(temp_slot_details_default)
-                    .room_details;
+                    let temp_hot_or_not_default = &HotOrNotDetails::default();
+                    let temp_slot_details_default = &SlotDetails::default();
+                    let room_details = &self
+                        .hot_or_not_details
+                        .as_ref()
+                        .unwrap_or(temp_hot_or_not_default)
+                        .slot_history
+                        .get(&currently_ongoing_slot)
+                        .unwrap_or(temp_slot_details_default)
+                        .room_details;
 
-                let temp_room_details_default = &RoomDetails::default();
-                let currently_active_room = room_details
-                    .last_key_value()
-                    .unwrap_or((&1, temp_room_details_default));
-                let number_of_participants = currently_active_room.1.bets_made.len() as u8;
-                BettingStatus::BettingOpen {
-                    started_at,
-                    number_of_participants,
-                    ongoing_slot: currently_ongoing_slot,
-                    ongoing_room: *currently_active_room.0 as u64,
-                    has_this_user_participated_in_this_post: if *current_request_maker
-                        == Principal::anonymous()
-                    {
-                        None
-                    } else {
-                        Some(
-                            self.has_this_principal_already_bet_on_this_post(current_request_maker),
-                        )
-                    },
+                    let temp_room_details_default = &RoomDetails::default();
+                    let currently_active_room = room_details
+                        .last_key_value()
+                        .unwrap_or((&1, temp_room_details_default));
+                    let number_of_participants = currently_active_room.1.bets_made.len() as u8;
+                    BettingStatus::BettingOpen {
+                        started_at,
+                        number_of_participants,
+                        ongoing_slot: currently_ongoing_slot,
+                        ongoing_room: *currently_active_room.0 as u64,
+                        has_this_user_participated_in_this_post: if *bet_maker_principal_id
+                            == Principal::anonymous()
+                        {
+                            None
+                        } else {
+                            Some(self.has_this_principal_already_bet_on_this_post(
+                                bet_maker_principal_id,
+                            ))
+                        },
+                    }
                 }
-            }
-            // * contest is over
-            _ => BettingStatus::BettingClosed,
-        };
+                // * contest is over
+                _ => BettingStatus::BettingClosed,
+            };
 
         betting_status
     }
@@ -173,26 +185,29 @@ impl Post {
 
     pub fn place_hot_or_not_bet(
         &mut self,
-        api_caller: &Principal,
+        bet_maker_principal_id: &Principal,
         bet_amount: u64,
         bet_direction: &BetDirection,
         current_time_when_request_being_made: &SystemTime,
     ) -> Result<BettingStatus, BetOnCurrentlyViewingPostError> {
+        if *bet_maker_principal_id == Principal::anonymous() {
+            return Err(BetOnCurrentlyViewingPostError::UserNotLoggedIn);
+        }
+
         let betting_status = self.get_hot_or_not_betting_status_for_this_post(
             current_time_when_request_being_made,
-            api_caller,
+            bet_maker_principal_id,
         );
 
         match betting_status {
+            BettingStatus::BettingClosed => Err(BetOnCurrentlyViewingPostError::BettingClosed),
             BettingStatus::BettingOpen {
                 ongoing_slot,
                 ongoing_room,
                 has_this_user_participated_in_this_post,
                 ..
             } => {
-                if has_this_user_participated_in_this_post.is_none()
-                    || has_this_user_participated_in_this_post.unwrap()
-                {
+                if has_this_user_participated_in_this_post.unwrap() {
                     return Err(BetOnCurrentlyViewingPostError::UserAlreadyParticipatedInThisPost);
                 }
 
@@ -210,7 +225,7 @@ impl Post {
                 // * Update slot history details
                 if bets_made_currently.len() < 100 {
                     bets_made_currently.insert(
-                        api_caller.clone(),
+                        bet_maker_principal_id.clone(),
                         BetDetails {
                             amount: bet_amount,
                             bet_direction: bet_direction.clone(),
@@ -220,15 +235,19 @@ impl Post {
                     let new_room_number = ongoing_room + 1;
                     let mut bets_made = BTreeMap::default();
                     bets_made.insert(
-                        api_caller.clone(),
+                        bet_maker_principal_id.clone(),
                         BetDetails {
                             amount: bet_amount,
                             bet_direction: bet_direction.clone(),
                         },
                     );
-                    slot_history
-                        .room_details
-                        .insert(new_room_number, RoomDetails { bets_made });
+                    slot_history.room_details.insert(
+                        new_room_number,
+                        RoomDetails {
+                            bets_made,
+                            ..Default::default()
+                        },
+                    );
                 }
 
                 // * Update aggregate stats
@@ -273,9 +292,33 @@ impl Post {
                     has_this_user_participated_in_this_post: Some(true),
                 })
             }
-            BettingStatus::BettingClosed => Err(BetOnCurrentlyViewingPostError::BettingClosed),
         }
     }
+
+    // TODO: enable
+    // pub fn tabulate_hot_or_not_outcome_for_slot(&mut self, slot_id: &u8) {
+    //     let slot_to_tabulate = self
+    //         .hot_or_not_details
+    //         .as_mut()
+    //         .unwrap()
+    //         .slot_history
+    //         .get_mut(slot_id)
+    //         .unwrap();
+
+    //     slot_to_tabulate
+    //         .room_details
+    //         .iter()
+    //         .for_each(|(room_id, room_detail)| {
+    //             let hot_vote_count_in_room =
+    //                 room_detail
+    //                     .bets_made
+    //                     .iter()
+    //                     .fold(0, |acc, (_, bet_details)| match bet_details.bet_direction {
+    //                         BetDirection::Hot => acc + 1,
+    //                         BetDirection::Not => acc,
+    //                     });
+    //         })
+    // }
 }
 
 #[cfg(test)]
@@ -292,7 +335,7 @@ mod test {
     fn test_get_hot_or_not_betting_status_for_this_post() {
         let mut post = Post::new(
             0,
-            PostDetailsFromFrontend {
+            &PostDetailsFromFrontend {
                 description: "Doggos and puppers".into(),
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
@@ -500,7 +543,7 @@ mod test {
     fn test_has_this_principal_already_bet_on_this_post() {
         let mut post = Post::new(
             0,
-            PostDetailsFromFrontend {
+            &PostDetailsFromFrontend {
                 description: "Doggos and puppers".into(),
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
@@ -532,7 +575,7 @@ mod test {
     fn test_place_hot_or_not_bet() {
         let mut post = Post::new(
             0,
-            PostDetailsFromFrontend {
+            &PostDetailsFromFrontend {
                 description: "Doggos and puppers".into(),
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
@@ -614,5 +657,112 @@ mod test {
             &SystemTime::now(),
         );
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_tabulate_hot_or_not_outcome_for_slot_case_1() {
+        let post_creation_time = SystemTime::now();
+        let mut post = Post::new(
+            0,
+            &PostDetailsFromFrontend {
+                description: "Doggos and puppers".into(),
+                hashtags: vec!["doggo".into(), "pupper".into()],
+                video_uid: "abcd#1234".into(),
+                creator_consent_for_inclusion_in_hot_or_not: true,
+            },
+            &post_creation_time,
+        );
+
+        assert!(post.hot_or_not_details.is_some());
+
+        let data_set: Vec<(u64, BetDirection, u64, u64)> = vec![
+            (1, BetDirection::Not, 10, 18),
+            (2, BetDirection::Hot, 100, 0),
+            (3, BetDirection::Hot, 100, 0),
+            (4, BetDirection::Not, 100, 180),
+            (5, BetDirection::Hot, 10, 0),
+            (6, BetDirection::Not, 100, 180),
+            (7, BetDirection::Not, 50, 90),
+            (8, BetDirection::Not, 100, 180),
+            (9, BetDirection::Hot, 50, 0),
+            (10, BetDirection::Not, 50, 90),
+            (11, BetDirection::Not, 100, 180),
+            (12, BetDirection::Not, 10, 18),
+            (13, BetDirection::Hot, 100, 0),
+            (14, BetDirection::Not, 10, 18),
+            (15, BetDirection::Hot, 50, 0),
+            (16, BetDirection::Hot, 10, 0),
+            (17, BetDirection::Hot, 10, 0),
+            (18, BetDirection::Hot, 100, 0),
+            (19, BetDirection::Not, 10, 18),
+            (20, BetDirection::Hot, 50, 0),
+            (21, BetDirection::Hot, 10, 0),
+            (22, BetDirection::Not, 50, 90),
+            (23, BetDirection::Not, 50, 90),
+            (24, BetDirection::Hot, 100, 0),
+            (25, BetDirection::Not, 50, 90),
+            (26, BetDirection::Not, 10, 18),
+            (27, BetDirection::Not, 10, 18),
+            (28, BetDirection::Not, 50, 90),
+            (29, BetDirection::Hot, 50, 0),
+            (30, BetDirection::Not, 100, 180),
+            (31, BetDirection::Not, 50, 90),
+            (32, BetDirection::Not, 50, 90),
+            (33, BetDirection::Hot, 100, 0),
+            (34, BetDirection::Not, 10, 18),
+            (35, BetDirection::Not, 10, 18),
+            (36, BetDirection::Not, 100, 180),
+            (37, BetDirection::Hot, 10, 0),
+            (38, BetDirection::Not, 100, 180),
+            (39, BetDirection::Not, 50, 90),
+            (40, BetDirection::Hot, 100, 0),
+            (41, BetDirection::Hot, 50, 0),
+            (42, BetDirection::Not, 10, 18),
+            (43, BetDirection::Hot, 50, 0),
+            (44, BetDirection::Not, 10, 18),
+            (45, BetDirection::Not, 10, 18),
+            (46, BetDirection::Hot, 100, 0),
+            (47, BetDirection::Hot, 50, 0),
+            (48, BetDirection::Hot, 50, 0),
+            (49, BetDirection::Not, 100, 180),
+            (50, BetDirection::Hot, 10, 0),
+            (51, BetDirection::Not, 50, 90),
+            (52, BetDirection::Hot, 10, 0),
+            (53, BetDirection::Not, 50, 90),
+            (54, BetDirection::Not, 10, 18),
+            (55, BetDirection::Hot, 100, 0),
+            (56, BetDirection::Hot, 50, 0),
+            (57, BetDirection::Not, 50, 90),
+            (58, BetDirection::Not, 10, 18),
+            (59, BetDirection::Not, 50, 90),
+            (60, BetDirection::Hot, 10, 0),
+            (61, BetDirection::Not, 10, 18),
+            (62, BetDirection::Not, 50, 90),
+            (63, BetDirection::Not, 50, 90),
+            (64, BetDirection::Not, 10, 18),
+            (65, BetDirection::Not, 10, 18),
+            (66, BetDirection::Not, 100, 180),
+            (67, BetDirection::Hot, 100, 0),
+            (68, BetDirection::Not, 10, 18),
+            (69, BetDirection::Not, 10, 18),
+            (70, BetDirection::Not, 50, 90),
+            (71, BetDirection::Not, 100, 180),
+            (72, BetDirection::Not, 10, 18),
+            (73, BetDirection::Not, 10, 18),
+            (74, BetDirection::Hot, 10, 0),
+            (75, BetDirection::Not, 10, 18),
+        ];
+
+        data_set
+            .iter()
+            .for_each(|(user_id, bet_direction, bet_amount, _)| {
+                let result = post.place_hot_or_not_bet(
+                    &Principal::self_authenticating(&user_id.to_ne_bytes()),
+                    *bet_amount,
+                    bet_direction,
+                    &post_creation_time,
+                );
+                assert!(result.is_ok());
+            });
     }
 }

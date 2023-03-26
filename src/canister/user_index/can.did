@@ -25,7 +25,8 @@ type KnownPrincipalType = variant {
   CanisterIdSNSController;
   UserIdGlobalSuperAdmin;
 };
-type Result = variant { Ok; Err : SetUniqueUsernameError };
+type Result = variant { Ok : CanisterStatusResponse; Err : text };
+type Result_1 = variant { Ok; Err : SetUniqueUsernameError };
 type SetUniqueUsernameError = variant {
   UsernameAlreadyTaken;
   SendingCanisterDoesNotMatchUserCanisterId;
@@ -53,9 +54,7 @@ type UserIndexInitArgs = record {
 };
 service : (UserIndexInitArgs) -> {
   backup_all_individual_user_canisters : () -> ();
-  get_canister_status_from_management_canister : (principal) -> (
-      CanisterStatusResponse,
-    );
+  get_canister_status_from_management_canister : (principal) -> (Result);
   get_index_details_is_user_name_taken : (text) -> (bool) query;
   get_index_details_last_upgrade_status : () -> (UpgradeStatus) query;
   get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer : (
@@ -65,7 +64,6 @@ service : (UserIndexInitArgs) -> {
   get_user_canister_id_from_user_principal_id : (principal) -> (
       opt principal,
     ) query;
-  get_user_roles : (principal) -> (vec UserAccessRole) query;
   get_well_known_principal_value : (KnownPrincipalType) -> (
       opt principal,
     ) query;
@@ -78,10 +76,8 @@ service : (UserIndexInitArgs) -> {
   update_index_with_unique_user_name_corresponding_to_user_principal_id : (
       text,
       principal,
-    ) -> (Result);
-  update_user_add_role : (UserAccessRole, principal) -> ();
+    ) -> (Result_1);
   update_user_index_upgrade_user_canisters_with_latest_wasm : () -> (text);
-  update_user_remove_role : (UserAccessRole, principal) -> ();
   upgrade_specific_individual_user_canister_with_latest_wasm : (
       principal,
       principal,

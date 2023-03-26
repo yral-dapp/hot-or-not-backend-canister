@@ -25,7 +25,7 @@ fn update_post_toggle_like_status_by_caller(id: u64) -> bool {
         updated_like_status
     });
 
-    update_scores_and_share_with_post_cache_if_difference_beyond_threshold(id);
+    update_scores_and_share_with_post_cache_if_difference_beyond_threshold(&id);
 
     response
 }

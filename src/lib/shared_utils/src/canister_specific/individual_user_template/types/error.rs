@@ -16,8 +16,11 @@ pub enum GetFollowerOrFollowingError {
 
 #[derive(CandidType, PartialEq, Eq, Debug, Deserialize)]
 pub enum BetOnCurrentlyViewingPostError {
-    UserNotLoggedIn,
-    InsufficientBalance,
     BettingClosed,
+    InsufficientBalance,
+    Unauthorized,
     UserAlreadyParticipatedInThisPost,
+    UserNotLoggedIn,
+    UserPrincipalNotSet,
+    PostCreatorCanisterCallFailed,
 }

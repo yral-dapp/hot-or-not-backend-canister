@@ -23,5 +23,5 @@ fn update_post_add_view_details(id: u64, details: PostViewDetailsFromFrontend) {
             .insert(id, post_to_update);
     });
 
-    update_scores_and_share_with_post_cache_if_difference_beyond_threshold(id);
+    update_scores_and_share_with_post_cache_if_difference_beyond_threshold(&id);
 }
