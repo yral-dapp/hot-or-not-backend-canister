@@ -86,6 +86,8 @@ pub struct RoomDetails {
     pub bets_made: BTreeMap<BetMaker, BetDetails>,
     #[serde(default)]
     pub bet_outcome: RoomBetPossibleOutcomes,
+    #[serde(default)]
+    pub room_bets_total_pot: u64,
 }
 
 pub type BetMaker = Principal;
@@ -222,7 +224,7 @@ impl Post {
                 let room_details = slot_history.room_details.entry(ongoing_room).or_default();
                 let bets_made_currently = &mut room_details.bets_made;
 
-                // * Update slot history details
+                // * Update bets_made currently
                 if bets_made_currently.len() < 100 {
                     bets_made_currently.insert(
                         bet_maker_principal_id.clone(),
@@ -231,6 +233,7 @@ impl Post {
                             bet_direction: bet_direction.clone(),
                         },
                     );
+                    room_details.room_bets_total_pot += bet_amount;
                 } else {
                     let new_room_number = ongoing_room + 1;
                     let mut bets_made = BTreeMap::default();
@@ -245,6 +248,7 @@ impl Post {
                         new_room_number,
                         RoomDetails {
                             bets_made,
+                            room_bets_total_pot: bet_amount,
                             ..Default::default()
                         },
                     );
@@ -624,7 +628,8 @@ mod test {
             .unwrap()
             .room_details;
         assert_eq!(room_details.len(), 1);
-        let bets_made = &room_details.get(&1).unwrap().bets_made;
+        let room = room_details.get(&1).unwrap();
+        let bets_made = &room.bets_made;
         assert_eq!(bets_made.len(), 1);
         assert_eq!(
             bets_made
@@ -640,6 +645,7 @@ mod test {
                 .bet_direction,
             BetDirection::Hot
         );
+        assert_eq!(room.room_bets_total_pot, 100);
         assert_eq!(hot_or_not_details.aggregate_stats.total_amount_bet, 100);
         assert_eq!(
             hot_or_not_details.aggregate_stats.total_number_of_hot_bets,

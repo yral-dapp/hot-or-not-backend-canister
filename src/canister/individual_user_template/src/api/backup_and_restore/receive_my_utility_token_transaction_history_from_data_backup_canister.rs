@@ -30,7 +30,7 @@ fn receive_my_utility_token_transaction_history_from_data_backup_canister(
         for (id, token_event) in all_token_events_chunk_vec {
             canister_data
                 .my_token_balance
-                .utility_token_transaction_history_v1
+                .utility_token_transaction_history
                 .insert(id, token_event);
         }
     });

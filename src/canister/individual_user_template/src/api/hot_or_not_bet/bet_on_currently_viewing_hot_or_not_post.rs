@@ -1,6 +1,10 @@
 use candid::Principal;
-use shared_utils::canister_specific::individual_user_template::types::{
-    arg::PlaceBetArg, error::BetOnCurrentlyViewingPostError, hot_or_not::BettingStatus,
+use shared_utils::{
+    canister_specific::individual_user_template::types::{
+        arg::PlaceBetArg, error::BetOnCurrentlyViewingPostError, hot_or_not::BettingStatus,
+    },
+    common::utils::system_time,
+    types::utility_token::token_event::{StakeEvent, TokenEvent},
 };
 
 use crate::{data_model::CanisterData, CANISTER_DATA};
@@ -11,6 +15,7 @@ async fn bet_on_currently_viewing_post(
     place_bet_arg: PlaceBetArg,
 ) -> Result<BettingStatus, BetOnCurrentlyViewingPostError> {
     let bet_maker_principal_id = ic_cdk::caller();
+    let current_time = system_time::get_current_system_time_from_ic();
 
     CANISTER_DATA.with(|canister_data_ref_cell| {
         validate_incoming_bet(
@@ -39,6 +44,18 @@ async fn bet_on_currently_viewing_post(
     .0?;
 
     // TODO: deduct bet amount from bet maker's balance
+    CANISTER_DATA.with(|canister_data_ref_cell| {
+        let my_token_balance = &mut canister_data_ref_cell.borrow_mut().my_token_balance;
+        my_token_balance.handle_token_event(TokenEvent::Stake {
+            details: StakeEvent::BetOnHotOrNotPost {
+                post_canister_id: place_bet_arg.post_canister_id,
+                post_id: place_bet_arg.post_id,
+                bet_amount: place_bet_arg.bet_amount,
+                bet_direction: place_bet_arg.bet_direction,
+            },
+            timestamp: current_time,
+        });
+    });
 
     Ok(response)
 }

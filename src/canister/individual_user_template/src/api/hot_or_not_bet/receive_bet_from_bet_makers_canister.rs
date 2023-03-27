@@ -51,8 +51,6 @@ fn receive_bet_from_bet_makers_canister_impl(
         ..
     } = place_bet_arg;
 
-    // TODO: change faulty logic. The tokens being checked here is the post creator's tokens, not the bet maker's tokens
-
     let post = canister_data.all_created_posts.get_mut(&post_id).unwrap();
 
     post.place_hot_or_not_bet(

@@ -20,7 +20,7 @@ fn get_user_utility_token_transaction_history_with_pagination(
             canister_data_ref_cell
                 .borrow()
                 .my_token_balance
-                .utility_token_transaction_history_v1
+                .utility_token_transaction_history
                 .len()
         }) as u64,
     )
@@ -40,7 +40,7 @@ fn get_user_utility_token_transaction_history_with_pagination(
         canister_data_ref_cell
             .borrow()
             .my_token_balance
-            .utility_token_transaction_history_v1
+            .utility_token_transaction_history
             .iter()
             .skip(from_inclusive_id as usize)
             .take((to_exclusive_id - from_inclusive_id) as usize)

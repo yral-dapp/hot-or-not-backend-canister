@@ -74,19 +74,28 @@ type PostViewStatistics = record {
 type RoomBetPossibleOutcomes = variant { HotWon; BetOngoing; Draw; NotWon };
 type RoomDetails = record {
   bets_made : vec record { principal; BetDetails };
+  room_bets_total_pot : nat64;
   bet_outcome : RoomBetPossibleOutcomes;
 };
 type SlotDetails = record { room_details : vec record { nat64; RoomDetails } };
+type StakeEvent = variant {
+  BetOnHotOrNotPost : record {
+    bet_amount : nat64;
+    post_id : nat64;
+    bet_direction : BetDirection;
+    post_canister_id : principal;
+  };
+};
 type SystemTime = record {
   nanos_since_epoch : nat32;
   secs_since_epoch : nat64;
 };
 type TokenBalance = record {
   utility_token_balance : nat64;
-  utility_token_transaction_history_v1 : vec record { nat64; TokenEvent };
+  utility_token_transaction_history : vec record { nat64; TokenEvent };
 };
 type TokenEvent = variant {
-  Stake;
+  Stake : record { timestamp : SystemTime; details : StakeEvent };
   Burn;
   Mint : record { timestamp : SystemTime; details : MintEvent };
   Transfer;
