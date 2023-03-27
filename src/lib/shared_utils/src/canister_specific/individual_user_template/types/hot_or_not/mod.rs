@@ -84,7 +84,7 @@ pub type RoomId = u64;
 #[derive(CandidType, Clone, Deserialize, Default, Debug, Serialize)]
 pub struct RoomDetails {
     pub bets_made: BTreeMap<BetMaker, BetDetails>,
-    // #[serde(default)]
+    #[serde(default)]
     pub bet_outcome: RoomBetPossibleOutcomes,
 }
 
