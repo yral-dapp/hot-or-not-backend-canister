@@ -143,9 +143,9 @@ async fn send_all_token_data(
         .expect("Failed to call the receive_current_token_balance_from_individual_user_canister method on the data_backup canister");
 
     let all_token_transactions = token_data
-        .utility_token_transaction_history_v1
+        .utility_token_transaction_history
         .iter()
-        .map(|(token_transaction_id, token_event)| (*token_transaction_id, *token_event))
+        .map(|(token_transaction_id, token_event)| (*token_transaction_id, (*token_event).clone()))
         .collect::<Vec<_>>();
 
     let all_token_transactions_chunks = all_token_transactions

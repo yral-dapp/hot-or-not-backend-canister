@@ -55,8 +55,8 @@ fn receive_all_token_transactions_from_individual_user_canister_impl(
             existing_entry
                 .canister_data
                 .token_data
-                .utility_token_transaction_history_v1
-                .insert(token_transaction.0, token_transaction.1);
+                .utility_token_transaction_history
+                .insert(token_transaction.0, token_transaction.1.clone());
         });
 
     canister_data.user_principal_id_to_all_user_data_map.insert(
@@ -73,7 +73,7 @@ mod test {
         canister_specific::data_backup::types::all_user_data::{
             AllUserData, UserOwnedCanisterData,
         },
-        types::utility_token::mint_event::MintEvent,
+        types::utility_token::token_event::MintEvent,
     };
     use test_utils::setup::test_constants::{
         get_mock_user_alice_canister_id, get_mock_user_alice_principal_id,
@@ -147,7 +147,7 @@ mod test {
                 .unwrap()
                 .canister_data
                 .token_data
-                .utility_token_transaction_history_v1
+                .utility_token_transaction_history
                 .len(),
             0
         );
@@ -179,7 +179,7 @@ mod test {
                 .unwrap()
                 .canister_data
                 .token_data
-                .utility_token_transaction_history_v1
+                .utility_token_transaction_history
                 .len(),
             2
         );

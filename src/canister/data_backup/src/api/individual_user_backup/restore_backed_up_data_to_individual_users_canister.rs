@@ -121,7 +121,7 @@ async fn send_utility_token_history(users_data: &AllUserData) {
     let all_utility_token_transactions_vec = users_data
         .canister_data
         .token_data
-        .utility_token_transaction_history_v1
+        .utility_token_transaction_history
         .iter()
         .map(|(id, token_event)| (*id, token_event.clone()))
         .collect::<Vec<_>>();

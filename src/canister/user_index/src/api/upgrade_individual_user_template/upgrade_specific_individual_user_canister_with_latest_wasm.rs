@@ -7,7 +7,7 @@ use shared_utils::{
 
 use crate::{util::canister_management, CANISTER_DATA};
 
-// * dfx canister call user_index upgrade_specific_individual_user_canister_with_latest_wasm '(principal "<user_principal_id>", principal "<user_canister_id>", null)' --network ic
+// * dfx canister call user_index upgrade_specific_individual_user_canister_with_latest_wasm '(principal "", principal "", null)' --network ic
 
 #[ic_cdk::update]
 #[candid::candid_method(update)]
@@ -57,12 +57,4 @@ async fn upgrade_specific_individual_user_canister_with_latest_wasm(
             return e.1;
         }
     }
-
-    // let upgrade_response: CallResult<()> = call::call(
-    //     user_canister_id.clone(),
-    //     "backup_data_to_backup_canister",
-    //     (user_principal_id.clone(), user_canister_id.clone()),
-    // )
-    // .await;
-    // upgrade_response.ok();
 }

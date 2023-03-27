@@ -4,3 +4,13 @@
 sudo nix-channel --add https:///nixos.org/channels/nixos-22.11
 sudo nix-channel --update nixos-22.11
 ```
+
+# Commonly used dfx commands
+
+## Try upgrading a canister to the latest wasm manually
+
+- `dfx canister call user_index upgrade_specific_individual_user_canister_with_latest_wasm '(principal "", principal "", null)' --network ic`
+
+## Deposit cycles to a canister
+
+- `dfx canister deposit-cycles 1000000000000 <canister_id> --network ic`

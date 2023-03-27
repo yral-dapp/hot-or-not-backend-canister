@@ -5,7 +5,7 @@ use shared_utils::{
     common::types::known_principal::KnownPrincipalType,
     types::{
         canister_specific::individual_user_template::error_types::GetUserUtilityTokenTransactionHistoryError,
-        utility_token::{mint_event::MintEvent, token_event::TokenEvent},
+        utility_token::token_event::{MintEvent, TokenEvent},
     },
 };
 use test_utils::setup::{
@@ -231,7 +231,10 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
         1
     );
     assert_eq!(
-        match alice_utility_token_transaction_history_after_signup[0].1 {
+        match alice_utility_token_transaction_history_after_signup[0]
+            .1
+            .clone()
+        {
             TokenEvent::Mint { details, .. } => details,
             _ => {
                 MintEvent::NewUserSignup {
@@ -250,7 +253,10 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
         2
     );
     assert_eq!(
-        match alice_utility_token_transaction_history_after_referral[0].1 {
+        match alice_utility_token_transaction_history_after_referral[0]
+            .1
+            .clone()
+        {
             TokenEvent::Mint { details, .. } => details,
             _ => {
                 MintEvent::NewUserSignup {
@@ -263,7 +269,10 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
         },
     );
     assert_eq!(
-        match alice_utility_token_transaction_history_after_referral[1].1 {
+        match alice_utility_token_transaction_history_after_referral[1]
+            .1
+            .clone()
+        {
             TokenEvent::Mint { details, .. } => details,
             _ => {
                 MintEvent::Referral {
@@ -282,7 +291,10 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
         2
     );
     assert_eq!(
-        match bob_utility_token_transaction_history_after_referral[0].1 {
+        match bob_utility_token_transaction_history_after_referral[0]
+            .1
+            .clone()
+        {
             TokenEvent::Mint { details, .. } => details,
             _ => {
                 MintEvent::NewUserSignup {
@@ -295,7 +307,10 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
         },
     );
     assert_eq!(
-        match bob_utility_token_transaction_history_after_referral[1].1 {
+        match bob_utility_token_transaction_history_after_referral[1]
+            .1
+            .clone()
+        {
             TokenEvent::Mint { details, .. } => details,
             _ => {
                 MintEvent::Referral {
