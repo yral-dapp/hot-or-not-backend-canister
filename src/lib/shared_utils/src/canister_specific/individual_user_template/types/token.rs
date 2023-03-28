@@ -8,7 +8,6 @@ use crate::types::utility_token::token_event::{MintEvent, StakeEvent, TokenEvent
 #[derive(Default, Clone, Deserialize, CandidType, Debug, Serialize)]
 pub struct TokenBalance {
     pub utility_token_balance: u64,
-    #[serde(alias = "utility_token_transaction_history_v1")]
     pub utility_token_transaction_history: BTreeMap<u64, TokenEvent>,
 }
 

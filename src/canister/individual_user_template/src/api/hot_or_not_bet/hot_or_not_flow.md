@@ -62,18 +62,19 @@ flowchart
   Error::InsufficientBalance[Error <br>Insufficient Balance]
   HasEnoughTokensToBet{Does user have <br>enough tokens to bet?}
   PostCreatorCanister[Post creator canister]
-  StakeTokens[/Stake tokens/]
   UserOwnCanister[User own canister]
 
   AuthenticatedUser -- 1. Place bet --> UserOwnCanister
   UserOwnCanister --> HasEnoughTokensToBet
   HasEnoughTokensToBet -- No --> Error::InsufficientBalance
-  HasEnoughTokensToBet -- Yes --> StakeTokens
-  StakeTokens -- 2. Tokens deducted <br>from balance --> BetDetails
-  BetDetails -- 3. Place bet --> PostCreatorCanister
-  PostCreatorCanister -- - Add tokens to pot <br>- Record bet details<br>- Respond with <br>successful status --> UserOwnCanister
-  UserOwnCanister -- 4. Update internal <br>state --> UserOwnCanister
-  UserOwnCanister -- 5. Send acknowledgement --> AuthenticatedUser
+  HasEnoughTokensToBet -- Yes --> BetDetails
+  BetDetails -- 2.Place bet  --> PostCreatorCanister
+  PostCreatorCanister -- 3. Add tokens to pot --> PostCreatorCanister
+  PostCreatorCanister -- 4. Record bet details --> PostCreatorCanister
+  PostCreatorCanister -- 5. Respond with <br>successful status --> UserOwnCanister
+  UserOwnCanister -- 5. Stake tokens --> UserOwnCanister
+  UserOwnCanister -- 6. Update wallet --> UserOwnCanister
+  UserOwnCanister -- 7. Send acknowledgement --> AuthenticatedUser
 ```
 
 ## Tabulate outcomes and update wallets
