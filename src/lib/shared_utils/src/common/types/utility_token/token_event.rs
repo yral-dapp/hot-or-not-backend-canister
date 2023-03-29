@@ -17,6 +17,10 @@ pub enum TokenEvent {
         details: StakeEvent,
         timestamp: SystemTime,
     },
+    HotOrNotOutcomePayout {
+        details: HotOrNotOutcomePayoutEvent,
+        timestamp: SystemTime,
+    },
 }
 
 impl TokenEvent {
@@ -26,9 +30,7 @@ impl TokenEvent {
                 MintEvent::NewUserSignup { .. } => 1000,
                 MintEvent::Referral { .. } => 500,
             },
-            TokenEvent::Burn => 0,
-            TokenEvent::Transfer => 0,
-            TokenEvent::Stake { .. } => 0,
+            _ => 0,
         }
     }
 }
@@ -53,3 +55,15 @@ pub enum StakeEvent {
         bet_direction: BetDirection,
     },
 }
+
+#[derive(Clone, CandidType, Deserialize, Serialize, Debug, PartialEq, Eq)]
+pub enum HotOrNotOutcomePayoutEvent {
+    CommissionFromHotOrNotBet {
+        post_id: u64,
+        slot_id: u8,
+        room_id: u64,
+        room_pot_total_amount: u64,
+    },
+}
+
+pub const HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE: u64 = 10;

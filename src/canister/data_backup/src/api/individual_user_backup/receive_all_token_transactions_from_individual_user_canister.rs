@@ -1,7 +1,6 @@
 use candid::Principal;
-use shared_utils::{
-    common::types::storable_principal::StorablePrincipal,
-    types::utility_token::token_event::TokenEvent,
+use shared_utils::common::types::{
+    storable_principal::StorablePrincipal, utility_token::token_event::TokenEvent,
 };
 
 use crate::{data::memory_layout::CanisterData, CANISTER_DATA};
@@ -73,7 +72,7 @@ mod test {
         canister_specific::data_backup::types::all_user_data::{
             AllUserData, UserOwnedCanisterData,
         },
-        types::utility_token::token_event::MintEvent,
+        common::types::utility_token::token_event::MintEvent,
     };
     use test_utils::setup::test_constants::{
         get_mock_user_alice_canister_id, get_mock_user_alice_principal_id,

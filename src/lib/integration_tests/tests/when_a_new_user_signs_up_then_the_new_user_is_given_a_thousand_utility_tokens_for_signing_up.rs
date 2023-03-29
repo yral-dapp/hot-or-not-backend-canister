@@ -2,11 +2,11 @@ use candid::Principal;
 use ic_state_machine_tests::{CanisterId, StateMachine, WasmResult};
 
 use shared_utils::{
-    common::types::known_principal::KnownPrincipalType,
-    types::{
-        canister_specific::individual_user_template::error_types::GetUserUtilityTokenTransactionHistoryError,
+    common::types::{
+        known_principal::KnownPrincipalType,
         utility_token::token_event::{MintEvent, TokenEvent},
     },
+    types::canister_specific::individual_user_template::error_types::GetUserUtilityTokenTransactionHistoryError,
 };
 use test_utils::setup::{
     env::v0::{

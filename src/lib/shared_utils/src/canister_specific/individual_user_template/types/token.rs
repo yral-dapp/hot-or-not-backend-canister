@@ -3,7 +3,10 @@ use std::collections::BTreeMap;
 use candid::{CandidType, Deserialize};
 use serde::Serialize;
 
-use crate::types::utility_token::token_event::{MintEvent, StakeEvent, TokenEvent};
+use crate::common::types::utility_token::token_event::{
+    HotOrNotOutcomePayoutEvent, MintEvent, StakeEvent, TokenEvent,
+    HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE,
+};
 
 #[derive(Default, Clone, Deserialize, CandidType, Debug, Serialize)]
 pub struct TokenBalance {
@@ -35,6 +38,15 @@ impl TokenBalance {
             TokenEvent::Stake { details, .. } => match details {
                 StakeEvent::BetOnHotOrNotPost { bet_amount, .. } => {
                     self.utility_token_balance -= bet_amount;
+                }
+            },
+            TokenEvent::HotOrNotOutcomePayout { details, .. } => match details {
+                HotOrNotOutcomePayoutEvent::CommissionFromHotOrNotBet {
+                    room_pot_total_amount,
+                    ..
+                } => {
+                    self.utility_token_balance +=
+                        room_pot_total_amount * HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE / 100;
                 }
             },
         }

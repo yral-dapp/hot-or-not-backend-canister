@@ -1,8 +1,11 @@
 use crate::CANISTER_DATA;
 use candid::Principal;
-use shared_utils::{
-    common::{types::known_principal::KnownPrincipalType, utils::system_time},
-    types::utility_token::token_event::{MintEvent, TokenEvent},
+use shared_utils::common::{
+    types::{
+        known_principal::KnownPrincipalType,
+        utility_token::token_event::{MintEvent, TokenEvent},
+    },
+    utils::system_time,
 };
 
 #[ic_cdk::update]

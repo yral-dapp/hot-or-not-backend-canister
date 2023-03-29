@@ -23,12 +23,9 @@ use shared_utils::{
             UserProfile, UserProfileDetailsForFrontend, UserProfileUpdateDetailsFromFrontend,
         },
     },
-    common::types::known_principal::KnownPrincipalType,
-    types::{
-        canister_specific::individual_user_template::error_types::{
-            GetUserUtilityTokenTransactionHistoryError, UpdateProfileSetUniqueUsernameError,
-        },
-        utility_token::token_event::TokenEvent,
+    common::types::{known_principal::KnownPrincipalType, utility_token::token_event::TokenEvent},
+    types::canister_specific::individual_user_template::error_types::{
+        GetUserUtilityTokenTransactionHistoryError, UpdateProfileSetUniqueUsernameError,
     },
 };
 

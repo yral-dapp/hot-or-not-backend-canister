@@ -11,11 +11,8 @@ use shared_utils::{
             profile::{UserProfileDetailsForFrontend, UserProfileUpdateDetailsFromFrontend},
         },
     },
-    common::types::known_principal::KnownPrincipalType,
-    types::{
-        canister_specific::individual_user_template::error_types::GetUserUtilityTokenTransactionHistoryError,
-        utility_token::token_event::TokenEvent,
-    },
+    common::types::{known_principal::KnownPrincipalType, utility_token::token_event::TokenEvent},
+    types::canister_specific::individual_user_template::error_types::GetUserUtilityTokenTransactionHistoryError,
 };
 use test_utils::setup::{
     env::v0::{
