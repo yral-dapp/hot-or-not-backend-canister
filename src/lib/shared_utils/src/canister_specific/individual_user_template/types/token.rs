@@ -48,6 +48,11 @@ impl TokenBalance {
                     self.utility_token_balance +=
                         room_pot_total_amount * HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE / 100;
                 }
+                HotOrNotOutcomePayoutEvent::WinningsEarnedFromBet {
+                    winnings_amount, ..
+                } => {
+                    self.utility_token_balance += winnings_amount;
+                }
             },
         }
 

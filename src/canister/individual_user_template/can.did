@@ -11,6 +11,7 @@ type AnotherUserFollowedMeError = variant {
 };
 type BetDetails = record {
   bet_direction : BetDirection;
+  bet_maker_canister_id : principal;
   amount : nat64;
   payout : BetPayout;
 };
@@ -23,6 +24,12 @@ type BetOnCurrentlyViewingPostError = variant {
   Unauthorized;
   PostCreatorCanisterCallFailed;
   UserNotLoggedIn;
+};
+type BetOutcomeForBetMaker = variant {
+  Won : nat64;
+  Draw : nat64;
+  Lost;
+  AwaitingResult;
 };
 type BetPayout = variant { NotCalculatedYet; Calculated : nat64 };
 type BettingStatus = variant {
@@ -61,6 +68,12 @@ type HotOrNotDetails = record {
   slot_history : vec record { nat8; SlotDetails };
 };
 type HotOrNotOutcomePayoutEvent = variant {
+  WinningsEarnedFromBet : record {
+    slot_id : nat8;
+    post_id : nat64;
+    room_id : nat64;
+    winnings_amount : nat64;
+  };
   CommissionFromHotOrNotBet : record {
     slot_id : nat8;
     post_id : nat64;
@@ -96,6 +109,16 @@ type PlaceBetArg = record {
   post_id : nat64;
   bet_direction : BetDirection;
   post_canister_id : principal;
+};
+type PlacedBetDetail = record {
+  outcome_received : BetOutcomeForBetMaker;
+  slot_id : nat8;
+  post_id : nat64;
+  room_id : nat64;
+  canister_id : principal;
+  bet_direction : BetDirection;
+  amount_bet : nat64;
+  bet_placed_at : SystemTime;
 };
 type Post = record {
   id : nat64;
@@ -157,22 +180,22 @@ type PostViewStatistics = record {
   threshold_view_count : nat64;
 };
 type Result = variant { Ok : nat64; Err : text };
-type Result_1 = variant { Ok : Post; Err };
-type Result_2 = variant {
+type Result_1 = variant {
+  Ok : BettingStatus;
+  Err : BetOnCurrentlyViewingPostError;
+};
+type Result_2 = variant { Ok : Post; Err };
+type Result_3 = variant {
   Ok : vec PostDetailsForFrontend;
   Err : GetPostsOfUserProfileError;
 };
-type Result_3 = variant {
+type Result_4 = variant {
   Ok : vec principal;
   Err : GetPostsOfUserProfileError;
 };
-type Result_4 = variant {
+type Result_5 = variant {
   Ok : vec record { nat64; TokenEvent };
   Err : GetPostsOfUserProfileError;
-};
-type Result_5 = variant {
-  Ok : BettingStatus;
-  Err : BetOnCurrentlyViewingPostError;
 };
 type Result_6 = variant { Ok : bool; Err : FollowAnotherUserProfileError };
 type Result_7 = variant { Ok : bool; Err : AnotherUserFollowedMeError };
@@ -241,27 +264,35 @@ type UserProfileUpdateDetailsFromFrontend = record {
 service : (IndividualUserTemplateInitArgs) -> {
   add_post_v2 : (PostDetailsFromFrontend) -> (Result);
   backup_data_to_backup_canister : (principal, principal) -> ();
-  get_entire_individual_post_detail_by_id : (nat64) -> (Result_1) query;
+  bet_on_currently_viewing_post : (PlaceBetArg) -> (Result_1);
+  get_entire_individual_post_detail_by_id : (nat64) -> (Result_2) query;
   get_following_status_do_i_follow_this_user : (principal) -> (bool) query;
   get_hot_or_not_bet_details_for_this_post : (nat64) -> (BettingStatus) query;
+  get_hot_or_not_bets_placed_by_this_profile_with_pagination : (nat64) -> (
+      vec PlacedBetDetail,
+    ) query;
+  get_individual_hot_or_not_bet_placed_by_this_profile : (principal, nat64) -> (
+      opt PlacedBetDetail,
+    ) query;
   get_individual_post_details_by_id : (nat64) -> (PostDetailsForFrontend) query;
   get_posts_of_this_user_profile_with_pagination : (nat64, nat64) -> (
-      Result_2,
+      Result_3,
     ) query;
-  get_principals_i_follow_paginated : (nat64, nat64) -> (Result_3) query;
-  get_principals_that_follow_me_paginated : (nat64, nat64) -> (Result_3) query;
+  get_principals_i_follow_paginated : (nat64, nat64) -> (Result_4) query;
+  get_principals_that_follow_me_paginated : (nat64, nat64) -> (Result_4) query;
   get_profile_details : () -> (UserProfileDetailsForFrontend) query;
   get_rewarded_for_referral : (principal, principal) -> ();
   get_rewarded_for_signing_up : () -> ();
   get_user_utility_token_transaction_history_with_pagination : (
       nat64,
       nat64,
-    ) -> (Result_4) query;
+    ) -> (Result_5) query;
   get_utility_token_balance : () -> (nat64) query;
   get_well_known_principal_value : (KnownPrincipalType) -> (
       opt principal,
     ) query;
-  receive_bet_from_bet_makers_canister : (PlaceBetArg, principal) -> (Result_5);
+  receive_bet_from_bet_makers_canister : (PlaceBetArg, principal) -> (Result_1);
+  receive_bet_winnings_when_distributed : (nat64, BetOutcomeForBetMaker) -> ();
   receive_my_created_posts_from_data_backup_canister : (vec Post) -> ();
   receive_my_profile_from_data_backup_canister : (UserProfile) -> ();
   receive_my_utility_token_balance_from_data_backup_canister : (nat64) -> ();

@@ -92,6 +92,7 @@ pub type RoomId = u64;
 
 #[derive(CandidType, Clone, Deserialize, Default, Debug, Serialize)]
 pub struct RoomDetails {
+    #[serde(skip_deserializing)]
     pub bets_made: BTreeMap<BetMaker, BetDetails>,
     pub bet_outcome: RoomBetPossibleOutcomes,
     pub room_bets_total_pot: u64,
@@ -107,10 +108,8 @@ pub type BetMaker = Principal;
 pub struct BetDetails {
     pub amount: u64,
     pub bet_direction: BetDirection,
-    #[serde(default)]
     pub payout: BetPayout,
-    // TODO: reset the containing list
-    // pub bet_maker_canister_id: CanisterId,
+    pub bet_maker_canister_id: CanisterId,
 }
 
 #[derive(Clone, Deserialize, Debug, CandidType, Serialize, Default)]
@@ -129,10 +128,25 @@ pub enum RoomBetPossibleOutcomes {
     Draw,
 }
 
-#[derive(Deserialize, Ord, PartialOrd, Eq, PartialEq, Serialize)]
+#[derive(Deserialize, Serialize, Clone, CandidType)]
 pub struct PlacedBetDetail {
     pub canister_id: CanisterId,
     pub post_id: PostId,
+    pub slot_id: SlotId,
+    pub room_id: RoomId,
+    pub amount_bet: u64,
+    pub bet_direction: BetDirection,
+    pub bet_placed_at: SystemTime,
+    pub outcome_received: BetOutcomeForBetMaker,
+}
+
+#[derive(Deserialize, Serialize, Default, CandidType, PartialEq, Eq, Clone)]
+pub enum BetOutcomeForBetMaker {
+    #[default]
+    AwaitingResult,
+    Won(u64),
+    Lost,
+    Draw(u64),
 }
 
 impl Post {
@@ -216,6 +230,7 @@ impl Post {
     pub fn place_hot_or_not_bet(
         &mut self,
         bet_maker_principal_id: &Principal,
+        bet_maker_canister_id: &CanisterId,
         bet_amount: u64,
         bet_direction: &BetDirection,
         current_time_when_request_being_made: &SystemTime,
@@ -260,6 +275,7 @@ impl Post {
                             amount: bet_amount,
                             bet_direction: bet_direction.clone(),
                             payout: BetPayout::default(),
+                            bet_maker_canister_id: *bet_maker_canister_id,
                         },
                     );
                     room_detail.room_bets_total_pot += bet_amount;
@@ -272,6 +288,7 @@ impl Post {
                             amount: bet_amount,
                             bet_direction: bet_direction.clone(),
                             payout: BetPayout::default(),
+                            bet_maker_canister_id: *bet_maker_canister_id,
                         },
                     );
                     slot_history.room_details.insert(
@@ -422,7 +439,9 @@ impl Post {
 mod test {
     use std::time::Duration;
 
-    use test_utils::setup::test_constants::get_mock_user_alice_principal_id;
+    use test_utils::setup::test_constants::{
+        get_mock_user_alice_canister_id, get_mock_user_alice_principal_id,
+    };
 
     use crate::canister_specific::individual_user_template::types::post::PostDetailsFromFrontend;
 
@@ -490,6 +509,7 @@ mod test {
 
         let result = post.place_hot_or_not_bet(
             &get_mock_user_alice_principal_id(),
+            &get_mock_user_alice_canister_id(),
             100,
             &BetDirection::Hot,
             &current_time
@@ -524,6 +544,7 @@ mod test {
         (100..200).for_each(|num| {
             let result = post.place_hot_or_not_bet(
                 &Principal::from_slice(&[num]),
+                &Principal::from_slice(&[num]),
                 100,
                 &BetDirection::Hot,
                 &current_time
@@ -537,6 +558,7 @@ mod test {
         });
 
         let result = post.place_hot_or_not_bet(
+            &Principal::from_slice(&[200]),
             &Principal::from_slice(&[200]),
             100,
             &BetDirection::Hot,
@@ -571,6 +593,7 @@ mod test {
 
         let result = post.place_hot_or_not_bet(
             &get_mock_user_alice_principal_id(),
+            &get_mock_user_alice_canister_id(),
             100,
             &BetDirection::Hot,
             &current_time
@@ -604,6 +627,7 @@ mod test {
 
         let result = post.place_hot_or_not_bet(
             &get_mock_user_alice_principal_id(),
+            &get_mock_user_alice_canister_id(),
             100,
             &BetDirection::Hot,
             &current_time
@@ -656,6 +680,7 @@ mod test {
 
         post.place_hot_or_not_bet(
             &get_mock_user_alice_principal_id(),
+            &get_mock_user_alice_canister_id(),
             100,
             &BetDirection::Hot,
             &SystemTime::now(),
@@ -685,6 +710,7 @@ mod test {
 
         let result = post.place_hot_or_not_bet(
             &get_mock_user_alice_principal_id(),
+            &get_mock_user_alice_canister_id(),
             100,
             &BetDirection::Hot,
             &SystemTime::now()
@@ -698,6 +724,7 @@ mod test {
 
         let result = post.place_hot_or_not_bet(
             &get_mock_user_alice_principal_id(),
+            &get_mock_user_alice_canister_id(),
             100,
             &BetDirection::Hot,
             &SystemTime::now(),
@@ -753,6 +780,7 @@ mod test {
 
         let result = post.place_hot_or_not_bet(
             &get_mock_user_alice_principal_id(),
+            &get_mock_user_alice_canister_id(),
             100,
             &BetDirection::Hot,
             &SystemTime::now(),
@@ -859,6 +887,7 @@ mod test {
             .iter()
             .for_each(|(user_id, bet_direction, bet_amount, _)| {
                 let result = post.place_hot_or_not_bet(
+                    &Principal::self_authenticating(&user_id.to_ne_bytes()),
                     &Principal::self_authenticating(&user_id.to_ne_bytes()),
                     *bet_amount,
                     bet_direction,
@@ -1002,6 +1031,7 @@ mod test {
             .iter()
             .for_each(|(user_id, bet_direction, bet_amount, _)| {
                 let result = post.place_hot_or_not_bet(
+                    &Principal::self_authenticating(&(user_id + 75).to_ne_bytes()),
                     &Principal::self_authenticating(&(user_id + 75).to_ne_bytes()),
                     *bet_amount,
                     bet_direction,
@@ -1236,6 +1266,7 @@ mod test {
             .for_each(|(user_id, bet_direction, bet_amount, _)| {
                 let result = post.place_hot_or_not_bet(
                     &Principal::self_authenticating(&user_id.to_ne_bytes()),
+                    &Principal::self_authenticating(&user_id.to_ne_bytes()),
                     *bet_amount,
                     bet_direction,
                     &post_creation_time,
@@ -1437,6 +1468,7 @@ mod test {
             .iter()
             .for_each(|(user_id, bet_direction, bet_amount, _)| {
                 let result = post.place_hot_or_not_bet(
+                    &Principal::self_authenticating(&user_id.to_ne_bytes()),
                     &Principal::self_authenticating(&user_id.to_ne_bytes()),
                     *bet_amount,
                     bet_direction,

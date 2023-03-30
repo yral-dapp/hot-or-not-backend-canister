@@ -12,7 +12,7 @@ let
     inherit pkgs ic-nix;
   };
 in
-# modify to include installing rust stable and adding wasm32 target
+# TODO: modify to include installing rust stable and adding wasm32 target
 dfx-env.overrideAttrs (old: {
   nativeBuildInputs = old.nativeBuildInputs ++ [ pkgs.rustup pkgs.pkg-config pkgs.openssl pkgs.protobuf pkgs.cmake pkgs.cachix pkgs.killall ];
 })

@@ -9,13 +9,14 @@ use api::{
 };
 use candid::{export_service, Principal};
 use data_model::CanisterData;
+use ic_cdk::api::management_canister::provisional::CanisterId;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
         arg::{IndividualUserTemplateInitArgs, PlaceBetArg},
         error::{
             BetOnCurrentlyViewingPostError, GetFollowerOrFollowingError, GetPostsOfUserProfileError,
         },
-        hot_or_not::BettingStatus,
+        hot_or_not::{BetOutcomeForBetMaker, BettingStatus, PlacedBetDetail},
         post::{
             Post, PostDetailsForFrontend, PostDetailsFromFrontend, PostViewDetailsFromFrontend,
         },
@@ -23,7 +24,10 @@ use shared_utils::{
             UserProfile, UserProfileDetailsForFrontend, UserProfileUpdateDetailsFromFrontend,
         },
     },
-    common::types::{known_principal::KnownPrincipalType, utility_token::token_event::TokenEvent},
+    common::types::{
+        app_primitive_type::PostId, known_principal::KnownPrincipalType,
+        utility_token::token_event::TokenEvent,
+    },
     types::canister_specific::individual_user_template::error_types::{
         GetUserUtilityTokenTransactionHistoryError, UpdateProfileSetUniqueUsernameError,
     },

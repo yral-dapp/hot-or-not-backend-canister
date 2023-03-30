@@ -11,6 +11,7 @@ type AllUserData = record {
 type BackupStatistics = record { number_of_user_entries : nat64 };
 type BetDetails = record {
   bet_direction : BetDirection;
+  bet_maker_canister_id : principal;
   amount : nat64;
   payout : BetPayout;
 };
@@ -31,6 +32,12 @@ type HotOrNotDetails = record {
   slot_history : vec record { nat8; SlotDetails };
 };
 type HotOrNotOutcomePayoutEvent = variant {
+  WinningsEarnedFromBet : record {
+    slot_id : nat8;
+    post_id : nat64;
+    room_id : nat64;
+    winnings_amount : nat64;
+  };
   CommissionFromHotOrNotBet : record {
     slot_id : nat8;
     post_id : nat64;

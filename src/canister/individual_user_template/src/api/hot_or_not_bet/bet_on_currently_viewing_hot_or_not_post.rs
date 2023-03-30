@@ -3,7 +3,7 @@ use shared_utils::{
     canister_specific::individual_user_template::types::{
         arg::PlaceBetArg,
         error::BetOnCurrentlyViewingPostError,
-        hot_or_not::{BettingStatus, PlacedBetDetail},
+        hot_or_not::{BetOutcomeForBetMaker, BettingStatus, PlacedBetDetail},
     },
     common::{
         types::utility_token::token_event::{StakeEvent, TokenEvent},
@@ -14,7 +14,7 @@ use shared_utils::{
 use crate::{data_model::CanisterData, CANISTER_DATA};
 
 #[ic_cdk::update]
-// #[candid::candid_method(update)]
+#[candid::candid_method(update)]
 async fn bet_on_currently_viewing_post(
     place_bet_arg: PlaceBetArg,
 ) -> Result<BettingStatus, BetOnCurrentlyViewingPostError> {
@@ -47,26 +47,46 @@ async fn bet_on_currently_viewing_post(
     .map_err(|_| BetOnCurrentlyViewingPostError::PostCreatorCanisterCallFailed)?
     .0?;
 
-    CANISTER_DATA.with(|canister_data_ref_cell| {
-        let canister_data = &mut canister_data_ref_cell.borrow_mut();
+    match response {
+        BettingStatus::BettingClosed => {
+            return Err(BetOnCurrentlyViewingPostError::BettingClosed);
+        }
+        BettingStatus::BettingOpen {
+            ongoing_slot,
+            ongoing_room,
+            ..
+        } => {
+            CANISTER_DATA.with(|canister_data_ref_cell| {
+                let canister_data = &mut canister_data_ref_cell.borrow_mut();
 
-        let my_token_balance = &mut canister_data.my_token_balance;
-        my_token_balance.handle_token_event(TokenEvent::Stake {
-            details: StakeEvent::BetOnHotOrNotPost {
-                post_canister_id: place_bet_arg.post_canister_id,
-                post_id: place_bet_arg.post_id,
-                bet_amount: place_bet_arg.bet_amount,
-                bet_direction: place_bet_arg.bet_direction,
-            },
-            timestamp: current_time,
-        });
+                let my_token_balance = &mut canister_data.my_token_balance;
+                my_token_balance.handle_token_event(TokenEvent::Stake {
+                    details: StakeEvent::BetOnHotOrNotPost {
+                        post_canister_id: place_bet_arg.post_canister_id,
+                        post_id: place_bet_arg.post_id,
+                        bet_amount: place_bet_arg.bet_amount,
+                        bet_direction: place_bet_arg.bet_direction.clone(),
+                    },
+                    timestamp: current_time,
+                });
 
-        let all_hot_or_not_bets_placed = &mut canister_data.all_hot_or_not_bets_placed;
-        all_hot_or_not_bets_placed.insert(PlacedBetDetail {
-            canister_id: place_bet_arg.post_canister_id,
-            post_id: place_bet_arg.post_id,
-        });
-    });
+                let all_hot_or_not_bets_placed = &mut canister_data.all_hot_or_not_bets_placed;
+                all_hot_or_not_bets_placed.insert(
+                    (place_bet_arg.post_canister_id, place_bet_arg.post_id),
+                    PlacedBetDetail {
+                        canister_id: place_bet_arg.post_canister_id,
+                        post_id: place_bet_arg.post_id,
+                        slot_id: ongoing_slot,
+                        room_id: ongoing_room,
+                        bet_direction: place_bet_arg.bet_direction,
+                        bet_placed_at: current_time,
+                        amount_bet: place_bet_arg.bet_amount,
+                        outcome_received: BetOutcomeForBetMaker::default(),
+                    },
+                );
+            });
+        }
+    }
 
     Ok(response)
 }
@@ -97,10 +117,7 @@ fn validate_incoming_bet(
 
     if canister_data
         .all_hot_or_not_bets_placed
-        .contains(&PlacedBetDetail {
-            canister_id: place_bet_arg.post_canister_id,
-            post_id: place_bet_arg.post_id,
-        })
+        .contains_key(&(place_bet_arg.post_canister_id, place_bet_arg.post_id))
     {
         return Err(BetOnCurrentlyViewingPostError::UserAlreadyParticipatedInThisPost);
     }
@@ -110,6 +127,8 @@ fn validate_incoming_bet(
 
 #[cfg(test)]
 mod test {
+    use std::time::SystemTime;
+
     use shared_utils::canister_specific::individual_user_template::types::hot_or_not::BetDirection;
     use test_utils::setup::test_constants::{
         get_mock_user_alice_canister_id, get_mock_user_alice_principal_id,
@@ -181,12 +200,19 @@ mod test {
 
         assert_eq!(result, Ok(()));
 
-        canister_data
-            .all_hot_or_not_bets_placed
-            .insert(PlacedBetDetail {
+        canister_data.all_hot_or_not_bets_placed.insert(
+            (get_mock_user_alice_canister_id(), 0),
+            PlacedBetDetail {
                 canister_id: get_mock_user_alice_canister_id(),
                 post_id: 0,
-            });
+                slot_id: 1,
+                room_id: 1,
+                amount_bet: 100,
+                bet_direction: BetDirection::Hot,
+                bet_placed_at: SystemTime::now(),
+                outcome_received: BetOutcomeForBetMaker::default(),
+            },
+        );
 
         let result = validate_incoming_bet(
             &canister_data,

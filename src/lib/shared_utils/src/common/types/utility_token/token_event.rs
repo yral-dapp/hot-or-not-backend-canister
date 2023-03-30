@@ -64,6 +64,12 @@ pub enum HotOrNotOutcomePayoutEvent {
         room_id: u64,
         room_pot_total_amount: u64,
     },
+    WinningsEarnedFromBet {
+        post_id: u64,
+        slot_id: u8,
+        room_id: u64,
+        winnings_amount: u64,
+    },
 }
 
 pub const HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE: u64 = 10;
