@@ -219,13 +219,18 @@ type SystemTime = record {
   secs_since_epoch : nat64;
 };
 type TokenEvent = variant {
-  Stake : record { timestamp : SystemTime; details : StakeEvent };
+  Stake : record {
+    timestamp : SystemTime;
+    details : StakeEvent;
+    amount : nat64;
+  };
   Burn;
-  Mint : record { timestamp : SystemTime; details : MintEvent };
+  Mint : record { timestamp : SystemTime; details : MintEvent; amount : nat64 };
   Transfer;
   HotOrNotOutcomePayout : record {
     timestamp : SystemTime;
     details : HotOrNotOutcomePayoutEvent;
+    amount : nat64;
   };
 };
 type UpdateProfileDetailsError = variant { NotAuthorized };

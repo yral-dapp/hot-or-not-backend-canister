@@ -89,6 +89,7 @@ mod test {
             (
                 0,
                 TokenEvent::Mint {
+                    amount: 1000,
                     details: MintEvent::NewUserSignup {
                         new_user_principal_id: get_mock_user_alice_principal_id(),
                     },
@@ -98,6 +99,7 @@ mod test {
             (
                 1,
                 TokenEvent::Mint {
+                    amount: 500,
                     details: MintEvent::Referral {
                         referee_user_principal_id: get_mock_user_alice_principal_id(),
                         referrer_user_principal_id: get_mock_user_bob_principal_id(),

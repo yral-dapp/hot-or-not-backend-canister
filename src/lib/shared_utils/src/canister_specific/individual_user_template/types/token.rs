@@ -140,6 +140,7 @@ mod test {
         let mut token_balance = TokenBalance::default();
 
         token_balance.handle_token_event(TokenEvent::Mint {
+            amount: 1000,
             details: MintEvent::NewUserSignup {
                 new_user_principal_id: get_mock_user_alice_principal_id(),
             },
@@ -149,6 +150,7 @@ mod test {
         assert_eq!(token_balance.utility_token_balance, 1000);
 
         token_balance.handle_token_event(TokenEvent::Mint {
+            amount: 500,
             details: MintEvent::Referral {
                 referee_user_principal_id: get_mock_user_alice_principal_id(),
                 referrer_user_principal_id: get_mock_user_bob_principal_id(),
@@ -159,6 +161,7 @@ mod test {
         assert_eq!(token_balance.utility_token_balance, 1500);
 
         token_balance.handle_token_event(TokenEvent::Stake {
+            amount: 100,
             details: StakeEvent::BetOnHotOrNotPost {
                 post_canister_id: get_mock_user_alice_canister_id(),
                 post_id: 1,

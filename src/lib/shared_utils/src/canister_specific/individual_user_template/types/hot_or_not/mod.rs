@@ -383,6 +383,9 @@ impl Post {
                 }
 
                 token_balance.handle_token_event(TokenEvent::HotOrNotOutcomePayout {
+                    amount: room_detail.room_bets_total_pot
+                        * HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE
+                        / 100,
                     details: HotOrNotOutcomePayoutEvent::CommissionFromHotOrNotBet {
                         post_id: self.id,
                         slot_id: *slot_id,

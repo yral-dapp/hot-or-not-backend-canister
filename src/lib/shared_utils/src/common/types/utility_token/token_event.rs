@@ -8,16 +8,22 @@ use crate::canister_specific::individual_user_template::types::hot_or_not::BetDi
 #[derive(Clone, CandidType, Deserialize, Debug, PartialEq, Eq, Serialize)]
 pub enum TokenEvent {
     Mint {
+        #[serde(default)]
+        amount: u64,
         details: MintEvent,
         timestamp: SystemTime,
     },
     Burn,
     Transfer,
     Stake {
+        #[serde(default)]
+        amount: u64,
         details: StakeEvent,
         timestamp: SystemTime,
     },
     HotOrNotOutcomePayout {
+        #[serde(default)]
+        amount: u64,
         details: HotOrNotOutcomePayoutEvent,
         timestamp: SystemTime,
     },

@@ -61,6 +61,7 @@ async fn bet_on_currently_viewing_post(
 
                 let my_token_balance = &mut canister_data.my_token_balance;
                 my_token_balance.handle_token_event(TokenEvent::Stake {
+                    amount: place_bet_arg.bet_amount,
                     details: StakeEvent::BetOnHotOrNotPost {
                         post_canister_id: place_bet_arg.post_canister_id,
                         post_id: place_bet_arg.post_id,

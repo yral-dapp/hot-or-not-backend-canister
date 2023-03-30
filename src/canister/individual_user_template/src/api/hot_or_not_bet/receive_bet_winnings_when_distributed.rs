@@ -56,6 +56,11 @@ fn receive_bet_winnings_when_distributed(post_id: PostId, outcome: BetOutcomeFor
 
         let my_token_balance = &mut canister_data.my_token_balance;
         my_token_balance.handle_token_event(TokenEvent::HotOrNotOutcomePayout {
+            amount: match outcome {
+                BetOutcomeForBetMaker::Draw(amount) => amount,
+                BetOutcomeForBetMaker::Won(amount) => amount,
+                _ => 0,
+            },
             details: HotOrNotOutcomePayoutEvent::WinningsEarnedFromBet {
                 post_id,
                 slot_id: placed_bet_detail.slot_id,
