@@ -21,7 +21,6 @@ pub mod version_details;
 pub struct CanisterData {
     // Key is Post ID
     pub all_created_posts: BTreeMap<u64, Post>,
-    #[serde(default)]
     pub all_hot_or_not_bets_placed: BTreeMap<(CanisterId, PostId), PlacedBetDetail>,
     pub known_principal_ids: KnownPrincipalMap,
     pub my_token_balance: TokenBalance,
