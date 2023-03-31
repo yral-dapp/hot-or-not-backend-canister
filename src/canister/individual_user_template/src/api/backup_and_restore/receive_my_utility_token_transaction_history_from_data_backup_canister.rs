@@ -1,6 +1,5 @@
-use shared_utils::{
-    common::types::known_principal::KnownPrincipalType,
-    types::utility_token::token_event::TokenEvent,
+use shared_utils::common::types::{
+    known_principal::KnownPrincipalType, utility_token::token_event::TokenEvent,
 };
 
 use crate::CANISTER_DATA;

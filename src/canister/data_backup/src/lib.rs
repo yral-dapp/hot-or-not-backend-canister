@@ -11,8 +11,7 @@ use shared_utils::{
         },
         individual_user_template::types::{post::Post, profile::UserProfile},
     },
-    common::types::known_principal::KnownPrincipalType,
-    types::utility_token::token_event::TokenEvent,
+    common::types::{known_principal::KnownPrincipalType, utility_token::token_event::TokenEvent},
 };
 
 mod api;

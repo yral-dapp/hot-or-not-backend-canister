@@ -1,6 +1,7 @@
 use std::time::SystemTime;
 
 use candid::Principal;
+use ic_cdk::api::management_canister::provisional::CanisterId;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
         arg::PlaceBetArg, error::BetOnCurrentlyViewingPostError, hot_or_not::BettingStatus,
@@ -22,12 +23,13 @@ fn receive_bet_from_bet_makers_canister(
     bet_maker_principal_id: Principal,
 ) -> Result<BettingStatus, BetOnCurrentlyViewingPostError> {
     // TODO: validate using this
-    // let bet_maker_canister_id = ic_cdk::caller();
+    let bet_maker_canister_id = ic_cdk::caller();
 
     let status = CANISTER_DATA.with(|canister_data_ref_cell| {
         receive_bet_from_bet_makers_canister_impl(
             &mut canister_data_ref_cell.borrow_mut(),
             &bet_maker_principal_id,
+            &bet_maker_canister_id,
             place_bet_arg.clone(),
             &system_time::get_current_system_time_from_ic(),
         )
@@ -41,6 +43,7 @@ fn receive_bet_from_bet_makers_canister(
 fn receive_bet_from_bet_makers_canister_impl(
     canister_data: &mut CanisterData,
     bet_maker_principal_id: &Principal,
+    bet_maker_canister_id: &CanisterId,
     place_bet_arg: PlaceBetArg,
     current_time: &SystemTime,
 ) -> Result<BettingStatus, BetOnCurrentlyViewingPostError> {
@@ -55,6 +58,7 @@ fn receive_bet_from_bet_makers_canister_impl(
 
     post.place_hot_or_not_bet(
         bet_maker_principal_id,
+        bet_maker_canister_id,
         bet_amount,
         &bet_direction,
         &current_time,
@@ -93,6 +97,7 @@ mod test {
         let result = receive_bet_from_bet_makers_canister_impl(
             &mut canister_data,
             &get_mock_user_alice_principal_id(),
+            &get_mock_user_alice_canister_id(),
             PlaceBetArg {
                 post_canister_id: get_mock_user_alice_canister_id(),
                 post_id: 0,

@@ -1,10 +1,8 @@
 use crate::CANISTER_DATA;
 use shared_utils::{
+    common::types::utility_token::token_event::TokenEvent,
     pagination::{self, PaginationError},
-    types::{
-        canister_specific::individual_user_template::error_types::GetUserUtilityTokenTransactionHistoryError,
-        utility_token::token_event::TokenEvent,
-    },
+    types::canister_specific::individual_user_template::error_types::GetUserUtilityTokenTransactionHistoryError,
 };
 
 #[ic_cdk::query]

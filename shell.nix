@@ -1,3 +1,4 @@
+# TODO: update to the latest ic-nix release
 { pkgs ? import <nixos-22.11/nixpkgs> { } }:
 let
   ic-nix = pkgs.fetchFromGitHub {
@@ -11,6 +12,7 @@ let
     inherit pkgs ic-nix;
   };
 in
+# TODO: modify to include installing rust stable and adding wasm32 target
 dfx-env.overrideAttrs (old: {
   nativeBuildInputs = old.nativeBuildInputs ++ [ pkgs.rustup pkgs.pkg-config pkgs.openssl pkgs.protobuf pkgs.cmake pkgs.cachix pkgs.killall ];
 })

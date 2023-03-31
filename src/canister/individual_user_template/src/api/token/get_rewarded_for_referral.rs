@@ -1,8 +1,11 @@
 use crate::CANISTER_DATA;
 use candid::Principal;
-use shared_utils::{
-    common::{types::known_principal::KnownPrincipalType, utils::system_time},
-    types::utility_token::token_event::{MintEvent, TokenEvent},
+use shared_utils::common::{
+    types::{
+        known_principal::KnownPrincipalType,
+        utility_token::token_event::{MintEvent, TokenEvent},
+    },
+    utils::system_time,
 };
 
 #[ic_cdk::update]
@@ -23,14 +26,28 @@ fn get_rewarded_for_referral(referrer: Principal, referree: Principal) {
         return;
     }
 
+    let current_time = system_time::get_current_system_time_from_ic();
+
     CANISTER_DATA.with(|canister_data_ref_cell| {
         let my_token_balance = &mut canister_data_ref_cell.borrow_mut().my_token_balance;
+
+        let referral_reward_amount =
+            TokenEvent::get_token_amount_for_token_event(&TokenEvent::Mint {
+                amount: 0,
+                details: MintEvent::Referral {
+                    referrer_user_principal_id: referrer,
+                    referee_user_principal_id: referree,
+                },
+                timestamp: current_time,
+            });
+
         my_token_balance.handle_token_event(TokenEvent::Mint {
+            amount: referral_reward_amount,
             details: MintEvent::Referral {
                 referrer_user_principal_id: referrer,
                 referee_user_principal_id: referree,
             },
-            timestamp: system_time::get_current_system_time_from_ic(),
+            timestamp: current_time,
         });
     });
 }

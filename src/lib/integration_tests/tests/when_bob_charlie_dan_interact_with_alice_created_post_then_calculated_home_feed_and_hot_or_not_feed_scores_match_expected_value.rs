@@ -26,7 +26,8 @@ use test_utils::setup::{
 };
 
 #[test]
-fn when_bob_charlie_dan_places_new_bet_on_alice_post_then_expected_outcomes_occur() {
+fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_feed_and_hot_or_not_feed_scores_match_expected_value(
+) {
     let state_machine = StateMachine::new();
     let known_principal_map = get_initialized_env_with_provisioned_known_canisters(&state_machine);
     let user_index_canister_id = get_canister_id_of_specific_type_from_principal_id_map(

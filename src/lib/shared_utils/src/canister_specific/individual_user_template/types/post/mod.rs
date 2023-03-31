@@ -464,6 +464,7 @@ mod test {
         (0..80).for_each(|number| {
             let result = post.place_hot_or_not_bet(
                 &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
@@ -481,6 +482,7 @@ mod test {
 
         (80..145).for_each(|number| {
             let result = post.place_hot_or_not_bet(
+                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 100,
                 &BetDirection::Not,
@@ -537,6 +539,7 @@ mod test {
         (0..216).for_each(|number| {
             let result = post.place_hot_or_not_bet(
                 &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
@@ -554,6 +557,7 @@ mod test {
 
         (216..360).for_each(|number| {
             let result = post.place_hot_or_not_bet(
+                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 100,
                 &BetDirection::Not,
@@ -610,6 +614,7 @@ mod test {
         (0..1_078).for_each(|number| {
             let result = post.place_hot_or_not_bet(
                 &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
@@ -630,6 +635,7 @@ mod test {
 
         (1_078..2_695).for_each(|number| {
             let result = post.place_hot_or_not_bet(
+                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 100,
                 &BetDirection::Not,
@@ -687,6 +693,7 @@ mod test {
         (0..4_725).for_each(|number| {
             let result = post.place_hot_or_not_bet(
                 &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
@@ -707,6 +714,7 @@ mod test {
 
         (4_725..10_500).for_each(|number| {
             let result = post.place_hot_or_not_bet(
+                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 100,
                 &BetDirection::Not,
@@ -764,6 +772,7 @@ mod test {
         (0..26_827).for_each(|number| {
             let result = post.place_hot_or_not_bet(
                 &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
@@ -784,6 +793,7 @@ mod test {
 
         (26_827..54_750).for_each(|number| {
             let result = post.place_hot_or_not_bet(
+                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 100,
                 &BetDirection::Not,
@@ -841,6 +851,7 @@ mod test {
         (0..18).for_each(|number| {
             let result = post.place_hot_or_not_bet(
                 &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
@@ -861,6 +872,7 @@ mod test {
 
         (18..45).for_each(|number| {
             let result = post.place_hot_or_not_bet(
+                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 100,
                 &BetDirection::Not,
@@ -918,6 +930,7 @@ mod test {
         (0..40).for_each(|number| {
             let result = post.place_hot_or_not_bet(
                 &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
@@ -938,6 +951,7 @@ mod test {
 
         (40..68).for_each(|number| {
             let result = post.place_hot_or_not_bet(
+                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 100,
                 &BetDirection::Not,
@@ -995,6 +1009,7 @@ mod test {
         (0..466).for_each(|number| {
             let result = post.place_hot_or_not_bet(
                 &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
@@ -1015,6 +1030,7 @@ mod test {
 
         (466..805).for_each(|number| {
             let result = post.place_hot_or_not_bet(
+                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 100,
                 &BetDirection::Not,
@@ -1072,6 +1088,7 @@ mod test {
         (0..1_320).for_each(|number| {
             let result = post.place_hot_or_not_bet(
                 &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
@@ -1092,6 +1109,7 @@ mod test {
 
         (1_320..2_400).for_each(|number| {
             let result = post.place_hot_or_not_bet(
+                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 100,
                 &BetDirection::Not,
@@ -1149,6 +1167,7 @@ mod test {
         (0..6_270).for_each(|number| {
             let result = post.place_hot_or_not_bet(
                 &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
@@ -1169,6 +1188,7 @@ mod test {
 
         (6_270..14_250).for_each(|number| {
             let result = post.place_hot_or_not_bet(
+                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 100,
                 &BetDirection::Not,
@@ -1225,6 +1245,7 @@ mod test {
         (0..80).for_each(|number| {
             let result = post.place_hot_or_not_bet(
                 &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
@@ -1242,6 +1263,7 @@ mod test {
 
         (80..145).for_each(|number| {
             let result = post.place_hot_or_not_bet(
+                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 100,
                 &BetDirection::Not,
@@ -1312,6 +1334,7 @@ mod test {
         (0..216).for_each(|number| {
             let result = post.place_hot_or_not_bet(
                 &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
@@ -1329,6 +1352,7 @@ mod test {
 
         (216..360).for_each(|number| {
             let result = post.place_hot_or_not_bet(
+                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 100,
                 &BetDirection::Not,
@@ -1399,6 +1423,7 @@ mod test {
         (0..1_078).for_each(|number| {
             let result = post.place_hot_or_not_bet(
                 &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
@@ -1419,6 +1444,7 @@ mod test {
 
         (1_078..2_695).for_each(|number| {
             let result = post.place_hot_or_not_bet(
+                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 100,
                 &BetDirection::Not,
@@ -1490,6 +1516,7 @@ mod test {
         (0..4_725).for_each(|number| {
             let result = post.place_hot_or_not_bet(
                 &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
@@ -1510,6 +1537,7 @@ mod test {
 
         (4_725..10_500).for_each(|number| {
             let result = post.place_hot_or_not_bet(
+                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 100,
                 &BetDirection::Not,
@@ -1581,6 +1609,7 @@ mod test {
         (0..26_827).for_each(|number| {
             let result = post.place_hot_or_not_bet(
                 &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
@@ -1601,6 +1630,7 @@ mod test {
 
         (26_827..54_750).for_each(|number| {
             let result = post.place_hot_or_not_bet(
+                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 100,
                 &BetDirection::Not,
@@ -1672,6 +1702,7 @@ mod test {
         (0..18).for_each(|number| {
             let result = post.place_hot_or_not_bet(
                 &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
@@ -1692,6 +1723,7 @@ mod test {
 
         (18..45).for_each(|number| {
             let result = post.place_hot_or_not_bet(
+                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 100,
                 &BetDirection::Not,
@@ -1763,6 +1795,7 @@ mod test {
         (0..40).for_each(|number| {
             let result = post.place_hot_or_not_bet(
                 &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
@@ -1783,6 +1816,7 @@ mod test {
 
         (40..68).for_each(|number| {
             let result = post.place_hot_or_not_bet(
+                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 100,
                 &BetDirection::Not,
@@ -1854,6 +1888,7 @@ mod test {
         (0..466).for_each(|number| {
             let result = post.place_hot_or_not_bet(
                 &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
@@ -1874,6 +1909,7 @@ mod test {
 
         (466..805).for_each(|number| {
             let result = post.place_hot_or_not_bet(
+                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 100,
                 &BetDirection::Not,
@@ -1945,6 +1981,7 @@ mod test {
         (0..1_320).for_each(|number| {
             let result = post.place_hot_or_not_bet(
                 &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
@@ -1965,6 +2002,7 @@ mod test {
 
         (1_320..2_400).for_each(|number| {
             let result = post.place_hot_or_not_bet(
+                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 100,
                 &BetDirection::Not,
@@ -2036,6 +2074,7 @@ mod test {
         (0..6_270).for_each(|number| {
             let result = post.place_hot_or_not_bet(
                 &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
@@ -2056,6 +2095,7 @@ mod test {
 
         (6_270..14_250).for_each(|number| {
             let result = post.place_hot_or_not_bet(
+                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
                 100,
                 &BetDirection::Not,

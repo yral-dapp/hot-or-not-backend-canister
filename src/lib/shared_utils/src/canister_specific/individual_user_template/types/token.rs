@@ -3,12 +3,14 @@ use std::collections::BTreeMap;
 use candid::{CandidType, Deserialize};
 use serde::Serialize;
 
-use crate::types::utility_token::token_event::{MintEvent, StakeEvent, TokenEvent};
+use crate::common::types::utility_token::token_event::{
+    HotOrNotOutcomePayoutEvent, MintEvent, StakeEvent, TokenEvent,
+    HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE,
+};
 
 #[derive(Default, Clone, Deserialize, CandidType, Debug, Serialize)]
 pub struct TokenBalance {
     pub utility_token_balance: u64,
-    #[serde(alias = "utility_token_transaction_history_v1")]
     pub utility_token_transaction_history: BTreeMap<u64, TokenEvent>,
 }
 
@@ -36,6 +38,20 @@ impl TokenBalance {
             TokenEvent::Stake { details, .. } => match details {
                 StakeEvent::BetOnHotOrNotPost { bet_amount, .. } => {
                     self.utility_token_balance -= bet_amount;
+                }
+            },
+            TokenEvent::HotOrNotOutcomePayout { details, .. } => match details {
+                HotOrNotOutcomePayoutEvent::CommissionFromHotOrNotBet {
+                    room_pot_total_amount,
+                    ..
+                } => {
+                    self.utility_token_balance +=
+                        room_pot_total_amount * HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE / 100;
+                }
+                HotOrNotOutcomePayoutEvent::WinningsEarnedFromBet {
+                    winnings_amount, ..
+                } => {
+                    self.utility_token_balance += winnings_amount;
                 }
             },
         }
@@ -124,6 +140,7 @@ mod test {
         let mut token_balance = TokenBalance::default();
 
         token_balance.handle_token_event(TokenEvent::Mint {
+            amount: 1000,
             details: MintEvent::NewUserSignup {
                 new_user_principal_id: get_mock_user_alice_principal_id(),
             },
@@ -133,6 +150,7 @@ mod test {
         assert_eq!(token_balance.utility_token_balance, 1000);
 
         token_balance.handle_token_event(TokenEvent::Mint {
+            amount: 500,
             details: MintEvent::Referral {
                 referee_user_principal_id: get_mock_user_alice_principal_id(),
                 referrer_user_principal_id: get_mock_user_bob_principal_id(),
@@ -143,6 +161,7 @@ mod test {
         assert_eq!(token_balance.utility_token_balance, 1500);
 
         token_balance.handle_token_event(TokenEvent::Stake {
+            amount: 100,
             details: StakeEvent::BetOnHotOrNotPost {
                 post_canister_id: get_mock_user_alice_canister_id(),
                 post_id: 1,

@@ -9,8 +9,14 @@ type AllUserData = record {
   canister_data : UserOwnedCanisterData;
 };
 type BackupStatistics = record { number_of_user_entries : nat64 };
-type BetDetails = record { bet_direction : BetDirection; amount : nat64 };
+type BetDetails = record {
+  bet_direction : BetDirection;
+  bet_maker_canister_id : principal;
+  amount : nat64;
+  payout : BetPayout;
+};
 type BetDirection = variant { Hot; Not };
+type BetPayout = variant { NotCalculatedYet; Calculated : nat64 };
 type DataBackupInitArgs = record {
   known_principal_ids : opt vec record { KnownPrincipalType; principal };
   access_control_map : opt vec record { principal; vec UserAccessRole };
@@ -24,6 +30,20 @@ type HotOrNotDetails = record {
   hot_or_not_feed_score : FeedScore;
   aggregate_stats : AggregateStats;
   slot_history : vec record { nat8; SlotDetails };
+};
+type HotOrNotOutcomePayoutEvent = variant {
+  WinningsEarnedFromBet : record {
+    slot_id : nat8;
+    post_id : nat64;
+    room_id : nat64;
+    winnings_amount : nat64;
+  };
+  CommissionFromHotOrNotBet : record {
+    slot_id : nat8;
+    post_id : nat64;
+    room_pot_total_amount : nat64;
+    room_id : nat64;
+  };
 };
 type KnownPrincipalType = variant {
   CanisterIdUserIndex;
@@ -73,7 +93,9 @@ type PostViewStatistics = record {
 };
 type RoomBetPossibleOutcomes = variant { HotWon; BetOngoing; Draw; NotWon };
 type RoomDetails = record {
+  total_hot_bets : nat64;
   bets_made : vec record { principal; BetDetails };
+  total_not_bets : nat64;
   room_bets_total_pot : nat64;
   bet_outcome : RoomBetPossibleOutcomes;
 };
@@ -95,10 +117,19 @@ type TokenBalance = record {
   utility_token_transaction_history : vec record { nat64; TokenEvent };
 };
 type TokenEvent = variant {
-  Stake : record { timestamp : SystemTime; details : StakeEvent };
+  Stake : record {
+    timestamp : SystemTime;
+    details : StakeEvent;
+    amount : nat64;
+  };
   Burn;
-  Mint : record { timestamp : SystemTime; details : MintEvent };
+  Mint : record { timestamp : SystemTime; details : MintEvent; amount : nat64 };
   Transfer;
+  HotOrNotOutcomePayout : record {
+    timestamp : SystemTime;
+    details : HotOrNotOutcomePayoutEvent;
+    amount : nat64;
+  };
 };
 type UserAccessRole = variant {
   CanisterController;

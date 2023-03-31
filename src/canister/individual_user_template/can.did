@@ -9,7 +9,12 @@ type AnotherUserFollowedMeError = variant {
   NotAuthorized;
   UserTryingToFollowMeDoesNotExist;
 };
-type BetDetails = record { bet_direction : BetDirection; amount : nat64 };
+type BetDetails = record {
+  bet_direction : BetDirection;
+  bet_maker_canister_id : principal;
+  amount : nat64;
+  payout : BetPayout;
+};
 type BetDirection = variant { Hot; Not };
 type BetOnCurrentlyViewingPostError = variant {
   UserPrincipalNotSet;
@@ -20,6 +25,13 @@ type BetOnCurrentlyViewingPostError = variant {
   PostCreatorCanisterCallFailed;
   UserNotLoggedIn;
 };
+type BetOutcomeForBetMaker = variant {
+  Won : nat64;
+  Draw : nat64;
+  Lost;
+  AwaitingResult;
+};
+type BetPayout = variant { NotCalculatedYet; Calculated : nat64 };
 type BettingStatus = variant {
   BettingOpen : record {
     number_of_participants : nat8;
@@ -55,6 +67,20 @@ type HotOrNotDetails = record {
   aggregate_stats : AggregateStats;
   slot_history : vec record { nat8; SlotDetails };
 };
+type HotOrNotOutcomePayoutEvent = variant {
+  WinningsEarnedFromBet : record {
+    slot_id : nat8;
+    post_id : nat64;
+    room_id : nat64;
+    winnings_amount : nat64;
+  };
+  CommissionFromHotOrNotBet : record {
+    slot_id : nat8;
+    post_id : nat64;
+    room_pot_total_amount : nat64;
+    room_id : nat64;
+  };
+};
 type IndividualUserTemplateInitArgs = record {
   known_principal_ids : opt vec record { KnownPrincipalType; principal };
   profile_owner : opt principal;
@@ -83,6 +109,16 @@ type PlaceBetArg = record {
   post_id : nat64;
   bet_direction : BetDirection;
   post_canister_id : principal;
+};
+type PlacedBetDetail = record {
+  outcome_received : BetOutcomeForBetMaker;
+  slot_id : nat8;
+  post_id : nat64;
+  room_id : nat64;
+  canister_id : principal;
+  bet_direction : BetDirection;
+  amount_bet : nat64;
+  bet_placed_at : SystemTime;
 };
 type Post = record {
   id : nat64;
@@ -170,7 +206,9 @@ type Result_8 = variant {
 type Result_9 = variant { Ok; Err : UpdateProfileSetUniqueUsernameError };
 type RoomBetPossibleOutcomes = variant { HotWon; BetOngoing; Draw; NotWon };
 type RoomDetails = record {
+  total_hot_bets : nat64;
   bets_made : vec record { principal; BetDetails };
+  total_not_bets : nat64;
   room_bets_total_pot : nat64;
   bet_outcome : RoomBetPossibleOutcomes;
 };
@@ -181,10 +219,19 @@ type SystemTime = record {
   secs_since_epoch : nat64;
 };
 type TokenEvent = variant {
-  Stake : record { timestamp : SystemTime; details : StakeEvent };
+  Stake : record {
+    timestamp : SystemTime;
+    details : StakeEvent;
+    amount : nat64;
+  };
   Burn;
-  Mint : record { timestamp : SystemTime; details : MintEvent };
+  Mint : record { timestamp : SystemTime; details : MintEvent; amount : nat64 };
   Transfer;
+  HotOrNotOutcomePayout : record {
+    timestamp : SystemTime;
+    details : HotOrNotOutcomePayoutEvent;
+    amount : nat64;
+  };
 };
 type UpdateProfileDetailsError = variant { NotAuthorized };
 type UpdateProfileSetUniqueUsernameError = variant {
@@ -226,6 +273,12 @@ service : (IndividualUserTemplateInitArgs) -> {
   get_entire_individual_post_detail_by_id : (nat64) -> (Result_2) query;
   get_following_status_do_i_follow_this_user : (principal) -> (bool) query;
   get_hot_or_not_bet_details_for_this_post : (nat64) -> (BettingStatus) query;
+  get_hot_or_not_bets_placed_by_this_profile_with_pagination : (nat64) -> (
+      vec PlacedBetDetail,
+    ) query;
+  get_individual_hot_or_not_bet_placed_by_this_profile : (principal, nat64) -> (
+      opt PlacedBetDetail,
+    ) query;
   get_individual_post_details_by_id : (nat64) -> (PostDetailsForFrontend) query;
   get_posts_of_this_user_profile_with_pagination : (nat64, nat64) -> (
       Result_3,
@@ -244,6 +297,7 @@ service : (IndividualUserTemplateInitArgs) -> {
       opt principal,
     ) query;
   receive_bet_from_bet_makers_canister : (PlaceBetArg, principal) -> (Result_1);
+  receive_bet_winnings_when_distributed : (nat64, BetOutcomeForBetMaker) -> ();
   receive_my_created_posts_from_data_backup_canister : (vec Post) -> ();
   receive_my_profile_from_data_backup_canister : (UserProfile) -> ();
   receive_my_utility_token_balance_from_data_backup_canister : (nat64) -> ();

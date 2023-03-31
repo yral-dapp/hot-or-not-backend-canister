@@ -9,6 +9,43 @@ pub struct PostScoreIndexItem {
     pub publisher_canister_id: Principal,
 }
 
+// TODO: Look at the below implementation and check if this can be used to update
+
+// #[derive(Debug, PartialEq, Eq)]
+// struct MyType {
+//     id: u32,
+//     score: u32,
+// }
+
+// impl Ord for MyType {
+//     fn cmp(&self, other: &Self) -> Ordering {
+//         // Compare by the `id` field for equality first
+//         let id_cmp = self.id.cmp(&other.id);
+
+//         if id_cmp != Ordering::Equal {
+//             // If the `id` fields are equal, compare by the `score` field
+//             self.score.cmp(&other.score)
+//         } else {
+//             // If the `id` fields are different, return the `id` comparison result
+//             id_cmp
+//         }
+//     }
+// }
+
+// impl PartialOrd for MyType {
+//     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+//         Some(self.cmp(other))
+//     }
+// }
+
+// impl PartialEq for MyType {
+//     fn eq(&self, other: &Self) -> bool {
+//         self.id == other.id
+//     }
+// }
+
+// impl Eq for MyType {}
+
 impl Ord for PostScoreIndexItem {
     fn cmp(&self, other: &Self) -> Ordering {
         match other.publisher_canister_id.cmp(&self.publisher_canister_id) {
