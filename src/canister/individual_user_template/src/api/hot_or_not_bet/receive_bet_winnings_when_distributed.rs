@@ -62,6 +62,7 @@ fn receive_bet_winnings_when_distributed(post_id: PostId, outcome: BetOutcomeFor
                 _ => 0,
             },
             details: HotOrNotOutcomePayoutEvent::WinningsEarnedFromBet {
+                post_canister_id: post_creator_canister_id,
                 post_id,
                 slot_id: placed_bet_detail.slot_id,
                 room_id: placed_bet_detail.room_id,
@@ -70,6 +71,7 @@ fn receive_bet_winnings_when_distributed(post_id: PostId, outcome: BetOutcomeFor
                     BetOutcomeForBetMaker::Won(amount) => amount,
                     _ => 0,
                 },
+                event_outcome: outcome,
             },
             timestamp: current_time,
         });
