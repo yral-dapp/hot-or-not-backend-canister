@@ -67,7 +67,6 @@ async fn backup_data_to_backup_canister(
         canister_id
     ));
 
-    // TODO: backup and restore UserProfileGlobalStats. This is not done yet.
     send_profile_data(
         &data_backup_canister_id,
         &canister_owner_principal_id,

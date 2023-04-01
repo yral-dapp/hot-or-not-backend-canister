@@ -72,13 +72,16 @@ type HotOrNotOutcomePayoutEvent = variant {
     slot_id : nat8;
     post_id : nat64;
     room_id : nat64;
+    post_canister_id : principal;
     winnings_amount : nat64;
+    event_outcome : BetOutcomeForBetMaker;
   };
   CommissionFromHotOrNotBet : record {
     slot_id : nat8;
     post_id : nat64;
     room_pot_total_amount : nat64;
     room_id : nat64;
+    post_canister_id : principal;
   };
 };
 type IndividualUserTemplateInitArgs = record {

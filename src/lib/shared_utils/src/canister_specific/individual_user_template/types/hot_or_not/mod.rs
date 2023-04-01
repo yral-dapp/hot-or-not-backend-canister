@@ -137,7 +137,7 @@ pub struct PlacedBetDetail {
     pub outcome_received: BetOutcomeForBetMaker,
 }
 
-#[derive(Deserialize, Serialize, Default, CandidType, PartialEq, Eq, Clone)]
+#[derive(Deserialize, Serialize, Default, CandidType, PartialEq, Eq, Clone, Debug)]
 pub enum BetOutcomeForBetMaker {
     #[default]
     AwaitingResult,
@@ -348,6 +348,7 @@ impl Post {
 
     pub fn tabulate_hot_or_not_outcome_for_slot(
         &mut self,
+        post_canister_id: &CanisterId,
         slot_id: &u8,
         token_balance: &mut TokenBalance,
         current_time: &SystemTime,
@@ -384,6 +385,7 @@ impl Post {
                         * HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE
                         / 100,
                     details: HotOrNotOutcomePayoutEvent::CommissionFromHotOrNotBet {
+                        post_canister_id: *post_canister_id,
                         post_id: self.id,
                         slot_id: *slot_id,
                         room_id: *room_id,
@@ -802,6 +804,7 @@ mod test {
             &post_creation_time,
         );
         let mut token_balance = TokenBalance::default();
+        let tabulation_canister_id = get_mock_user_alice_canister_id();
 
         assert!(post.hot_or_not_details.is_some());
 
@@ -900,7 +903,12 @@ mod test {
             .checked_add(Duration::from_secs(60 * 5))
             .unwrap();
 
-        post.tabulate_hot_or_not_outcome_for_slot(&1, &mut token_balance, &score_tabulation_time);
+        post.tabulate_hot_or_not_outcome_for_slot(
+            &tabulation_canister_id,
+            &1,
+            &mut token_balance,
+            &score_tabulation_time,
+        );
 
         assert_eq!(token_balance.utility_token_transaction_history.len(), 1);
         assert_eq!(token_balance.utility_token_balance, 355);
@@ -1044,7 +1052,12 @@ mod test {
             .checked_add(Duration::from_secs(60 * 5))
             .unwrap();
 
-        post.tabulate_hot_or_not_outcome_for_slot(&2, &mut token_balance, &score_tabulation_time);
+        post.tabulate_hot_or_not_outcome_for_slot(
+            &get_mock_user_alice_canister_id(),
+            &2,
+            &mut token_balance,
+            &score_tabulation_time,
+        );
 
         assert_eq!(token_balance.utility_token_transaction_history.len(), 2);
         assert_eq!(token_balance.utility_token_balance, 355 + 458);
@@ -1278,7 +1291,12 @@ mod test {
             .checked_add(Duration::from_secs(60 * 5))
             .unwrap();
 
-        post.tabulate_hot_or_not_outcome_for_slot(&1, &mut token_balance, &score_tabulation_time);
+        post.tabulate_hot_or_not_outcome_for_slot(
+            &get_mock_user_alice_canister_id(),
+            &1,
+            &mut token_balance,
+            &score_tabulation_time,
+        );
 
         assert_eq!(token_balance.utility_token_transaction_history.len(), 2);
         assert_eq!(token_balance.utility_token_balance, 487 + 321);
@@ -1481,7 +1499,12 @@ mod test {
             .checked_add(Duration::from_secs(60 * 5))
             .unwrap();
 
-        post.tabulate_hot_or_not_outcome_for_slot(&1, &mut token_balance, &score_tabulation_time);
+        post.tabulate_hot_or_not_outcome_for_slot(
+            &get_mock_user_alice_canister_id(),
+            &1,
+            &mut token_balance,
+            &score_tabulation_time,
+        );
 
         assert_eq!(token_balance.utility_token_transaction_history.len(), 1);
         assert_eq!(token_balance.utility_token_balance, 390);

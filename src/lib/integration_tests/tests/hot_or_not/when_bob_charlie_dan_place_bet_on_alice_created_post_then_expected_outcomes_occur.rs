@@ -6,7 +6,7 @@ use shared_utils::{
     canister_specific::individual_user_template::types::{
         arg::PlaceBetArg,
         error::BetOnCurrentlyViewingPostError,
-        hot_or_not::{BetDirection, BettingStatus},
+        hot_or_not::{BetDirection, BetOutcomeForBetMaker, BettingStatus},
         post::PostDetailsFromFrontend,
     },
     common::types::{
@@ -313,6 +313,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
         TokenEvent::HotOrNotOutcomePayout {
             amount: 16,
             details: HotOrNotOutcomePayoutEvent::CommissionFromHotOrNotBet {
+                post_canister_id: returned_post.publisher_canister_id,
                 post_id: 0,
                 slot_id: 1,
                 room_id: 1,
@@ -398,9 +399,11 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
         TokenEvent::HotOrNotOutcomePayout {
             amount: 90,
             details: HotOrNotOutcomePayoutEvent::WinningsEarnedFromBet {
+                post_canister_id: alice_canister_id,
                 post_id: 0,
                 slot_id: 1,
                 room_id: 1,
+                event_outcome: BetOutcomeForBetMaker::Won(90),
                 winnings_amount: 90
             },
             timestamp: if let TokenEvent::HotOrNotOutcomePayout { timestamp, .. } =
@@ -483,9 +486,11 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
         TokenEvent::HotOrNotOutcomePayout {
             amount: 0,
             details: HotOrNotOutcomePayoutEvent::WinningsEarnedFromBet {
+                post_canister_id: alice_canister_id,
                 post_id: 0,
                 slot_id: 1,
                 room_id: 1,
+                event_outcome: BetOutcomeForBetMaker::Lost,
                 winnings_amount: 0
             },
             timestamp: if let TokenEvent::HotOrNotOutcomePayout { timestamp, .. } =
@@ -568,9 +573,11 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
         TokenEvent::HotOrNotOutcomePayout {
             amount: 18,
             details: HotOrNotOutcomePayoutEvent::WinningsEarnedFromBet {
+                post_canister_id: alice_canister_id,
                 post_id: 0,
                 slot_id: 1,
                 room_id: 1,
+                event_outcome: BetOutcomeForBetMaker::Won(18),
                 winnings_amount: 18
             },
             timestamp: if let TokenEvent::HotOrNotOutcomePayout { timestamp, .. } =
