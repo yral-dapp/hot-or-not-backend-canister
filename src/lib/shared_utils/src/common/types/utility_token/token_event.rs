@@ -75,9 +75,7 @@ pub enum HotOrNotOutcomePayoutEvent {
         post_id: u64,
         slot_id: u8,
         room_id: u64,
-        #[serde(default)]
         event_outcome: BetOutcomeForBetMaker,
-        #[serde(skip_serializing)]
         winnings_amount: u64,
     },
 }
