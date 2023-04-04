@@ -18,23 +18,10 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
-      - name: Add Rust wasm target
-        run: rustup target add wasm32-unknown-unknown
-      - name: Setup protoc
-        uses: arduino/setup-protoc@v1.1.2
+      - name: Cache install Nix packages
+        uses: rikhuijzer/cache-install@v1.0.9
         with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Install DFX
-        run: DFX_VERSION=0.13.1 sh -ci "$(curl -fsSL https://smartcontracts.org/install.sh)"
-      - name: Initialize DFX identities
-        run: dfx identity list
-      - name: Import DFX identity
-        run: |
-          touch actions_identity.pem
-          echo "${{ secrets.CANISTER_CONTROLLER_SECRET_KEY }}" > actions_identity.pem
-          dfx identity import --disable-encryption actions actions_identity.pem
-          rm actions_identity.pem
-          dfx identity use actions
+          key: nix-${{ hashFiles('default.nix') }}
       - name: Cache rust dependencies, build output and DFX build cache
         uses: actions/cache@v3
         with:
@@ -45,38 +32,44 @@ jobs:
             ~/.cargo/git/db/
             target/
             .dfx/
-          key: ${{ runner.os }}-testing-${{ hashFiles('**/Cargo.lock') }}
+          key: rust-test-${{ hashFiles('**/Cargo.lock') }}
+      - name: Import DFX identity
+        run: |
+          touch actions_identity.pem
+          echo "${{ secrets.CANISTER_CONTROLLER_SECRET_KEY }}" > actions_identity.pem
+          nix-shell --run "dfx identity import --disable-encryption actions actions_identity.pem"
+          rm actions_identity.pem
+          nix-shell --run "dfx identity use actions"
       - name: Start local replica
-        run: dfx start --background
+        run: nix-shell --run "dfx start --background"
       - name: Provision local canister IDs for the canisters
         run: |
-          dfx canister create --no-wallet configuration
-          dfx canister create --no-wallet data_backup
-          dfx canister create --no-wallet individual_user_template
-          dfx canister create --no-wallet post_cache
-          dfx canister create --no-wallet user_index
+          nix-shell --run "dfx canister create --no-wallet configuration"
+          nix-shell --run "dfx canister create --no-wallet data_backup"
+          nix-shell --run "dfx canister create --no-wallet individual_user_template"
+          nix-shell --run "dfx canister create --no-wallet post_cache"
+          nix-shell --run "dfx canister create --no-wallet user_index"
       - name: Stop local replica
-        run: dfx stop
+        run: nix-shell --run "dfx stop"
       - name: Build configuration canister
         run: |
-          dfx build configuration
+          nix-shell --run "dfx build configuration"
           gzip -f -1 ./target/wasm32-unknown-unknown/release/configuration.wasm
       - name: Build data_backup canister
         run: |
-          dfx build data_backup
+          nix-shell --run "dfx build data_backup"
           gzip -f -1 ./target/wasm32-unknown-unknown/release/data_backup.wasm
       - name: Build individual_user_template canister
         run: |
-          dfx build individual_user_template
+          nix-shell --run "dfx build individual_user_template"
           gzip -f -1 ./target/wasm32-unknown-unknown/release/individual_user_template.wasm
       - name: Build user_index canister
         run: |
-          dfx build user_index
+          nix-shell --run "dfx build user_index"
           gzip -f -1 ./target/wasm32-unknown-unknown/release/user_index.wasm
       - name: Build post_cache canister
         run: |
-          dfx build post_cache
+          nix-shell --run "dfx build post_cache"
           gzip -f -1 ./target/wasm32-unknown-unknown/release/post_cache.wasm
-
       - name: Run canister test suite
-        run: cargo test
+        run: nix-shell --run "cargo test"
