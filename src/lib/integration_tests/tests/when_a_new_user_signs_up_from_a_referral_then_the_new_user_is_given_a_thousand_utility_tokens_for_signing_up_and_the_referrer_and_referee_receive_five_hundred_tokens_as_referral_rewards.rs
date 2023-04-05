@@ -259,22 +259,6 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
         {
             TokenEvent::Mint { details, .. } => details,
             _ => {
-                MintEvent::NewUserSignup {
-                    new_user_principal_id: Principal::anonymous(),
-                }
-            }
-        },
-        MintEvent::NewUserSignup {
-            new_user_principal_id: alice_principal_id.0
-        },
-    );
-    assert_eq!(
-        match alice_utility_token_transaction_history_after_referral[1]
-            .1
-            .clone()
-        {
-            TokenEvent::Mint { details, .. } => details,
-            _ => {
                 MintEvent::Referral {
                     referee_user_principal_id: Principal::anonymous(),
                     referrer_user_principal_id: Principal::anonymous(),
@@ -284,6 +268,22 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
         MintEvent::Referral {
             referrer_user_principal_id: alice_principal_id.0,
             referee_user_principal_id: bob_principal_id.0,
+        },
+    );
+    assert_eq!(
+        match alice_utility_token_transaction_history_after_referral[1]
+            .1
+            .clone()
+        {
+            TokenEvent::Mint { details, .. } => details,
+            _ => {
+                MintEvent::NewUserSignup {
+                    new_user_principal_id: Principal::anonymous(),
+                }
+            }
+        },
+        MintEvent::NewUserSignup {
+            new_user_principal_id: alice_principal_id.0
         },
     );
     assert_eq!(
@@ -297,22 +297,6 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
         {
             TokenEvent::Mint { details, .. } => details,
             _ => {
-                MintEvent::NewUserSignup {
-                    new_user_principal_id: Principal::anonymous(),
-                }
-            }
-        },
-        MintEvent::NewUserSignup {
-            new_user_principal_id: bob_principal_id.0
-        },
-    );
-    assert_eq!(
-        match bob_utility_token_transaction_history_after_referral[1]
-            .1
-            .clone()
-        {
-            TokenEvent::Mint { details, .. } => details,
-            _ => {
                 MintEvent::Referral {
                     referee_user_principal_id: Principal::anonymous(),
                     referrer_user_principal_id: Principal::anonymous(),
@@ -322,6 +306,22 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
         MintEvent::Referral {
             referrer_user_principal_id: alice_principal_id.0,
             referee_user_principal_id: bob_principal_id.0,
+        },
+    );
+    assert_eq!(
+        match bob_utility_token_transaction_history_after_referral[1]
+            .1
+            .clone()
+        {
+            TokenEvent::Mint { details, .. } => details,
+            _ => {
+                MintEvent::NewUserSignup {
+                    new_user_principal_id: Principal::anonymous(),
+                }
+            }
+        },
+        MintEvent::NewUserSignup {
+            new_user_principal_id: bob_principal_id.0
         },
     );
 }

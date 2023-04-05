@@ -307,7 +307,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
 
     assert_eq!(alice_token_transaction_history.len(), 2);
     assert_eq!(
-        alice_token_transaction_history.get(1).unwrap().1,
+        alice_token_transaction_history.get(0).unwrap().1,
         TokenEvent::HotOrNotOutcomePayout {
             amount: 16,
             details: HotOrNotOutcomePayoutEvent::CommissionFromHotOrNotBet {
@@ -318,7 +318,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
                 room_pot_total_amount: 160
             },
             timestamp: if let TokenEvent::HotOrNotOutcomePayout { timestamp, .. } =
-                alice_token_transaction_history.get(1).unwrap().1.clone()
+                alice_token_transaction_history.get(0).unwrap().1.clone()
             {
                 timestamp
             } else {
@@ -374,6 +374,27 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
 
     assert_eq!(bob_token_transaction_history.len(), 3);
     assert_eq!(
+        bob_token_transaction_history.get(0).unwrap().1,
+        TokenEvent::HotOrNotOutcomePayout {
+            amount: 90,
+            details: HotOrNotOutcomePayoutEvent::WinningsEarnedFromBet {
+                post_canister_id: alice_canister_id,
+                post_id: 0,
+                slot_id: 1,
+                room_id: 1,
+                event_outcome: BetOutcomeForBetMaker::Won(90),
+                winnings_amount: 90
+            },
+            timestamp: if let TokenEvent::HotOrNotOutcomePayout { timestamp, .. } =
+                bob_token_transaction_history.get(0).unwrap().1.clone()
+            {
+                timestamp
+            } else {
+                panic!("\n🛑 unexpected token event\n");
+            },
+        }
+    );
+    assert_eq!(
         bob_token_transaction_history.get(1).unwrap().1,
         TokenEvent::Stake {
             amount: 50,
@@ -390,27 +411,6 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
             } else {
                 panic!("\n🛑 unexpected token event\n");
             }
-        }
-    );
-    assert_eq!(
-        bob_token_transaction_history.get(2).unwrap().1,
-        TokenEvent::HotOrNotOutcomePayout {
-            amount: 90,
-            details: HotOrNotOutcomePayoutEvent::WinningsEarnedFromBet {
-                post_canister_id: alice_canister_id,
-                post_id: 0,
-                slot_id: 1,
-                room_id: 1,
-                event_outcome: BetOutcomeForBetMaker::Won(90),
-                winnings_amount: 90
-            },
-            timestamp: if let TokenEvent::HotOrNotOutcomePayout { timestamp, .. } =
-                bob_token_transaction_history.get(2).unwrap().1.clone()
-            {
-                timestamp
-            } else {
-                panic!("\n🛑 unexpected token event\n");
-            },
         }
     );
 
@@ -461,6 +461,27 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
 
     assert_eq!(charlie_token_transaction_history.len(), 3);
     assert_eq!(
+        charlie_token_transaction_history.get(0).unwrap().1,
+        TokenEvent::HotOrNotOutcomePayout {
+            amount: 0,
+            details: HotOrNotOutcomePayoutEvent::WinningsEarnedFromBet {
+                post_canister_id: alice_canister_id,
+                post_id: 0,
+                slot_id: 1,
+                room_id: 1,
+                event_outcome: BetOutcomeForBetMaker::Lost,
+                winnings_amount: 0
+            },
+            timestamp: if let TokenEvent::HotOrNotOutcomePayout { timestamp, .. } =
+                charlie_token_transaction_history.get(0).unwrap().1.clone()
+            {
+                timestamp
+            } else {
+                panic!("\n🛑 unexpected token event\n");
+            },
+        }
+    );
+    assert_eq!(
         charlie_token_transaction_history.get(1).unwrap().1,
         TokenEvent::Stake {
             amount: 100,
@@ -477,27 +498,6 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
             } else {
                 panic!("\n🛑 unexpected token event\n");
             }
-        }
-    );
-    assert_eq!(
-        charlie_token_transaction_history.get(2).unwrap().1,
-        TokenEvent::HotOrNotOutcomePayout {
-            amount: 0,
-            details: HotOrNotOutcomePayoutEvent::WinningsEarnedFromBet {
-                post_canister_id: alice_canister_id,
-                post_id: 0,
-                slot_id: 1,
-                room_id: 1,
-                event_outcome: BetOutcomeForBetMaker::Lost,
-                winnings_amount: 0
-            },
-            timestamp: if let TokenEvent::HotOrNotOutcomePayout { timestamp, .. } =
-                charlie_token_transaction_history.get(2).unwrap().1.clone()
-            {
-                timestamp
-            } else {
-                panic!("\n🛑 unexpected token event\n");
-            },
         }
     );
 
@@ -548,6 +548,27 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
 
     assert_eq!(dan_token_transaction_history.len(), 3);
     assert_eq!(
+        dan_token_transaction_history.get(0).unwrap().1,
+        TokenEvent::HotOrNotOutcomePayout {
+            amount: 18,
+            details: HotOrNotOutcomePayoutEvent::WinningsEarnedFromBet {
+                post_canister_id: alice_canister_id,
+                post_id: 0,
+                slot_id: 1,
+                room_id: 1,
+                event_outcome: BetOutcomeForBetMaker::Won(18),
+                winnings_amount: 18
+            },
+            timestamp: if let TokenEvent::HotOrNotOutcomePayout { timestamp, .. } =
+                dan_token_transaction_history.get(0).unwrap().1.clone()
+            {
+                timestamp
+            } else {
+                panic!("\n🛑 unexpected token event\n");
+            },
+        }
+    );
+    assert_eq!(
         dan_token_transaction_history.get(1).unwrap().1,
         TokenEvent::Stake {
             amount: 10,
@@ -564,27 +585,6 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
             } else {
                 panic!("\n🛑 unexpected token event\n");
             }
-        }
-    );
-    assert_eq!(
-        dan_token_transaction_history.get(2).unwrap().1,
-        TokenEvent::HotOrNotOutcomePayout {
-            amount: 18,
-            details: HotOrNotOutcomePayoutEvent::WinningsEarnedFromBet {
-                post_canister_id: alice_canister_id,
-                post_id: 0,
-                slot_id: 1,
-                room_id: 1,
-                event_outcome: BetOutcomeForBetMaker::Won(18),
-                winnings_amount: 18
-            },
-            timestamp: if let TokenEvent::HotOrNotOutcomePayout { timestamp, .. } =
-                dan_token_transaction_history.get(2).unwrap().1.clone()
-            {
-                timestamp
-            } else {
-                panic!("\n🛑 unexpected token event\n");
-            },
         }
     );
 }
