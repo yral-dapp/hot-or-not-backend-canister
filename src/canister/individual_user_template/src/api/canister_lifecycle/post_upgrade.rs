@@ -25,8 +25,7 @@ fn restore_data_from_stable_memory() {
             });
         }
         Err(e) => {
-            ic_cdk::print(format!("Error: {:?}", e));
-            panic!("Failed to restore canister data from stable memory");
+            panic!("Error: {:?}", e);
         }
     }
 }
