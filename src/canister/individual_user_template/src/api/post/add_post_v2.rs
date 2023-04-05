@@ -1,5 +1,6 @@
 use std::time::{Duration, SystemTime};
 
+use candid::Principal;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
         hot_or_not::{BetDirection, BetOutcomeForBetMaker, BetPayout, RoomBetPossibleOutcomes},
@@ -140,12 +141,25 @@ fn inform_participants_of_outcome(post: &Post, slot_id: &u8) {
                 },
             };
 
-            ic_cdk::notify(
+            ic_cdk::spawn(receive_bet_winnings_when_distributed(
                 bet.bet_maker_canister_id,
-                "receive_bet_winnings_when_distributed",
-                (post.id, bet_outcome_for_bet_maker),
-            )
-            .ok();
+                post.id,
+                bet_outcome_for_bet_maker,
+            ));
         }
     }
+}
+
+async fn receive_bet_winnings_when_distributed(
+    bet_maker_canister_id: Principal,
+    post_id: u64,
+    bet_outcome_for_bet_maker: BetOutcomeForBetMaker,
+) {
+    ic_cdk::call::<_, ()>(
+        bet_maker_canister_id,
+        "receive_bet_winnings_when_distributed",
+        (post_id, bet_outcome_for_bet_maker),
+    )
+    .await
+    .ok();
 }

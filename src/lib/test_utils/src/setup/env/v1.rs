@@ -58,7 +58,10 @@ pub fn get_initialized_env_with_provisioned_known_canisters(
             controllers: Some(vec![get_global_super_admin_principal_id_v1()]),
             ..Default::default()
         });
-        let canister_id = state_machine.create_canister_with_settings(settings);
+        let canister_id = state_machine.create_canister_with_settings(
+            settings,
+            Some(get_global_super_admin_principal_id_v1()),
+        );
         state_machine.add_cycles(canister_id, cycle_amount);
         canister_id
     };
@@ -88,7 +91,12 @@ pub fn get_initialized_env_with_provisioned_known_canisters(
 
     // * Install canisters
     let canister_installer = |canister_id: Principal, wasm_module: Vec<u8>, arg: Vec<u8>| {
-        state_machine.install_canister(canister_id, wasm_module, arg);
+        state_machine.install_canister(
+            canister_id,
+            wasm_module,
+            arg,
+            Some(get_global_super_admin_principal_id_v1()),
+        );
     };
 
     canister_installer(
