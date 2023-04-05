@@ -1,3 +1,4 @@
 pub mod get_index_details_last_upgrade_status;
+pub mod retry_upgrade_for_canisters_that_failed_upgrade_with_the_latest_wasm;
 pub mod update_user_index_upgrade_user_canisters_with_latest_wasm;
 pub mod upgrade_specific_individual_user_canister_with_latest_wasm;

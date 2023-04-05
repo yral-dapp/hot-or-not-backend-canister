@@ -40,6 +40,7 @@ fn get_user_utility_token_transaction_history_with_pagination(
             .my_token_balance
             .utility_token_transaction_history
             .iter()
+            .rev()
             .skip(from_inclusive_id as usize)
             .take((to_exclusive_id - from_inclusive_id) as usize)
             .map(|(time, token_event)| (*time, token_event.clone()))
