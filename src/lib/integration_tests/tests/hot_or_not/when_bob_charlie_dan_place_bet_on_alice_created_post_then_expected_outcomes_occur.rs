@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use candid::Principal;
-use ic_state_machine_tests::{CanisterId, PrincipalId, StateMachine, WasmResult};
+use ic_test_state_machine_client::WasmResult;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
         arg::PlaceBetArg,
@@ -20,10 +20,7 @@ use shared_utils::{
     },
 };
 use test_utils::setup::{
-    env::v0::{
-        get_canister_id_of_specific_type_from_principal_id_map,
-        get_initialized_env_with_provisioned_known_canisters,
-    },
+    env::v1::{get_initialized_env_with_provisioned_known_canisters, get_new_state_machine},
     test_constants::{
         get_mock_user_alice_principal_id, get_mock_user_bob_principal_id,
         get_mock_user_charlie_principal_id, get_mock_user_dan_principal_id,
@@ -32,26 +29,32 @@ use test_utils::setup::{
 
 #[test]
 fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_occur() {
-    let state_machine = StateMachine::new();
+    let state_machine = get_new_state_machine();
     let known_principal_map = get_initialized_env_with_provisioned_known_canisters(&state_machine);
-    let user_index_canister_id = get_canister_id_of_specific_type_from_principal_id_map(
-        &known_principal_map,
-        KnownPrincipalType::CanisterIdUserIndex,
+    let user_index_canister_id = known_principal_map
+        .get(&KnownPrincipalType::CanisterIdUserIndex)
+        .unwrap()
+        .clone();
+    println!(
+        "🧪 user_index_canister_id: {:?}",
+        user_index_canister_id.to_text()
     );
-    let post_cache_canister_id = get_canister_id_of_specific_type_from_principal_id_map(
-        &known_principal_map,
-        KnownPrincipalType::CanisterIdPostCache,
+    let post_cache_canister_id = known_principal_map
+        .get(&KnownPrincipalType::CanisterIdPostCache)
+        .unwrap()
+        .clone();
+    println!(
+        "🧪 post_cache_canister_id: {:?}",
+        post_cache_canister_id.to_text()
     );
-    let alice_principal_id = PrincipalId(get_mock_user_alice_principal_id());
-    let bob_principal_id = PrincipalId(get_mock_user_bob_principal_id());
-    let charlie_principal_id = PrincipalId(get_mock_user_charlie_principal_id());
-    let dan_principal_id = PrincipalId(get_mock_user_dan_principal_id());
+    let alice_principal_id = get_mock_user_alice_principal_id();
+    let bob_principal_id = get_mock_user_bob_principal_id();
+    let charlie_principal_id = get_mock_user_charlie_principal_id();
+    let dan_principal_id = get_mock_user_dan_principal_id();
 
-    println!("🧪 user_index_canister_id: {:?}", user_index_canister_id);
-
-    let alice_canister_id = state_machine.execute_ingress_as(
-        alice_principal_id,
+    let alice_canister_id = state_machine.update_call(
         user_index_canister_id,
+        alice_principal_id,
         "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer",
         candid::encode_one(()).unwrap(),
     ).map(|reply_payload| {
@@ -62,9 +65,9 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
         alice_canister_id
     }).unwrap();
 
-    let bob_canister_id = state_machine.execute_ingress_as(
-        bob_principal_id,
+    let bob_canister_id = state_machine.update_call(
         user_index_canister_id,
+        bob_principal_id,
         "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer",
         candid::encode_one(()).unwrap(),
     ).map(|reply_payload| {
@@ -75,9 +78,9 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
         bob_canister_id
     }).unwrap();
 
-    let charlie_canister_id = state_machine.execute_ingress_as(
-        charlie_principal_id,
+    let charlie_canister_id = state_machine.update_call(
         user_index_canister_id,
+        charlie_principal_id,
         "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer",
         candid::encode_one(()).unwrap(),
     ).map(|reply_payload| {
@@ -88,9 +91,9 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
         charlie_canister_id
     }).unwrap();
 
-    let dan_canister_id = state_machine.execute_ingress_as(
-        dan_principal_id,
+    let dan_canister_id = state_machine.update_call(
         user_index_canister_id,
+        dan_principal_id,
         "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer",
         candid::encode_one(()).unwrap(),
     ).map(|reply_payload| {
@@ -104,13 +107,12 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
     println!("🧪 alice_canister_id: {:?}", alice_canister_id.to_text());
 
     let post_creation_time = state_machine.time();
-    // state_machine.set_time(post_creation_time);
 
     // * Post is created by Alice
     let newly_created_post_id = state_machine
-        .execute_ingress_as(
+        .update_call(
+            alice_canister_id,
             alice_principal_id,
-            CanisterId::new(PrincipalId(alice_canister_id)).unwrap(),
             "add_post_v2",
             candid::encode_args((PostDetailsFromFrontend {
                 description: "This is a fun video to watch".to_string(),
@@ -133,8 +135,9 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
     println!("🧪 newly_created_post_id: {:?}", newly_created_post_id);
 
     let returned_posts: Vec<PostScoreIndexItem> = state_machine
-        .query(
+        .query_call(
             post_cache_canister_id,
+            Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed",
             candid::encode_args((0 as u64,10 as u64)).unwrap(),
         )
@@ -162,9 +165,9 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
     };
 
     let bet_status = state_machine
-        .execute_ingress_as(
-            PrincipalId(get_mock_user_bob_principal_id()),
-            CanisterId::new(PrincipalId(bob_canister_id)).unwrap(),
+        .update_call(
+            bob_canister_id,
+            get_mock_user_bob_principal_id(),
             "bet_on_currently_viewing_post",
             candid::encode_one(bob_place_bet_arg).unwrap(),
         )
@@ -199,9 +202,9 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
     };
 
     let bet_status = state_machine
-        .execute_ingress_as(
-            PrincipalId(get_mock_user_charlie_principal_id()),
-            CanisterId::new(PrincipalId(charlie_canister_id)).unwrap(),
+        .update_call(
+            charlie_canister_id,
+            get_mock_user_charlie_principal_id(),
             "bet_on_currently_viewing_post",
             candid::encode_one(charlie_place_bet_arg).unwrap(),
         )
@@ -235,9 +238,9 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
     };
 
     let bet_status = state_machine
-        .execute_ingress_as(
-            PrincipalId(get_mock_user_dan_principal_id()),
-            CanisterId::new(PrincipalId(dan_canister_id)).unwrap(),
+        .update_call(
+            dan_canister_id,
+            get_mock_user_dan_principal_id(),
             "bet_on_currently_viewing_post",
             candid::encode_one(dan_place_bet_arg).unwrap(),
         )
@@ -268,8 +271,9 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
 
     // * Alice outcome
     let alice_token_balance = state_machine
-        .query(
-            CanisterId::new(PrincipalId(alice_canister_id)).unwrap(),
+        .query_call(
+            alice_canister_id,
+            Principal::anonymous(),
             "get_utility_token_balance",
             candid::encode_args(()).unwrap(),
         )
@@ -285,8 +289,9 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
     assert_eq!(alice_token_balance, 1000 + 16);
 
     let alice_token_transaction_history = state_machine
-        .query(
-            CanisterId::new(PrincipalId(alice_canister_id)).unwrap(),
+        .query_call(
+            alice_canister_id,
+            Principal::anonymous(),
             "get_user_utility_token_transaction_history_with_pagination",
             candid::encode_args((0 as u64, 10 as u64)).unwrap(),
         )
@@ -329,8 +334,9 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
 
     // * Bob outcome
     let bob_token_balance = state_machine
-        .query(
-            CanisterId::new(PrincipalId(bob_canister_id)).unwrap(),
+        .query_call(
+            bob_canister_id,
+            Principal::anonymous(),
             "get_utility_token_balance",
             candid::encode_args(()).unwrap(),
         )
@@ -347,8 +353,9 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
     assert_eq!(bob_token_balance, 1000 - 50 + 90);
 
     let bob_token_transaction_history = state_machine
-        .query(
-            CanisterId::new(PrincipalId(bob_canister_id)).unwrap(),
+        .query_call(
+            bob_canister_id,
+            Principal::anonymous(),
             "get_user_utility_token_transaction_history_with_pagination",
             candid::encode_args((0 as u64, 10 as u64)).unwrap(),
         )
@@ -416,8 +423,9 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
 
     // * Charlie outcome
     let charlie_token_balance = state_machine
-        .query(
-            CanisterId::new(PrincipalId(charlie_canister_id)).unwrap(),
+        .query_call(
+            charlie_canister_id,
+            Principal::anonymous(),
             "get_utility_token_balance",
             candid::encode_args(()).unwrap(),
         )
@@ -434,8 +442,9 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
     assert_eq!(charlie_token_balance, 1000 - 100 + 0);
 
     let charlie_token_transaction_history = state_machine
-        .query(
-            CanisterId::new(PrincipalId(charlie_canister_id)).unwrap(),
+        .query_call(
+            charlie_canister_id,
+            Principal::anonymous(),
             "get_user_utility_token_transaction_history_with_pagination",
             candid::encode_args((0 as u64, 10 as u64)).unwrap(),
         )
@@ -503,8 +512,9 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
 
     // * Dan outcome
     let dan_token_balance = state_machine
-        .query(
-            CanisterId::new(PrincipalId(dan_canister_id)).unwrap(),
+        .query_call(
+            dan_canister_id,
+            Principal::anonymous(),
             "get_utility_token_balance",
             candid::encode_args(()).unwrap(),
         )
@@ -521,8 +531,9 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
     assert_eq!(dan_token_balance, 1000 - 10 + 18);
 
     let dan_token_transaction_history = state_machine
-        .query(
-            CanisterId::new(PrincipalId(dan_canister_id)).unwrap(),
+        .query_call(
+            dan_canister_id,
+            Principal::anonymous(),
             "get_user_utility_token_transaction_history_with_pagination",
             candid::encode_args((0 as u64, 10 as u64)).unwrap(),
         )
