@@ -14,6 +14,12 @@ pub enum GetFollowerOrFollowingError {
     ExceededMaxNumberOfItemsAllowedInOneRequest,
 }
 
+#[derive(CandidType, Deserialize, PartialEq, Eq, Debug)]
+pub enum GetFollowerOrFollowingPageError {
+    Unauthenticated,
+    Unauthorized,
+}
+
 #[derive(CandidType, PartialEq, Eq, Debug, Deserialize)]
 pub enum BetOnCurrentlyViewingPostError {
     BettingClosed,
@@ -23,4 +29,14 @@ pub enum BetOnCurrentlyViewingPostError {
     UserNotLoggedIn,
     UserPrincipalNotSet,
     PostCreatorCanisterCallFailed,
+}
+
+// TODO: clean up variants not used
+#[derive(CandidType, Deserialize, PartialEq, Eq, Debug)]
+pub enum FollowAnotherUserProfileError {
+    Unauthenticated,
+    Unauthorized,
+    UsersICanFollowListIsFull,
+    UserITriedToFollowCrossCanisterCallFailed,
+    UserITriedToFollowHasTheirFollowersListFull,
 }

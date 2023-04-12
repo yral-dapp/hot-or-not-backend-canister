@@ -2,6 +2,7 @@ use candid::Principal;
 
 use crate::CANISTER_DATA;
 
+#[deprecated]
 #[ic_cdk::query]
 #[candid::candid_method(query)]
 fn get_following_status_do_i_follow_this_user(user_principal_to_check: Principal) -> bool {

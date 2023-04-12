@@ -42,8 +42,8 @@ then
   cargo test
 fi
 
-dfx canister install configuration --mode upgrade --argument "(record {})"
-dfx canister install data_backup --mode upgrade --argument "(record {})"
-dfx canister install post_cache --mode upgrade --argument "(record {})"
-dfx canister install user_index --mode upgrade --argument "(record {})"
+dfx canister install configuration --mode upgrade --argument "(record {})" --wasm target/wasm32-unknown-unknown/release/configuration.wasm.gz
+dfx canister install data_backup --mode upgrade --argument "(record {})" --wasm target/wasm32-unknown-unknown/release/data_backup.wasm.gz
+dfx canister install post_cache --mode upgrade --argument "(record {})" --wasm target/wasm32-unknown-unknown/release/post_cache.wasm.gz
+dfx canister install user_index --mode upgrade --argument "(record {})" --wasm target/wasm32-unknown-unknown/release/user_index.wasm.gz
 dfx canister call user_index update_user_index_upgrade_user_canisters_with_latest_wasm

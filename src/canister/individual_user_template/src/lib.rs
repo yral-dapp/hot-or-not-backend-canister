@@ -4,6 +4,7 @@ use api::{
     follow::{
         update_principals_i_follow_toggle_list_with_principal_specified::FollowAnotherUserProfileError,
         update_principals_that_follow_me_toggle_list_with_specified_principal::AnotherUserFollowedMeError,
+        update_profiles_that_follow_me_toggle_list_with_specified_profile::FollowerArg,
     },
     profile::update_profile_display_details::UpdateProfileDetailsError,
 };
@@ -12,10 +13,12 @@ use data_model::CanisterData;
 use ic_cdk::api::management_canister::provisional::CanisterId;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
-        arg::{IndividualUserTemplateInitArgs, PlaceBetArg},
+        arg::{FolloweeArg, IndividualUserTemplateInitArgs, PlaceBetArg},
         error::{
-            BetOnCurrentlyViewingPostError, GetFollowerOrFollowingError, GetPostsOfUserProfileError,
+            BetOnCurrentlyViewingPostError, GetFollowerOrFollowingError,
+            GetFollowerOrFollowingPageError, GetPostsOfUserProfileError,
         },
+        follow::{FollowEntryDetail, FollowEntryId},
         hot_or_not::{BetOutcomeForBetMaker, BettingStatus, PlacedBetDetail},
         post::{
             Post, PostDetailsForFrontend, PostDetailsFromFrontend, PostViewDetailsFromFrontend,

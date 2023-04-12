@@ -58,8 +58,8 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
         "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer",
         candid::encode_one(()).unwrap(),
     ).map(|reply_payload| {
-        let (alice_canister_id,): (Principal,) = match reply_payload {
-            WasmResult::Reply(payload) => candid::decode_args(&payload).unwrap(),
+        let alice_canister_id: Principal = match reply_payload {
+            WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
             _ => panic!("\n🛑 get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer failed\n"),
         };
         alice_canister_id
@@ -71,8 +71,8 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
         "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer",
         candid::encode_one(()).unwrap(),
     ).map(|reply_payload| {
-        let (bob_canister_id,): (Principal,) = match reply_payload {
-            WasmResult::Reply(payload) => candid::decode_args(&payload).unwrap(),
+        let bob_canister_id: Principal = match reply_payload {
+            WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
             _ => panic!("\n🛑 get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer failed\n"),
         };
         bob_canister_id
@@ -84,8 +84,8 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
         "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer",
         candid::encode_one(()).unwrap(),
     ).map(|reply_payload| {
-        let (charlie_canister_id,): (Principal,) = match reply_payload {
-            WasmResult::Reply(payload) => candid::decode_args(&payload).unwrap(),
+        let charlie_canister_id: Principal = match reply_payload {
+            WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
             _ => panic!("\n🛑 get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer failed\n"),
         };
         charlie_canister_id
@@ -97,8 +97,8 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
         "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer",
         candid::encode_one(()).unwrap(),
     ).map(|reply_payload| {
-        let (dan_canister_id,): (Principal,) = match reply_payload {
-            WasmResult::Reply(payload) => candid::decode_args(&payload).unwrap(),
+        let dan_canister_id: Principal = match reply_payload {
+            WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
             _ => panic!("\n🛑 get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer failed\n"),
         };
         dan_canister_id

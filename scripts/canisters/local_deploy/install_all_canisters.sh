@@ -89,7 +89,7 @@ dfx canister install configuration --argument "(record {
       vec { variant { CanisterAdmin }; variant { CanisterController }; }
     };
   };
-})"
+})" --wasm target/wasm32-unknown-unknown/release/configuration.wasm.gz
 
 dfx canister install data_backup --argument "(record {
   known_principal_ids = opt vec {
@@ -120,7 +120,7 @@ dfx canister install data_backup --argument "(record {
       vec { variant { CanisterAdmin }; variant { CanisterController }; }
     };
   };
-})"
+})" --wasm target/wasm32-unknown-unknown/release/data_backup.wasm.gz
 
 dfx canister install post_cache --argument "(record {
   known_principal_ids = opt vec {
@@ -145,7 +145,7 @@ dfx canister install post_cache --argument "(record {
       principal \"$(dfx canister id user_index)\";
     };
   }
-})"
+})" --wasm target/wasm32-unknown-unknown/release/post_cache.wasm.gz
 
 dfx canister install user_index --argument "(record {
   known_principal_ids = opt vec {
@@ -176,4 +176,4 @@ dfx canister install user_index --argument "(record {
       vec { variant { CanisterAdmin }; variant { CanisterController }; }
     };
   };
-})"
+})" --wasm target/wasm32-unknown-unknown/release/user_index.wasm.gz
