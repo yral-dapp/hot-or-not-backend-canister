@@ -6,6 +6,7 @@ use shared_utils::{
 
 use crate::CANISTER_DATA;
 
+#[deprecated]
 #[ic_cdk::query]
 #[candid::candid_method(query)]
 pub fn get_principals_i_follow_paginated(

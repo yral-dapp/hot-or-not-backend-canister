@@ -6,6 +6,7 @@ use shared_utils::{
     pagination::{self, PaginationError},
 };
 
+#[deprecated]
 #[ic_cdk::query]
 #[candid::candid_method(query)]
 pub fn get_principals_that_follow_me_paginated(

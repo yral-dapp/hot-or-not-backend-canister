@@ -17,8 +17,10 @@ pub enum FollowAnotherUserProfileError {
     UserITriedToFollowHasTheirFollowersListFull,
 }
 
+// TODO: remove this API in subsequent update
 /// # Access Control
 /// Only the user whose profile details are stored in this canister can follow another user's profile.
+#[deprecated]
 #[ic_cdk::update]
 #[candid::candid_method(update)]
 async fn update_principals_i_follow_toggle_list_with_principal_specified(

@@ -28,3 +28,9 @@ pub struct PlaceBetArg {
     pub bet_amount: u64,
     pub bet_direction: BetDirection,
 }
+
+#[derive(CandidType, Deserialize, Clone)]
+pub struct FolloweeArg {
+    pub followee_principal_id: Principal,
+    pub followee_canister_id: Principal,
+}
