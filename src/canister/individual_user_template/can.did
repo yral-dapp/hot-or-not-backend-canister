@@ -3,12 +3,6 @@ type AggregateStats = record {
   total_amount_bet : nat64;
   total_number_of_hot_bets : nat64;
 };
-type AnotherUserFollowedMeError = variant {
-  UserIndexCrossCanisterCallFailed;
-  FollowersListFull;
-  NotAuthorized;
-  UserTryingToFollowMeDoesNotExist;
-};
 type BetDetails = record {
   bet_direction : BetDirection;
   bet_maker_canister_id : principal;
@@ -48,14 +42,11 @@ type FeedScore = record {
   last_synchronized_score : nat64;
 };
 type FollowAnotherUserProfileError = variant {
-  UserToFollowDoesNotExist;
-  UserIndexCrossCanisterCallFailed;
   UserITriedToFollowCrossCanisterCallFailed;
   UsersICanFollowListIsFull;
-  MyCanisterIDDoesNotMatchMyPrincipalCanisterIDMappingSeenByUserITriedToFollow;
-  UserITriedToFollowDidNotFindMe;
-  NotAuthorized;
+  Unauthorized;
   UserITriedToFollowHasTheirFollowersListFull;
+  Unauthenticated;
 };
 type FollowEntryDetail = record {
   canister_id : principal;
@@ -203,7 +194,6 @@ type Result_1 = variant {
   Ok : BettingStatus;
   Err : BetOnCurrentlyViewingPostError;
 };
-type Result_10 = variant { Ok; Err : UpdateProfileSetUniqueUsernameError };
 type Result_2 = variant { Ok : bool; Err : FollowAnotherUserProfileError };
 type Result_3 = variant { Ok : Post; Err };
 type Result_4 = variant {
@@ -211,22 +201,18 @@ type Result_4 = variant {
   Err : GetPostsOfUserProfileError;
 };
 type Result_5 = variant {
-  Ok : vec principal;
-  Err : GetPostsOfUserProfileError;
-};
-type Result_6 = variant {
   Ok : vec record { nat64; FollowEntryDetail };
   Err : GetFollowerOrFollowingPageError;
 };
-type Result_7 = variant {
+type Result_6 = variant {
   Ok : vec record { nat64; TokenEvent };
   Err : GetPostsOfUserProfileError;
 };
-type Result_8 = variant { Ok : bool; Err : AnotherUserFollowedMeError };
-type Result_9 = variant {
+type Result_7 = variant {
   Ok : UserProfileDetailsForFrontend;
   Err : UpdateProfileDetailsError;
 };
+type Result_8 = variant { Ok; Err : UpdateProfileSetUniqueUsernameError };
 type RoomBetPossibleOutcomes = variant { HotWon; BetOngoing; Draw; NotWon };
 type RoomDetails = record {
   total_hot_bets : nat64;
@@ -295,7 +281,6 @@ service : (IndividualUserTemplateInitArgs) -> {
   bet_on_currently_viewing_post : (PlaceBetArg) -> (Result_1);
   do_i_follow_this_user : (FolloweeArg) -> (Result_2) query;
   get_entire_individual_post_detail_by_id : (nat64) -> (Result_3) query;
-  get_following_status_do_i_follow_this_user : (principal) -> (bool) query;
   get_hot_or_not_bet_details_for_this_post : (nat64) -> (BettingStatus) query;
   get_hot_or_not_bets_placed_by_this_profile_with_pagination : (nat64) -> (
       vec PlacedBetDetail,
@@ -307,17 +292,15 @@ service : (IndividualUserTemplateInitArgs) -> {
   get_posts_of_this_user_profile_with_pagination : (nat64, nat64) -> (
       Result_4,
     ) query;
-  get_principals_i_follow_paginated : (nat64, nat64) -> (Result_5) query;
-  get_principals_that_follow_me_paginated : (nat64, nat64) -> (Result_5) query;
   get_profile_details : () -> (UserProfileDetailsForFrontend) query;
-  get_profiles_i_follow_paginated : (opt nat64) -> (Result_6) query;
-  get_profiles_that_follow_me_paginated : (opt nat64) -> (Result_6) query;
+  get_profiles_i_follow_paginated : (opt nat64) -> (Result_5) query;
+  get_profiles_that_follow_me_paginated : (opt nat64) -> (Result_5) query;
   get_rewarded_for_referral : (principal, principal) -> ();
   get_rewarded_for_signing_up : () -> ();
   get_user_utility_token_transaction_history_with_pagination : (
       nat64,
       nat64,
-    ) -> (Result_7) query;
+    ) -> (Result_6) query;
   get_utility_token_balance : () -> (nat64) query;
   get_well_known_principal_value : (KnownPrincipalType) -> (
       opt principal,
@@ -339,16 +322,10 @@ service : (IndividualUserTemplateInitArgs) -> {
   update_post_as_ready_to_view : (nat64) -> ();
   update_post_increment_share_count : (nat64) -> (nat64);
   update_post_toggle_like_status_by_caller : (nat64) -> (bool);
-  update_principals_i_follow_toggle_list_with_principal_specified : (
-      principal,
-    ) -> (Result_2);
-  update_principals_that_follow_me_toggle_list_with_specified_principal : (
-      principal,
-    ) -> (Result_8);
   update_profile_display_details : (UserProfileUpdateDetailsFromFrontend) -> (
-      Result_9,
+      Result_7,
     );
-  update_profile_set_unique_username_once : (text) -> (Result_10);
+  update_profile_set_unique_username_once : (text) -> (Result_8);
   update_profiles_i_follow_toggle_list_with_specified_profile : (
       FolloweeArg,
     ) -> (Result_2);

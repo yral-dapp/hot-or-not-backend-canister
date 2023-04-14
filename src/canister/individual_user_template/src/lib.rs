@@ -1,11 +1,7 @@
 use std::cell::RefCell;
 
 use api::{
-    follow::{
-        update_principals_i_follow_toggle_list_with_principal_specified::FollowAnotherUserProfileError,
-        update_principals_that_follow_me_toggle_list_with_specified_principal::AnotherUserFollowedMeError,
-        update_profiles_that_follow_me_toggle_list_with_specified_profile::FollowerArg,
-    },
+    follow::update_profiles_that_follow_me_toggle_list_with_specified_profile::FollowerArg,
     profile::update_profile_display_details::UpdateProfileDetailsError,
 };
 use candid::{export_service, Principal};
@@ -15,7 +11,7 @@ use shared_utils::{
     canister_specific::individual_user_template::types::{
         arg::{FolloweeArg, IndividualUserTemplateInitArgs, PlaceBetArg},
         error::{
-            BetOnCurrentlyViewingPostError, GetFollowerOrFollowingError,
+            BetOnCurrentlyViewingPostError, FollowAnotherUserProfileError,
             GetFollowerOrFollowingPageError, GetPostsOfUserProfileError,
         },
         follow::{FollowEntryDetail, FollowEntryId},
