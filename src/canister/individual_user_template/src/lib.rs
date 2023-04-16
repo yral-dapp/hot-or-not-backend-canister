@@ -12,7 +12,7 @@ use shared_utils::{
         arg::{FolloweeArg, IndividualUserTemplateInitArgs, PlaceBetArg},
         error::{
             BetOnCurrentlyViewingPostError, FollowAnotherUserProfileError,
-            GetFollowerOrFollowingPageError, GetPostsOfUserProfileError,
+            GetPostsOfUserProfileError,
         },
         follow::{FollowEntryDetail, FollowEntryId},
         hot_or_not::{BetOutcomeForBetMaker, BettingStatus, PlacedBetDetail},

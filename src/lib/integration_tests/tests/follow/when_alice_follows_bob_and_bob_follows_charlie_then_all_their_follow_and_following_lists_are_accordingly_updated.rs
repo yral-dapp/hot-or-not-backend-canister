@@ -3,7 +3,7 @@ use ic_test_state_machine_client::WasmResult;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
         arg::FolloweeArg,
-        error::{FollowAnotherUserProfileError, GetFollowerOrFollowingPageError},
+        error::FollowAnotherUserProfileError,
         follow::{FollowEntryDetail, FollowEntryId},
     },
     common::types::known_principal::KnownPrincipalType,
@@ -165,19 +165,16 @@ fn when_alice_follows_bob_and_bob_follows_charlie_then_all_their_follow_and_foll
     let alice_following_list = state_machine
         .query_call(
             alice_canister_id,
-            alice_principal_id,
-            "get_profiles_i_follow_paginated",
+            Principal::anonymous(),
+            "get_principals_this_profile_follows_paginated",
             candid::encode_one(None::<u64>).unwrap(),
         )
         .map(|reply_payload| {
-            let result: Result<
-                Vec<(FollowEntryId, FollowEntryDetail)>,
-                GetFollowerOrFollowingPageError,
-            > = match reply_payload {
+            let result: Vec<(FollowEntryId, FollowEntryDetail)> = match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_profiles_i_follow_paginated failed\n"),
+                _ => panic!("\n🛑 get_principals_this_profile_follows_paginated failed\n"),
             };
-            result.unwrap()
+            result
         })
         .unwrap();
 
@@ -191,18 +188,15 @@ fn when_alice_follows_bob_and_bob_follows_charlie_then_all_their_follow_and_foll
         .query_call(
             bob_canister_id,
             bob_principal_id,
-            "get_profiles_that_follow_me_paginated",
+            "get_principals_that_follow_this_profile_paginated",
             candid::encode_one(None::<u64>).unwrap(),
         )
         .map(|reply_payload| {
-            let result: Result<
-                Vec<(FollowEntryId, FollowEntryDetail)>,
-                GetFollowerOrFollowingPageError,
-            > = match reply_payload {
+            let result: Vec<(FollowEntryId, FollowEntryDetail)> = match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_profiles_that_follow_me_paginated failed\n"),
+                _ => panic!("\n🛑 get_principals_that_follow_this_profile_paginated failed\n"),
             };
-            result.unwrap()
+            result
         })
         .unwrap();
 
@@ -215,19 +209,16 @@ fn when_alice_follows_bob_and_bob_follows_charlie_then_all_their_follow_and_foll
     let bob_following_list = state_machine
         .query_call(
             bob_canister_id,
-            bob_principal_id,
-            "get_profiles_i_follow_paginated",
+            Principal::anonymous(),
+            "get_principals_this_profile_follows_paginated",
             candid::encode_one(None::<u64>).unwrap(),
         )
         .map(|reply_payload| {
-            let result: Result<
-                Vec<(FollowEntryId, FollowEntryDetail)>,
-                GetFollowerOrFollowingPageError,
-            > = match reply_payload {
+            let result: Vec<(FollowEntryId, FollowEntryDetail)> = match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_profiles_i_follow_paginated failed\n"),
+                _ => panic!("\n🛑 get_principals_this_profile_follows_paginated failed\n"),
             };
-            result.unwrap()
+            result
         })
         .unwrap();
 

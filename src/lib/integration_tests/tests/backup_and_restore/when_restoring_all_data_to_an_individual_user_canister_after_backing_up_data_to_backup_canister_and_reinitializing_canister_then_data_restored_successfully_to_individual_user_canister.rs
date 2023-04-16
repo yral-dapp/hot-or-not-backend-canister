@@ -6,7 +6,7 @@ use shared_utils::{
         data_backup::types::{all_user_data::AllUserData, backup_statistics::BackupStatistics},
         individual_user_template::types::{
             arg::FolloweeArg,
-            error::{GetFollowerOrFollowingPageError, GetPostsOfUserProfileError},
+            error::GetPostsOfUserProfileError,
             follow::{FollowEntryDetail, FollowEntryId},
             post::{PostDetailsForFrontend, PostDetailsFromFrontend},
             profile::{UserProfileDetailsForFrontend, UserProfileUpdateDetailsFromFrontend},
@@ -322,13 +322,13 @@ fn when_restoring_all_data_to_an_individual_user_canister_after_backing_up_data_
     // assert_eq!(
     //     alice_backup_details
     //         .canister_data
-    //         .principals_that_follow_me
+    //         .principals_that_follow_this_profile
     //         .len(),
     //     1
     // );
     // assert!(alice_backup_details
     //     .canister_data
-    //     .principals_that_follow_me
+    //     .principals_that_follow_this_profile
     //     .contains(&get_mock_user_bob_principal_id()));
     assert_eq!(
         alice_backup_details
@@ -511,65 +511,56 @@ fn when_restoring_all_data_to_an_individual_user_canister_after_backing_up_data_
     assert!(utility_token_transaction_history.is_ok());
     assert_eq!(utility_token_transaction_history.unwrap().len(), 2);
 
-    let principals_i_follow = state_machine
+    let principals_this_profile_follows = state_machine
         .query_call(
             alice_canister_id,
             alice_principal_id,
-            "get_profiles_i_follow_paginated",
+            "get_principals_this_profile_follows_paginated",
             candid::encode_one(None::<u64>).unwrap(),
         )
         .map(|reply_payload| {
-            let principals_i_follow: Result<
-                Vec<(FollowEntryId, FollowEntryDetail)>,
-                GetFollowerOrFollowingPageError,
-            > = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_profiles_i_follow_paginated failed\n"),
-            };
-            principals_i_follow
+            let principals_this_profile_follows: Vec<(FollowEntryId, FollowEntryDetail)> =
+                match reply_payload {
+                    WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                    _ => panic!("\n🛑 get_principals_this_profile_follows_paginated failed\n"),
+                };
+            principals_this_profile_follows
         })
         .unwrap();
 
-    println!("🧪 principals_i_follow = {:?}", principals_i_follow);
-
-    assert!(principals_i_follow.is_ok());
-
-    let _principals_i_follow = principals_i_follow.unwrap();
+    println!(
+        "🧪 principals_this_profile_follows = {:?}",
+        principals_this_profile_follows
+    );
 
     // TODO: reassert after fixing follower following backup
-    // assert_eq!(principals_i_follow.len(), 1);
+    // assert_eq!(principals_this_profile_follows.len(), 1);
     // assert_eq!(
-    //     principals_i_follow[0].1.principal_id,
+    //     principals_this_profile_follows[0].1.principal_id,
     //     get_mock_user_charlie_principal_id()
     // );
 
-    let principals_that_follow_me = state_machine
+    let _principals_that_follow_this_profile = state_machine
         .query_call(
             alice_canister_id,
             alice_principal_id,
-            "get_profiles_that_follow_me_paginated",
+            "get_principals_that_follow_this_profile_paginated",
             candid::encode_one(None::<u64>).unwrap(),
         )
         .map(|reply_payload| {
-            let principals_that_follow_me: Result<
-                Vec<(FollowEntryId, FollowEntryDetail)>,
-                GetFollowerOrFollowingPageError,
-            > = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_profiles_that_follow_me_paginated failed\n"),
-            };
-            principals_that_follow_me
+            let principals_that_follow_this_profile: Vec<(FollowEntryId, FollowEntryDetail)> =
+                match reply_payload {
+                    WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                    _ => panic!("\n🛑 get_principals_that_follow_this_profile_paginated failed\n"),
+                };
+            principals_that_follow_this_profile
         })
         .unwrap();
 
-    assert!(principals_that_follow_me.is_ok());
-
-    let _principals_that_follow_me = principals_that_follow_me.unwrap();
-
     // TODO: reassert after fixing follower following backup
-    // assert_eq!(principals_that_follow_me.len(), 1);
+    // assert_eq!(principals_that_follow_this_profile.len(), 1);
     // assert_eq!(
-    //     principals_that_follow_me[0].1.principal_id,
+    //     principals_that_follow_this_profile[0].1.principal_id,
     //     get_mock_user_bob_principal_id()
     // );
 
