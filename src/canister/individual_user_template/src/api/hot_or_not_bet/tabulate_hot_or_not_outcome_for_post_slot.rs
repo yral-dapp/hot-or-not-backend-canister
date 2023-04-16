@@ -69,6 +69,10 @@ fn inform_participants_of_outcome(post: &Post, slot_id: &u8) {
                 },
             };
 
+            if bet_outcome_for_bet_maker == BetOutcomeForBetMaker::AwaitingResult {
+                continue;
+            }
+
             ic_cdk::spawn(receive_bet_winnings_when_distributed(
                 bet.bet_maker_canister_id,
                 post.id,
