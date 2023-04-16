@@ -3,8 +3,12 @@ use std::time::Duration;
 use shared_utils::common::utils::stable_memory_serializer_deserializer;
 
 use crate::{
-    api::well_known_principal::update_locally_stored_well_known_principals,
-    data_model::CanisterData, CANISTER_DATA,
+    api::{
+        hot_or_not_bet::reenqueue_timers_for_pending_bet_outcomes::reenqueue_timers_for_pending_bet_outcomes,
+        well_known_principal::update_locally_stored_well_known_principals,
+    },
+    data_model::CanisterData,
+    CANISTER_DATA,
 };
 
 use super::pre_upgrade::BUFFER_SIZE_BYTES;
@@ -13,6 +17,7 @@ use super::pre_upgrade::BUFFER_SIZE_BYTES;
 fn post_upgrade() {
     restore_data_from_stable_memory();
     refetch_well_known_principals();
+    reenqueue_timers_for_pending_bet_outcomes();
 }
 
 fn restore_data_from_stable_memory() {

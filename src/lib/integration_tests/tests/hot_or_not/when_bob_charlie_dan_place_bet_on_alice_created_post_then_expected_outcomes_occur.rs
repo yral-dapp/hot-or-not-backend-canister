@@ -22,8 +22,9 @@ use shared_utils::{
 use test_utils::setup::{
     env::v1::{get_initialized_env_with_provisioned_known_canisters, get_new_state_machine},
     test_constants::{
-        get_mock_user_alice_principal_id, get_mock_user_bob_principal_id,
-        get_mock_user_charlie_principal_id, get_mock_user_dan_principal_id,
+        get_global_super_admin_principal_id_v1, get_mock_user_alice_principal_id,
+        get_mock_user_bob_principal_id, get_mock_user_charlie_principal_id,
+        get_mock_user_dan_principal_id,
     },
 };
 
@@ -264,6 +265,27 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
             has_this_user_participated_in_this_post: Some(true),
         }
     );
+
+    // * Restart their canisters
+    let response = state_machine
+        .update_call(
+            user_index_canister_id,
+            get_global_super_admin_principal_id_v1(),
+            "update_user_index_upgrade_user_canisters_with_latest_wasm",
+            candid::encode_args(()).unwrap(),
+        )
+        .map(|reply_payload| {
+            let bet_status: String = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!(
+                    "\n🛑 update_user_index_upgrade_user_canisters_with_latest_wasm failed\n"
+                ),
+            };
+            bet_status
+        })
+        .unwrap();
+
+    println!("🧪 response: {}", response);
 
     // * advance time to the end of the first slot and then 5 minutes
     state_machine.advance_time(Duration::from_secs(60 * (60 + 5)));

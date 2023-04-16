@@ -369,70 +369,79 @@ impl Post {
             .unwrap()
             .room_details
             .iter_mut()
-            .for_each(|(room_id, room_detail)| {
-                match room_detail.total_hot_bets.cmp(&room_detail.total_not_bets) {
-                    Ordering::Greater => {
-                        room_detail.bet_outcome = RoomBetPossibleOutcomes::HotWon;
+            .for_each(|(room_id, room_detail)| match room_detail.bet_outcome {
+                // * Only tabulate scores for room if already not tabulated
+                RoomBetPossibleOutcomes::BetOngoing => {
+                    // * Figure out which side won
+                    match room_detail.total_hot_bets.cmp(&room_detail.total_not_bets) {
+                        Ordering::Greater => {
+                            room_detail.bet_outcome = RoomBetPossibleOutcomes::HotWon;
+                        }
+                        Ordering::Less => {
+                            room_detail.bet_outcome = RoomBetPossibleOutcomes::NotWon;
+                        }
+                        Ordering::Equal => room_detail.bet_outcome = RoomBetPossibleOutcomes::Draw,
                     }
-                    Ordering::Less => {
-                        room_detail.bet_outcome = RoomBetPossibleOutcomes::NotWon;
-                    }
-                    Ordering::Equal => room_detail.bet_outcome = RoomBetPossibleOutcomes::Draw,
-                }
 
-                token_balance.handle_token_event(TokenEvent::HotOrNotOutcomePayout {
-                    amount: room_detail.room_bets_total_pot
-                        * HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE
-                        / 100,
-                    details: HotOrNotOutcomePayoutEvent::CommissionFromHotOrNotBet {
-                        post_canister_id: *post_canister_id,
-                        post_id: self.id,
-                        slot_id: *slot_id,
-                        room_id: *room_id,
-                        room_pot_total_amount: room_detail.room_bets_total_pot,
-                    },
-                    timestamp: *current_time,
-                });
-
-                room_detail
-                    .bets_made
-                    .iter_mut()
-                    .for_each(|(_user_id, bet_details)| {
-                        match &room_detail.bet_outcome {
-                            RoomBetPossibleOutcomes::HotWon => {
-                                if bet_details.bet_direction == BetDirection::Hot {
-                                    bet_details.payout = BetPayout::Calculated(
-                                        bet_details.amount
-                                            * 2
-                                            * (100 - HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE)
-                                            / 100,
-                                    );
-                                } else {
-                                    bet_details.payout = BetPayout::Calculated(0);
-                                }
-                            }
-                            RoomBetPossibleOutcomes::NotWon => {
-                                if bet_details.bet_direction == BetDirection::Not {
-                                    bet_details.payout = BetPayout::Calculated(
-                                        bet_details.amount
-                                            * 2
-                                            * (100 - HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE)
-                                            / 100,
-                                    );
-                                } else {
-                                    bet_details.payout = BetPayout::Calculated(0);
-                                }
-                            }
-                            RoomBetPossibleOutcomes::Draw => {
-                                bet_details.payout = BetPayout::Calculated(
-                                    bet_details.amount
-                                        * (100 - HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE)
-                                        / 100,
-                                );
-                            }
-                            RoomBetPossibleOutcomes::BetOngoing => {}
-                        };
+                    // * Reward creator with commission. Commission is 10% of total pot
+                    token_balance.handle_token_event(TokenEvent::HotOrNotOutcomePayout {
+                        amount: room_detail.room_bets_total_pot
+                            * HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE
+                            / 100,
+                        details: HotOrNotOutcomePayoutEvent::CommissionFromHotOrNotBet {
+                            post_canister_id: *post_canister_id,
+                            post_id: self.id,
+                            slot_id: *slot_id,
+                            room_id: *room_id,
+                            room_pot_total_amount: room_detail.room_bets_total_pot,
+                        },
+                        timestamp: *current_time,
                     });
+
+                    // * Reward individual participants
+                    room_detail
+                        .bets_made
+                        .iter_mut()
+                        .for_each(|(_user_id, bet_details)| {
+                            match &room_detail.bet_outcome {
+                                RoomBetPossibleOutcomes::HotWon => {
+                                    if bet_details.bet_direction == BetDirection::Hot {
+                                        bet_details.payout = BetPayout::Calculated(
+                                            bet_details.amount
+                                                * 2
+                                                * (100
+                                                    - HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE)
+                                                / 100,
+                                        );
+                                    } else {
+                                        bet_details.payout = BetPayout::Calculated(0);
+                                    }
+                                }
+                                RoomBetPossibleOutcomes::NotWon => {
+                                    if bet_details.bet_direction == BetDirection::Not {
+                                        bet_details.payout = BetPayout::Calculated(
+                                            bet_details.amount
+                                                * 2
+                                                * (100
+                                                    - HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE)
+                                                / 100,
+                                        );
+                                    } else {
+                                        bet_details.payout = BetPayout::Calculated(0);
+                                    }
+                                }
+                                RoomBetPossibleOutcomes::Draw => {
+                                    bet_details.payout = BetPayout::Calculated(
+                                        bet_details.amount
+                                            * (100 - HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE)
+                                            / 100,
+                                    );
+                                }
+                                RoomBetPossibleOutcomes::BetOngoing => {}
+                            };
+                        });
+                }
+                _ => {}
             })
     }
 }
