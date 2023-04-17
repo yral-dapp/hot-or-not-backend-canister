@@ -4,6 +4,7 @@ use shared_utils::common::types::known_principal::KnownPrincipalType;
 
 use crate::CANISTER_DATA;
 
+// TODO: reimplement this function to not clone entire lists
 #[ic_cdk::update]
 #[candid::candid_method(update)]
 async fn backup_data_to_backup_canister(
@@ -162,55 +163,61 @@ async fn send_all_token_data(
     }
 }
 
+// TODO: fix follower following data backup
 async fn send_all_follower_following_data(
-    data_backup_canister_id: &Principal,
-    canister_owner_principal_id: &Principal,
+    _data_backup_canister_id: &Principal,
+    _canister_owner_principal_id: &Principal,
 ) {
-    let principals_i_follow = CANISTER_DATA
-        .with(|canister_data_ref_cell| canister_data_ref_cell.borrow().principals_i_follow.clone());
+    // let principals_i_follow = CANISTER_DATA.with(|canister_data_ref_cell| {
+    //     canister_data_ref_cell
+    //         .borrow()
+    //         .follow_data
+    //         .following
+    //         .clone()
+    // });
 
-    let principals_i_follow_vec = principals_i_follow
-        .iter()
-        .map(|principal_id| *principal_id)
-        .collect::<Vec<_>>();
+    // let principals_i_follow_vec = principals_i_follow
+    //     .iter()
+    //     .map(|principal_id| *principal_id)
+    //     .collect::<Vec<_>>();
 
-    let principals_i_follow_chunks = principals_i_follow_vec
-        .chunks(CHUNK_SIZE)
-        .collect::<Vec<_>>();
+    // let principals_i_follow_chunks = principals_i_follow_vec
+    //     .chunks(CHUNK_SIZE)
+    //     .collect::<Vec<_>>();
 
-    for chunk in principals_i_follow_chunks {
-        let _response: () = call::call(
-            data_backup_canister_id.clone(),
-            "receive_principals_i_follow_from_individual_user_canister",
-            (chunk.to_vec(), *canister_owner_principal_id),
-        )
-        .await
-        .expect("Failed to call the receive_principals_i_follow_from_individual_user_canister method on the data_backup canister");
-    }
+    // for chunk in principals_i_follow_chunks {
+    //     let _response: () = call::call(
+    //         data_backup_canister_id.clone(),
+    //         "receive_principals_i_follow_from_individual_user_canister",
+    //         (chunk.to_vec(), *canister_owner_principal_id),
+    //     )
+    //     .await
+    //     .expect("Failed to call the receive_principals_i_follow_from_individual_user_canister method on the data_backup canister");
+    // }
 
-    let principals_that_follow_me = CANISTER_DATA.with(|canister_data_ref_cell| {
-        canister_data_ref_cell
-            .borrow()
-            .principals_that_follow_me
-            .clone()
-    });
+    // let principals_that_follow_me = CANISTER_DATA.with(|canister_data_ref_cell| {
+    //     canister_data_ref_cell
+    //         .borrow()
+    //         .principals_that_follow_me
+    //         .clone()
+    // });
 
-    let principals_that_follow_me_vec = principals_that_follow_me
-        .iter()
-        .map(|principal_id| *principal_id)
-        .collect::<Vec<_>>();
+    // let principals_that_follow_me_vec = principals_that_follow_me
+    //     .iter()
+    //     .map(|principal_id| *principal_id)
+    //     .collect::<Vec<_>>();
 
-    let principals_that_follow_me_chunks = principals_that_follow_me_vec
-        .chunks(CHUNK_SIZE)
-        .collect::<Vec<_>>();
+    // let principals_that_follow_me_chunks = principals_that_follow_me_vec
+    //     .chunks(CHUNK_SIZE)
+    //     .collect::<Vec<_>>();
 
-    for chunk in principals_that_follow_me_chunks {
-        let _response: () = call::call(
-            data_backup_canister_id.clone(),
-            "receive_principals_that_follow_me_from_individual_user_canister",
-            (chunk.to_vec(), *canister_owner_principal_id),
-        )
-        .await
-        .expect("Failed to call the receive_principals_that_follow_me_from_individual_user_canister method on the data_backup canister");
-    }
+    // for chunk in principals_that_follow_me_chunks {
+    //     let _response: () = call::call(
+    //         data_backup_canister_id.clone(),
+    //         "receive_principals_that_follow_me_from_individual_user_canister",
+    //         (chunk.to_vec(), *canister_owner_principal_id),
+    //     )
+    //     .await
+    //     .expect("Failed to call the receive_principals_that_follow_me_from_individual_user_canister method on the data_backup canister");
+    // }
 }
