@@ -29,7 +29,7 @@ fn get_posts_that_have_pending_outcomes(
         .take_while(|(_post_id, post)| {
             let created_in_the_last_48_hours = current_time
                 .duration_since(post.created_at)
-                .unwrap()
+                .unwrap_or(Duration::from_secs((48 * 60 + 5) * 60))
                 .as_secs()
                 < 48 * 60 * 60;
             let is_a_hot_or_not_post = post.hot_or_not_details.is_some();
