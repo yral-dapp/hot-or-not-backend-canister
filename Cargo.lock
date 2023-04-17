@@ -3166,9 +3166,9 @@ dependencies = [
 
 [[package]]
 name = "ic-test-state-machine-client"
-version = "2.0.0"
+version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cfce35743c7f0b5f5b709121b2445e5da4aa3eb240bc7e9490e9b267bd47f350"
+checksum = "be83b09145df43603a6255b2dee2b08055ed37642fe1ee26d2036f2ada81730b"
 dependencies = [
  "candid",
  "ciborium 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
