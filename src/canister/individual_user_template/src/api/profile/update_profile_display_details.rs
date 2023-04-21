@@ -26,13 +26,17 @@ fn update_profile_display_details(
         return Err(UpdateProfileDetailsError::NotAuthorized);
     }
 
-    Ok(CANISTER_DATA.with(|canister_data_ref_cell| {
-        let mut profile = canister_data_ref_cell.borrow_mut().profile.clone();
+    CANISTER_DATA.with(|canister_data_ref_cell| {
+        let profile = &mut canister_data_ref_cell.borrow_mut().profile;
 
         profile.display_name = user_profile_details.display_name;
         profile.profile_picture_url = user_profile_details.profile_picture_url;
+    });
 
-        canister_data_ref_cell.borrow_mut().profile = profile.clone();
+    Ok(CANISTER_DATA.with(|canister_data_ref_cell| {
+        let canister_data = canister_data_ref_cell.borrow();
+        let profile = &canister_data.profile;
+        let lifetime_earnings = &canister_data.my_token_balance.lifetime_earnings;
 
         UserProfileDetailsForFrontend {
             principal_id: profile.principal_id.unwrap(),
@@ -45,6 +49,7 @@ fn update_profile_display_details(
                 .principals_that_follow_me
                 .len() as u64,
             following_count: canister_data_ref_cell.borrow().principals_i_follow.len() as u64,
+            lifetime_earnings: *lifetime_earnings,
         }
     }))
 }

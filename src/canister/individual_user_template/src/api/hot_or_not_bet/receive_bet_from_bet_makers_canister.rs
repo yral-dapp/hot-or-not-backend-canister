@@ -4,7 +4,9 @@ use candid::Principal;
 use ic_cdk::api::management_canister::provisional::CanisterId;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
-        arg::PlaceBetArg, error::BetOnCurrentlyViewingPostError, hot_or_not::BettingStatus,
+        arg::PlaceBetArg,
+        error::BetOnCurrentlyViewingPostError,
+        hot_or_not::{BetDirection, BettingStatus},
     },
     common::utils::system_time,
 };
@@ -35,6 +37,13 @@ fn receive_bet_from_bet_makers_canister(
         )
     })?;
 
+    CANISTER_DATA.with(|canister_data_ref_cell| {
+        update_profile_stats_with_bet_placed(
+            &mut canister_data_ref_cell.borrow_mut(),
+            &place_bet_arg.bet_direction,
+        );
+    });
+
     update_scores_and_share_with_post_cache_if_difference_beyond_threshold(&place_bet_arg.post_id);
 
     Ok(status)
@@ -63,6 +72,20 @@ fn receive_bet_from_bet_makers_canister_impl(
         &bet_direction,
         &current_time,
     )
+}
+
+fn update_profile_stats_with_bet_placed(
+    canister_data: &mut CanisterData,
+    bet_direction: &BetDirection,
+) {
+    match *bet_direction {
+        BetDirection::Hot => {
+            canister_data.profile.profile_stats.hot_bets_received += 1;
+        }
+        BetDirection::Not => {
+            canister_data.profile.profile_stats.not_bets_received += 1;
+        }
+    }
 }
 
 #[cfg(test)]
