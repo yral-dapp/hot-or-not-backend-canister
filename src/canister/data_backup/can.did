@@ -122,6 +122,7 @@ type SystemTime = record {
   secs_since_epoch : nat64;
 };
 type TokenBalance = record {
+  lifetime_earnings : nat64;
   utility_token_balance : nat64;
   utility_token_transaction_history : vec record { nat64; TokenEvent };
 };
@@ -162,8 +163,8 @@ type UserProfile = record {
 };
 type UserProfileGlobalStats = record {
   lifetime_earnings : nat64;
-  hots_earned_count : nat64;
-  nots_earned_count : nat64;
+  hot_bets_received : nat64;
+  not_bets_received : nat64;
 };
 service : (DataBackupInitArgs) -> {
   get_current_backup_statistics : () -> (BackupStatistics) query;

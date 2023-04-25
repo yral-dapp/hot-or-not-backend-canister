@@ -94,8 +94,8 @@ mod test {
             profile_picture_url: profile_picture_url.clone(),
             profile_stats: UserProfileGlobalStats {
                 lifetime_earnings: 1500,
-                hots_earned_count: 10,
-                nots_earned_count: 5,
+                hot_bets_received: 10,
+                not_bets_received: 5,
             },
         };
 
@@ -184,7 +184,7 @@ mod test {
                 .canister_data
                 .profile
                 .profile_stats
-                .hots_earned_count,
+                .hot_bets_received,
             10
         );
         assert_eq!(
@@ -195,7 +195,7 @@ mod test {
                 .canister_data
                 .profile
                 .profile_stats
-                .nots_earned_count,
+                .not_bets_received,
             5
         );
 

@@ -81,3 +81,4 @@ pub enum HotOrNotOutcomePayoutEvent {
 }
 
 pub const HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE: u64 = 10;
+pub const HOT_OR_NOT_BET_WINNINGS_MULTIPLIER: u64 = 2;

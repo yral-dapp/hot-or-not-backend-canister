@@ -8,6 +8,7 @@ use crate::common::types::{
     app_primitive_type::PostId,
     utility_token::token_event::{
         HotOrNotOutcomePayoutEvent, TokenEvent, HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE,
+        HOT_OR_NOT_BET_WINNINGS_MULTIPLIER,
     },
 };
 
@@ -408,7 +409,7 @@ impl Post {
                                     if bet_details.bet_direction == BetDirection::Hot {
                                         bet_details.payout = BetPayout::Calculated(
                                             bet_details.amount
-                                                * 2
+                                                * HOT_OR_NOT_BET_WINNINGS_MULTIPLIER
                                                 * (100
                                                     - HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE)
                                                 / 100,
@@ -421,7 +422,7 @@ impl Post {
                                     if bet_details.bet_direction == BetDirection::Not {
                                         bet_details.payout = BetPayout::Calculated(
                                             bet_details.amount
-                                                * 2
+                                                * HOT_OR_NOT_BET_WINNINGS_MULTIPLIER
                                                 * (100
                                                     - HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE)
                                                 / 100,

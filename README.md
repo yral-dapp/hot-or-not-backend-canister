@@ -14,3 +14,7 @@ sudo nix-channel --update nixos-22.11
 ## Deposit cycles to a canister
 
 - `dfx canister deposit-cycles 1000000000000 <canister_id> --network ic`
+
+## Run the upgrade only on the canisters that failed their upgrade
+
+- `dfx canister call user_index retry_upgrade_for_canisters_that_failed_upgrade_with_the_latest_wasm --network ic`
