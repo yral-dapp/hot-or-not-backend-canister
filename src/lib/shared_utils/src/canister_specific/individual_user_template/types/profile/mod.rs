@@ -24,11 +24,7 @@ pub struct UserProfileDetailsForFrontend {
 
 #[derive(CandidType, Deserialize, Clone, Copy, Debug, Default, Serialize)]
 pub struct UserProfileGlobalStats {
-    #[serde(skip_serializing)]
-    pub lifetime_earnings: u64,
-    #[serde(alias = "hots_earned_count")]
     pub hot_bets_received: u64,
-    #[serde(alias = "nots_earned_count")]
     pub not_bets_received: u64,
 }
 

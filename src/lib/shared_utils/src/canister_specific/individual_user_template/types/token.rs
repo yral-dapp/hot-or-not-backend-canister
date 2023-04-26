@@ -12,7 +12,6 @@ use crate::common::types::utility_token::token_event::{
 pub struct TokenBalance {
     pub utility_token_balance: u64,
     pub utility_token_transaction_history: BTreeMap<u64, TokenEvent>,
-    #[serde(default)]
     pub lifetime_earnings: u64,
 }
 
