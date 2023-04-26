@@ -260,7 +260,6 @@ type UserProfileDetailsForFrontend = record {
   followers_count : nat64;
 };
 type UserProfileGlobalStats = record {
-  lifetime_earnings : nat64;
   hot_bets_received : nat64;
   not_bets_received : nat64;
 };
