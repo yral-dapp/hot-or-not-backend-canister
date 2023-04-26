@@ -65,18 +65,17 @@ impl TokenBalance {
 
         let utility_token_transaction_history = &mut self.utility_token_transaction_history;
 
+        let last_key = *utility_token_transaction_history
+            .last_key_value()
+            .unwrap_or((&0, &TokenEvent::Burn))
+            .0;
+
         if utility_token_transaction_history.len() > 1500 {
-            let last_key = *utility_token_transaction_history
-                .last_key_value()
-                .unwrap()
-                .0;
             utility_token_transaction_history.retain(|key, _| *key > last_key - 1000)
         }
 
-        self.utility_token_transaction_history.insert(
-            self.utility_token_transaction_history.len() as u64,
-            token_event,
-        );
+        self.utility_token_transaction_history
+            .insert(last_key + 1, token_event);
     }
 }
 
@@ -119,7 +118,7 @@ mod test {
                     .last_key_value()
                     .unwrap()
                     .0,
-                1499
+                1500
             );
 
             token_balance.handle_token_event(TokenEvent::Burn);
@@ -130,18 +129,18 @@ mod test {
                     .last_key_value()
                     .unwrap()
                     .0,
-                1500
+                1501
             );
 
             token_balance.handle_token_event(TokenEvent::Burn);
-            assert_eq!(token_balance.utility_token_transaction_history.len(), 1000);
+            assert_eq!(token_balance.utility_token_transaction_history.len(), 1001);
             assert_eq!(
                 *token_balance
                     .utility_token_transaction_history
                     .first_key_value()
                     .unwrap()
                     .0,
-                501
+                502
             );
             assert_eq!(
                 *token_balance
@@ -149,7 +148,26 @@ mod test {
                     .last_key_value()
                     .unwrap()
                     .0,
-                1500
+                1502
+            );
+
+            token_balance.handle_token_event(TokenEvent::Burn);
+            assert_eq!(token_balance.utility_token_transaction_history.len(), 1002);
+            assert_eq!(
+                *token_balance
+                    .utility_token_transaction_history
+                    .first_key_value()
+                    .unwrap()
+                    .0,
+                502
+            );
+            assert_eq!(
+                *token_balance
+                    .utility_token_transaction_history
+                    .last_key_value()
+                    .unwrap()
+                    .0,
+                1503
             );
         }
 
