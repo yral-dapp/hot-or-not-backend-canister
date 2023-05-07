@@ -5,7 +5,6 @@ use shared_utils::common::types::known_principal::KnownPrincipalType;
 use crate::CANISTER_DATA;
 
 pub async fn update_locally_stored_well_known_principals() {
-    // TODO: enable this and remove the below
     // extract the canister ID of the configuration canister from well-known principals
     // let config_canister_id = CANISTER_DATA.with(|canister_data_ref_cell| {
     //         canister_data_ref_cell
@@ -16,7 +15,6 @@ pub async fn update_locally_stored_well_known_principals() {
     //         .clone()
     // });
 
-    // TODO: Remove this once refactored
     let config_canister_id = match option_env!("DFX_NETWORK") {
         Some("ic") => Principal::from_text("efsfj-sqaaa-aaaap-qatwa-cai").unwrap(),
         _ => CANISTER_DATA.with(|canister_data_ref_cell| {
@@ -29,7 +27,7 @@ pub async fn update_locally_stored_well_known_principals() {
         }),
     };
 
-    // fetch the well-known principals from the configuration canister
+    // * Fetch the well-known principals from the configuration canister
     let (well_known_principals,): (Vec<(KnownPrincipalType, Principal)>,) = call::call(
         config_canister_id,
         "get_current_list_of_all_well_known_principal_values",

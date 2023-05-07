@@ -16,15 +16,12 @@ use crate::{
     data_model::CanisterData, CANISTER_DATA,
 };
 
-// TODO: validate incoming request is from hot or not bet fleet
-// TODO: and not some external canister
 #[ic_cdk::update]
 #[candid::candid_method(update)]
 fn receive_bet_from_bet_makers_canister(
     place_bet_arg: PlaceBetArg,
     bet_maker_principal_id: Principal,
 ) -> Result<BettingStatus, BetOnCurrentlyViewingPostError> {
-    // TODO: validate using this
     let bet_maker_canister_id = ic_cdk::caller();
 
     let status = CANISTER_DATA.with(|canister_data_ref_cell| {

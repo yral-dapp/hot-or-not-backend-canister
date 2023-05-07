@@ -9,8 +9,6 @@ pub struct PostScoreIndexItem {
     pub publisher_canister_id: Principal,
 }
 
-// TODO: Look at the below implementation and check if this can be used to update
-
 // #[derive(Debug, PartialEq, Eq)]
 // struct MyType {
 //     id: u32,

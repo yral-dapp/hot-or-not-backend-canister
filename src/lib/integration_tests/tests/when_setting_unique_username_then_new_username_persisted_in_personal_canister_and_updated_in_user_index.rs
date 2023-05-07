@@ -36,9 +36,6 @@ fn when_setting_unique_username_then_new_username_persisted_in_personal_canister
         alice_canister_id
     }).unwrap();
 
-    // TODO: test the error cases
-    // TODO: figure out how to get the error message from the reply payload
-
     state_machine
         .execute_ingress_as(
             alice_principal_id,

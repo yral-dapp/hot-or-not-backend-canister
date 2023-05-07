@@ -7,8 +7,6 @@ use shared_utils::common::types::known_principal::KnownPrincipalType;
 
 use crate::CANISTER_DATA;
 
-// TODO: move this to the individual canisters
-// TODO: Do this by calling this via the user_index canister
 #[ic_cdk::update]
 #[candid::candid_method(update)]
 async fn get_canister_status_from_management_canister(
