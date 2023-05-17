@@ -5,4 +5,5 @@
 *.wasm
 target
 internet_identity.did
-ic-test-state-machine
+sns-quill
+sns-testing
