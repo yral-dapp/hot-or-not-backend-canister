@@ -6,7 +6,7 @@
 
 ## Deposit cycles to a canister
 
-- `dfx canister deposit-cycles 1000000000000 <canister_id> --network ic`
+- `dfx canister deposit-cycles 1000000000000 <canister_id> --network ic // 1T cycles`
 
 ## Run the upgrade only on the canisters that failed their upgrade
 
