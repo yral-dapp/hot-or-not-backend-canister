@@ -5,4 +5,5 @@
 *.wasm
 target
 internet_identity.did
-sns-quill
+quill
+sns
