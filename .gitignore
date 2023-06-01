@@ -6,4 +6,4 @@
 target
 internet_identity.did
 quill
-sns
+**/*.pem
