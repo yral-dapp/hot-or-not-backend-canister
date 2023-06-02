@@ -1,4 +1,3 @@
-// TODO: reenable this functionality using pure functions
 // pub fn update_post_home_feed_score_index_on_home_feed_post_score_recalculation(
 //     post_id: u64,
 //     new_score: u64,
@@ -28,7 +27,6 @@
 //     s! { PostsIndexSortedByHomeFeedScore = posts_index_sorted_by_home_feed_score };
 // }
 
-// // TODO: Refactor to use the same function for both hot or not and home feed
 // pub fn update_post_score_index_on_hot_or_not_feed_post_score_recalculation(
 //     post_id: u64,
 //     new_score: u64,

@@ -26,13 +26,9 @@ pub struct CanisterData {
     pub follow_data: FollowData,
     pub known_principal_ids: KnownPrincipalMap,
     pub my_token_balance: TokenBalance,
-    // TODO: remove this index
     pub posts_index_sorted_by_home_feed_score: PostScoreIndex,
-    // TODO: remove this index
     pub posts_index_sorted_by_hot_or_not_feed_score: PostScoreIndex,
-    // TODO: remove this in subsequent update
     pub principals_i_follow: BTreeSet<Principal>,
-    // TODO: remove this in subsequent update
     pub principals_that_follow_me: BTreeSet<Principal>,
     pub profile: UserProfile,
     pub version_details: VersionDetails,

@@ -11,9 +11,7 @@ pub struct UpgradeStatus {
     pub version_number: u64,
     pub last_run_on: SystemTime,
     pub successful_upgrade_count: u32,
-    // TODO: add failure reason
     pub failed_canister_ids: Vec<(Principal, Principal)>,
-    // TODO: add a field for canisters that were topped up
 }
 
 impl Display for UpgradeStatus {

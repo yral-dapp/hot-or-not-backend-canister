@@ -31,7 +31,6 @@ pub enum BetOnCurrentlyViewingPostError {
     PostCreatorCanisterCallFailed,
 }
 
-// TODO: clean up variants not used
 #[derive(CandidType, Deserialize, PartialEq, Eq, Debug)]
 pub enum FollowAnotherUserProfileError {
     Unauthenticated,

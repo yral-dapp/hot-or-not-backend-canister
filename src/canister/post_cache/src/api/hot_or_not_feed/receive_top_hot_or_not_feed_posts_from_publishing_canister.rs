@@ -7,8 +7,6 @@ use crate::{data_model::CanisterData, CANISTER_DATA};
 fn receive_top_hot_or_not_feed_posts_from_publishing_canister(
     top_posts_from_publishing_canister: Vec<PostScoreIndexItem>,
 ) {
-    // TODO: Add access control to allow only project canisters to send this message
-
     CANISTER_DATA.with(|canister_data| {
         let mut canister_data = canister_data.borrow_mut();
 

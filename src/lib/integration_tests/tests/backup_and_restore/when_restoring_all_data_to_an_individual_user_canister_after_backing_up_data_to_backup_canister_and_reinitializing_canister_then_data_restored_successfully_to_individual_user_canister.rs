@@ -23,7 +23,6 @@ use test_utils::setup::{
     },
 };
 
-// TODO: consider merging this test with the other one
 #[test]
 fn when_restoring_all_data_to_an_individual_user_canister_after_backing_up_data_to_backup_canister_and_reinitializing_canister_then_data_restored_successfully_to_individual_user_canister(
 ) {
@@ -318,7 +317,6 @@ fn when_restoring_all_data_to_an_individual_user_canister_after_backing_up_data_
     let token_data = alice_backup_details.canister_data.token_data;
     assert_eq!(token_data.utility_token_balance, 1500);
     assert_eq!(token_data.utility_token_transaction_history.len(), 2);
-    // TODO: reassert after fixing follower following backup
     // assert_eq!(
     //     alice_backup_details
     //         .canister_data
@@ -533,7 +531,6 @@ fn when_restoring_all_data_to_an_individual_user_canister_after_backing_up_data_
         principals_this_profile_follows
     );
 
-    // TODO: reassert after fixing follower following backup
     // assert_eq!(principals_this_profile_follows.len(), 1);
     // assert_eq!(
     //     principals_this_profile_follows[0].1.principal_id,
@@ -557,7 +554,6 @@ fn when_restoring_all_data_to_an_individual_user_canister_after_backing_up_data_
         })
         .unwrap();
 
-    // TODO: reassert after fixing follower following backup
     // assert_eq!(principals_that_follow_this_profile.len(), 1);
     // assert_eq!(
     //     principals_that_follow_this_profile[0].1.principal_id,

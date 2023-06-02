@@ -45,8 +45,6 @@ fn inform_participants_of_outcome(post: &Post, slot_id: &u8) {
 
     for (_room_id, room_detail) in slot_details.unwrap().room_details.iter() {
         for (_participant, bet) in room_detail.bets_made.iter() {
-            // TODO: complete implementation
-            // TODO: Remove in the future when sure that DTS is working
             let bet_outcome_for_bet_maker: BetOutcomeForBetMaker = match room_detail.bet_outcome {
                 RoomBetPossibleOutcomes::BetOngoing => BetOutcomeForBetMaker::AwaitingResult,
                 RoomBetPossibleOutcomes::Draw => BetOutcomeForBetMaker::Draw(match bet.payout {

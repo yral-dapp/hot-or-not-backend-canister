@@ -4,7 +4,6 @@ use shared_utils::common::types::known_principal::KnownPrincipalType;
 
 use crate::CANISTER_DATA;
 
-// TODO: reimplement this function to not clone entire lists
 #[ic_cdk::update]
 #[candid::candid_method(update)]
 async fn backup_data_to_backup_canister(
@@ -163,7 +162,6 @@ async fn send_all_token_data(
     }
 }
 
-// TODO: fix follower following data backup
 async fn send_all_follower_following_data(
     _data_backup_canister_id: &Principal,
     _canister_owner_principal_id: &Principal,

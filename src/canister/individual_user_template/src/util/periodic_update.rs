@@ -1,5 +1,3 @@
-// TODO: remove this file
-
 // use crate::util::score_ranking;
 // use ic_cdk::timer;
 // use shared_utils::constant::{

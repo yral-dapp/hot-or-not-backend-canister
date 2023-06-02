@@ -47,7 +47,6 @@ fn get_posts_of_this_user_profile_with_pagination(
                 let following = &canister_data_ref_cell.borrow().principals_i_follow;
                 let token_balance = &canister_data_ref_cell.borrow().my_token_balance;
 
-                // TODO: do this in a more efficient manner
                 post.get_post_details_for_frontend_for_this_post(
                     UserProfileDetailsForFrontend {
                         display_name: profile.display_name.clone(),

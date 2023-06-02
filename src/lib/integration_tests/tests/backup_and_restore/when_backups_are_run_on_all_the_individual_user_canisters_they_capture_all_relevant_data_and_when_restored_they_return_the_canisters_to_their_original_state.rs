@@ -171,8 +171,6 @@ fn when_backups_are_run_on_all_the_individual_user_canisters_they_capture_all_re
         )
         .unwrap();
 
-    // TODO: add a stress test case where we are adding 1000 posts and check if all are sent back
-
     state_machine
         .update_call(
             bob_canister_id,
@@ -347,7 +345,6 @@ fn when_backups_are_run_on_all_the_individual_user_canisters_they_capture_all_re
     let token_data = alice_backup_details.canister_data.token_data;
     assert_eq!(token_data.utility_token_balance, 1500);
     assert_eq!(token_data.utility_token_transaction_history.len(), 2);
-    // TODO: reassert after fixing follower following backup
     // assert_eq!(
     //     alice_backup_details
     //         .canister_data
@@ -425,7 +422,6 @@ fn when_backups_are_run_on_all_the_individual_user_canisters_they_capture_all_re
     let token_data = bob_backup_details.canister_data.token_data;
     assert_eq!(token_data.utility_token_balance, 1500);
     assert_eq!(token_data.utility_token_transaction_history.len(), 2);
-    // TODO: reassert after fixing follower following backup
     // assert_eq!(
     //     bob_backup_details.canister_data.principals_i_follow.len(),
     //     1
@@ -451,7 +447,6 @@ fn when_backups_are_run_on_all_the_individual_user_canisters_they_capture_all_re
         bob_profile_picture_url
     );
 
-    // TODO: implement testing restore functionality after API migrated to heap versions
     // let mut user_index_access_control_map = HashMap::new();
     // user_index_access_control_map.insert(
     //     get_global_super_admin_principal_id_v1(),

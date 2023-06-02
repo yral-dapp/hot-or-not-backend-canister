@@ -100,7 +100,6 @@ async fn update_user_index_upgrade_user_canisters_with_latest_wasm() -> String {
                             user_principal_id.to_text(),
                             e
                         ));
-                        // TODO: update schema to accept failure reason
                         failed_canister_ids
                             .push((user_principal_id.clone(), user_canister_id.clone()));
                     }
