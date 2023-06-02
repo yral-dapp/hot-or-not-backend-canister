@@ -19,6 +19,6 @@ ic-stable-structures = "0.5.3"
 ic-state-machine-tests = { git = "https://github.com/dfinity/ic", rev = "36f4a1c2903aed012b95b3b073e052c4036aef09" }
 ic-test-state-machine-client = "2.1.0"
 rmp-serde = "1.1.1"
-serde = "1.0.160"
+serde = "1.0.163"
 shared_utils = { path = "./src/lib/shared_utils" }
 test_utils = { path = "./src/lib/test_utils" }
