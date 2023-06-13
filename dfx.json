@@ -8,7 +8,9 @@
       "declarations": {
         "node_compatibility": true,
         "output": "./export/declarations/configuration"
-      }
+      },
+      "gzip": true,
+      "optimize": "size"
     },
     "data_backup": {
       "type": "rust",
@@ -17,7 +19,9 @@
       "declarations": {
         "node_compatibility": true,
         "output": "./export/declarations/data_backup"
-      }
+      },
+      "gzip": true,
+      "optimize": "size"
     },
     "individual_user_template": {
       "type": "rust",
@@ -26,7 +30,9 @@
       "declarations": {
         "node_compatibility": true,
         "output": "./export/declarations/individual_user_template"
-      }
+      },
+      "gzip": true,
+      "optimize": "size"
     },
     "post_cache": {
       "type": "rust",
@@ -35,7 +41,9 @@
       "declarations": {
         "node_compatibility": true,
         "output": "./export/declarations/post_cache"
-      }
+      },
+      "gzip": true,
+      "optimize": "size"
     },
     "user_index": {
       "type": "rust",
@@ -44,13 +52,9 @@
       "declarations": {
         "node_compatibility": true,
         "output": "./export/declarations/user_index"
-      }
-    },
-    "internet_identity": {
-      "type": "custom",
-      "candid": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity.did",
-      "wasm": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity_dev.wasm.gz",
-      "shrink": false
+      },
+      "gzip": true,
+      "optimize": "size"
     }
   }
 }

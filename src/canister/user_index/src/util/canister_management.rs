@@ -15,7 +15,7 @@ use shared_utils::{
 use crate::CANISTER_DATA;
 
 const INDIVIDUAL_USER_TEMPLATE_CANISTER_WASM: &[u8] = include_bytes!(
-    "../../../../../target/wasm32-unknown-unknown/release/individual_user_template.wasm.gz"
+    "../../../../../target/wasm32-unknown-unknown/release/individual_user_template.wasm"
 );
 
 pub async fn create_users_canister(profile_owner: Principal) -> Principal {
