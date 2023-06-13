@@ -23,7 +23,6 @@ dfx build configuration
 dfx build data_backup
 dfx build individual_user_template
 dfx build user_index
-# gzip -f -1 ./target/wasm32-unknown-unknown/release/user_index.wasm
 dfx build post_cache
 
 if [[ $skip_test != true ]] 

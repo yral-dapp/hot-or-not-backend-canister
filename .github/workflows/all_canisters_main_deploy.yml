@@ -50,23 +50,18 @@ jobs:
       - name: Build configuration canister
         run: |
           nix-shell --run "dfx build --network ic configuration"
-          gzip -f -1 ./target/wasm32-unknown-unknown/release/configuration.wasm
       - name: Build data_backup canister
         run: |
           nix-shell --run "dfx build --network ic data_backup"
-          gzip -f -1 ./target/wasm32-unknown-unknown/release/data_backup.wasm
       - name: Build individual_user_template canister
         run: |
           nix-shell --run "dfx build --network ic individual_user_template"
-          gzip -f -1 ./target/wasm32-unknown-unknown/release/individual_user_template.wasm
       - name: Build user_index canister
         run: |
           nix-shell --run "dfx build --network ic user_index"
-          gzip -f -1 ./target/wasm32-unknown-unknown/release/user_index.wasm
       - name: Build post_cache canister
         run: |
           nix-shell --run "dfx build --network ic post_cache"
-          gzip -f -1 ./target/wasm32-unknown-unknown/release/post_cache.wasm
       - name: Deploy configuration canister
         run: nix-shell --run "dfx canister install configuration --network ic --mode upgrade --argument '(record {})' --yes"
       - name: Deploy data_backup canister

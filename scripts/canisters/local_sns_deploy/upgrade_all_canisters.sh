@@ -30,8 +30,6 @@ then
   cargo test
 fi
 
-# dfx canister call user_index update_user_index_upgrade_user_canisters_with_latest_wasm
-
 source ./sns-testing/constants.sh normal
 
 cd ..
