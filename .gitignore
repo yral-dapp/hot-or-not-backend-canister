@@ -7,3 +7,5 @@ target
 internet_identity.did
 quill
 **/*.pem
+sns-testing/**
+msg.json
