@@ -19,9 +19,10 @@ while getopts "sh" arg; do
   esac
 done
 
+dfx build individual_user_template
+gzip -f -1 ./target/wasm32-unknown-unknown/release/individual_user_template.wasm
 dfx build configuration
 dfx build data_backup
-dfx build individual_user_template
 dfx build user_index
 dfx build post_cache
 
