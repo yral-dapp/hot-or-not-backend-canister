@@ -2,7 +2,7 @@ use candid::Principal;
 
 use crate::common::types::known_principal::{KnownPrincipalMap, KnownPrincipalType};
 
-pub const DYNAMIC_CANISTER_DEFAULT_CREATION_BALANCE: u64 = 1_000_000_000_000; // 1T Cycles
+pub const DYNAMIC_CANISTER_DEFAULT_CREATION_BALANCE: u128 = 1_000_000_000_000; // 1T Cycles
 pub const CYCLES_THRESHOLD_TO_INITIATE_RECHARGE: u128 = 500_000_000_000;
 pub const RECHARGE_CYCLES_AMOUNT: u128 = 500_000_000_000;
 pub const MINIMUM_CYCLES_TO_REVIVE_CANISTER: u128 = 200_000_000_000; // 0.2T Cycles

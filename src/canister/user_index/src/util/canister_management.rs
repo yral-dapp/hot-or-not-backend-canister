@@ -7,10 +7,7 @@ use ic_cdk::api::{
         provisional::{CanisterIdRecord, CanisterSettings},
     },
 };
-use shared_utils::{
-    canister_specific::individual_user_template::types::arg::IndividualUserTemplateInitArgs,
-    common::types::known_principal::KnownPrincipalType,
-};
+use shared_utils::canister_specific::individual_user_template::types::arg::IndividualUserTemplateInitArgs;
 
 use crate::CANISTER_DATA;
 
@@ -25,15 +22,6 @@ pub async fn create_users_canister(profile_owner: Principal) -> Principal {
             controllers: Some(vec![
                 // this canister
                 api::id(),
-                // hot or not global owner principal
-                CANISTER_DATA.with(|canister_data_ref_cell| {
-                    canister_data_ref_cell
-                        .borrow()
-                        .known_principal_ids
-                        .get(&KnownPrincipalType::UserIdGlobalSuperAdmin)
-                        .unwrap()
-                        .clone()
-                }),
             ]),
             compute_allocation: None,
             memory_allocation: None,

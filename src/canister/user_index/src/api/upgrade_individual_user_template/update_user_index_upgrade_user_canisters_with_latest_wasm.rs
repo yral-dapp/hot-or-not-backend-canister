@@ -5,7 +5,7 @@ use ic_cdk::api::management_canister::{
 use shared_utils::{
     canister_specific::individual_user_template::types::arg::IndividualUserTemplateInitArgs,
     common::{types::known_principal::KnownPrincipalType, utils::system_time},
-    constant::MINIMUM_CYCLES_TO_REVIVE_CANISTER,
+    constant::{DYNAMIC_CANISTER_DEFAULT_CREATION_BALANCE, MINIMUM_CYCLES_TO_REVIVE_CANISTER},
 };
 
 use crate::{
@@ -73,7 +73,7 @@ async fn update_user_index_upgrade_user_canisters_with_latest_wasm() -> String {
                         CanisterIdRecord {
                             canister_id: user_canister_id.clone(),
                         },
-                        MINIMUM_CYCLES_TO_REVIVE_CANISTER,
+                        DYNAMIC_CANISTER_DEFAULT_CREATION_BALANCE,
                     )
                     .await
                     .unwrap();
