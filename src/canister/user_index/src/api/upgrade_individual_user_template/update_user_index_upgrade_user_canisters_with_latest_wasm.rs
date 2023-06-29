@@ -5,7 +5,7 @@ use ic_cdk::api::management_canister::{
 use shared_utils::{
     canister_specific::individual_user_template::types::arg::IndividualUserTemplateInitArgs,
     common::{types::known_principal::KnownPrincipalType, utils::system_time},
-    constant::{DYNAMIC_CANISTER_DEFAULT_CREATION_BALANCE, MINIMUM_CYCLES_TO_REVIVE_CANISTER},
+    constant::DYNAMIC_CANISTER_DEFAULT_CREATION_BALANCE,
 };
 
 use crate::{

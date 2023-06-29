@@ -1,31 +1,27 @@
 use candid::Principal;
-use ic_state_machine_tests::{CanisterId, PrincipalId, StateMachine, WasmResult};
+use ic_test_state_machine_client::WasmResult;
 use shared_utils::{
     canister_specific::individual_user_template::types::profile::UserProfileDetailsForFrontend,
     common::types::known_principal::KnownPrincipalType,
 };
 use test_utils::setup::{
-    env::v0::{
-        get_canister_id_of_specific_type_from_principal_id_map,
-        get_initialized_env_with_provisioned_known_canisters,
-    },
-    test_constants::get_alice_principal_id,
+    env::v1::{get_initialized_env_with_provisioned_known_canisters, get_new_state_machine},
+    test_constants::get_mock_user_alice_principal_id,
 };
 
 #[test]
 fn when_setting_unique_username_then_new_username_persisted_in_personal_canister_and_updated_in_user_index(
 ) {
-    let state_machine = StateMachine::new();
+    let state_machine = get_new_state_machine();
     let known_principal_map = get_initialized_env_with_provisioned_known_canisters(&state_machine);
-    let user_index_canister_id = get_canister_id_of_specific_type_from_principal_id_map(
-        &known_principal_map,
-        KnownPrincipalType::CanisterIdUserIndex,
-    );
-    let alice_principal_id = get_alice_principal_id();
+    let user_index_canister_id = known_principal_map
+        .get(&KnownPrincipalType::CanisterIdUserIndex)
+        .unwrap();
+    let alice_principal_id = get_mock_user_alice_principal_id();
 
-    let alice_canister_id = state_machine.execute_ingress_as(
+    let alice_canister_id = state_machine.update_call(
+        *user_index_canister_id,
         alice_principal_id,
-        user_index_canister_id,
         "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer",
         candid::encode_one(()).unwrap(),
     ).map(|reply_payload| {
@@ -37,18 +33,18 @@ fn when_setting_unique_username_then_new_username_persisted_in_personal_canister
     }).unwrap();
 
     state_machine
-        .execute_ingress_as(
+        .update_call(
+            alice_canister_id,
             alice_principal_id,
-            CanisterId::new(PrincipalId(alice_canister_id)).unwrap(),
             "update_profile_set_unique_username_once",
             candid::encode_one(String::from("cool_alice_1234")).unwrap(),
         )
         .unwrap();
 
     let profile_details_from_user_canister = state_machine
-        .query_as(
-            PrincipalId::new_anonymous(),
-            CanisterId::new(PrincipalId(alice_canister_id)).unwrap(),
+        .query_call(
+            alice_canister_id,
+            Principal::anonymous(),
             "get_profile_details",
             candid::encode_args(()).unwrap(),
         )
@@ -68,20 +64,22 @@ fn when_setting_unique_username_then_new_username_persisted_in_personal_canister
     );
 
     let is_alice_username_taken = state_machine
-        .query_as(
-            PrincipalId::new_anonymous(),
-            user_index_canister_id,
+        .query_call(
+            *user_index_canister_id,
+            Principal::anonymous(),
             "get_index_details_is_user_name_taken",
-            candid::encode_args(("cool_alice_1234",)).unwrap(),
+            candid::encode_one("cool_alice_1234").unwrap(),
         )
         .map(|reply_payload| {
-            let (is_alice_username_taken,): (bool,) = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_args(&payload).unwrap(),
+            let is_alice_username_taken: bool = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
                 _ => panic!("\n🛑 get_index_details_is_user_name_taken failed\n"),
             };
             is_alice_username_taken
         })
         .unwrap();
+
+    assert_eq!(is_alice_username_taken, true);
 
     println!(
         "🧪 profile_details_from_user_canister: {:?}",
@@ -91,8 +89,9 @@ fn when_setting_unique_username_then_new_username_persisted_in_personal_canister
     println!("🧪 is_alice_username_taken: {:?}", is_alice_username_taken);
 
     let alice_canister_id_corresponding_to_username = state_machine
-        .query(
-            user_index_canister_id,
+        .query_call(
+            *user_index_canister_id,
+            Principal::anonymous(),
             "get_user_canister_id_from_unique_user_name",
             candid::encode_one("cool_alice_1234".to_string()).unwrap(),
         )
@@ -112,10 +111,11 @@ fn when_setting_unique_username_then_new_username_persisted_in_personal_canister
     );
 
     let alice_canister_id_corresponding_to_principal_id = state_machine
-        .query(
-            user_index_canister_id,
+        .query_call(
+            *user_index_canister_id,
+            Principal::anonymous(),
             "get_user_canister_id_from_user_principal_id",
-            candid::encode_one(alice_principal_id.0).unwrap(),
+            candid::encode_one(alice_principal_id).unwrap(),
         )
         .map(|reply_payload| {
             let alice_principal_id_corresponding_to_username: Option<Principal> =
@@ -127,14 +127,13 @@ fn when_setting_unique_username_then_new_username_persisted_in_personal_canister
         })
         .unwrap();
 
-    println!(
-        "🧪 alice_canister_id_corresponding_to_principal_id: {:?}",
+    assert_eq!(
+        alice_canister_id_corresponding_to_username,
         alice_canister_id_corresponding_to_principal_id
     );
 
-    assert_eq!(is_alice_username_taken, true);
-    assert_eq!(
-        alice_canister_id_corresponding_to_username,
+    println!(
+        "🧪 alice_canister_id_corresponding_to_principal_id: {:?}",
         alice_canister_id_corresponding_to_principal_id
     );
 }

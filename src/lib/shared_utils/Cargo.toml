@@ -14,5 +14,4 @@ rmp-serde = { workspace = true }
 serde = { workspace = true }
 
 [dev-dependencies]
-ic-state-machine-tests = { workspace = true }
 test_utils = { workspace = true }

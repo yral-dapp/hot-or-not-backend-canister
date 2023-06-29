@@ -44,3 +44,11 @@
 `dfx canister --network=ic call aanaa-xaaaa-aaaah-aaeiq-cai burn "(record { canister_id= principal \"$(dfx identity get-wallet --network ic)\"; amount= (1000000000000:nat64)})"`
 
 Burn XTC to cycles operation burns 2B cycles
+
+## Steps
+
+- Migrate all tests to the latest ic-state-machine-test-client
+- Add a canister_status method for user_index (current canister count and cycle balance)
+- Add auto canister topups if upgrade fails and balance below .5T cycles
+- Add multiple upgrades at a time
+- Remove any controller except itself

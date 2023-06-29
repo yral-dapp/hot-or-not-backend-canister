@@ -1,0 +1,1 @@
+pub mod when_setting_unique_username_then_new_username_persisted_in_personal_canister_and_updated_in_user_index;

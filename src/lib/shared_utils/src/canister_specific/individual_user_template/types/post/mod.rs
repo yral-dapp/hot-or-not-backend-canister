@@ -396,8 +396,6 @@ impl Post {
 
 #[cfg(test)]
 mod test {
-    use ic_state_machine_tests::PrincipalId;
-
     use crate::canister_specific::individual_user_template::types::hot_or_not::BetDirection;
 
     use super::*;
@@ -463,8 +461,8 @@ mod test {
 
         (0..80).for_each(|number| {
             let result = post.place_hot_or_not_bet(
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
@@ -482,8 +480,8 @@ mod test {
 
         (80..145).for_each(|number| {
             let result = post.place_hot_or_not_bet(
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Not,
                 &betting_time,
@@ -538,8 +536,8 @@ mod test {
 
         (0..216).for_each(|number| {
             let result = post.place_hot_or_not_bet(
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
@@ -557,8 +555,8 @@ mod test {
 
         (216..360).for_each(|number| {
             let result = post.place_hot_or_not_bet(
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Not,
                 &betting_time,
@@ -613,8 +611,8 @@ mod test {
 
         (0..1_078).for_each(|number| {
             let result = post.place_hot_or_not_bet(
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
@@ -635,8 +633,8 @@ mod test {
 
         (1_078..2_695).for_each(|number| {
             let result = post.place_hot_or_not_bet(
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Not,
                 &betting_time,
@@ -682,8 +680,9 @@ mod test {
         );
         post.view_stats.total_view_count = 15_000;
         (0..1_200).for_each(|number| {
-            post.likes
-                .insert(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0);
+            post.likes.insert(Principal::self_authenticating(
+                &(number as usize).to_ne_bytes(),
+            ));
         });
         assert_eq!(post.likes.len(), 1_200);
         post.share_count = 180;
@@ -692,8 +691,8 @@ mod test {
 
         (0..4_725).for_each(|number| {
             let result = post.place_hot_or_not_bet(
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
@@ -714,8 +713,8 @@ mod test {
 
         (4_725..10_500).for_each(|number| {
             let result = post.place_hot_or_not_bet(
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Not,
                 &betting_time,
@@ -761,8 +760,9 @@ mod test {
         );
         post.view_stats.total_view_count = 75_000;
         (0..3_000).for_each(|number| {
-            post.likes
-                .insert(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0);
+            post.likes.insert(Principal::self_authenticating(
+                &(number as usize).to_ne_bytes(),
+            ));
         });
         assert_eq!(post.likes.len(), 3_000);
         post.share_count = 360;
@@ -771,8 +771,8 @@ mod test {
 
         (0..26_827).for_each(|number| {
             let result = post.place_hot_or_not_bet(
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
@@ -793,8 +793,8 @@ mod test {
 
         (26_827..54_750).for_each(|number| {
             let result = post.place_hot_or_not_bet(
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Not,
                 &betting_time,
@@ -840,8 +840,9 @@ mod test {
         );
         post.view_stats.total_view_count = 150;
         (0..3).for_each(|number| {
-            post.likes
-                .insert(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0);
+            post.likes.insert(Principal::self_authenticating(
+                &(number as usize).to_ne_bytes(),
+            ));
         });
         assert_eq!(post.likes.len(), 3);
         post.share_count = 0;
@@ -850,8 +851,8 @@ mod test {
 
         (0..18).for_each(|number| {
             let result = post.place_hot_or_not_bet(
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
@@ -872,8 +873,8 @@ mod test {
 
         (18..45).for_each(|number| {
             let result = post.place_hot_or_not_bet(
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Not,
                 &betting_time,
@@ -919,8 +920,9 @@ mod test {
         );
         post.view_stats.total_view_count = 400;
         (0..4).for_each(|number| {
-            post.likes
-                .insert(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0);
+            post.likes.insert(Principal::self_authenticating(
+                &(number as usize).to_ne_bytes(),
+            ));
         });
         assert_eq!(post.likes.len(), 4);
         post.share_count = 0;
@@ -929,8 +931,8 @@ mod test {
 
         (0..40).for_each(|number| {
             let result = post.place_hot_or_not_bet(
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
@@ -951,8 +953,8 @@ mod test {
 
         (40..68).for_each(|number| {
             let result = post.place_hot_or_not_bet(
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Not,
                 &betting_time,
@@ -998,8 +1000,9 @@ mod test {
         );
         post.view_stats.total_view_count = 3_500;
         (0..35).for_each(|number| {
-            post.likes
-                .insert(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0);
+            post.likes.insert(Principal::self_authenticating(
+                &(number as usize).to_ne_bytes(),
+            ));
         });
         assert_eq!(post.likes.len(), 35);
         post.share_count = 0;
@@ -1008,8 +1011,8 @@ mod test {
 
         (0..466).for_each(|number| {
             let result = post.place_hot_or_not_bet(
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
@@ -1030,8 +1033,8 @@ mod test {
 
         (466..805).for_each(|number| {
             let result = post.place_hot_or_not_bet(
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Not,
                 &betting_time,
@@ -1077,8 +1080,9 @@ mod test {
         );
         post.view_stats.total_view_count = 15_000;
         (0..600).for_each(|number| {
-            post.likes
-                .insert(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0);
+            post.likes.insert(Principal::self_authenticating(
+                &(number as usize).to_ne_bytes(),
+            ));
         });
         assert_eq!(post.likes.len(), 600);
         post.share_count = 30;
@@ -1087,8 +1091,8 @@ mod test {
 
         (0..1_320).for_each(|number| {
             let result = post.place_hot_or_not_bet(
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
@@ -1109,8 +1113,8 @@ mod test {
 
         (1_320..2_400).for_each(|number| {
             let result = post.place_hot_or_not_bet(
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Not,
                 &betting_time,
@@ -1156,8 +1160,9 @@ mod test {
         );
         post.view_stats.total_view_count = 75_000;
         (0..750).for_each(|number| {
-            post.likes
-                .insert(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0);
+            post.likes.insert(Principal::self_authenticating(
+                &(number as usize).to_ne_bytes(),
+            ));
         });
         assert_eq!(post.likes.len(), 750);
         post.share_count = 15;
@@ -1166,8 +1171,8 @@ mod test {
 
         (0..6_270).for_each(|number| {
             let result = post.place_hot_or_not_bet(
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
@@ -1188,8 +1193,8 @@ mod test {
 
         (6_270..14_250).for_each(|number| {
             let result = post.place_hot_or_not_bet(
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Not,
                 &betting_time,
@@ -1244,8 +1249,8 @@ mod test {
 
         (0..80).for_each(|number| {
             let result = post.place_hot_or_not_bet(
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
@@ -1263,8 +1268,8 @@ mod test {
 
         (80..145).for_each(|number| {
             let result = post.place_hot_or_not_bet(
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Not,
                 &betting_time,
@@ -1333,8 +1338,8 @@ mod test {
 
         (0..216).for_each(|number| {
             let result = post.place_hot_or_not_bet(
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
@@ -1352,8 +1357,8 @@ mod test {
 
         (216..360).for_each(|number| {
             let result = post.place_hot_or_not_bet(
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Not,
                 &betting_time,
@@ -1422,8 +1427,8 @@ mod test {
 
         (0..1_078).for_each(|number| {
             let result = post.place_hot_or_not_bet(
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
@@ -1444,8 +1449,8 @@ mod test {
 
         (1_078..2_695).for_each(|number| {
             let result = post.place_hot_or_not_bet(
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Not,
                 &betting_time,
@@ -1505,8 +1510,9 @@ mod test {
         );
         post.view_stats.total_view_count = 15_000;
         (0..1_200).for_each(|number| {
-            post.likes
-                .insert(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0);
+            post.likes.insert(Principal::self_authenticating(
+                &(number as usize).to_ne_bytes(),
+            ));
         });
         assert_eq!(post.likes.len(), 1_200);
         post.share_count = 180;
@@ -1515,8 +1521,8 @@ mod test {
 
         (0..4_725).for_each(|number| {
             let result = post.place_hot_or_not_bet(
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
@@ -1537,8 +1543,8 @@ mod test {
 
         (4_725..10_500).for_each(|number| {
             let result = post.place_hot_or_not_bet(
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Not,
                 &betting_time,
@@ -1598,8 +1604,9 @@ mod test {
         );
         post.view_stats.total_view_count = 75_000;
         (0..3_000).for_each(|number| {
-            post.likes
-                .insert(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0);
+            post.likes.insert(Principal::self_authenticating(
+                &(number as usize).to_ne_bytes(),
+            ));
         });
         assert_eq!(post.likes.len(), 3_000);
         post.share_count = 360;
@@ -1608,8 +1615,8 @@ mod test {
 
         (0..26_827).for_each(|number| {
             let result = post.place_hot_or_not_bet(
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
@@ -1630,8 +1637,8 @@ mod test {
 
         (26_827..54_750).for_each(|number| {
             let result = post.place_hot_or_not_bet(
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Not,
                 &betting_time,
@@ -1691,8 +1698,9 @@ mod test {
         );
         post.view_stats.total_view_count = 150;
         (0..3).for_each(|number| {
-            post.likes
-                .insert(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0);
+            post.likes.insert(Principal::self_authenticating(
+                &(number as usize).to_ne_bytes(),
+            ));
         });
         assert_eq!(post.likes.len(), 3);
         post.share_count = 0;
@@ -1701,8 +1709,8 @@ mod test {
 
         (0..18).for_each(|number| {
             let result = post.place_hot_or_not_bet(
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
@@ -1723,8 +1731,8 @@ mod test {
 
         (18..45).for_each(|number| {
             let result = post.place_hot_or_not_bet(
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Not,
                 &betting_time,
@@ -1784,8 +1792,9 @@ mod test {
         );
         post.view_stats.total_view_count = 400;
         (0..4).for_each(|number| {
-            post.likes
-                .insert(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0);
+            post.likes.insert(Principal::self_authenticating(
+                &(number as usize).to_ne_bytes(),
+            ));
         });
         assert_eq!(post.likes.len(), 4);
         post.share_count = 0;
@@ -1794,8 +1803,8 @@ mod test {
 
         (0..40).for_each(|number| {
             let result = post.place_hot_or_not_bet(
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
@@ -1816,8 +1825,8 @@ mod test {
 
         (40..68).for_each(|number| {
             let result = post.place_hot_or_not_bet(
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Not,
                 &betting_time,
@@ -1877,8 +1886,9 @@ mod test {
         );
         post.view_stats.total_view_count = 3_500;
         (0..35).for_each(|number| {
-            post.likes
-                .insert(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0);
+            post.likes.insert(Principal::self_authenticating(
+                &(number as usize).to_ne_bytes(),
+            ));
         });
         assert_eq!(post.likes.len(), 35);
         post.share_count = 0;
@@ -1887,8 +1897,8 @@ mod test {
 
         (0..466).for_each(|number| {
             let result = post.place_hot_or_not_bet(
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
@@ -1909,8 +1919,8 @@ mod test {
 
         (466..805).for_each(|number| {
             let result = post.place_hot_or_not_bet(
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Not,
                 &betting_time,
@@ -1970,8 +1980,9 @@ mod test {
         );
         post.view_stats.total_view_count = 15_000;
         (0..600).for_each(|number| {
-            post.likes
-                .insert(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0);
+            post.likes.insert(Principal::self_authenticating(
+                &(number as usize).to_ne_bytes(),
+            ));
         });
         assert_eq!(post.likes.len(), 600);
         post.share_count = 30;
@@ -1980,8 +1991,8 @@ mod test {
 
         (0..1_320).for_each(|number| {
             let result = post.place_hot_or_not_bet(
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
@@ -2002,8 +2013,8 @@ mod test {
 
         (1_320..2_400).for_each(|number| {
             let result = post.place_hot_or_not_bet(
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Not,
                 &betting_time,
@@ -2063,8 +2074,9 @@ mod test {
         );
         post.view_stats.total_view_count = 75_000;
         (0..750).for_each(|number| {
-            post.likes
-                .insert(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0);
+            post.likes.insert(Principal::self_authenticating(
+                &(number as usize).to_ne_bytes(),
+            ));
         });
         assert_eq!(post.likes.len(), 750);
         post.share_count = 15;
@@ -2073,8 +2085,8 @@ mod test {
 
         (0..6_270).for_each(|number| {
             let result = post.place_hot_or_not_bet(
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
@@ -2095,8 +2107,8 @@ mod test {
 
         (6_270..14_250).for_each(|number| {
             let result = post.place_hot_or_not_bet(
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
-                &(PrincipalId::new_self_authenticating(&(number as usize).to_ne_bytes()).0),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
+                &Principal::self_authenticating(&(number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Not,
                 &betting_time,

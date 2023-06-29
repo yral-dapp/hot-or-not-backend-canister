@@ -1,7 +1,7 @@
 use std::time::{Duration, SystemTime};
 
 use candid::Principal;
-use ic_state_machine_tests::{CanisterId, PrincipalId, StateMachine, WasmResult};
+use ic_test_state_machine_client::WasmResult;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
         arg::PlaceBetArg,
@@ -15,10 +15,7 @@ use shared_utils::{
     types::canister_specific::post_cache::error_types::TopPostsFetchError,
 };
 use test_utils::setup::{
-    env::v0::{
-        get_canister_id_of_specific_type_from_principal_id_map,
-        get_initialized_env_with_provisioned_known_canisters,
-    },
+    env::v1::{get_initialized_env_with_provisioned_known_canisters, get_new_state_machine},
     test_constants::{
         get_mock_user_alice_principal_id, get_mock_user_bob_principal_id,
         get_mock_user_charlie_principal_id, get_mock_user_dan_principal_id,
@@ -28,70 +25,71 @@ use test_utils::setup::{
 #[test]
 fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_feed_and_hot_or_not_feed_scores_match_expected_value(
 ) {
-    let state_machine = StateMachine::new();
+    let state_machine = get_new_state_machine();
     let known_principal_map = get_initialized_env_with_provisioned_known_canisters(&state_machine);
-    let user_index_canister_id = get_canister_id_of_specific_type_from_principal_id_map(
-        &known_principal_map,
-        KnownPrincipalType::CanisterIdUserIndex,
-    );
-    let post_cache_canister_id = get_canister_id_of_specific_type_from_principal_id_map(
-        &known_principal_map,
-        KnownPrincipalType::CanisterIdPostCache,
-    );
-    let alice_principal_id = PrincipalId(get_mock_user_alice_principal_id());
-    let bob_principal_id = PrincipalId(get_mock_user_bob_principal_id());
-    let charlie_principal_id = PrincipalId(get_mock_user_charlie_principal_id());
-    let dan_principal_id = PrincipalId(get_mock_user_dan_principal_id());
+    let user_index_canister_id = known_principal_map
+        .get(&KnownPrincipalType::CanisterIdUserIndex)
+        .unwrap();
+    let post_cache_canister_id = known_principal_map
+        .get(&KnownPrincipalType::CanisterIdPostCache)
+        .unwrap();
+    let alice_principal_id = get_mock_user_alice_principal_id();
+    let bob_principal_id = get_mock_user_bob_principal_id();
+    let charlie_principal_id = get_mock_user_charlie_principal_id();
+    let dan_principal_id = get_mock_user_dan_principal_id();
 
-    println!("🧪 user_index_canister_id: {:?}", user_index_canister_id);
+    println!(
+        "🧪 user_index_canister_id: {:?}",
+        user_index_canister_id.to_text()
+    );
 
-    let alice_canister_id = state_machine.execute_ingress_as(
+    let alice_canister_id = state_machine.update_call(
+        *user_index_canister_id,
         alice_principal_id,
-        user_index_canister_id,
         "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer",
         candid::encode_one(()).unwrap(),
     ).map(|reply_payload| {
-        let (alice_canister_id,): (Principal,) = match reply_payload {
-            WasmResult::Reply(payload) => candid::decode_args(&payload).unwrap(),
+        let alice_canister_id: Principal = match reply_payload {
+            WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
             _ => panic!("\n🛑 get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer failed\n"),
         };
         alice_canister_id
     }).unwrap();
 
-    let bob_canister_id = state_machine.execute_ingress_as(
+    let bob_canister_id = state_machine.update_call(
+        *user_index_canister_id,
         bob_principal_id,
-        user_index_canister_id,
         "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer",
         candid::encode_one(()).unwrap(),
     ).map(|reply_payload| {
-        let (bob_canister_id,): (Principal,) = match reply_payload {
-            WasmResult::Reply(payload) => candid::decode_args(&payload).unwrap(),
+        let bob_canister_id: Principal = match reply_payload {
+            WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
             _ => panic!("\n🛑 get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer failed\n"),
         };
         bob_canister_id
     }).unwrap();
 
-    let charlie_canister_id = state_machine.execute_ingress_as(
+    let charlie_canister_id = state_machine.update_call(
+        *user_index_canister_id,
         charlie_principal_id,
-        user_index_canister_id,
         "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer",
         candid::encode_one(()).unwrap(),
     ).map(|reply_payload| {
-        let (charlie_canister_id,): (Principal,) = match reply_payload {
-            WasmResult::Reply(payload) => candid::decode_args(&payload).unwrap(),
+        let charlie_canister_id: Principal = match reply_payload {
+            WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
             _ => panic!("\n🛑 get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer failed\n"),
         };
         charlie_canister_id
     }).unwrap();
 
-    let dan_canister_id = state_machine.execute_ingress_as(
+    let dan_canister_id = state_machine.update_call(
+        *user_index_canister_id,
         dan_principal_id,
-        user_index_canister_id,
         "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer",
         candid::encode_one(()).unwrap(),
     ).map(|reply_payload| {
-        let (dan_canister_id,): (Principal,) = match reply_payload {
-            WasmResult::Reply(payload) => candid::decode_args(&payload).unwrap(),
+        let dan_canister_id: Principal = match reply_payload {
+            WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
             _ => panic!("\n🛑 get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer failed\n"),
         };
         dan_canister_id
@@ -106,16 +104,16 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
 
     // * Post is created by Alice
     let newly_created_post_id = state_machine
-        .execute_ingress_as(
+        .update_call(
+            alice_canister_id,
             alice_principal_id,
-            CanisterId::new(PrincipalId(alice_canister_id)).unwrap(),
             "add_post_v2",
-            candid::encode_args((PostDetailsFromFrontend {
+            candid::encode_one(PostDetailsFromFrontend {
                 description: "This is a fun video to watch".to_string(),
                 hashtags: vec!["fun".to_string(), "video".to_string()],
                 video_uid: "abcd#1234".to_string(),
                 creator_consent_for_inclusion_in_hot_or_not: true,
-            },))
+            })
             .unwrap(),
         )
         .map(|reply_payload| {
@@ -131,8 +129,9 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     println!("🧪 newly_created_post_id: {:?}", newly_created_post_id);
 
     let returned_posts: Vec<PostScoreIndexItem> = state_machine
-        .query(
-            post_cache_canister_id,
+        .query_call(
+            *post_cache_canister_id,
+            Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed",
             candid::encode_args((0 as u64,10 as u64)).unwrap(),
         )
@@ -153,8 +152,9 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
 
     let returned_posts: Vec<PostScoreIndexItem> = state_machine
-        .query(
-            post_cache_canister_id,
+        .query_call(
+            *post_cache_canister_id,
+            Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed",
             candid::encode_args((0 as u64,10 as u64)).unwrap(),
         )
@@ -184,9 +184,9 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
         watch_count: 4,
         percentage_watched: 23,
     };
-    let result = state_machine.execute_ingress_as(
-        PrincipalId(get_mock_user_bob_principal_id()),
-        CanisterId::new(PrincipalId(returned_post.publisher_canister_id)).unwrap(),
+    let result = state_machine.update_call(
+        returned_post.publisher_canister_id,
+        get_mock_user_bob_principal_id(),
         "update_post_add_view_details",
         candid::encode_args((returned_post.post_id, bob_view_details)).unwrap(),
     );
@@ -194,8 +194,9 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     assert!(result.is_ok());
 
     let returned_posts: Vec<PostScoreIndexItem> = state_machine
-        .query(
-            post_cache_canister_id,
+        .query_call(
+            *post_cache_canister_id,
+            Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed",
             candid::encode_args((0 as u64,10 as u64)).unwrap(),
         )
@@ -216,8 +217,9 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
 
     let returned_posts: Vec<PostScoreIndexItem> = state_machine
-        .query(
-            post_cache_canister_id,
+        .query_call(
+            *post_cache_canister_id,
+            Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed",
             candid::encode_args((0 as u64,10 as u64)).unwrap(),
         )
@@ -239,9 +241,9 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
 
     // * Bob likes the post
     let like_status = state_machine
-        .execute_ingress_as(
-            PrincipalId(get_mock_user_bob_principal_id()),
-            CanisterId::new(PrincipalId(returned_post.publisher_canister_id)).unwrap(),
+        .update_call(
+            returned_post.publisher_canister_id,
+            get_mock_user_bob_principal_id(),
             "update_post_toggle_like_status_by_caller",
             candid::encode_one(returned_post.post_id).unwrap(),
         )
@@ -257,8 +259,9 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     assert_eq!(like_status, true);
 
     let returned_posts: Vec<PostScoreIndexItem> = state_machine
-        .query(
-            post_cache_canister_id,
+        .query_call(
+            *post_cache_canister_id,
+            Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed",
             candid::encode_args((0 as u64,10 as u64)).unwrap(),
         )
@@ -279,8 +282,9 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
 
     let returned_posts: Vec<PostScoreIndexItem> = state_machine
-        .query(
-            post_cache_canister_id,
+        .query_call(
+            *post_cache_canister_id,
+            Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed",
             candid::encode_args((0 as u64,10 as u64)).unwrap(),
         )
@@ -309,9 +313,9 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     };
 
     let bet_status = state_machine
-        .execute_ingress_as(
-            PrincipalId(get_mock_user_bob_principal_id()),
-            CanisterId::new(PrincipalId(bob_canister_id)).unwrap(),
+        .update_call(
+            bob_canister_id,
+            get_mock_user_bob_principal_id(),
             "bet_on_currently_viewing_post",
             candid::encode_one(bob_place_bet_arg).unwrap(),
         )
@@ -338,8 +342,9 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     );
 
     let returned_posts: Vec<PostScoreIndexItem> = state_machine
-        .query(
-            post_cache_canister_id,
+        .query_call(
+            *post_cache_canister_id,
+            Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed",
             candid::encode_args((0 as u64,10 as u64)).unwrap(),
         )
@@ -360,8 +365,9 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
 
     let returned_posts: Vec<PostScoreIndexItem> = state_machine
-        .query(
-            post_cache_canister_id,
+        .query_call(
+            *post_cache_canister_id,
+            Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed",
             candid::encode_args((0 as u64,10 as u64)).unwrap(),
         )
@@ -391,9 +397,9 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
         watch_count: 7,
         percentage_watched: 97,
     };
-    let result = state_machine.execute_ingress_as(
-        PrincipalId(get_mock_user_charlie_principal_id()),
-        CanisterId::new(PrincipalId(returned_post.publisher_canister_id)).unwrap(),
+    let result = state_machine.update_call(
+        returned_post.publisher_canister_id,
+        get_mock_user_charlie_principal_id(),
         "update_post_add_view_details",
         candid::encode_args((returned_post.post_id, charlie_view_details)).unwrap(),
     );
@@ -401,8 +407,9 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     assert!(result.is_ok());
 
     let returned_posts: Vec<PostScoreIndexItem> = state_machine
-        .query(
-            post_cache_canister_id,
+        .query_call(
+            *post_cache_canister_id,
+            Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed",
             candid::encode_args((0 as u64,10 as u64)).unwrap(),
         )
@@ -423,8 +430,9 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
 
     let returned_posts: Vec<PostScoreIndexItem> = state_machine
-        .query(
-            post_cache_canister_id,
+        .query_call(
+            *post_cache_canister_id,
+            Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed",
             candid::encode_args((0 as u64,10 as u64)).unwrap(),
         )
@@ -453,9 +461,9 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     };
 
     let bet_status = state_machine
-        .execute_ingress_as(
-            PrincipalId(get_mock_user_charlie_principal_id()),
-            CanisterId::new(PrincipalId(charlie_canister_id)).unwrap(),
+        .update_call(
+            charlie_canister_id,
+            get_mock_user_charlie_principal_id(),
             "bet_on_currently_viewing_post",
             candid::encode_one(charlie_place_bet_arg).unwrap(),
         )
@@ -481,8 +489,9 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     );
 
     let returned_posts: Vec<PostScoreIndexItem> = state_machine
-        .query(
-            post_cache_canister_id,
+        .query_call(
+            *post_cache_canister_id,
+            Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed",
             candid::encode_args((0 as u64,10 as u64)).unwrap(),
         )
@@ -503,8 +512,9 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
 
     let returned_posts: Vec<PostScoreIndexItem> = state_machine
-        .query(
-            post_cache_canister_id,
+        .query_call(
+            *post_cache_canister_id,
+            Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed",
             candid::encode_args((0 as u64,10 as u64)).unwrap(),
         )
@@ -534,9 +544,9 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
         watch_count: 2,
         percentage_watched: 11,
     };
-    let result = state_machine.execute_ingress_as(
-        PrincipalId(get_mock_user_dan_principal_id()),
-        CanisterId::new(PrincipalId(returned_post.publisher_canister_id)).unwrap(),
+    let result = state_machine.update_call(
+        returned_post.publisher_canister_id,
+        get_mock_user_dan_principal_id(),
         "update_post_add_view_details",
         candid::encode_args((returned_post.post_id, dan_view_details)).unwrap(),
     );
@@ -544,8 +554,9 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     assert!(result.is_ok());
 
     let returned_posts: Vec<PostScoreIndexItem> = state_machine
-        .query(
-            post_cache_canister_id,
+        .query_call(
+            *post_cache_canister_id,
+            Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed",
             candid::encode_args((0 as u64,10 as u64)).unwrap(),
         )
@@ -566,8 +577,9 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
 
     let returned_posts: Vec<PostScoreIndexItem> = state_machine
-        .query(
-            post_cache_canister_id,
+        .query_call(
+            *post_cache_canister_id,
+            Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed",
             candid::encode_args((0 as u64,10 as u64)).unwrap(),
         )
@@ -589,9 +601,9 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
 
     // * Dan likes the post
     let like_status = state_machine
-        .execute_ingress_as(
-            PrincipalId(get_mock_user_dan_principal_id()),
-            CanisterId::new(PrincipalId(returned_post.publisher_canister_id)).unwrap(),
+        .update_call(
+            returned_post.publisher_canister_id,
+            get_mock_user_dan_principal_id(),
             "update_post_toggle_like_status_by_caller",
             candid::encode_one(returned_post.post_id).unwrap(),
         )
@@ -607,8 +619,9 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     assert_eq!(like_status, true);
 
     let returned_posts: Vec<PostScoreIndexItem> = state_machine
-        .query(
-            post_cache_canister_id,
+        .query_call(
+            *post_cache_canister_id,
+            Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed",
             candid::encode_args((0 as u64,10 as u64)).unwrap(),
         )
@@ -629,8 +642,9 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
 
     let returned_posts: Vec<PostScoreIndexItem> = state_machine
-        .query(
-            post_cache_canister_id,
+        .query_call(
+            *post_cache_canister_id,
+            Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed",
             candid::encode_args((0 as u64,10 as u64)).unwrap(),
         )
@@ -652,9 +666,9 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
 
     // * Dan shares the post
     let incremented_share_count = state_machine
-        .execute_ingress_as(
-            PrincipalId(get_mock_user_dan_principal_id()),
-            CanisterId::new(PrincipalId(returned_post.publisher_canister_id)).unwrap(),
+        .update_call(
+            returned_post.publisher_canister_id,
+            get_mock_user_dan_principal_id(),
             "update_post_increment_share_count",
             candid::encode_one(returned_post.post_id).unwrap(),
         )
@@ -670,8 +684,9 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     assert_eq!(incremented_share_count, 1);
 
     let returned_posts: Vec<PostScoreIndexItem> = state_machine
-        .query(
-            post_cache_canister_id,
+        .query_call(
+            *post_cache_canister_id,
+            Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed",
             candid::encode_args((0 as u64,10 as u64)).unwrap(),
         )
@@ -692,8 +707,9 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
 
     let returned_posts: Vec<PostScoreIndexItem> = state_machine
-        .query(
-            post_cache_canister_id,
+        .query_call(
+            *post_cache_canister_id,
+            Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed",
             candid::encode_args((0 as u64,10 as u64)).unwrap(),
         )
@@ -722,9 +738,9 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     };
 
     let bet_status = state_machine
-        .execute_ingress_as(
-            PrincipalId(get_mock_user_dan_principal_id()),
-            CanisterId::new(PrincipalId(dan_canister_id)).unwrap(),
+        .update_call(
+            dan_canister_id,
+            get_mock_user_dan_principal_id(),
             "bet_on_currently_viewing_post",
             candid::encode_one(dan_place_bet_arg).unwrap(),
         )
@@ -750,8 +766,9 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     );
 
     let returned_posts: Vec<PostScoreIndexItem> = state_machine
-        .query(
-            post_cache_canister_id,
+        .query_call(
+            *post_cache_canister_id,
+            Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed",
             candid::encode_args((0 as u64,10 as u64)).unwrap(),
         )
@@ -772,8 +789,9 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
 
     let returned_posts: Vec<PostScoreIndexItem> = state_machine
-        .query(
-            post_cache_canister_id,
+        .query_call(
+            *post_cache_canister_id,
+            Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed",
             candid::encode_args((0 as u64,10 as u64)).unwrap(),
         )
@@ -803,9 +821,9 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
         watch_count: 1,
         percentage_watched: 5,
     };
-    let result = state_machine.execute_ingress_as(
-        PrincipalId(get_mock_user_alice_principal_id()),
-        CanisterId::new(PrincipalId(returned_post.publisher_canister_id)).unwrap(),
+    let result = state_machine.update_call(
+        returned_post.publisher_canister_id,
+        get_mock_user_alice_principal_id(),
         "update_post_add_view_details",
         candid::encode_args((returned_post.post_id, alice_view_details)).unwrap(),
     );
@@ -813,8 +831,9 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     assert!(result.is_ok());
 
     let returned_posts: Vec<PostScoreIndexItem> = state_machine
-        .query(
-            post_cache_canister_id,
+        .query_call(
+            *post_cache_canister_id,
+            Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed",
             candid::encode_args((0 as u64,10 as u64)).unwrap(),
         )
@@ -835,8 +854,9 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
 
     let returned_posts: Vec<PostScoreIndexItem> = state_machine
-        .query(
-            post_cache_canister_id,
+        .query_call(
+            *post_cache_canister_id,
+            Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed",
             candid::encode_args((0 as u64,10 as u64)).unwrap(),
         )
@@ -858,9 +878,9 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
 
     // * Alice shares the post
     let incremented_share_count = state_machine
-        .execute_ingress_as(
-            PrincipalId(get_mock_user_alice_principal_id()),
-            CanisterId::new(PrincipalId(returned_post.publisher_canister_id)).unwrap(),
+        .update_call(
+            returned_post.publisher_canister_id,
+            get_mock_user_alice_principal_id(),
             "update_post_increment_share_count",
             candid::encode_one(returned_post.post_id).unwrap(),
         )
@@ -876,8 +896,9 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     assert_eq!(incremented_share_count, 2);
 
     let returned_posts: Vec<PostScoreIndexItem> = state_machine
-        .query(
-            post_cache_canister_id,
+        .query_call(
+            *post_cache_canister_id,
+            Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed",
             candid::encode_args((0 as u64,10 as u64)).unwrap(),
         )
@@ -898,8 +919,9 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
 
     let returned_posts: Vec<PostScoreIndexItem> = state_machine
-        .query(
-            post_cache_canister_id,
+        .query_call(
+            *post_cache_canister_id,
+            Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed",
             candid::encode_args((0 as u64,10 as u64)).unwrap(),
         )
