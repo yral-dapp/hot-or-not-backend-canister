@@ -47,8 +47,9 @@ Burn XTC to cycles operation burns 2B cycles
 
 ## Steps
 
-- Migrate all tests to the latest ic-state-machine-test-client
+- bump dependencies
 - Add a canister_status method for user_index (current canister count and cycle balance)
 - Add auto canister topups if upgrade fails and balance below .5T cycles
 - Add multiple upgrades at a time
+- Add canister upgrades to user_index post_upgrade
 - Remove any controller except itself

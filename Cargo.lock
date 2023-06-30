@@ -158,29 +158,14 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "ciborium"
-version = "0.2.0"
-source = "git+https://github.com/enarx/ciborium?rev=e719537c99b564c3674a56defe53713c702c6f46#e719537c99b564c3674a56defe53713c702c6f46"
-dependencies = [
- "ciborium-io 0.2.0",
- "ciborium-ll 0.2.0",
- "serde",
-]
-
-[[package]]
-name = "ciborium"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "effd91f6c78e5a4ace8a5d3c0b6bfaec9e2baaef55f3efc00e45fb2e477ee926"
 dependencies = [
- "ciborium-io 0.2.1",
- "ciborium-ll 0.2.1",
+ "ciborium-io",
+ "ciborium-ll",
  "serde",
 ]
-
-[[package]]
-name = "ciborium-io"
-version = "0.2.0"
-source = "git+https://github.com/enarx/ciborium?rev=e719537c99b564c3674a56defe53713c702c6f46#e719537c99b564c3674a56defe53713c702c6f46"
 
 [[package]]
 name = "ciborium-io"
@@ -190,20 +175,11 @@ checksum = "cdf919175532b369853f5d5e20b26b43112613fd6fe7aee757e35f7a44642656"
 
 [[package]]
 name = "ciborium-ll"
-version = "0.2.0"
-source = "git+https://github.com/enarx/ciborium?rev=e719537c99b564c3674a56defe53713c702c6f46#e719537c99b564c3674a56defe53713c702c6f46"
-dependencies = [
- "ciborium-io 0.2.0",
- "half",
-]
-
-[[package]]
-name = "ciborium-ll"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "defaa24ecc093c77630e6c15e17c51f5e187bf35ee514f4e2d67baaa96dae22b"
 dependencies = [
- "ciborium-io 0.2.1",
+ "ciborium-io",
  "half",
 ]
 
@@ -273,7 +249,7 @@ name = "data_backup"
 version = "0.1.0"
 dependencies = [
  "candid",
- "ciborium 0.2.0",
+ "ciborium",
  "ic-cdk",
  "ic-cdk-timers",
  "ic-stable-structures",
@@ -567,7 +543,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "adb2db930617e7384a9ce26a2b6ebd1b7eb01da1513336cd82637e0c2119b3ea"
 dependencies = [
  "candid",
- "ciborium 0.2.1",
+ "ciborium",
  "ic-cdk",
  "serde",
  "serde_bytes",
