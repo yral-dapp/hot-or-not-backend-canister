@@ -1,35 +1,19 @@
+use std::time::SystemTime;
+
+use candid::Principal;
 use ic_cdk::api::management_canister::{
     main::{self, CanisterInstallMode},
     provisional::CanisterIdRecord,
 };
 use shared_utils::{
     canister_specific::individual_user_template::types::arg::IndividualUserTemplateInitArgs,
-    common::{types::known_principal::KnownPrincipalType, utils::system_time},
-    constant::DYNAMIC_CANISTER_DEFAULT_CREATION_BALANCE,
+    common::utils::system_time,
+    constant::{CYCLES_THRESHOLD_TO_INITIATE_RECHARGE, INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT},
 };
 
-use crate::{
-    data_model::canister_upgrade::upgrade_status::UpgradeStatus, util::canister_management,
-    CANISTER_DATA,
-};
+use crate::{data_model::CanisterData, util::canister_management, CANISTER_DATA};
 
-#[ic_cdk::update]
-#[candid::candid_method(update)]
-async fn update_user_index_upgrade_user_canisters_with_latest_wasm() -> String {
-    let api_caller = ic_cdk::caller();
-
-    let known_principal_ids = CANISTER_DATA
-        .with(|canister_data_ref_cell| canister_data_ref_cell.borrow().known_principal_ids.clone());
-
-    if known_principal_ids
-        .get(&KnownPrincipalType::UserIdGlobalSuperAdmin)
-        .unwrap()
-        .clone()
-        != api_caller
-    {
-        return "Unauthorized caller".to_string();
-    };
-
+pub async fn upgrade_user_canisters_with_latest_wasm() {
     let mut upgrade_count = 0;
     let mut failed_canister_ids = Vec::new();
 
@@ -48,64 +32,29 @@ async fn update_user_index_upgrade_user_canisters_with_latest_wasm() -> String {
     });
 
     for (user_principal_id, user_canister_id) in user_principal_id_to_canister_id_map.iter() {
-        match canister_management::upgrade_individual_user_canister(
-            user_canister_id.clone(),
-            CanisterInstallMode::Upgrade,
-            IndividualUserTemplateInitArgs {
-                known_principal_ids: None,
-                profile_owner: None,
-                upgrade_version_number: Some(saved_upgrade_status.version_number + 1),
-            },
-        )
-        .await
-        {
-            Ok(_) => {
-                upgrade_count += 1;
-            }
-            Err(e) => {
-                let response_result = main::canister_status(CanisterIdRecord {
-                    canister_id: user_canister_id.clone(),
-                })
-                .await;
+        let is_canister_below_threshold_balance =
+            is_canister_below_threshold_balance(user_canister_id).await;
 
-                if response_result.is_err() {
-                    main::deposit_cycles(
-                        CanisterIdRecord {
-                            canister_id: user_canister_id.clone(),
-                        },
-                        DYNAMIC_CANISTER_DEFAULT_CREATION_BALANCE,
-                    )
-                    .await
-                    .unwrap();
-                }
+        if is_canister_below_threshold_balance {
+            let recharge_result = recharge_canister(user_canister_id).await;
 
-                match canister_management::upgrade_individual_user_canister(
-                    user_canister_id.clone(),
-                    CanisterInstallMode::Upgrade,
-                    IndividualUserTemplateInitArgs {
-                        known_principal_ids: None,
-                        profile_owner: None,
-                        upgrade_version_number: Some(saved_upgrade_status.version_number + 1),
-                    },
-                )
-                .await
-                {
-                    Ok(_) => {
-                        upgrade_count += 1;
-                    }
-                    Err(_) => {
-                        ic_cdk::print(format!(
-                            "🥫 Failed to upgrade canister {:?} belonging to user {:?} with error: {:?}",
-                            user_canister_id.to_text(),
-                            user_principal_id.to_text(),
-                            e
-                        ));
-                        failed_canister_ids
-                            .push((user_principal_id.clone(), user_canister_id.clone()));
-                    }
-                };
+            if recharge_result.is_err() {
+                let err = recharge_result.err().unwrap();
+                failed_canister_ids.push((*user_principal_id, *user_canister_id, err));
+                continue;
             }
         }
+
+        let upgrade_result =
+            upgrade_user_canister(user_canister_id, saved_upgrade_status.version_number).await;
+
+        if upgrade_result.is_err() {
+            let err = upgrade_result.err().unwrap();
+            failed_canister_ids.push((*user_principal_id, *user_canister_id, err));
+            continue;
+        }
+
+        upgrade_count += 1;
 
         // * Enable for data backup
         // let upgrade_response: CallResult<()> = call::call(
@@ -117,28 +66,84 @@ async fn update_user_index_upgrade_user_canisters_with_latest_wasm() -> String {
         // upgrade_response.ok();
 
         CANISTER_DATA.with(|canister_data_ref_cell| {
-            let mut last_run_upgrade_status = canister_data_ref_cell
-                .borrow_mut()
-                .last_run_upgrade_status
-                .clone();
-
-            last_run_upgrade_status.successful_upgrade_count = upgrade_count;
-            last_run_upgrade_status.failed_canister_ids = failed_canister_ids.clone();
-
-            canister_data_ref_cell.borrow_mut().last_run_upgrade_status = last_run_upgrade_status;
+            update_upgrade_status(
+                &mut canister_data_ref_cell.borrow_mut(),
+                upgrade_count,
+                &failed_canister_ids,
+                None,
+                None,
+            );
         });
     }
 
-    let new_upgrade_status = UpgradeStatus {
-        version_number: saved_upgrade_status.version_number + 1,
-        last_run_on: system_time::get_current_system_time_from_ic(),
-        successful_upgrade_count: upgrade_count,
-        failed_canister_ids,
-    };
-
     CANISTER_DATA.with(|canister_data_ref_cell| {
-        canister_data_ref_cell.borrow_mut().last_run_upgrade_status = new_upgrade_status.clone();
+        update_upgrade_status(
+            &mut canister_data_ref_cell.borrow_mut(),
+            upgrade_count,
+            &failed_canister_ids,
+            Some(saved_upgrade_status.version_number + 1),
+            Some(system_time::get_current_system_time_from_ic()),
+        );
     });
+}
 
-    return new_upgrade_status.to_string();
+async fn is_canister_below_threshold_balance(canister_id: &Principal) -> bool {
+    let response: Result<(u128,), (_, _)> =
+        ic_cdk::call(*canister_id, "get_user_caniser_cycle_balance", ()).await;
+
+    if response.is_err() {
+        return true;
+    }
+
+    let (balance,): (u128,) = response.unwrap();
+
+    if balance < CYCLES_THRESHOLD_TO_INITIATE_RECHARGE {
+        return true;
+    }
+
+    return false;
+}
+
+async fn recharge_canister(canister_id: &Principal) -> Result<(), String> {
+    Ok(main::deposit_cycles(
+        CanisterIdRecord {
+            canister_id: *canister_id,
+        },
+        INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT,
+    )
+    .await
+    .map_err(|e| e.1)?)
+}
+
+async fn upgrade_user_canister(canister_id: &Principal, version_number: u64) -> Result<(), String> {
+    Ok(canister_management::upgrade_individual_user_canister(
+        *canister_id,
+        CanisterInstallMode::Upgrade,
+        IndividualUserTemplateInitArgs {
+            known_principal_ids: None,
+            profile_owner: None,
+            upgrade_version_number: Some(version_number + 1),
+        },
+    )
+    .await
+    .map_err(|e| e.1)?)
+}
+
+fn update_upgrade_status(
+    canister_data: &mut CanisterData,
+    upgrade_count: u32,
+    failed_canister_ids: &Vec<(Principal, Principal, String)>,
+    version_number: Option<u64>,
+    last_run_on: Option<SystemTime>,
+) {
+    let mut last_run_upgrade_status = canister_data.last_run_upgrade_status.clone();
+
+    last_run_upgrade_status.successful_upgrade_count = upgrade_count;
+    last_run_upgrade_status.failed_canister_ids = failed_canister_ids.clone();
+    last_run_upgrade_status.version_number =
+        version_number.unwrap_or(canister_data.last_run_upgrade_status.version_number);
+    last_run_upgrade_status.last_run_on =
+        last_run_on.unwrap_or(canister_data.last_run_upgrade_status.last_run_on);
+
+    canister_data.last_run_upgrade_status = last_run_upgrade_status;
 }

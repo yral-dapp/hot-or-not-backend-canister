@@ -3,8 +3,12 @@ use std::time::Duration;
 use shared_utils::common::utils::stable_memory_serializer_deserializer;
 
 use crate::{
-    api::well_known_principal::update_locally_stored_well_known_principals,
-    data_model::CanisterData, CANISTER_DATA,
+    api::{
+        upgrade_individual_user_template::update_user_index_upgrade_user_canisters_with_latest_wasm,
+        well_known_principal::update_locally_stored_well_known_principals,
+    },
+    data_model::CanisterData,
+    CANISTER_DATA,
 };
 
 use super::pre_upgrade::BUFFER_SIZE_BYTES;
@@ -13,6 +17,7 @@ use super::pre_upgrade::BUFFER_SIZE_BYTES;
 fn post_upgrade() {
     restore_data_from_stable_memory();
     refetch_well_known_principals();
+    upgrade_all_indexed_user_canisters();
 }
 
 fn restore_data_from_stable_memory() {
@@ -35,5 +40,12 @@ const DELAY_FOR_REFETCHING_WELL_KNOWN_PRINCIPALS: Duration = Duration::from_secs
 fn refetch_well_known_principals() {
     ic_cdk_timers::set_timer(DELAY_FOR_REFETCHING_WELL_KNOWN_PRINCIPALS, || {
         ic_cdk::spawn(update_locally_stored_well_known_principals::update_locally_stored_well_known_principals())
+    });
+}
+
+const DELAY_FOR_UPGRADING_ALL_INDEXED_USER_CANISTERS: Duration = Duration::from_secs(10);
+fn upgrade_all_indexed_user_canisters() {
+    ic_cdk_timers::set_timer(DELAY_FOR_UPGRADING_ALL_INDEXED_USER_CANISTERS, || {
+        ic_cdk::spawn(update_user_index_upgrade_user_canisters_with_latest_wasm::upgrade_user_canisters_with_latest_wasm())
     });
 }

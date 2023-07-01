@@ -11,7 +11,7 @@ pub struct UpgradeStatus {
     pub version_number: u64,
     pub last_run_on: SystemTime,
     pub successful_upgrade_count: u32,
-    pub failed_canister_ids: Vec<(Principal, Principal)>,
+    pub failed_canister_ids: Vec<(Principal, Principal, String)>,
 }
 
 impl Display for UpgradeStatus {

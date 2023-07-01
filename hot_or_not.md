@@ -45,11 +45,8 @@
 
 Burn XTC to cycles operation burns 2B cycles
 
-## Steps
+## Next Items
 
-- bump dependencies
-- Add a canister_status method for user_index (current canister count and cycle balance)
-- Add auto canister topups if upgrade fails and balance below .5T cycles
-- Add multiple upgrades at a time
-- Add canister upgrades to user_index post_upgrade
 - Remove any controller except itself
+- Add additional known canisters for sns root and governance and ensure that canister upgrade parameters retain existing entries and only upsert new entries
+- Add multiple upgrades at a time

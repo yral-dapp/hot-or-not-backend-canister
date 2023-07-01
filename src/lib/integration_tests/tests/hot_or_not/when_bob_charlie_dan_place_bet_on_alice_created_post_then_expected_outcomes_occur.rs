@@ -3,11 +3,14 @@ use std::time::Duration;
 use candid::Principal;
 use ic_test_state_machine_client::WasmResult;
 use shared_utils::{
-    canister_specific::individual_user_template::types::{
-        arg::PlaceBetArg,
-        error::BetOnCurrentlyViewingPostError,
-        hot_or_not::{BetDirection, BetOutcomeForBetMaker, BettingStatus},
-        post::PostDetailsFromFrontend,
+    canister_specific::{
+        individual_user_template::types::{
+            arg::PlaceBetArg,
+            error::BetOnCurrentlyViewingPostError,
+            hot_or_not::{BetDirection, BetOutcomeForBetMaker, BettingStatus},
+            post::PostDetailsFromFrontend,
+        },
+        user_index::types::args::UserIndexInitArgs,
     },
     common::types::{
         known_principal::KnownPrincipalType,
@@ -22,9 +25,9 @@ use shared_utils::{
 use test_utils::setup::{
     env::v1::{get_initialized_env_with_provisioned_known_canisters, get_new_state_machine},
     test_constants::{
-        get_global_super_admin_principal_id_v1, get_mock_user_alice_principal_id,
-        get_mock_user_bob_principal_id, get_mock_user_charlie_principal_id,
-        get_mock_user_dan_principal_id,
+        get_canister_wasm, get_global_super_admin_principal_id_v1,
+        get_mock_user_alice_principal_id, get_mock_user_bob_principal_id,
+        get_mock_user_charlie_principal_id, get_mock_user_dan_principal_id,
     },
 };
 
@@ -267,25 +270,20 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
     );
 
     // * Restart their canisters
-    let response = state_machine
-        .update_call(
+    state_machine
+        .upgrade_canister(
             user_index_canister_id,
-            get_global_super_admin_principal_id_v1(),
-            "update_user_index_upgrade_user_canisters_with_latest_wasm",
-            candid::encode_args(()).unwrap(),
+            get_canister_wasm(KnownPrincipalType::CanisterIdUserIndex),
+            candid::encode_one(UserIndexInitArgs {
+                ..Default::default()
+            })
+            .unwrap(),
+            Some(get_global_super_admin_principal_id_v1()),
         )
-        .map(|reply_payload| {
-            let bet_status: String = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!(
-                    "\n🛑 update_user_index_upgrade_user_canisters_with_latest_wasm failed\n"
-                ),
-            };
-            bet_status
-        })
         .unwrap();
 
-    println!("🧪 response: {}", response);
+    state_machine.advance_time(Duration::from_secs(30));
+    state_machine.tick();
 
     // * advance time to the end of the first slot and then 5 minutes
     state_machine.advance_time(Duration::from_secs(60 * (60 + 5)));

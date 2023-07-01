@@ -1,10 +1,16 @@
+use std::time::Duration;
+
 use candid::Principal;
-use ic_cdk::api::management_canister::main::CanisterStatusResponse;
 use ic_test_state_machine_client::WasmResult;
-use shared_utils::common::types::known_principal::KnownPrincipalType;
+use shared_utils::{
+    canister_specific::user_index::types::args::UserIndexInitArgs,
+    common::types::known_principal::KnownPrincipalType,
+};
 use test_utils::setup::{
     env::v1::{get_initialized_env_with_provisioned_known_canisters, get_new_state_machine},
-    test_constants::{get_global_super_admin_principal_id_v1, get_mock_user_alice_principal_id},
+    test_constants::{
+        get_canister_wasm, get_global_super_admin_principal_id_v1, get_mock_user_alice_principal_id,
+    },
 };
 
 #[test]
@@ -32,17 +38,17 @@ fn when_canister_cycle_balance_is_below_the_configured_or_freezing_threshold_the
 
     let alice_starting_cycle_balance = state_machine
         .update_call(
-            *user_index_canister_id,
-            get_global_super_admin_principal_id_v1(),
-            "get_canister_status_from_management_canister",
-            candid::encode_one(alice_canister_id).unwrap(),
+            alice_canister_id,
+            Principal::anonymous(),
+            "get_user_caniser_cycle_balance",
+            candid::encode_one(()).unwrap(),
         )
         .map(|reply_payload| {
-            let response: Result<CanisterStatusResponse, String> = match reply_payload {
+            let response: u128 = match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_canister_status_from_management_canister failed\n"),
+                _ => panic!("\n🛑 get_user_caniser_cycle_balance failed\n"),
             };
-            response.unwrap().cycles
+            response
         })
         .unwrap();
 
@@ -54,72 +60,70 @@ fn when_canister_cycle_balance_is_below_the_configured_or_freezing_threshold_the
     state_machine
         .update_call(
             alice_canister_id,
-            get_global_super_admin_principal_id_v1(),
+            *user_index_canister_id,
             "return_cycles_to_user_index_canister",
-            candid::encode_one(()).unwrap(),
-        )
-        .unwrap();
-    state_machine
-        .update_call(
-            alice_canister_id,
-            get_global_super_admin_principal_id_v1(),
-            "return_cycles_to_user_index_canister",
-            candid::encode_one(()).unwrap(),
+            candid::encode_one(Some(1_000_000_000_000 as u128)).unwrap(),
         )
         .unwrap();
 
     let alice_reduced_cycle_balance = state_machine
         .update_call(
-            *user_index_canister_id,
-            get_global_super_admin_principal_id_v1(),
-            "get_canister_status_from_management_canister",
-            candid::encode_one(alice_canister_id).unwrap(),
+            alice_canister_id,
+            Principal::anonymous(),
+            "get_user_caniser_cycle_balance",
+            candid::encode_one(()).unwrap(),
         )
         .map(|reply_payload| {
-            let response: Result<CanisterStatusResponse, String> = match reply_payload {
+            let response: u128 = match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_canister_status_from_management_canister failed\n"),
+                _ => panic!("\n🛑 get_user_caniser_cycle_balance failed\n"),
             };
-            response.unwrap().cycles
+            response
         })
         .unwrap();
-
-    assert!(alice_starting_cycle_balance > alice_reduced_cycle_balance);
 
     println!(
         "🧪 alice_reduced_cycle_balance: {}",
         alice_reduced_cycle_balance
     );
 
+    assert!(alice_starting_cycle_balance > alice_reduced_cycle_balance);
+
     state_machine
-        .update_call(
+        .upgrade_canister(
             *user_index_canister_id,
-            get_global_super_admin_principal_id_v1(),
-            "topup_canisters_that_need_it",
-            candid::encode_one(()).unwrap(),
+            get_canister_wasm(KnownPrincipalType::CanisterIdUserIndex),
+            candid::encode_one(UserIndexInitArgs {
+                ..Default::default()
+            })
+            .unwrap(),
+            Some(get_global_super_admin_principal_id_v1()),
         )
         .unwrap();
 
-    let alice_topped_up_cycle_balance = state_machine
+    state_machine.advance_time(Duration::from_secs(30));
+    state_machine.tick();
+
+    let alice_cycle_balance_after_user_index_upgrade = state_machine
         .update_call(
-            *user_index_canister_id,
-            get_global_super_admin_principal_id_v1(),
-            "get_canister_status_from_management_canister",
-            candid::encode_one(alice_canister_id).unwrap(),
+            alice_canister_id,
+            Principal::anonymous(),
+            "get_user_caniser_cycle_balance",
+            candid::encode_one(()).unwrap(),
         )
         .map(|reply_payload| {
-            let response: Result<CanisterStatusResponse, String> = match reply_payload {
+            let response: u128 = match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_canister_status_from_management_canister failed\n"),
+                _ => panic!("\n🛑 get_user_caniser_cycle_balance failed\n"),
             };
-            response.unwrap().cycles
+            response
         })
         .unwrap();
 
-    assert!(alice_reduced_cycle_balance < alice_topped_up_cycle_balance);
+    assert!(alice_cycle_balance_after_user_index_upgrade > 1_000_000_000_000);
 
     println!(
-        "🧪 alice_topped_up_cycle_balance: {}",
-        alice_topped_up_cycle_balance
+        "🧪 alice_cycle_balance_after_user_index_upgrade: {}",
+        alice_cycle_balance_after_user_index_upgrade
     );
 }

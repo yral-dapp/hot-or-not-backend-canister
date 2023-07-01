@@ -12,4 +12,3 @@ dfx canister install configuration --network ic --mode upgrade --argument "(reco
 dfx canister install data_backup --network ic --mode upgrade --argument "(record {})"
 dfx canister install post_cache --network ic --mode upgrade --argument "(record {})"
 dfx canister install user_index --network ic --mode upgrade --argument "(record {})"
-dfx canister call user_index update_user_index_upgrade_user_canisters_with_latest_wasm --network ic --async
