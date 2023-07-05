@@ -1,0 +1,1 @@
+pub mod on_every_upgrade_fetch_the_latest_list_of_well_known_principals_and_update_canisters;

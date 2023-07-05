@@ -80,7 +80,6 @@ pub fn get_roles_for_principal_id_v2(
 mod test {
     use std::collections::HashMap;
     use test_utils::setup::test_constants::{
-        get_bob_principal_id, get_global_super_admin_principal_id,
         get_global_super_admin_principal_id_v1, get_mock_user_alice_principal_id,
         get_mock_user_bob_principal_id,
     };
@@ -120,7 +119,7 @@ mod test {
             &mut user_id_access_control_map,
             user_to_add_to,
             role_to_add,
-            get_global_super_admin_principal_id().0,
+            get_global_super_admin_principal_id_v1(),
         );
 
         let result = get_roles_for_principal_id_v2(&user_id_access_control_map, user_to_add_to);
@@ -133,7 +132,7 @@ mod test {
             &mut user_id_access_control_map,
             user_to_add,
             role_to_add,
-            get_bob_principal_id().0,
+            get_mock_user_bob_principal_id(),
         );
         let result = get_roles_for_principal_id_v2(&user_id_access_control_map, user_to_add);
         assert!(!result.contains(&UserAccessRole::CanisterAdmin));

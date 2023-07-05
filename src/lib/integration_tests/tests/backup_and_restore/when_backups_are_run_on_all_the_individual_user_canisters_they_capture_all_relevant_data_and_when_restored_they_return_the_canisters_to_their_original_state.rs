@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use candid::Principal;
 use ic_test_state_machine_client::WasmResult;
 use shared_utils::{
@@ -8,6 +10,7 @@ use shared_utils::{
             post::{PostDetailsForFrontend, PostDetailsFromFrontend},
             profile::UserProfileUpdateDetailsFromFrontend,
         },
+        user_index::types::args::UserIndexInitArgs,
     },
     common::types::known_principal::KnownPrincipalType,
 };
@@ -246,13 +249,19 @@ fn when_backups_are_run_on_all_the_individual_user_canisters_they_capture_all_re
     assert_eq!(bob_first_post_detail.video_uid, "bob-video-0");
 
     state_machine
-        .update_call(
+        .upgrade_canister(
             user_index_canister_id,
-            get_global_super_admin_principal_id_v1(),
-            "update_user_index_upgrade_user_canisters_with_latest_wasm",
-            candid::encode_one(()).unwrap(),
+            get_canister_wasm(KnownPrincipalType::CanisterIdUserIndex),
+            candid::encode_one(UserIndexInitArgs {
+                ..Default::default()
+            })
+            .unwrap(),
+            Some(get_global_super_admin_principal_id_v1()),
         )
         .unwrap();
+
+    state_machine.advance_time(Duration::from_secs(30));
+    state_machine.tick();
 
     state_machine
         .update_call(
@@ -264,13 +273,19 @@ fn when_backups_are_run_on_all_the_individual_user_canisters_they_capture_all_re
         .unwrap();
 
     state_machine
-        .update_call(
+        .upgrade_canister(
             user_index_canister_id,
-            get_global_super_admin_principal_id_v1(),
-            "update_user_index_upgrade_user_canisters_with_latest_wasm",
-            candid::encode_one(()).unwrap(),
+            get_canister_wasm(KnownPrincipalType::CanisterIdUserIndex),
+            candid::encode_one(UserIndexInitArgs {
+                ..Default::default()
+            })
+            .unwrap(),
+            Some(get_global_super_admin_principal_id_v1()),
         )
         .unwrap();
+
+    state_machine.advance_time(Duration::from_secs(30));
+    state_machine.tick();
 
     let backup_statistics = state_machine
         .query_call(

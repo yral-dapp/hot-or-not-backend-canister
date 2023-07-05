@@ -12,11 +12,10 @@ members = [
 
 [workspace.dependencies]
 candid = "0.8.4"
-ciborium = { git = "https://github.com/enarx/ciborium", rev = "e719537c99b564c3674a56defe53713c702c6f46" }
+ciborium = "0.2.1"
 ic-cdk = "0.8.1"
 ic-cdk-timers = "0.2.0"
 ic-stable-structures = "0.5.4"
-ic-state-machine-tests = { git = "https://github.com/dfinity/ic", rev = "36f4a1c2903aed012b95b3b073e052c4036aef09" }
 ic-test-state-machine-client = "2.2.1"
 rmp-serde = "1.1.1"
 serde = "1.0.164"

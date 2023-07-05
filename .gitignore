@@ -9,3 +9,4 @@ quill
 **/*.pem
 sns-testing/**
 msg.json
+candid/**

@@ -44,3 +44,9 @@
 `dfx canister --network=ic call aanaa-xaaaa-aaaah-aaeiq-cai burn "(record { canister_id= principal \"$(dfx identity get-wallet --network ic)\"; amount= (1000000000000:nat64)})"`
 
 Burn XTC to cycles operation burns 2B cycles
+
+## Next Items
+
+- Remove any controller except itself
+- Add additional known canisters for sns root and governance and ensure that canister upgrade parameters retain existing entries and only upsert new entries
+- Add multiple upgrades at a time

@@ -1,96 +1,72 @@
 use candid::Principal;
-use ic_state_machine_tests::{CanisterId, Cycles, PrincipalId};
+use ic_cdk::api::management_canister::provisional::CanisterId;
 use shared_utils::common::types::known_principal::KnownPrincipalType;
 use std::{fs::File, io::Read, path::PathBuf};
 
 pub mod v1;
 
-pub const CANISTER_INITIAL_CYCLES_FOR_SPAWNING_CANISTERS: Cycles = Cycles::new(20_000_000_000_000); // 20T
-pub const CANISTER_INITIAL_CYCLES_FOR_NON_SPAWNING_CANISTERS: Cycles =
-    Cycles::new(2_000_000_000_000); // 2T
-
-pub fn get_global_super_admin_principal_id() -> PrincipalId {
-    PrincipalId::new_self_authenticating(&[0])
-}
-
 pub fn get_global_super_admin_principal_id_v1() -> Principal {
-    PrincipalId::new_self_authenticating(&[0]).0
-}
-
-pub fn get_alice_principal_id() -> PrincipalId {
-    PrincipalId::new_self_authenticating(&[1])
+    Principal::self_authenticating(&[0])
 }
 
 pub fn get_mock_user_alice_principal_id() -> Principal {
-    PrincipalId::new_self_authenticating(&[1]).0
-}
-
-pub fn get_bob_principal_id() -> PrincipalId {
-    PrincipalId::new_self_authenticating(&[2])
+    Principal::self_authenticating(&[1])
 }
 
 pub fn get_mock_user_bob_principal_id() -> Principal {
-    PrincipalId::new_self_authenticating(&[2]).0
-}
-
-pub fn get_charlie_principal_id() -> PrincipalId {
-    PrincipalId::new_self_authenticating(&[3])
+    Principal::self_authenticating(&[2])
 }
 
 pub fn get_mock_user_charlie_principal_id() -> Principal {
-    PrincipalId::new_self_authenticating(&[3]).0
-}
-
-pub fn get_dan_principal_id() -> PrincipalId {
-    PrincipalId::new_self_authenticating(&[4])
+    Principal::self_authenticating(&[3])
 }
 
 pub fn get_mock_user_dan_principal_id() -> Principal {
-    PrincipalId::new_self_authenticating(&[4]).0
+    Principal::self_authenticating(&[4])
 }
 
 pub fn get_mock_canister_id_post_cache() -> Principal {
-    CanisterId::from_u64(0).get().0
+    CanisterId::from_slice(&(0 as usize).to_ne_bytes())
 }
 
 pub fn get_mock_canister_id_root() -> Principal {
-    CanisterId::from_u64(2).get().0
+    CanisterId::from_slice(&(2 as usize).to_ne_bytes())
 }
 
 pub fn get_mock_canister_id_sns() -> Principal {
-    CanisterId::from_u64(3).get().0
+    CanisterId::from_slice(&(3 as usize).to_ne_bytes())
 }
 
 pub fn get_mock_canister_id_topic_cache() -> Principal {
-    CanisterId::from_u64(4).get().0
+    CanisterId::from_slice(&(4 as usize).to_ne_bytes())
 }
 
 pub fn get_mock_canister_id_user_index() -> Principal {
-    CanisterId::from_u64(5).get().0
+    CanisterId::from_slice(&(5 as usize).to_ne_bytes())
 }
 
 pub fn get_mock_canister_id_configuration() -> Principal {
-    CanisterId::from_u64(6).get().0
+    CanisterId::from_slice(&(6 as usize).to_ne_bytes())
 }
 
 pub fn get_mock_canister_id_data_backup() -> Principal {
-    CanisterId::from_u64(7).get().0
+    CanisterId::from_slice(&(7 as usize).to_ne_bytes())
 }
 
 pub fn get_mock_user_alice_canister_id() -> Principal {
-    CanisterId::from_u64(8).get().0
+    CanisterId::from_slice(&(8 as usize).to_ne_bytes())
 }
 
 pub fn get_mock_user_bob_canister_id() -> Principal {
-    CanisterId::from_u64(9).get().0
+    CanisterId::from_slice(&(9 as usize).to_ne_bytes())
 }
 
 pub fn get_mock_user_charlie_canister_id() -> Principal {
-    CanisterId::from_u64(10).get().0
+    CanisterId::from_slice(&(10 as usize).to_ne_bytes())
 }
 
 pub fn get_mock_user_dan_canister_id() -> Principal {
-    CanisterId::from_u64(11).get().0
+    CanisterId::from_slice(&(11 as usize).to_ne_bytes())
 }
 
 pub fn get_user_index_canister_wasm() -> Vec<u8> {

@@ -1,29 +1,17 @@
 use ic_cdk::api::management_canister::{main, provisional::CanisterIdRecord};
 use shared_utils::{
-    common::types::known_principal::KnownPrincipalType, constant::RECHARGE_CYCLES_AMOUNT,
+    common::types::known_principal::KnownPrincipalType,
+    constant::INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT,
 };
 
 use crate::CANISTER_DATA;
 
 #[ic_cdk::update]
 #[candid::candid_method(update)]
-async fn return_cycles_to_user_index_canister() {
+async fn return_cycles_to_user_index_canister(cycle_amount: Option<u128>) {
     let api_caller = ic_cdk::caller();
 
-    let global_controller_principal_id = CANISTER_DATA.with(|canister_data_ref_cell| {
-        canister_data_ref_cell
-            .borrow()
-            .known_principal_ids
-            .get(&KnownPrincipalType::UserIdGlobalSuperAdmin)
-            .cloned()
-            .unwrap()
-    });
-
-    if api_caller != global_controller_principal_id {
-        return;
-    }
-
-    let user_index_canister_principal_id = CANISTER_DATA.with(|canister_data_ref_cell| {
+    let user_index_canister_id = CANISTER_DATA.with(|canister_data_ref_cell| {
         canister_data_ref_cell
             .borrow()
             .known_principal_ids
@@ -32,11 +20,15 @@ async fn return_cycles_to_user_index_canister() {
             .unwrap()
     });
 
+    if api_caller != user_index_canister_id {
+        return;
+    }
+
     main::deposit_cycles(
         CanisterIdRecord {
-            canister_id: user_index_canister_principal_id,
+            canister_id: user_index_canister_id,
         },
-        RECHARGE_CYCLES_AMOUNT,
+        cycle_amount.unwrap_or(INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT / 2),
     )
     .await
     .unwrap();

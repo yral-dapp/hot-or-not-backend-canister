@@ -1,19 +1,4 @@
 type CanisterInstallMode = variant { reinstall; upgrade; install };
-type CanisterStatusResponse = record {
-  status : CanisterStatusType;
-  memory_size : nat;
-  cycles : nat;
-  settings : DefiniteCanisterSettings;
-  idle_cycles_burned_per_day : nat;
-  module_hash : opt vec nat8;
-};
-type CanisterStatusType = variant { stopped; stopping; running };
-type DefiniteCanisterSettings = record {
-  freezing_threshold : nat;
-  controllers : vec principal;
-  memory_allocation : nat;
-  compute_allocation : nat;
-};
 type KnownPrincipalType = variant {
   CanisterIdUserIndex;
   CanisterIdConfiguration;
@@ -25,8 +10,7 @@ type KnownPrincipalType = variant {
   CanisterIdSNSController;
   UserIdGlobalSuperAdmin;
 };
-type Result = variant { Ok : CanisterStatusResponse; Err : text };
-type Result_1 = variant { Ok; Err : SetUniqueUsernameError };
+type Result = variant { Ok; Err : SetUniqueUsernameError };
 type SetUniqueUsernameError = variant {
   UsernameAlreadyTaken;
   SendingCanisterDoesNotMatchUserCanisterId;
@@ -39,7 +23,7 @@ type SystemTime = record {
 type UpgradeStatus = record {
   version_number : nat64;
   last_run_on : SystemTime;
-  failed_canister_ids : vec record { principal; principal };
+  failed_canister_ids : vec record { principal; principal; text };
   successful_upgrade_count : nat32;
 };
 type UserAccessRole = variant {
@@ -54,7 +38,6 @@ type UserIndexInitArgs = record {
 };
 service : (UserIndexInitArgs) -> {
   backup_all_individual_user_canisters : () -> ();
-  get_canister_status_from_management_canister : (principal) -> (Result);
   get_index_details_is_user_name_taken : (text) -> (bool) query;
   get_index_details_last_upgrade_status : () -> (UpgradeStatus) query;
   get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer : (
@@ -64,6 +47,8 @@ service : (UserIndexInitArgs) -> {
   get_user_canister_id_from_user_principal_id : (principal) -> (
       opt principal,
     ) query;
+  get_user_index_canister_count : () -> (nat64);
+  get_user_index_canister_cycle_balance : () -> (nat) query;
   get_well_known_principal_value : (KnownPrincipalType) -> (
       opt principal,
     ) query;
@@ -72,15 +57,10 @@ service : (UserIndexInitArgs) -> {
       principal,
       text,
     ) -> ();
-  retry_upgrade_for_canisters_that_failed_upgrade_with_the_latest_wasm : () -> (
-      vec record { principal; principal; text },
-    );
-  topup_canisters_that_need_it : () -> ();
   update_index_with_unique_user_name_corresponding_to_user_principal_id : (
       text,
       principal,
-    ) -> (Result_1);
-  update_user_index_upgrade_user_canisters_with_latest_wasm : () -> (text);
+    ) -> (Result);
   upgrade_specific_individual_user_canister_with_latest_wasm : (
       principal,
       principal,

@@ -19,8 +19,7 @@ fn get_user_roles_impl(principal_id: Principal, heap_data: &HeapData) -> Vec<Use
 mod test {
     use shared_utils::access_control::UserAccessRole;
     use test_utils::setup::test_constants::{
-        get_global_super_admin_principal_id, get_global_super_admin_principal_id_v1,
-        get_mock_user_alice_principal_id,
+        get_global_super_admin_principal_id_v1, get_mock_user_alice_principal_id,
     };
 
     use crate::data::heap_data::HeapData;
@@ -41,7 +40,7 @@ mod test {
 
         assert_eq!(user_roles, vec![]);
 
-        let principal_id = get_global_super_admin_principal_id().0;
+        let principal_id = get_global_super_admin_principal_id_v1();
         let user_roles = super::get_user_roles_impl(principal_id, &heap_data);
         assert_eq!(
             user_roles,
