@@ -1,7 +1,7 @@
 use crate::CANISTER_DATA;
 
-#[ic_cdk::update]
-#[candid::candid_method(update)]
+#[ic_cdk::query]
+#[candid::candid_method(query)]
 fn get_user_index_canister_count() -> usize {
     CANISTER_DATA.with(|canister_data_ref_cell| {
         canister_data_ref_cell

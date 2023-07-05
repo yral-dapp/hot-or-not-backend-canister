@@ -1,2 +1,1 @@
-pub mod get_user_index_canister_count;
 pub mod get_user_index_canister_cycle_balance;
