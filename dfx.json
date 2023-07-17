@@ -162,36 +162,6 @@
       "package": "post_cache",
       "type": "rust"
     },
-    "sns_governance": {
-      "build": "",
-      "candid": "candid/sns_governance.did",
-      "type": "custom",
-      "wasm": ""
-    },
-    "sns_index": {
-      "build": "",
-      "candid": "candid/sns_index.did",
-      "type": "custom",
-      "wasm": ""
-    },
-    "sns_ledger": {
-      "build": "",
-      "candid": "candid/sns_ledger.did",
-      "type": "custom",
-      "wasm": ""
-    },
-    "sns_root": {
-      "build": "",
-      "candid": "candid/sns_root.did",
-      "type": "custom",
-      "wasm": ""
-    },
-    "sns_swap": {
-      "build": "",
-      "candid": "candid/sns_swap.did",
-      "type": "custom",
-      "wasm": ""
-    },
     "user_index": {
       "candid": "./src/canister/user_index/can.did",
       "declarations": {
