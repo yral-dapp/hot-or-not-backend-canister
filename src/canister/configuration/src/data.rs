@@ -8,6 +8,7 @@ use shared_utils::{
 #[derive(Default, CandidType, Deserialize)]
 pub struct CanisterData {
     pub known_principal_ids: KnownPrincipalMap,
+    #[serde(skip_serializing)]
     pub access_control_list: HashMap<Principal, Vec<UserAccessRole>>,
     pub signups_enabled: bool,
 }
