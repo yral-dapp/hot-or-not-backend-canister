@@ -21,15 +21,6 @@ fn init_impl(init_args: ConfigurationInitArgs, data: &mut CanisterData) {
                 .insert(principal_belongs_to.clone(), principal_id.clone());
         });
 
-    init_args
-        .access_control_map
-        .unwrap_or_default()
-        .iter()
-        .for_each(|(principal, access_roles)| {
-            data.access_control_list
-                .insert(principal.clone(), access_roles.clone());
-        });
-
     data.signups_enabled = init_args.signups_enabled.unwrap_or(data.signups_enabled);
 }
 
@@ -109,21 +100,6 @@ mod test {
                 .get(&KnownPrincipalType::CanisterIdUserIndex)
                 .unwrap(),
             &get_mock_canister_id_user_index()
-        );
-        assert_eq!(
-            data.access_control_list
-                .get(&get_global_super_admin_principal_id_v1())
-                .unwrap(),
-            &vec![
-                UserAccessRole::CanisterController,
-                UserAccessRole::CanisterAdmin
-            ]
-        );
-        assert_eq!(
-            data.access_control_list
-                .get(&get_mock_user_alice_canister_id())
-                .unwrap(),
-            &vec![UserAccessRole::ProjectCanister]
         );
         assert_eq!(data.signups_enabled, true);
     }
