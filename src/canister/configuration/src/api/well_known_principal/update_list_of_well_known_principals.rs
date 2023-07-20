@@ -1,22 +1,14 @@
-use candid::{CandidType, Principal};
-use shared_utils::{
-    access_control::{self, UserAccessRole},
-    common::types::known_principal::KnownPrincipalType,
-};
+use candid::Principal;
+use shared_utils::common::types::known_principal::KnownPrincipalType;
 
 use crate::{data::CanisterData, CANISTER_DATA};
-
-#[derive(CandidType)]
-pub enum ErrorUpdateListOfWellKnownPrincipals {
-    Unauthorized,
-}
 
 #[ic_cdk::update]
 #[candid::candid_method(update)]
 fn update_list_of_well_known_principals(
     principal_type: KnownPrincipalType,
     principal_value: Principal,
-) -> Result<(), ErrorUpdateListOfWellKnownPrincipals> {
+) -> Result<(), String> {
     let api_caller = ic_cdk::caller();
 
     CANISTER_DATA.with(|canister_data_ref_cell| {
@@ -35,13 +27,14 @@ fn update_list_of_well_known_principals_impl(
     principal_value: Principal,
     canister_data: &mut CanisterData,
     api_caller: &Principal,
-) -> Result<(), ErrorUpdateListOfWellKnownPrincipals> {
-    if !access_control::does_principal_have_role_v2(
-        &canister_data.access_control_list,
-        UserAccessRole::CanisterAdmin,
-        *api_caller,
-    ) {
-        return Err(ErrorUpdateListOfWellKnownPrincipals::Unauthorized);
+) -> Result<(), String> {
+    let super_admin = canister_data
+        .known_principal_ids
+        .get(&KnownPrincipalType::UserIdGlobalSuperAdmin)
+        .ok_or("Super admin not found in internal records")?;
+
+    if api_caller != super_admin {
+        return Err("Unauthorized".to_string());
     }
 
     canister_data
@@ -68,9 +61,9 @@ mod test {
             KnownPrincipalType::CanisterIdConfiguration,
             get_mock_canister_id_configuration(),
         );
-        canister_data.access_control_list.insert(
+        canister_data.known_principal_ids.insert(
+            KnownPrincipalType::UserIdGlobalSuperAdmin,
             get_global_super_admin_principal_id_v1(),
-            vec![UserAccessRole::CanisterAdmin],
         );
 
         let admin_api_caller = get_global_super_admin_principal_id_v1();

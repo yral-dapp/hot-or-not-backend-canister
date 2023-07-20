@@ -3,7 +3,6 @@ type ConfigurationInitArgs = record {
   signups_enabled : opt bool;
   access_control_map : opt vec record { principal; vec UserAccessRole };
 };
-type ErrorUpdateListOfWellKnownPrincipals = variant { Unauthorized };
 type KnownPrincipalType = variant {
   CanisterIdUserIndex;
   CanisterIdConfiguration;
@@ -15,7 +14,7 @@ type KnownPrincipalType = variant {
   CanisterIdSNSController;
   UserIdGlobalSuperAdmin;
 };
-type Result = variant { Ok; Err : ErrorUpdateListOfWellKnownPrincipals };
+type Result = variant { Ok; Err : text };
 type UserAccessRole = variant {
   CanisterController;
   ProfileOwner;
@@ -27,14 +26,11 @@ service : (ConfigurationInitArgs) -> {
   get_current_list_of_all_well_known_principal_values : () -> (
       vec record { KnownPrincipalType; principal },
     ) query;
-  get_user_roles : (principal) -> (vec UserAccessRole) query;
   get_well_known_principal_value : (KnownPrincipalType) -> (
       opt principal,
     ) query;
-  toggle_signups_enabled : () -> ();
+  toggle_signups_enabled : () -> (Result);
   update_list_of_well_known_principals : (KnownPrincipalType, principal) -> (
       Result,
     );
-  update_user_add_role : (UserAccessRole, principal) -> ();
-  update_user_remove_role : (UserAccessRole, principal) -> ();
 }

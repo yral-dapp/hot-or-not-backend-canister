@@ -50,6 +50,11 @@ pub async fn upgrade_user_canisters_with_latest_wasm() {
 
         if upgrade_result.is_err() {
             let err = upgrade_result.err().unwrap();
+            ic_cdk::print(format!(
+                "Failed to upgrade canister: {:?} with error: {:?}",
+                user_canister_id.to_text(),
+                err
+            ));
             failed_canister_ids.push((*user_principal_id, *user_canister_id, err));
             continue;
         }
