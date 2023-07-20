@@ -47,6 +47,4 @@ Burn XTC to cycles operation burns 2B cycles
 
 ## Next Items
 
-- Remove any controller except itself
-- Add additional known canisters for sns root and governance and ensure that canister upgrade parameters retain existing entries and only upsert new entries
-- Add multiple upgrades at a time
+- push configuration values to member canisters in subnet
