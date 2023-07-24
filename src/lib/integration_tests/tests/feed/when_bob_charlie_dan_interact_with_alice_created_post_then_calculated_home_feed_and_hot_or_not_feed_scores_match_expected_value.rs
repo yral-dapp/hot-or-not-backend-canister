@@ -133,7 +133,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
             *post_cache_canister_id,
             Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed",
-            candid::encode_args((0 as u64,10 as u64)).unwrap(),
+            candid::encode_args((0_u64, 10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let returned_posts: Result<Vec<PostScoreIndexItem>, TopPostsFetchError> = match reply_payload {
@@ -156,7 +156,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
             *post_cache_canister_id,
             Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed",
-            candid::encode_args((0 as u64,10 as u64)).unwrap(),
+            candid::encode_args((0_u64, 10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let returned_posts: Result<Vec<PostScoreIndexItem>, TopPostsFetchError> = match reply_payload {
@@ -198,7 +198,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
             *post_cache_canister_id,
             Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed",
-            candid::encode_args((0 as u64,10 as u64)).unwrap(),
+            candid::encode_args((0_u64,10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let returned_posts: Result<Vec<PostScoreIndexItem>, TopPostsFetchError> = match reply_payload {
@@ -221,7 +221,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
             *post_cache_canister_id,
             Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed",
-            candid::encode_args((0 as u64,10 as u64)).unwrap(),
+            candid::encode_args((0_u64,10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let returned_posts: Result<Vec<PostScoreIndexItem>, TopPostsFetchError> = match reply_payload {
@@ -256,14 +256,14 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
         })
         .unwrap();
 
-    assert_eq!(like_status, true);
+    assert!(like_status);
 
     let returned_posts: Vec<PostScoreIndexItem> = state_machine
         .query_call(
             *post_cache_canister_id,
             Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed",
-            candid::encode_args((0 as u64,10 as u64)).unwrap(),
+            candid::encode_args((0_u64,10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let returned_posts: Result<Vec<PostScoreIndexItem>, TopPostsFetchError> = match reply_payload {
@@ -286,7 +286,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
             *post_cache_canister_id,
             Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed",
-            candid::encode_args((0 as u64,10 as u64)).unwrap(),
+            candid::encode_args((0_u64,10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let returned_posts: Result<Vec<PostScoreIndexItem>, TopPostsFetchError> = match reply_payload {
@@ -346,7 +346,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
             *post_cache_canister_id,
             Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed",
-            candid::encode_args((0 as u64,10 as u64)).unwrap(),
+            candid::encode_args((0_u64,10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let returned_posts: Result<Vec<PostScoreIndexItem>, TopPostsFetchError> = match reply_payload {
@@ -369,7 +369,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
             *post_cache_canister_id,
             Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed",
-            candid::encode_args((0 as u64,10 as u64)).unwrap(),
+            candid::encode_args((0_u64,10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let returned_posts: Result<Vec<PostScoreIndexItem>, TopPostsFetchError> = match reply_payload {
@@ -411,7 +411,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
             *post_cache_canister_id,
             Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed",
-            candid::encode_args((0 as u64,10 as u64)).unwrap(),
+            candid::encode_args((0_u64,10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let returned_posts: Result<Vec<PostScoreIndexItem>, TopPostsFetchError> = match reply_payload {
@@ -434,7 +434,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
             *post_cache_canister_id,
             Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed",
-            candid::encode_args((0 as u64,10 as u64)).unwrap(),
+            candid::encode_args((0_u64,10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let returned_posts: Result<Vec<PostScoreIndexItem>, TopPostsFetchError> = match reply_payload {
@@ -493,7 +493,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
             *post_cache_canister_id,
             Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed",
-            candid::encode_args((0 as u64,10 as u64)).unwrap(),
+            candid::encode_args((0_u64,10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let returned_posts: Result<Vec<PostScoreIndexItem>, TopPostsFetchError> = match reply_payload {
@@ -516,7 +516,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
             *post_cache_canister_id,
             Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed",
-            candid::encode_args((0 as u64,10 as u64)).unwrap(),
+            candid::encode_args((0_u64,10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let returned_posts: Result<Vec<PostScoreIndexItem>, TopPostsFetchError> = match reply_payload {
@@ -558,7 +558,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
             *post_cache_canister_id,
             Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed",
-            candid::encode_args((0 as u64,10 as u64)).unwrap(),
+            candid::encode_args((0_u64,10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let returned_posts: Result<Vec<PostScoreIndexItem>, TopPostsFetchError> = match reply_payload {
@@ -581,7 +581,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
             *post_cache_canister_id,
             Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed",
-            candid::encode_args((0 as u64,10 as u64)).unwrap(),
+            candid::encode_args((0_u64,10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let returned_posts: Result<Vec<PostScoreIndexItem>, TopPostsFetchError> = match reply_payload {
@@ -616,14 +616,14 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
         })
         .unwrap();
 
-    assert_eq!(like_status, true);
+    assert!(like_status);
 
     let returned_posts: Vec<PostScoreIndexItem> = state_machine
         .query_call(
             *post_cache_canister_id,
             Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed",
-            candid::encode_args((0 as u64,10 as u64)).unwrap(),
+            candid::encode_args((0_u64,10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let returned_posts: Result<Vec<PostScoreIndexItem>, TopPostsFetchError> = match reply_payload {
@@ -646,7 +646,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
             *post_cache_canister_id,
             Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed",
-            candid::encode_args((0 as u64,10 as u64)).unwrap(),
+            candid::encode_args((0_u64,10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let returned_posts: Result<Vec<PostScoreIndexItem>, TopPostsFetchError> = match reply_payload {
@@ -688,7 +688,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
             *post_cache_canister_id,
             Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed",
-            candid::encode_args((0 as u64,10 as u64)).unwrap(),
+            candid::encode_args((0_u64,10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let returned_posts: Result<Vec<PostScoreIndexItem>, TopPostsFetchError> = match reply_payload {
@@ -711,7 +711,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
             *post_cache_canister_id,
             Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed",
-            candid::encode_args((0 as u64,10 as u64)).unwrap(),
+            candid::encode_args((0_u64,10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let returned_posts: Result<Vec<PostScoreIndexItem>, TopPostsFetchError> = match reply_payload {
@@ -770,7 +770,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
             *post_cache_canister_id,
             Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed",
-            candid::encode_args((0 as u64,10 as u64)).unwrap(),
+            candid::encode_args((0_u64,10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let returned_posts: Result<Vec<PostScoreIndexItem>, TopPostsFetchError> = match reply_payload {
@@ -793,7 +793,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
             *post_cache_canister_id,
             Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed",
-            candid::encode_args((0 as u64,10 as u64)).unwrap(),
+            candid::encode_args((0_u64,10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let returned_posts: Result<Vec<PostScoreIndexItem>, TopPostsFetchError> = match reply_payload {
@@ -835,7 +835,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
             *post_cache_canister_id,
             Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed",
-            candid::encode_args((0 as u64,10 as u64)).unwrap(),
+            candid::encode_args((0_u64,10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let returned_posts: Result<Vec<PostScoreIndexItem>, TopPostsFetchError> = match reply_payload {
@@ -858,7 +858,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
             *post_cache_canister_id,
             Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed",
-            candid::encode_args((0 as u64,10 as u64)).unwrap(),
+            candid::encode_args((0_u64,10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let returned_posts: Result<Vec<PostScoreIndexItem>, TopPostsFetchError> = match reply_payload {
@@ -900,7 +900,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
             *post_cache_canister_id,
             Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed",
-            candid::encode_args((0 as u64,10 as u64)).unwrap(),
+            candid::encode_args((0_u64,10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let returned_posts: Result<Vec<PostScoreIndexItem>, TopPostsFetchError> = match reply_payload {
@@ -923,7 +923,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
             *post_cache_canister_id,
             Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed",
-            candid::encode_args((0 as u64,10 as u64)).unwrap(),
+            candid::encode_args((0_u64,10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let returned_posts: Result<Vec<PostScoreIndexItem>, TopPostsFetchError> = match reply_payload {

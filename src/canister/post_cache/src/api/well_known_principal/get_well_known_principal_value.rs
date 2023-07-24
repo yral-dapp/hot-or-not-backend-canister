@@ -8,7 +8,7 @@ use crate::CANISTER_DATA;
 fn get_well_known_principal_value(principal_type: KnownPrincipalType) -> Option<Principal> {
     CANISTER_DATA.with(|canister_data_ref_cell| {
         let known_principal_ids = &canister_data_ref_cell.borrow().known_principal_ids;
-        get_well_known_principal_value_impl(&principal_type, &known_principal_ids)
+        get_well_known_principal_value_impl(&principal_type, known_principal_ids)
     })
 }
 
@@ -16,9 +16,7 @@ fn get_well_known_principal_value_impl(
     principal_type: &KnownPrincipalType,
     known_principal_ids: &KnownPrincipalMap,
 ) -> Option<Principal> {
-    known_principal_ids
-        .get(principal_type)
-        .map(|principal| principal.clone())
+    known_principal_ids.get(principal_type).copied()
 }
 
 #[cfg(test)]

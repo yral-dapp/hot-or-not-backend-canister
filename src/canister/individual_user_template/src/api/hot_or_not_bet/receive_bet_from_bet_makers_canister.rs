@@ -67,7 +67,7 @@ fn receive_bet_from_bet_makers_canister_impl(
         bet_maker_canister_id,
         bet_amount,
         &bet_direction,
-        &current_time,
+        current_time,
     )
 }
 

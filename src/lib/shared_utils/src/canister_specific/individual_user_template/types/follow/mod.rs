@@ -47,6 +47,10 @@ impl FollowList {
     pub fn len(&self) -> usize {
         self.members.len()
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.members.is_empty()
+    }
 }
 
 pub type FollowEntryId = u64;
@@ -69,15 +73,15 @@ mod test {
             let mut follow_list = FollowList::default();
 
             let follow_entry_detail = FollowEntryDetail {
-                principal_id: Principal::self_authenticating(&(0u64).to_ne_bytes()),
-                canister_id: Principal::self_authenticating(&(0u64).to_ne_bytes()),
+                principal_id: Principal::self_authenticating((0u64).to_ne_bytes()),
+                canister_id: Principal::self_authenticating((0u64).to_ne_bytes()),
             };
 
             let follow_entry_id = follow_list.add(follow_entry_detail.clone());
 
             assert_eq!(follow_entry_id, 0);
             assert_eq!(follow_list.len(), 1);
-            assert_eq!(follow_list.contains(&follow_entry_detail), true);
+            assert!(follow_list.contains(&follow_entry_detail));
         }
 
         #[test]
@@ -85,21 +89,21 @@ mod test {
             let mut follow_list = FollowList::default();
 
             let follow_entry_detail = FollowEntryDetail {
-                principal_id: Principal::self_authenticating(&(0u64).to_ne_bytes()),
-                canister_id: Principal::self_authenticating(&(0u64).to_ne_bytes()),
+                principal_id: Principal::self_authenticating((0u64).to_ne_bytes()),
+                canister_id: Principal::self_authenticating((0u64).to_ne_bytes()),
             };
 
             let follow_entry_id = follow_list.add(follow_entry_detail.clone());
 
             assert_eq!(follow_entry_id, 0);
             assert_eq!(follow_list.len(), 1);
-            assert_eq!(follow_list.contains(&follow_entry_detail), true);
+            assert!(follow_list.contains(&follow_entry_detail));
 
             let follow_entry_id = follow_list.remove(&follow_entry_detail);
 
             assert_eq!(follow_entry_id, Some(0));
             assert_eq!(follow_list.len(), 0);
-            assert_eq!(follow_list.contains(&follow_entry_detail), false);
+            assert!(!follow_list.contains(&follow_entry_detail));
         }
 
         #[test]
@@ -107,27 +111,27 @@ mod test {
             let mut follow_list = FollowList::default();
 
             let follow_entry_detail = FollowEntryDetail {
-                principal_id: Principal::self_authenticating(&(0u64).to_ne_bytes()),
-                canister_id: Principal::self_authenticating(&(0u64).to_ne_bytes()),
+                principal_id: Principal::self_authenticating((0u64).to_ne_bytes()),
+                canister_id: Principal::self_authenticating((0u64).to_ne_bytes()),
             };
 
             let follow_entry_id = follow_list.add(follow_entry_detail.clone());
 
             assert_eq!(follow_entry_id, 0);
             assert_eq!(follow_list.len(), 1);
-            assert_eq!(follow_list.contains(&follow_entry_detail), true);
+            assert!(follow_list.contains(&follow_entry_detail));
 
             let follow_entry_id = follow_list.remove(&follow_entry_detail);
 
             assert_eq!(follow_entry_id, Some(0));
             assert_eq!(follow_list.len(), 0);
-            assert_eq!(follow_list.contains(&follow_entry_detail), false);
+            assert!(!follow_list.contains(&follow_entry_detail));
 
             let follow_entry_id = follow_list.add(follow_entry_detail.clone());
 
             assert_eq!(follow_entry_id, 0);
             assert_eq!(follow_list.len(), 1);
-            assert_eq!(follow_list.contains(&follow_entry_detail), true);
+            assert!(follow_list.contains(&follow_entry_detail));
         }
 
         #[test]
@@ -135,22 +139,22 @@ mod test {
             let mut follow_list = FollowList::default();
 
             let follow_entry_detail = FollowEntryDetail {
-                principal_id: Principal::self_authenticating(&(0u64).to_ne_bytes()),
-                canister_id: Principal::self_authenticating(&(0u64).to_ne_bytes()),
+                principal_id: Principal::self_authenticating((0u64).to_ne_bytes()),
+                canister_id: Principal::self_authenticating((0u64).to_ne_bytes()),
             };
 
             let follow_entry_id = follow_list.add(follow_entry_detail.clone());
 
             assert_eq!(follow_entry_id, 0);
             assert_eq!(follow_list.len(), 1);
-            assert_eq!(follow_list.contains(&follow_entry_detail), true);
+            assert!(follow_list.contains(&follow_entry_detail));
 
             let follow_entry_detail = FollowEntryDetail {
-                principal_id: Principal::self_authenticating(&(1u64).to_ne_bytes()),
-                canister_id: Principal::self_authenticating(&(1u64).to_ne_bytes()),
+                principal_id: Principal::self_authenticating((1u64).to_ne_bytes()),
+                canister_id: Principal::self_authenticating((1u64).to_ne_bytes()),
             };
 
-            assert_eq!(follow_list.contains(&follow_entry_detail), false);
+            assert!(!follow_list.contains(&follow_entry_detail));
         }
 
         #[test]
@@ -158,26 +162,26 @@ mod test {
             let mut follow_list = FollowList::default();
 
             let follow_entry_detail = FollowEntryDetail {
-                principal_id: Principal::self_authenticating(&(0u64).to_ne_bytes()),
-                canister_id: Principal::self_authenticating(&(0u64).to_ne_bytes()),
+                principal_id: Principal::self_authenticating((0u64).to_ne_bytes()),
+                canister_id: Principal::self_authenticating((0u64).to_ne_bytes()),
             };
 
             let follow_entry_id = follow_list.add(follow_entry_detail.clone());
 
             assert_eq!(follow_entry_id, 0);
             assert_eq!(follow_list.len(), 1);
-            assert_eq!(follow_list.contains(&follow_entry_detail), true);
+            assert!(follow_list.contains(&follow_entry_detail));
 
             let follow_entry_detail = FollowEntryDetail {
-                principal_id: Principal::self_authenticating(&(1u64).to_ne_bytes()),
-                canister_id: Principal::self_authenticating(&(1u64).to_ne_bytes()),
+                principal_id: Principal::self_authenticating((1u64).to_ne_bytes()),
+                canister_id: Principal::self_authenticating((1u64).to_ne_bytes()),
             };
 
             let follow_entry_id = follow_list.add(follow_entry_detail.clone());
 
             assert_eq!(follow_entry_id, 1);
             assert_eq!(follow_list.len(), 2);
-            assert_eq!(follow_list.contains(&follow_entry_detail), true);
+            assert!(follow_list.contains(&follow_entry_detail));
         }
     }
 }

@@ -29,7 +29,7 @@ fn get_rewarded_for_signing_up() {
 
     CANISTER_DATA.with(|canister_data_ref_cell| {
         let mut canister_data_ref = canister_data_ref_cell.borrow_mut();
-        let my_principal_id = canister_data_ref.profile.principal_id.unwrap().clone();
+        let my_principal_id = canister_data_ref.profile.principal_id.unwrap();
         let my_token_balance = &mut canister_data_ref.my_token_balance;
 
         let signup_reward_amount =

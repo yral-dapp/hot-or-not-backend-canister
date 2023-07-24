@@ -66,7 +66,7 @@ fn reenqueue_timers_for_these_posts(
                     CANISTER_DATA.with(|canister_data_ref_cell| {
                         tabulate_hot_or_not_outcome_for_post_slot(
                             &mut canister_data_ref_cell.borrow_mut(),
-                            post_id.clone(),
+                            post_id,
                             slot_number + 1,
                         );
                     });
@@ -145,7 +145,7 @@ mod test {
             video_uid: "video#0001".to_string(),
             status: PostStatus::ReadyToView,
             created_at: post_0_creation_time
-                .checked_add(Duration::from_secs((1 * 60) * 60))
+                .checked_add(Duration::from_secs(60 * 60))
                 .unwrap(),
             likes: HashSet::new(),
             share_count: 0,
@@ -170,7 +170,7 @@ mod test {
         assert_eq!(posts_that_have_pending_outcomes[0], 1);
 
         let current_time = post_0_creation_time
-            .checked_add(Duration::from_secs(((48 * 60) + 0) * 60))
+            .checked_add(Duration::from_secs((48 * 60) * 60))
             .unwrap();
 
         let posts_that_have_pending_outcomes =

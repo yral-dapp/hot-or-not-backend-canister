@@ -13,7 +13,7 @@ fn get_profile_details() -> UserProfileDetailsForFrontend {
             display_name: profile.display_name.clone(),
             unique_user_name: profile.unique_user_name.clone(),
             profile_picture_url: profile.profile_picture_url.clone(),
-            profile_stats: profile.profile_stats.clone(),
+            profile_stats: profile.profile_stats,
             followers_count: canister_data_ref_cell.borrow().follow_data.follower.len() as u64,
             following_count: canister_data_ref_cell.borrow().follow_data.following.len() as u64,
             lifetime_earnings: token_balance.lifetime_earnings,

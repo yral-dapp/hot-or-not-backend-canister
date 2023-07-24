@@ -19,9 +19,8 @@ pub fn get_global_super_admin_principal_id_v1(
             Principal::from_text("7gaq2-4kttl-vtbt4-oo47w-igteo-cpk2k-57h3p-yioqe-wkawi-wz45g-jae")
                 .unwrap()
         }
-        _ => well_known_canisters
+        _ => *well_known_canisters
             .get(&KnownPrincipalType::UserIdGlobalSuperAdmin)
-            .expect("USER ID for global super admin not found")
-            .clone(),
+            .expect("USER ID for global super admin not found"),
     }
 }

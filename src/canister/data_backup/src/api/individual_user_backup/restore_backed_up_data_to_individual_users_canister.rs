@@ -16,13 +16,12 @@ async fn restore_backed_up_data_to_individual_users_canister(
     let caller_principal_id = ic_cdk::caller();
 
     if !(CANISTER_DATA.with(|canister_data_ref_cell| {
-        canister_data_ref_cell
+        *canister_data_ref_cell
             .borrow()
             .heap_data
             .known_principal_ids
             .get(&KnownPrincipalType::UserIdGlobalSuperAdmin)
             .unwrap()
-            .clone()
             == caller_principal_id
     })) {
         return "Unauthorized".to_string();
@@ -48,7 +47,7 @@ async fn restore_backed_up_data_to_individual_users_canister(
     send_principals_that_follow_me(&users_data).await;
     send_profile_data(&users_data).await;
 
-    return "Success".to_string();
+    "Success".to_string()
 }
 
 const CHUNK_SIZE: usize = 10;
@@ -56,7 +55,7 @@ const CHUNK_SIZE: usize = 10;
 async fn send_profile_data(users_data: &AllUserData) {
     let canister_id_to_send_to = users_data.user_canister_id;
 
-    let _response: () = call::call(
+    let _: () = call::call(
         canister_id_to_send_to,
         "receive_my_profile_from_data_backup_canister",
         (users_data.canister_data.profile.clone(),),
@@ -72,7 +71,7 @@ async fn send_principals_that_follow_me(users_data: &AllUserData) {
         .canister_data
         .principals_that_follow_me
         .iter()
-        .map(|principal_that_follow_me| principal_that_follow_me.clone())
+        .copied()
         .collect::<Vec<_>>();
 
     let principals_that_follow_me_vec_chunks = principals_that_follow_me_vec
@@ -80,7 +79,7 @@ async fn send_principals_that_follow_me(users_data: &AllUserData) {
         .collect::<Vec<_>>();
 
     for chunk in principals_that_follow_me_vec_chunks {
-        let _response: () = call::call(
+        let _: () = call::call(
             canister_id_to_send_to,
             "receive_principals_that_follow_me_from_data_backup_canister",
             (chunk.to_vec(),),
@@ -97,7 +96,7 @@ async fn send_principals_i_follow(users_data: &AllUserData) {
         .canister_data
         .principals_i_follow
         .iter()
-        .map(|principal_i_follow| principal_i_follow.clone())
+        .copied()
         .collect::<Vec<_>>();
 
     let principals_i_follow_vec_chunks = principals_i_follow_vec
@@ -105,7 +104,7 @@ async fn send_principals_i_follow(users_data: &AllUserData) {
         .collect::<Vec<_>>();
 
     for chunk in principals_i_follow_vec_chunks {
-        let _response: () = call::call(
+        let _: () = call::call(
             canister_id_to_send_to,
             "receive_principals_i_follow_from_data_backup_canister",
             (chunk.to_vec(),),
@@ -131,7 +130,7 @@ async fn send_utility_token_history(users_data: &AllUserData) {
         .collect::<Vec<_>>();
 
     for chunk in all_utility_token_transactions_chunks {
-        let _response: () = call::call(
+        let _: () = call::call(
             canister_id_to_send_to,
             "receive_my_utility_token_transaction_history_from_data_backup_canister",
             (chunk.to_vec(),),
@@ -144,7 +143,7 @@ async fn send_utility_token_history(users_data: &AllUserData) {
 async fn send_utility_token_balance(users_data: &AllUserData) {
     let canister_id_to_send_to = users_data.user_canister_id;
 
-    let _response: () = call::call(
+    let _: () = call::call(
         canister_id_to_send_to,
         "receive_my_utility_token_balance_from_data_backup_canister",
         (users_data.canister_data.token_data.utility_token_balance,),
@@ -159,14 +158,14 @@ async fn send_posts(users_data: &AllUserData) {
     let all_created_posts_vec = users_data
         .canister_data
         .all_created_posts
-        .iter()
-        .map(|(_id, post)| post.clone())
+        .values()
+        .cloned()
         .collect::<Vec<_>>();
 
     let all_created_posts_chunks = all_created_posts_vec.chunks(CHUNK_SIZE).collect::<Vec<_>>();
 
     for chunk in all_created_posts_chunks {
-        let _response: () = call::call(
+        let _: () = call::call(
             canister_id_to_send_to,
             "receive_my_created_posts_from_data_backup_canister",
             (chunk.to_vec(),),

@@ -100,10 +100,9 @@ pub fn get_initialized_env_with_provisioned_known_canisters(
     };
 
     canister_installer(
-        known_principal_map_with_all_canisters
+        *known_principal_map_with_all_canisters
             .get(&KnownPrincipalType::CanisterIdConfiguration)
-            .unwrap()
-            .clone(),
+            .unwrap(),
         get_canister_wasm(KnownPrincipalType::CanisterIdConfiguration),
         candid::encode_one(ConfigurationInitArgs {
             known_principal_ids: Some(known_principal_map_with_all_canisters.clone()),
@@ -112,10 +111,9 @@ pub fn get_initialized_env_with_provisioned_known_canisters(
         .unwrap(),
     );
     canister_installer(
-        known_principal_map_with_all_canisters
+        *known_principal_map_with_all_canisters
             .get(&KnownPrincipalType::CanisterIdDataBackup)
-            .unwrap()
-            .clone(),
+            .unwrap(),
         get_canister_wasm(KnownPrincipalType::CanisterIdDataBackup),
         candid::encode_one(DataBackupInitArgs {
             known_principal_ids: Some(known_principal_map_with_all_canisters.clone()),
@@ -124,10 +122,9 @@ pub fn get_initialized_env_with_provisioned_known_canisters(
         .unwrap(),
     );
     canister_installer(
-        known_principal_map_with_all_canisters
+        *known_principal_map_with_all_canisters
             .get(&KnownPrincipalType::CanisterIdPostCache)
-            .unwrap()
-            .clone(),
+            .unwrap(),
         get_canister_wasm(KnownPrincipalType::CanisterIdPostCache),
         candid::encode_one(PostCacheInitArgs {
             known_principal_ids: Some(known_principal_map_with_all_canisters.clone()),
@@ -145,15 +142,13 @@ pub fn get_initialized_env_with_provisioned_known_canisters(
     );
 
     canister_installer(
-        known_principal_map_with_all_canisters
+        *known_principal_map_with_all_canisters
             .get(&KnownPrincipalType::CanisterIdUserIndex)
-            .unwrap()
-            .clone(),
+            .unwrap(),
         get_canister_wasm(KnownPrincipalType::CanisterIdUserIndex),
         candid::encode_one(UserIndexInitArgs {
             known_principal_ids: Some(known_principal_map_with_all_canisters.clone()),
             access_control_map: Some(user_index_access_control_map),
-            ..Default::default()
         })
         .unwrap(),
     );
@@ -165,8 +160,7 @@ pub fn get_canister_id_of_specific_type_from_principal_id_map(
     principal_id_map: &KnownPrincipalMap,
     canister_type: KnownPrincipalType,
 ) -> Principal {
-    principal_id_map
+    *principal_id_map
         .get(&canister_type)
         .expect("Canister type not found in principal id map")
-        .clone()
 }

@@ -105,7 +105,7 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
                 alice_canister_id,
                 Principal::anonymous(),
                 "get_user_utility_token_transaction_history_with_pagination",
-                candid::encode_args((0 as u64, 10 as u64)).unwrap(),
+                candid::encode_args((0_u64, 10_u64)).unwrap(),
             )
             .map(|reply_payload| {
                 let response: Result<
@@ -164,7 +164,7 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
 
     let alice_utility_token_balance_after_referral = state_machine
         .query_call(
-            alice_canister_id.into(),
+            alice_canister_id,
             Principal::anonymous(),
             "get_utility_token_balance",
             candid::encode_one(()).unwrap(),
@@ -204,7 +204,7 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
                 alice_canister_id,
                 Principal::anonymous(),
                 "get_user_utility_token_transaction_history_with_pagination",
-                candid::encode_args((0 as u64, 10 as u64)).unwrap(),
+                candid::encode_args((0_u64, 10_u64)).unwrap(),
             )
             .map(|reply_payload| {
                 let response: Result<
@@ -273,7 +273,7 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
                 bob_canister_id,
                 Principal::anonymous(),
                 "get_user_utility_token_transaction_history_with_pagination",
-                candid::encode_args((0 as u64, 10 as u64)).unwrap(),
+                candid::encode_args((0_u64, 10_u64)).unwrap(),
             )
             .map(|reply_payload| {
                 let response: Result<

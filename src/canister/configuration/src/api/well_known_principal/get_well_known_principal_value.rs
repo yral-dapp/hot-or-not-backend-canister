@@ -19,7 +19,7 @@ fn get_well_known_principal_value_impl(
     canister_data
         .known_principal_ids
         .get(principal_type)
-        .map(|principal| principal.clone())
+        .copied()
 }
 
 #[cfg(test)]

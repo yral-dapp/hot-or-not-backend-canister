@@ -77,7 +77,7 @@ mod test {
         assert_eq!(
             posts_index_sorted_by_home_feed_score
                 .iter()
-                .nth(0)
+                .next()
                 .unwrap()
                 .post_id,
             3

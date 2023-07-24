@@ -100,7 +100,7 @@ mod test {
             UserAccessRole::CanisterAdmin,
             user_id,
         );
-        assert_eq!(result, true);
+        assert!(result);
     }
 
     #[test]

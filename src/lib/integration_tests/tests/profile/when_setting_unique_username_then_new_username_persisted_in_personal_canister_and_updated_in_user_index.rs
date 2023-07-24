@@ -79,7 +79,7 @@ fn when_setting_unique_username_then_new_username_persisted_in_personal_canister
         })
         .unwrap();
 
-    assert_eq!(is_alice_username_taken, true);
+    assert!(is_alice_username_taken);
 
     println!(
         "🧪 profile_details_from_user_canister: {:?}",

@@ -56,11 +56,13 @@ async fn backup_data_to_backup_canister(
         return;
     }
 
-    let data_backup_canister_id = CANISTER_DATA
-        .with(|canister_data_ref_cell| canister_data_ref_cell.borrow().known_principal_ids.clone())
-        .get(&KnownPrincipalType::CanisterIdDataBackup)
-        .unwrap()
-        .clone();
+    let data_backup_canister_id = CANISTER_DATA.with(|canister_data_ref_cell| {
+        *canister_data_ref_cell
+            .borrow()
+            .known_principal_ids
+            .get(&KnownPrincipalType::CanisterIdDataBackup)
+            .unwrap()
+    });
 
     ic_cdk::print(format!(
         "🥫 Backing up data for canister with id: {}",
@@ -92,8 +94,8 @@ async fn send_profile_data(
         return;
     }
 
-    let _response: () = call::call(
-            data_backup_canister_id.clone(),
+    let _: () = call::call(
+            *data_backup_canister_id,
             "receive_profile_details_from_individual_user_canister",
             (profile_data, *canister_owner_principal_id, *canister_id),
         )
@@ -108,16 +110,13 @@ async fn send_all_created_posts(
     let all_created_posts = CANISTER_DATA
         .with(|canister_data_ref_cell| canister_data_ref_cell.borrow().all_created_posts.clone());
 
-    let all_created_posts_vec = all_created_posts
-        .iter()
-        .map(|(_id, post)| post.clone())
-        .collect::<Vec<_>>();
+    let all_created_posts_vec = all_created_posts.values().cloned().collect::<Vec<_>>();
 
     let all_created_posts_chunks = all_created_posts_vec.chunks(CHUNK_SIZE).collect::<Vec<_>>();
 
     for chunk in all_created_posts_chunks {
-        let _response: () = call::call(
-            data_backup_canister_id.clone(),
+        let _: () = call::call(
+            *data_backup_canister_id,
             "receive_all_user_posts_from_individual_user_canister",
             (chunk.to_vec(), *canister_owner_principal_id),
         )
@@ -133,8 +132,8 @@ async fn send_all_token_data(
     let token_data = CANISTER_DATA
         .with(|canister_data_ref_cell| canister_data_ref_cell.borrow().my_token_balance.clone());
 
-    let _response: () = call::call(
-            data_backup_canister_id.clone(),
+    let _: () = call::call(
+            *data_backup_canister_id,
             "receive_current_token_balance_from_individual_user_canister",
             (token_data.utility_token_balance, *canister_owner_principal_id),
         )
@@ -152,8 +151,8 @@ async fn send_all_token_data(
         .collect::<Vec<_>>();
 
     for chunk in all_token_transactions_chunks {
-        let _response: () = call::call(
-            data_backup_canister_id.clone(),
+        let _: () = call::call(
+            *data_backup_canister_id,
             "receive_all_token_transactions_from_individual_user_canister",
             (chunk.to_vec(), *canister_owner_principal_id),
         )

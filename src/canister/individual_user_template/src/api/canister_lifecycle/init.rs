@@ -17,7 +17,7 @@ fn init_impl(init_args: IndividualUserTemplateInitArgs, data: &mut CanisterData)
         .iter()
         .for_each(|(principal_belongs_to, principal_id)| {
             data.known_principal_ids
-                .insert(principal_belongs_to.clone(), principal_id.clone());
+                .insert(principal_belongs_to.clone(), *principal_id);
         });
 
     data.profile.principal_id = init_args.profile_owner;

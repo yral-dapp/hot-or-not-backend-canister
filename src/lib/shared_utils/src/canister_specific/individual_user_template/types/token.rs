@@ -58,7 +58,7 @@ impl TokenBalance {
                 } => {
                     self.utility_token_balance += winnings_amount;
                     self.lifetime_earnings +=
-                        get_earnings_amount_from_winnings_amount(&winnings_amount);
+                        get_earnings_amount_from_winnings_amount(winnings_amount);
                 }
             },
         }
@@ -83,8 +83,7 @@ fn get_earnings_amount_from_winnings_amount(winnings_amount: &u64) -> u64 {
     let comission_subtracted_bet_amount = winnings_amount / HOT_OR_NOT_BET_WINNINGS_MULTIPLIER;
     let bet_amount = comission_subtracted_bet_amount * 100
         / (100 - HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE);
-    let earnings = winnings_amount - bet_amount;
-    return earnings;
+    winnings_amount - bet_amount
 }
 
 #[cfg(test)]

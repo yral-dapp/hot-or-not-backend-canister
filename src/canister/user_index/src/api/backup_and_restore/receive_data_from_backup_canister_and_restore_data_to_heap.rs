@@ -30,12 +30,11 @@ fn receive_data_from_backup_canister_and_restore_data_to_heap_impl(
     user_canister_id: Principal,
     unique_user_name: String,
 ) {
-    if !(canister_data
+    if *canister_data
         .known_principal_ids
         .get(&KnownPrincipalType::CanisterIdDataBackup)
         .unwrap()
-        .clone()
-        == caller_principal_id)
+        != caller_principal_id
     {
         return;
     }

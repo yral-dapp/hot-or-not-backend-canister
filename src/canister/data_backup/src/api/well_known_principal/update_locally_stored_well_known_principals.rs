@@ -6,17 +6,14 @@ use crate::CANISTER_DATA;
 
 pub async fn update_locally_stored_well_known_principals() {
     // extract the canister ID of the configuration canister from well-known principals
-    let config_canister_id = CANISTER_DATA
-        .with(|canister_data_ref_cell| {
-            canister_data_ref_cell
-                .borrow()
-                .heap_data
-                .known_principal_ids
-                .clone()
-        })
-        .get(&KnownPrincipalType::CanisterIdConfiguration)
-        .expect("Failed to get the canister id of the configuration canister")
-        .clone();
+    let config_canister_id = CANISTER_DATA.with(|canister_data_ref_cell| {
+        *canister_data_ref_cell
+            .borrow()
+            .heap_data
+            .known_principal_ids
+            .get(&KnownPrincipalType::CanisterIdConfiguration)
+            .expect("Failed to get the canister id of the configuration canister")
+    });
 
     // fetch the well-known principals from the configuration canister
     let (well_known_principals,): (Vec<(KnownPrincipalType, Principal)>,) = call::call(

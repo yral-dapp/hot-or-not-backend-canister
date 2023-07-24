@@ -124,8 +124,8 @@ mod test {
 
         (0..MAX_USERS_IN_FOLLOWER_FOLLOWING_LIST).for_each(|id: u64| {
             let follow_entry_detail = FollowEntryDetail {
-                principal_id: Principal::self_authenticating(&id.to_ne_bytes()),
-                canister_id: Principal::self_authenticating(&id.to_ne_bytes()),
+                principal_id: Principal::self_authenticating(id.to_ne_bytes()),
+                canister_id: Principal::self_authenticating(id.to_ne_bytes()),
             };
             canister_data.follow_data.following.add(follow_entry_detail);
         });
@@ -136,10 +136,10 @@ mod test {
 
         let follow_entry_detail = FollowEntryDetail {
             principal_id: Principal::self_authenticating(
-                &(MAX_USERS_IN_FOLLOWER_FOLLOWING_LIST + 1).to_ne_bytes(),
+                (MAX_USERS_IN_FOLLOWER_FOLLOWING_LIST + 1).to_ne_bytes(),
             ),
             canister_id: Principal::self_authenticating(
-                &(MAX_USERS_IN_FOLLOWER_FOLLOWING_LIST + 1).to_ne_bytes(),
+                (MAX_USERS_IN_FOLLOWER_FOLLOWING_LIST + 1).to_ne_bytes(),
             ),
         };
         canister_data.follow_data.following.add(follow_entry_detail);

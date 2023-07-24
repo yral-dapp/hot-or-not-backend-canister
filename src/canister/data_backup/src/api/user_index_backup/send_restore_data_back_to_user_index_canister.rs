@@ -9,26 +9,24 @@ fn send_restore_data_back_to_user_index_canister() {
     let caller_principal_id = ic_cdk::caller();
 
     if !(CANISTER_DATA.with(|canister_data_ref_cell| {
-        canister_data_ref_cell
+        *canister_data_ref_cell
             .borrow()
             .heap_data
             .known_principal_ids
             .get(&KnownPrincipalType::UserIdGlobalSuperAdmin)
             .unwrap()
-            .clone()
             == caller_principal_id
     })) {
         return;
     }
 
     CANISTER_DATA.with(|canister_data_ref_cell| {
-        let user_index_canister_id = canister_data_ref_cell
+        let user_index_canister_id = *canister_data_ref_cell
             .borrow()
             .heap_data
             .known_principal_ids
             .get(&KnownPrincipalType::CanisterIdUserIndex)
-            .unwrap()
-            .clone();
+            .unwrap();
 
         canister_data_ref_cell
             .borrow()

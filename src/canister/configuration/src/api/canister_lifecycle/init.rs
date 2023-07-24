@@ -18,7 +18,7 @@ fn init_impl(init_args: ConfigurationInitArgs, data: &mut CanisterData) {
         .iter()
         .for_each(|(principal_belongs_to, principal_id)| {
             data.known_principal_ids
-                .insert(principal_belongs_to.clone(), principal_id.clone());
+                .insert(principal_belongs_to.clone(), *principal_id);
         });
 
     data.signups_enabled = init_args.signups_enabled.unwrap_or(data.signups_enabled);
@@ -101,6 +101,6 @@ mod test {
                 .unwrap(),
             &get_mock_canister_id_user_index()
         );
-        assert_eq!(data.signups_enabled, true);
+        assert!(data.signups_enabled);
     }
 }

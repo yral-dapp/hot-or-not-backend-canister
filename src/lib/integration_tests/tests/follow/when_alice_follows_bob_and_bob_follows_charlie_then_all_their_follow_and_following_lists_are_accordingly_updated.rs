@@ -21,10 +21,9 @@ fn when_alice_follows_bob_and_bob_follows_charlie_then_all_their_follow_and_foll
 ) {
     let state_machine = get_new_state_machine();
     let known_principal_map = get_initialized_env_with_provisioned_known_canisters(&state_machine);
-    let user_index_canister_id = known_principal_map
+    let user_index_canister_id = *known_principal_map
         .get(&KnownPrincipalType::CanisterIdUserIndex)
-        .unwrap()
-        .clone();
+        .unwrap();
     let alice_principal_id = get_mock_user_alice_principal_id();
     let bob_principal_id = get_mock_user_bob_principal_id();
     let charlie_principal_id = get_mock_user_charlie_principal_id();
@@ -92,7 +91,7 @@ fn when_alice_follows_bob_and_bob_follows_charlie_then_all_their_follow_and_foll
         })
         .unwrap();
 
-    assert_eq!(follow_status, true);
+    assert!(follow_status);
 
     let follow_status = state_machine
         .query_call(
@@ -110,7 +109,7 @@ fn when_alice_follows_bob_and_bob_follows_charlie_then_all_their_follow_and_foll
         })
         .unwrap();
 
-    assert_eq!(follow_status, true);
+    assert!(follow_status);
 
     let followee_arg = FolloweeArg {
         followee_canister_id: charlie_canister_id,
@@ -133,7 +132,7 @@ fn when_alice_follows_bob_and_bob_follows_charlie_then_all_their_follow_and_foll
         })
         .unwrap();
 
-    assert_eq!(follow_status, false);
+    assert!(!follow_status);
 
     // Bob follows Charlie
     let followee_arg = FolloweeArg {
@@ -159,7 +158,7 @@ fn when_alice_follows_bob_and_bob_follows_charlie_then_all_their_follow_and_foll
         })
         .unwrap();
 
-    assert_eq!(follow_status, true);
+    assert!(follow_status);
 
     // Alice's following list should contain Bob
     let alice_following_list = state_machine

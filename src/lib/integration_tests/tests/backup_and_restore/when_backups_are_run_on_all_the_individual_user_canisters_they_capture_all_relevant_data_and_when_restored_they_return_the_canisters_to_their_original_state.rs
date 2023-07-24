@@ -27,14 +27,12 @@ fn when_backups_are_run_on_all_the_individual_user_canisters_they_capture_all_re
 ) {
     let state_machine = get_new_state_machine();
     let known_principal_map = get_initialized_env_with_provisioned_known_canisters(&state_machine);
-    let user_index_canister_id = known_principal_map
+    let user_index_canister_id = *known_principal_map
         .get(&KnownPrincipalType::CanisterIdUserIndex)
-        .unwrap()
-        .clone();
-    let data_backup_canister_id = known_principal_map
+        .unwrap();
+    let data_backup_canister_id = *known_principal_map
         .get(&KnownPrincipalType::CanisterIdDataBackup)
-        .unwrap()
-        .clone();
+        .unwrap();
     let alice_principal_id = get_mock_user_alice_principal_id();
     let alice_unique_username = "cool_alice_1234".to_string();
     let alice_display_name = "Alice".to_string();
@@ -201,7 +199,7 @@ fn when_backups_are_run_on_all_the_individual_user_canisters_they_capture_all_re
             alice_canister_id,
             Principal::anonymous(),
             "get_individual_post_details_by_id",
-            candid::encode_args((0 as u64,)).unwrap(),
+            candid::encode_args((0_u64,)).unwrap(),
         )
         .map(|reply_payload| {
             let post_details: PostDetailsForFrontend = match reply_payload {
@@ -227,7 +225,7 @@ fn when_backups_are_run_on_all_the_individual_user_canisters_they_capture_all_re
             bob_canister_id,
             Principal::anonymous(),
             "get_individual_post_details_by_id",
-            candid::encode_args((0 as u64,)).unwrap(),
+            candid::encode_args((0_u64,)).unwrap(),
         )
         .map(|reply_payload| {
             let post_details: PostDetailsForFrontend = match reply_payload {
@@ -347,7 +345,7 @@ fn when_backups_are_run_on_all_the_individual_user_canisters_they_capture_all_re
     assert!(alice_post_0.description == "alice post 0 - description");
     assert!(alice_post_0.hashtags == vec!["alice-tag-0".to_string(), "alice-tag-1".to_string()]);
     assert!(alice_post_0.video_uid == "alice-video-0");
-    assert!(alice_post_0.creator_consent_for_inclusion_in_hot_or_not == true);
+    assert!(alice_post_0.creator_consent_for_inclusion_in_hot_or_not);
     let alice_post_1 = alice_backup_details
         .canister_data
         .all_created_posts
@@ -356,7 +354,7 @@ fn when_backups_are_run_on_all_the_individual_user_canisters_they_capture_all_re
     assert!(alice_post_1.description == "alice post 1 - description");
     assert!(alice_post_1.hashtags == vec!["alice-tag-2".to_string(), "alice-tag-3".to_string()]);
     assert!(alice_post_1.video_uid == "alice-video-1");
-    assert!(alice_post_1.creator_consent_for_inclusion_in_hot_or_not == true);
+    assert!(alice_post_1.creator_consent_for_inclusion_in_hot_or_not);
     let token_data = alice_backup_details.canister_data.token_data;
     assert_eq!(token_data.utility_token_balance, 1500);
     assert_eq!(token_data.utility_token_transaction_history.len(), 2);
@@ -424,7 +422,7 @@ fn when_backups_are_run_on_all_the_individual_user_canisters_they_capture_all_re
     assert!(bob_post_0.description == "bob post 0 - description");
     assert!(bob_post_0.hashtags == vec!["bob-tag-0".to_string(), "bob-tag-1".to_string()]);
     assert!(bob_post_0.video_uid == "bob-video-0");
-    assert!(bob_post_0.creator_consent_for_inclusion_in_hot_or_not == true);
+    assert!(bob_post_0.creator_consent_for_inclusion_in_hot_or_not);
     let bob_post_1 = bob_backup_details
         .canister_data
         .all_created_posts
@@ -433,7 +431,7 @@ fn when_backups_are_run_on_all_the_individual_user_canisters_they_capture_all_re
     assert!(bob_post_1.description == "bob post 1 - description");
     assert!(bob_post_1.hashtags == vec!["bob-tag-2".to_string(), "bob-tag-3".to_string()]);
     assert!(bob_post_1.video_uid == "bob-video-1");
-    assert!(bob_post_1.creator_consent_for_inclusion_in_hot_or_not == true);
+    assert!(bob_post_1.creator_consent_for_inclusion_in_hot_or_not);
     let token_data = bob_backup_details.canister_data.token_data;
     assert_eq!(token_data.utility_token_balance, 1500);
     assert_eq!(token_data.utility_token_transaction_history.len(), 2);

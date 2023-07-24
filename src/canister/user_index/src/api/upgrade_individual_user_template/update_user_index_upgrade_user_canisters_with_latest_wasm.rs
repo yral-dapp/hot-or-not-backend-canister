@@ -106,22 +106,22 @@ async fn is_canister_below_threshold_balance(canister_id: &Principal) -> bool {
         return true;
     }
 
-    return false;
+    false
 }
 
 async fn recharge_canister(canister_id: &Principal) -> Result<(), String> {
-    Ok(main::deposit_cycles(
+    main::deposit_cycles(
         CanisterIdRecord {
             canister_id: *canister_id,
         },
         INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT,
     )
     .await
-    .map_err(|e| e.1)?)
+    .map_err(|e| e.1)
 }
 
 async fn upgrade_user_canister(canister_id: &Principal, version_number: u64) -> Result<(), String> {
-    Ok(canister_management::upgrade_individual_user_canister(
+    canister_management::upgrade_individual_user_canister(
         *canister_id,
         CanisterInstallMode::Upgrade,
         IndividualUserTemplateInitArgs {
@@ -131,20 +131,20 @@ async fn upgrade_user_canister(canister_id: &Principal, version_number: u64) -> 
         },
     )
     .await
-    .map_err(|e| e.1)?)
+    .map_err(|e| e.1)
 }
 
 fn update_upgrade_status(
     canister_data: &mut CanisterData,
     upgrade_count: u32,
-    failed_canister_ids: &Vec<(Principal, Principal, String)>,
+    failed_canister_ids: &[(Principal, Principal, String)],
     version_number: Option<u64>,
     last_run_on: Option<SystemTime>,
 ) {
     let mut last_run_upgrade_status = canister_data.last_run_upgrade_status.clone();
 
     last_run_upgrade_status.successful_upgrade_count = upgrade_count;
-    last_run_upgrade_status.failed_canister_ids = failed_canister_ids.clone();
+    last_run_upgrade_status.failed_canister_ids = failed_canister_ids.to_owned();
     last_run_upgrade_status.version_number =
         version_number.unwrap_or(canister_data.last_run_upgrade_status.version_number);
     last_run_upgrade_status.last_run_on =

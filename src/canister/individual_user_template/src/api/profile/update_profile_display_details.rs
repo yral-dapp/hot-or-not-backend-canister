@@ -43,7 +43,7 @@ fn update_profile_display_details(
             display_name: profile.display_name.clone(),
             unique_user_name: profile.unique_user_name.clone(),
             profile_picture_url: profile.profile_picture_url.clone(),
-            profile_stats: profile.profile_stats.clone(),
+            profile_stats: profile.profile_stats,
             followers_count: canister_data_ref_cell
                 .borrow()
                 .principals_that_follow_me
