@@ -1,4 +1,4 @@
-use crate::{data_model::canister_upgrade::upgrade_status::UpgradeStatus, CANISTER_DATA};
+use crate::{data_model::canister_upgrade::UpgradeStatus, CANISTER_DATA};
 
 #[ic_cdk::query]
 #[candid::candid_method(query)]

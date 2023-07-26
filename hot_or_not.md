@@ -47,4 +47,11 @@ Burn XTC to cycles operation burns 2B cycles
 
 ## Next Items
 
-- push configuration values to member canisters in subnet
+- update data layout to use configuration struct in user_index
+  - comment upgrade method before sns proposal
+- remove local_deploy_sns folder
+- remove known_principal_ids from user_index
+- update user_index to upgrade 2 at a time
+- push configuration values to member canisters in subnet by implementing functions for it
+- look at canister_status to also see if canister has >100 MB memory usage and log that
+- move post_cache to same subnet as user_index
