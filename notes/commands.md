@@ -1,24 +1,3 @@
-# Architecture
-
-```mermaid
-  flowchart
-    UserClient[User Client Device]
-    UserIndex[(User Index)]
-    IndividualUserCanister[(Individual User <br>Canister)]
-    ContentIndex[(Content Index)]
-    GlobalConfiguration[(Global Configuration)]
-    DataBackup[(Data Backup)]
-
-
-    UserIndex -- 1 --> IndividualUserCanister
-    IndividualUserCanister -- n --> UserIndex
-    IndividualUserCanister -- sync new <br> posts --> ContentIndex
-    IndividualUserCanister -- backup before <br> upgrades --> DataBackup
-    UserClient -- get provisioned <br> individual canister --> UserIndex
-    UserClient -- get content --> ContentIndex
-    UserClient -- talk to own <br> and others' canisters --> IndividualUserCanister
-```
-
 # Commonly used dfx commands
 
 ## Try upgrading a canister to the latest wasm manually
@@ -44,5 +23,3 @@
 `dfx canister --network=ic call aanaa-xaaaa-aaaah-aaeiq-cai burn "(record { canister_id= principal \"$(dfx identity get-wallet --network ic)\"; amount= (1000000000000:nat64)})"`
 
 Burn XTC to cycles operation burns 2B cycles
-
-## Next Items
