@@ -3,5 +3,5 @@ use serde::Serialize;
 
 #[derive(Default, CandidType, Deserialize, Serialize)]
 pub struct VersionDetails {
-    version_number: u64,
+    pub version_number: u64,
 }

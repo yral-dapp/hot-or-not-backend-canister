@@ -1,5 +1,8 @@
 use crate::{data_model::CanisterData, CANISTER_DATA};
-use shared_utils::canister_specific::individual_user_template::types::arg::IndividualUserTemplateInitArgs;
+use shared_utils::{
+    canister_specific::individual_user_template::types::arg::IndividualUserTemplateInitArgs,
+    common::timer::send_metrics::enqueue_timer_for_calling_metrics_rest_api,
+};
 
 #[ic_cdk::init]
 #[candid::candid_method(init)]
@@ -8,6 +11,8 @@ fn init(init_args: IndividualUserTemplateInitArgs) {
         let mut data = canister_data_ref_cell.borrow_mut();
         init_impl(init_args, &mut data);
     });
+
+    send_canister_metrics();
 }
 
 fn init_impl(init_args: IndividualUserTemplateInitArgs, data: &mut CanisterData) {
@@ -21,6 +26,22 @@ fn init_impl(init_args: IndividualUserTemplateInitArgs, data: &mut CanisterData)
         });
 
     data.profile.principal_id = init_args.profile_owner;
+
+    data.configuration.url_to_send_canister_metrics_to = init_args.url_to_send_canister_metrics_to;
+}
+
+pub fn send_canister_metrics() {
+    let url_to_send_canister_metrics_to = CANISTER_DATA.with(|canister_data_ref_cell| {
+        canister_data_ref_cell
+            .borrow()
+            .configuration
+            .url_to_send_canister_metrics_to
+            .clone()
+    });
+
+    if let Some(url_to_send_canister_metrics_to) = url_to_send_canister_metrics_to {
+        enqueue_timer_for_calling_metrics_rest_api(url_to_send_canister_metrics_to);
+    }
 }
 
 #[cfg(test)]
@@ -55,6 +76,9 @@ mod test {
             known_principal_ids: Some(known_principal_ids),
             profile_owner: Some(get_mock_user_alice_principal_id()),
             upgrade_version_number: Some(0),
+            url_to_send_canister_metrics_to: Some(
+                "http://metrics-url.com/receive-metrics".to_string(),
+            ),
         };
         let mut data = CanisterData::default();
 
@@ -84,6 +108,11 @@ mod test {
         assert_eq!(
             data.profile.principal_id,
             Some(get_mock_user_alice_principal_id())
+        );
+
+        assert_eq!(
+            data.configuration.url_to_send_canister_metrics_to,
+            Some("http://metrics-url.com/receive-metrics".to_string())
         );
     }
 }

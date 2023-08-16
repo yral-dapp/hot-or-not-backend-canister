@@ -89,6 +89,7 @@ type HotOrNotOutcomePayoutEvent = variant {
 };
 type IndividualUserTemplateInitArgs = record {
   known_principal_ids : opt vec record { KnownPrincipalType; principal };
+  url_to_send_canister_metrics_to : opt text;
   profile_owner : opt principal;
   upgrade_version_number : opt nat64;
 };

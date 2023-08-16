@@ -9,16 +9,7 @@ pub struct IndividualUserTemplateInitArgs {
     pub known_principal_ids: Option<KnownPrincipalMap>,
     pub profile_owner: Option<Principal>,
     pub upgrade_version_number: Option<u64>,
-}
-
-impl IndividualUserTemplateInitArgs {
-    pub fn new(profile_owner: Principal) -> Self {
-        Self {
-            known_principal_ids: Some(KnownPrincipalMap::default()),
-            profile_owner: Some(profile_owner),
-            upgrade_version_number: Some(0),
-        }
-    }
+    pub url_to_send_canister_metrics_to: Option<String>,
 }
 
 #[derive(Deserialize, CandidType, Clone)]

@@ -25,6 +25,9 @@ fn post_upgrade() {
         canister_data_ref_cell.borrow_mut().configuration = Configuration {
             known_principal_ids: well_known_principals,
             signups_open_on_this_subnet: false,
+            url_to_send_canister_metrics_to:
+                "https://receive-canister-metrics-and-push-to-timeseries-d-74gsa5ifla-uc.a.run.app/receive-metrics"
+                    .to_string(),
         };
     });
 }
