@@ -55,7 +55,7 @@ fn receive_all_user_posts_from_individual_user_canister_impl(
             existing_entry
                 .canister_data
                 .all_created_posts
-                .insert(post.id.clone(), post.clone());
+                .insert(post.id, post.clone());
         });
 
     canister_data.user_principal_id_to_all_user_data_map.insert(

@@ -8,7 +8,7 @@ use crate::CANISTER_DATA;
 fn get_current_list_of_all_well_known_principal_values() -> Vec<(KnownPrincipalType, Principal)> {
     CANISTER_DATA.with(|canister_data_ref_cell| {
         let known_principal_ids = &canister_data_ref_cell.borrow().known_principal_ids;
-        get_current_list_of_all_well_known_principal_values_impl(&known_principal_ids)
+        get_current_list_of_all_well_known_principal_values_impl(known_principal_ids)
     })
 }
 
@@ -17,7 +17,7 @@ fn get_current_list_of_all_well_known_principal_values_impl(
 ) -> Vec<(KnownPrincipalType, Principal)> {
     known_principal_ids
         .iter()
-        .map(|(known_principal_type, principal)| (known_principal_type.clone(), principal.clone()))
+        .map(|(known_principal_type, principal)| (known_principal_type.clone(), *principal))
         .collect()
 }
 

@@ -18,16 +18,16 @@ pub fn tabulate_hot_or_not_outcome_for_post_slot(
     let this_canister_id = ic_cdk::id();
 
     let post_to_tabulate_results_for = canister_data.all_created_posts.get_mut(&post_id).unwrap();
-    let mut token_balance = &mut canister_data.my_token_balance;
+    let token_balance = &mut canister_data.my_token_balance;
 
     post_to_tabulate_results_for.tabulate_hot_or_not_outcome_for_slot(
         &this_canister_id,
         &slot_id,
-        &mut token_balance,
+        token_balance,
         &current_time,
     );
 
-    inform_participants_of_outcome(&post_to_tabulate_results_for, &slot_id);
+    inform_participants_of_outcome(post_to_tabulate_results_for, &slot_id);
 }
 
 fn inform_participants_of_outcome(post: &Post, slot_id: &u8) {

@@ -7,12 +7,11 @@ use crate::CANISTER_DATA;
 pub async fn update_locally_stored_well_known_principals() {
     // extract the canister ID of the configuration canister from well-known principals
     let config_canister_id = CANISTER_DATA.with(|canister_data_ref_cell| {
-        canister_data_ref_cell
+        *canister_data_ref_cell
             .borrow()
             .known_principal_ids
             .get(&KnownPrincipalType::CanisterIdConfiguration)
             .unwrap()
-            .clone()
     });
 
     // fetch the well-known principals from the configuration canister

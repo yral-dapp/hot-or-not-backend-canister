@@ -35,18 +35,16 @@ use test_utils::setup::{
 fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_occur() {
     let state_machine = get_new_state_machine();
     let known_principal_map = get_initialized_env_with_provisioned_known_canisters(&state_machine);
-    let user_index_canister_id = known_principal_map
+    let user_index_canister_id = *known_principal_map
         .get(&KnownPrincipalType::CanisterIdUserIndex)
-        .unwrap()
-        .clone();
+        .unwrap();
     println!(
         "🧪 user_index_canister_id: {:?}",
         user_index_canister_id.to_text()
     );
-    let post_cache_canister_id = known_principal_map
+    let post_cache_canister_id = *known_principal_map
         .get(&KnownPrincipalType::CanisterIdPostCache)
-        .unwrap()
-        .clone();
+        .unwrap();
     println!(
         "🧪 post_cache_canister_id: {:?}",
         post_cache_canister_id.to_text()
@@ -143,7 +141,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
             post_cache_canister_id,
             Principal::anonymous(),
             "get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed",
-            candid::encode_args((0 as u64,10 as u64)).unwrap(),
+            candid::encode_args((0_u64,10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let returned_posts: Result<Vec<PostScoreIndexItem>, TopPostsFetchError> = match reply_payload {
@@ -313,7 +311,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
             alice_canister_id,
             Principal::anonymous(),
             "get_user_utility_token_transaction_history_with_pagination",
-            candid::encode_args((0 as u64, 10 as u64)).unwrap(),
+            candid::encode_args((0_u64, 10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let alice_token_transaction_history: Result<
@@ -377,7 +375,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
             bob_canister_id,
             Principal::anonymous(),
             "get_user_utility_token_transaction_history_with_pagination",
-            candid::encode_args((0 as u64, 10 as u64)).unwrap(),
+            candid::encode_args((0_u64, 10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let bob_token_transaction_history: Result<
@@ -459,14 +457,14 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
         .unwrap();
 
     println!("🧪 charlie_token_balance: {}", charlie_token_balance);
-    assert_eq!(charlie_token_balance, 1000 - 100 + 0);
+    assert_eq!(charlie_token_balance, 1000 - 100);
 
     let charlie_token_transaction_history = state_machine
         .query_call(
             charlie_canister_id,
             Principal::anonymous(),
             "get_user_utility_token_transaction_history_with_pagination",
-            candid::encode_args((0 as u64, 10 as u64)).unwrap(),
+            candid::encode_args((0_u64, 10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let charlie_token_transaction_history: Result<
@@ -555,7 +553,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
             dan_canister_id,
             Principal::anonymous(),
             "get_user_utility_token_transaction_history_with_pagination",
-            candid::encode_args((0 as u64, 10 as u64)).unwrap(),
+            candid::encode_args((0_u64, 10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let dan_token_transaction_history: Result<

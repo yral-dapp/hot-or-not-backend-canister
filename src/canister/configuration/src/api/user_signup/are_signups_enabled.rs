@@ -19,12 +19,14 @@ mod test {
 
     #[test]
     fn test_are_signups_enabled_impl() {
-        let mut canister_data = CanisterData::default();
+        let mut canister_data = CanisterData {
+            signups_enabled: true,
+            ..Default::default()
+        };
 
-        canister_data.signups_enabled = true;
-        assert_eq!(are_signups_enabled_impl(&canister_data), true);
+        assert!(are_signups_enabled_impl(&canister_data));
 
         canister_data.signups_enabled = false;
-        assert_eq!(are_signups_enabled_impl(&canister_data), false);
+        assert!(!are_signups_enabled_impl(&canister_data));
     }
 }

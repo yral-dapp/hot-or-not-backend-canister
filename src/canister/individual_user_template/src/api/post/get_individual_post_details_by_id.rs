@@ -31,7 +31,7 @@ pub fn get_individual_post_details_by_id(post_id: u64) -> PostDetailsForFrontend
                 following_count: following.len() as u64,
                 principal_id: profile.principal_id.unwrap(),
                 profile_picture_url: profile.profile_picture_url.clone(),
-                profile_stats: profile.profile_stats.clone(),
+                profile_stats: profile.profile_stats,
                 unique_user_name: profile.unique_user_name.clone(),
                 lifetime_earnings: token_balance.lifetime_earnings,
             },

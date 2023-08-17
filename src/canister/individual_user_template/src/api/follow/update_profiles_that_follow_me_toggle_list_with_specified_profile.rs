@@ -92,8 +92,8 @@ mod test {
         calling_canister_principal = get_mock_user_alice_canister_id();
         (0..MAX_USERS_IN_FOLLOWER_FOLLOWING_LIST).for_each(|id: u64| {
             let follow_entry_detail = FollowEntryDetail {
-                principal_id: Principal::self_authenticating(&id.to_ne_bytes()),
-                canister_id: Principal::self_authenticating(&id.to_ne_bytes()),
+                principal_id: Principal::self_authenticating(id.to_ne_bytes()),
+                canister_id: Principal::self_authenticating(id.to_ne_bytes()),
             };
             canister_data.follow_data.follower.add(follow_entry_detail);
         });
@@ -108,10 +108,10 @@ mod test {
 
         let follow_entry_detail = FollowEntryDetail {
             principal_id: Principal::self_authenticating(
-                &(MAX_USERS_IN_FOLLOWER_FOLLOWING_LIST + 1).to_ne_bytes(),
+                (MAX_USERS_IN_FOLLOWER_FOLLOWING_LIST + 1).to_ne_bytes(),
             ),
             canister_id: Principal::self_authenticating(
-                &(MAX_USERS_IN_FOLLOWER_FOLLOWING_LIST + 1).to_ne_bytes(),
+                (MAX_USERS_IN_FOLLOWER_FOLLOWING_LIST + 1).to_ne_bytes(),
             ),
         };
         canister_data.follow_data.follower.add(follow_entry_detail);
@@ -140,15 +140,12 @@ mod test {
         );
 
         assert!(result.is_ok());
-        assert_eq!(*result.as_ref().unwrap(), true);
-        assert_eq!(canister_data.follow_data.follower.len(), 1 as usize);
-        assert_eq!(
-            canister_data
-                .follow_data
-                .follower
-                .contains(&follow_entry_detail),
-            true
-        );
+        assert!(*result.as_ref().unwrap());
+        assert_eq!(canister_data.follow_data.follower.len(), 1_usize);
+        assert!(canister_data
+            .follow_data
+            .follower
+            .contains(&follow_entry_detail));
 
         let result = update_profiles_that_follow_me_toggle_list_with_specified_profile_impl(
             &mut canister_data,
@@ -157,14 +154,11 @@ mod test {
         );
 
         assert!(result.is_ok());
-        assert_eq!(*result.as_ref().unwrap(), false);
-        assert_eq!(canister_data.follow_data.follower.len(), 0 as usize);
-        assert_eq!(
-            canister_data
-                .follow_data
-                .follower
-                .contains(&follow_entry_detail),
-            false
-        );
+        assert!(!(*result.as_ref().unwrap()));
+        assert_eq!(canister_data.follow_data.follower.len(), 0_usize);
+        assert!(!canister_data
+            .follow_data
+            .follower
+            .contains(&follow_entry_detail));
     }
 }

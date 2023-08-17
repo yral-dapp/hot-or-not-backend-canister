@@ -1,10 +1,10 @@
-use ic_cdk::api::stable::{BufferedStableReader, BufferedStableWriter, WASM_PAGE_SIZE_IN_BYTES};
+use ic_cdk::api::stable::{BufferedStableReader, BufferedStableWriter};
 use serde::{de::DeserializeOwned, Serialize};
 use std::cmp::min;
 use std::error::Error;
 use std::io::{Read, Write};
 
-// * const WASM_PAGE_SIZE_BYTES: usize = 64 * 1024; // 64KB
+const WASM_PAGE_SIZE_IN_BYTES: usize = 64 * 1024; // 64KB
 
 pub fn serialize_to_stable_memory<S: Serialize>(
     state: S,

@@ -18,7 +18,7 @@ fn init_impl(init_args: DataBackupInitArgs, data: &mut HeapData) {
         .iter()
         .for_each(|(principal_belongs_to, principal_id)| {
             data.known_principal_ids
-                .insert(principal_belongs_to.clone(), principal_id.clone());
+                .insert(principal_belongs_to.clone(), *principal_id);
         });
 
     init_args
@@ -27,7 +27,7 @@ fn init_impl(init_args: DataBackupInitArgs, data: &mut HeapData) {
         .iter()
         .for_each(|(principal, access_roles)| {
             data.access_control_list
-                .insert(principal.clone(), access_roles.clone());
+                .insert(*principal, access_roles.clone());
         });
 }
 

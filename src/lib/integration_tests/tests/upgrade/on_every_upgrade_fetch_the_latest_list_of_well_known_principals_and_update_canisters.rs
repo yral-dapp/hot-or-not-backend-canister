@@ -90,10 +90,9 @@ fn on_every_upgrade_fetch_the_latest_list_of_well_known_principals_and_update_ca
     };
 
     canister_installer(
-        known_principal_map_with_all_canisters
+        *known_principal_map_with_all_canisters
             .get(&KnownPrincipalType::CanisterIdConfiguration)
-            .unwrap()
-            .clone(),
+            .unwrap(),
         get_canister_wasm(KnownPrincipalType::CanisterIdConfiguration),
         candid::encode_one(ConfigurationInitArgs {
             known_principal_ids: Some(known_principal_map_with_all_canisters.clone()),
@@ -110,16 +109,14 @@ fn on_every_upgrade_fetch_the_latest_list_of_well_known_principals_and_update_ca
     );
     incomplete_known_principal_map.insert(
         KnownPrincipalType::CanisterIdConfiguration,
-        known_principal_map_with_all_canisters
+        *known_principal_map_with_all_canisters
             .get(&KnownPrincipalType::CanisterIdConfiguration)
-            .unwrap()
-            .clone(),
+            .unwrap(),
     );
     canister_installer(
-        known_principal_map_with_all_canisters
+        *known_principal_map_with_all_canisters
             .get(&KnownPrincipalType::CanisterIdConfiguration)
-            .unwrap()
-            .clone(),
+            .unwrap(),
         get_canister_wasm(KnownPrincipalType::CanisterIdConfiguration),
         candid::encode_one(ConfigurationInitArgs {
             known_principal_ids: Some(incomplete_known_principal_map.clone()),
@@ -131,10 +128,9 @@ fn on_every_upgrade_fetch_the_latest_list_of_well_known_principals_and_update_ca
 
     let user_index_canister_id_from_configuration_canister: Option<Principal> = state_machine
         .query_call(
-            known_principal_map_with_all_canisters
+            *known_principal_map_with_all_canisters
                 .get(&KnownPrincipalType::CanisterIdConfiguration)
-                .unwrap()
-                .clone(),
+                .unwrap(),
             Principal::anonymous(),
             "get_well_known_principal_value",
             candid::encode_one(KnownPrincipalType::CanisterIdUserIndex).unwrap(),
@@ -152,10 +148,9 @@ fn on_every_upgrade_fetch_the_latest_list_of_well_known_principals_and_update_ca
     assert!(user_index_canister_id_from_configuration_canister.is_some());
 
     canister_installer(
-        known_principal_map_with_all_canisters
+        *known_principal_map_with_all_canisters
             .get(&KnownPrincipalType::CanisterIdDataBackup)
-            .unwrap()
-            .clone(),
+            .unwrap(),
         get_canister_wasm(KnownPrincipalType::CanisterIdDataBackup),
         candid::encode_one(DataBackupInitArgs {
             known_principal_ids: Some(incomplete_known_principal_map.clone()),
@@ -167,10 +162,9 @@ fn on_every_upgrade_fetch_the_latest_list_of_well_known_principals_and_update_ca
 
     let user_index_canister_id_from_data_backup_canister: Option<Principal> = state_machine
         .query_call(
-            known_principal_map_with_all_canisters
+            *known_principal_map_with_all_canisters
                 .get(&KnownPrincipalType::CanisterIdDataBackup)
-                .unwrap()
-                .clone(),
+                .unwrap(),
             Principal::anonymous(),
             "get_well_known_principal_value",
             candid::encode_one(KnownPrincipalType::CanisterIdUserIndex).unwrap(),
@@ -191,10 +185,9 @@ fn on_every_upgrade_fetch_the_latest_list_of_well_known_principals_and_update_ca
     // * Upgrade data backup canister
     state_machine
         .upgrade_canister(
-            known_principal_map_with_all_canisters
+            *known_principal_map_with_all_canisters
                 .get(&KnownPrincipalType::CanisterIdDataBackup)
-                .unwrap()
-                .clone(),
+                .unwrap(),
             get_canister_wasm(KnownPrincipalType::CanisterIdDataBackup),
             candid::encode_one(DataBackupInitArgs {
                 ..Default::default()
@@ -209,10 +202,9 @@ fn on_every_upgrade_fetch_the_latest_list_of_well_known_principals_and_update_ca
 
     let user_index_canister_id_from_data_backup_canister: Option<Principal> = state_machine
         .query_call(
-            known_principal_map_with_all_canisters
+            *known_principal_map_with_all_canisters
                 .get(&KnownPrincipalType::CanisterIdDataBackup)
-                .unwrap()
-                .clone(),
+                .unwrap(),
             Principal::anonymous(),
             "get_well_known_principal_value",
             candid::encode_one(KnownPrincipalType::CanisterIdUserIndex).unwrap(),

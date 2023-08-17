@@ -190,7 +190,7 @@ impl Post {
                         started_at,
                         number_of_participants,
                         ongoing_slot: currently_ongoing_slot,
-                        ongoing_room: *currently_active_room.0 as u64,
+                        ongoing_room: *currently_active_room.0,
                         has_this_user_participated_in_this_post: if *bet_maker_principal_id
                             == Principal::anonymous()
                         {
@@ -217,11 +217,9 @@ impl Post {
             .as_ref()
             .unwrap()
             .slot_history
-            .iter()
-            .map(|(_, slot_details)| slot_details.room_details.iter())
-            .flatten()
-            .map(|(_, room_details)| room_details.bets_made.iter())
-            .flatten()
+            .values()
+            .flat_map(|slot_details| slot_details.room_details.iter())
+            .flat_map(|(_, room_details)| room_details.bets_made.iter())
             .any(|(principal, _)| principal == principal_making_bet)
     }
 
@@ -268,7 +266,7 @@ impl Post {
                 // * Update bets_made currently
                 if bets_made_currently.len() < 100 {
                     bets_made_currently.insert(
-                        bet_maker_principal_id.clone(),
+                        *bet_maker_principal_id,
                         BetDetails {
                             amount: bet_amount,
                             bet_direction: bet_direction.clone(),
@@ -281,7 +279,7 @@ impl Post {
                     let new_room_number = ongoing_room + 1;
                     let mut bets_made = BTreeMap::default();
                     bets_made.insert(
-                        bet_maker_principal_id.clone(),
+                        *bet_maker_principal_id,
                         BetDetails {
                             amount: bet_amount,
                             bet_direction: bet_direction.clone(),
@@ -370,9 +368,8 @@ impl Post {
             .unwrap()
             .room_details
             .iter_mut()
-            .for_each(|(room_id, room_detail)| match room_detail.bet_outcome {
-                // * Only tabulate scores for room if already not tabulated
-                RoomBetPossibleOutcomes::BetOngoing => {
+            .for_each(|(room_id, room_detail)| {
+                if room_detail.bet_outcome == RoomBetPossibleOutcomes::BetOngoing {
                     // * Figure out which side won
                     match room_detail.total_hot_bets.cmp(&room_detail.total_not_bets) {
                         Ordering::Greater => {
@@ -442,7 +439,6 @@ impl Post {
                             };
                         });
                 }
-                _ => {}
             })
     }
 }
@@ -688,7 +684,7 @@ mod test {
         let result =
             post.has_this_principal_already_bet_on_this_post(&get_mock_user_alice_principal_id());
 
-        assert_eq!(result, false);
+        assert!(!result);
 
         post.place_hot_or_not_bet(
             &get_mock_user_alice_principal_id(),
@@ -702,7 +698,7 @@ mod test {
         let result =
             post.has_this_principal_already_bet_on_this_post(&get_mock_user_alice_principal_id());
 
-        assert_eq!(result, true);
+        assert!(result);
     }
 
     #[test]
@@ -900,8 +896,8 @@ mod test {
             .iter()
             .for_each(|(user_id, bet_direction, bet_amount, _)| {
                 let result = post.place_hot_or_not_bet(
-                    &Principal::self_authenticating(&user_id.to_ne_bytes()),
-                    &Principal::self_authenticating(&user_id.to_ne_bytes()),
+                    &Principal::self_authenticating(user_id.to_ne_bytes()),
+                    &Principal::self_authenticating(user_id.to_ne_bytes()),
                     *bet_amount,
                     bet_direction,
                     &post_creation_time,
@@ -944,7 +940,7 @@ mod test {
             .for_each(|(user_id, bet_direction, bet_amount, amount_won)| {
                 let bet_detail = room_detail
                     .bets_made
-                    .get(&Principal::self_authenticating(&user_id.to_ne_bytes()))
+                    .get(&Principal::self_authenticating(user_id.to_ne_bytes()))
                     .unwrap();
 
                 assert_eq!(bet_detail.bet_direction, *bet_direction);
@@ -1049,8 +1045,8 @@ mod test {
             .iter()
             .for_each(|(user_id, bet_direction, bet_amount, _)| {
                 let result = post.place_hot_or_not_bet(
-                    &Principal::self_authenticating(&(user_id + 75).to_ne_bytes()),
-                    &Principal::self_authenticating(&(user_id + 75).to_ne_bytes()),
+                    &Principal::self_authenticating((user_id + 75).to_ne_bytes()),
+                    &Principal::self_authenticating((user_id + 75).to_ne_bytes()),
                     *bet_amount,
                     bet_direction,
                     &post_creation_time,
@@ -1094,7 +1090,7 @@ mod test {
                 let bet_detail = room_detail
                     .bets_made
                     .get(&Principal::self_authenticating(
-                        &(user_id + 75).to_ne_bytes(),
+                        (user_id + 75).to_ne_bytes(),
                     ))
                     .unwrap();
 
@@ -1288,8 +1284,8 @@ mod test {
             .iter()
             .for_each(|(user_id, bet_direction, bet_amount, _)| {
                 let result = post.place_hot_or_not_bet(
-                    &Principal::self_authenticating(&user_id.to_ne_bytes()),
-                    &Principal::self_authenticating(&user_id.to_ne_bytes()),
+                    &Principal::self_authenticating(user_id.to_ne_bytes()),
+                    &Principal::self_authenticating(user_id.to_ne_bytes()),
                     *bet_amount,
                     bet_direction,
                     &post_creation_time,
@@ -1333,7 +1329,7 @@ mod test {
             .for_each(|(user_id, bet_direction, bet_amount, amount_won)| {
                 let bet_detail = room_detail
                     .bets_made
-                    .get(&Principal::self_authenticating(&user_id.to_ne_bytes()))
+                    .get(&Principal::self_authenticating(user_id.to_ne_bytes()))
                     .unwrap();
 
                 assert_eq!(bet_detail.bet_direction, *bet_direction);
@@ -1373,7 +1369,7 @@ mod test {
             .for_each(|(user_id, bet_direction, bet_amount, amount_won)| {
                 let bet_detail = room_detail
                     .bets_made
-                    .get(&Principal::self_authenticating(&user_id.to_ne_bytes()))
+                    .get(&Principal::self_authenticating(user_id.to_ne_bytes()))
                     .unwrap();
 
                 assert_eq!(bet_detail.bet_direction, *bet_direction);
@@ -1496,8 +1492,8 @@ mod test {
             .iter()
             .for_each(|(user_id, bet_direction, bet_amount, _)| {
                 let result = post.place_hot_or_not_bet(
-                    &Principal::self_authenticating(&user_id.to_ne_bytes()),
-                    &Principal::self_authenticating(&user_id.to_ne_bytes()),
+                    &Principal::self_authenticating(user_id.to_ne_bytes()),
+                    &Principal::self_authenticating(user_id.to_ne_bytes()),
                     *bet_amount,
                     bet_direction,
                     &post_creation_time,
@@ -1540,7 +1536,7 @@ mod test {
             .for_each(|(user_id, bet_direction, bet_amount, amount_won)| {
                 let bet_detail = room_detail
                     .bets_made
-                    .get(&Principal::self_authenticating(&user_id.to_ne_bytes()))
+                    .get(&Principal::self_authenticating(user_id.to_ne_bytes()))
                     .unwrap();
 
                 assert_eq!(bet_detail.bet_direction, *bet_direction);

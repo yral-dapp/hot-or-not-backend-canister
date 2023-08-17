@@ -51,7 +51,7 @@ fn update_index_with_unique_user_name_corresponding_to_user_principal_id_impl(
 
     canister_data
         .unique_user_name_to_user_principal_id_map
-        .insert(unique_user_name.clone(), user_principal_id.clone());
+        .insert(unique_user_name.clone(), user_principal_id);
 
     Ok(())
 }
@@ -75,8 +75,8 @@ mod test {
 
         let result = update_index_with_unique_user_name_corresponding_to_user_principal_id_impl(
             unique_user_name_1.clone(),
-            user_principal_id.clone(),
-            request_makers_canister_id.clone(),
+            user_principal_id,
+            request_makers_canister_id,
             &mut canister_data,
         );
         assert!(result.is_err());
@@ -85,14 +85,13 @@ mod test {
             SetUniqueUsernameError::UserCanisterEntryDoesNotExist
         );
 
-        canister_data.user_principal_id_to_canister_id_map.insert(
-            user_principal_id.clone(),
-            request_makers_canister_id.clone(),
-        );
+        canister_data
+            .user_principal_id_to_canister_id_map
+            .insert(user_principal_id, request_makers_canister_id);
 
         let result = update_index_with_unique_user_name_corresponding_to_user_principal_id_impl(
             unique_user_name_1.clone(),
-            user_principal_id.clone(),
+            user_principal_id,
             get_mock_user_bob_canister_id(),
             &mut canister_data,
         );
@@ -108,8 +107,8 @@ mod test {
 
         let result = update_index_with_unique_user_name_corresponding_to_user_principal_id_impl(
             unique_user_name_1.clone(),
-            user_principal_id.clone(),
-            request_makers_canister_id.clone(),
+            user_principal_id,
+            request_makers_canister_id,
             &mut canister_data,
         );
         assert!(result.is_err());
@@ -120,8 +119,8 @@ mod test {
 
         let result = update_index_with_unique_user_name_corresponding_to_user_principal_id_impl(
             unique_user_name_2.clone(),
-            user_principal_id.clone(),
-            request_makers_canister_id.clone(),
+            user_principal_id,
+            request_makers_canister_id,
             &mut canister_data,
         );
         assert!(result.is_ok());

@@ -8,7 +8,7 @@ use crate::{data::heap_data::HeapData, CANISTER_DATA};
 fn get_well_known_principal_value(principal_type: KnownPrincipalType) -> Option<Principal> {
     CANISTER_DATA.with(|canister_data_ref_cell| {
         let canister_data = &canister_data_ref_cell.borrow().heap_data;
-        get_well_known_principal_value_impl(&principal_type, &canister_data)
+        get_well_known_principal_value_impl(&principal_type, canister_data)
     })
 }
 
@@ -19,7 +19,7 @@ fn get_well_known_principal_value_impl(
     canister_data
         .known_principal_ids
         .get(principal_type)
-        .map(|principal| principal.clone())
+        .copied()
 }
 
 #[cfg(test)]

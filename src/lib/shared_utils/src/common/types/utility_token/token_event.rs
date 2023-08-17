@@ -29,7 +29,7 @@ pub enum TokenEvent {
 }
 
 impl TokenEvent {
-    pub fn get_token_amount_for_token_event(self: &Self) -> u64 {
+    pub fn get_token_amount_for_token_event(&self) -> u64 {
         match self {
             TokenEvent::Mint { details, .. } => match details {
                 MintEvent::NewUserSignup { .. } => 1000,

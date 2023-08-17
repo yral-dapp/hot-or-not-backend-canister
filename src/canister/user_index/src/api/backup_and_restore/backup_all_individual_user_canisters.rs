@@ -30,12 +30,9 @@ async fn backup_all_individual_user_canisters() {
 
     for (user_principal_id, user_canister_principal_id) in all_individual_user_canister_ids.iter() {
         let upgrade_response: CallResult<()> = call::call(
-            user_canister_principal_id.clone(),
+            *user_canister_principal_id,
             "backup_data_to_backup_canister",
-            (
-                user_principal_id.clone(),
-                user_canister_principal_id.clone(),
-            ),
+            (*user_principal_id, *user_canister_principal_id),
         )
         .await;
         upgrade_response.ok();

@@ -64,8 +64,8 @@ mod test {
 
         (0..25).for_each(|id: u64| {
             let follow_entry_detail = FollowEntryDetail {
-                principal_id: Principal::self_authenticating(&id.to_ne_bytes()),
-                canister_id: Principal::self_authenticating(&id.to_ne_bytes()),
+                principal_id: Principal::self_authenticating(id.to_ne_bytes()),
+                canister_id: Principal::self_authenticating(id.to_ne_bytes()),
             };
             canister_data.follow_data.follower.add(follow_entry_detail);
         });
@@ -83,8 +83,8 @@ mod test {
                 .map(|id: u64| (
                     id,
                     FollowEntryDetail {
-                        principal_id: Principal::self_authenticating(&id.to_ne_bytes()),
-                        canister_id: Principal::self_authenticating(&id.to_ne_bytes()),
+                        principal_id: Principal::self_authenticating(id.to_ne_bytes()),
+                        canister_id: Principal::self_authenticating(id.to_ne_bytes()),
                     }
                 ))
                 .collect::<Vec<(u64, FollowEntryDetail)>>()
@@ -104,8 +104,8 @@ mod test {
                 .map(|id: u64| (
                     id,
                     FollowEntryDetail {
-                        principal_id: Principal::self_authenticating(&id.to_ne_bytes()),
-                        canister_id: Principal::self_authenticating(&id.to_ne_bytes()),
+                        principal_id: Principal::self_authenticating(id.to_ne_bytes()),
+                        canister_id: Principal::self_authenticating(id.to_ne_bytes()),
                     }
                 ))
                 .collect::<Vec<(u64, FollowEntryDetail)>>()
@@ -126,8 +126,8 @@ mod test {
                 .map(|id: u64| (
                     id,
                     FollowEntryDetail {
-                        principal_id: Principal::self_authenticating(&id.to_ne_bytes()),
-                        canister_id: Principal::self_authenticating(&id.to_ne_bytes()),
+                        principal_id: Principal::self_authenticating(id.to_ne_bytes()),
+                        canister_id: Principal::self_authenticating(id.to_ne_bytes()),
                     }
                 ))
                 .collect::<Vec<(u64, FollowEntryDetail)>>()
@@ -148,8 +148,8 @@ mod test {
                 .map(|id: u64| (
                     id,
                     FollowEntryDetail {
-                        principal_id: Principal::self_authenticating(&id.to_ne_bytes()),
-                        canister_id: Principal::self_authenticating(&id.to_ne_bytes()),
+                        principal_id: Principal::self_authenticating(id.to_ne_bytes()),
+                        canister_id: Principal::self_authenticating(id.to_ne_bytes()),
                     }
                 ))
                 .collect::<Vec<(u64, FollowEntryDetail)>>()
@@ -170,8 +170,8 @@ mod test {
                 .map(|id: u64| (
                     id,
                     FollowEntryDetail {
-                        principal_id: Principal::self_authenticating(&id.to_ne_bytes()),
-                        canister_id: Principal::self_authenticating(&id.to_ne_bytes()),
+                        principal_id: Principal::self_authenticating(id.to_ne_bytes()),
+                        canister_id: Principal::self_authenticating(id.to_ne_bytes()),
                     }
                 ))
                 .collect::<Vec<(u64, FollowEntryDetail)>>()

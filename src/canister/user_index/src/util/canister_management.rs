@@ -37,12 +37,16 @@ pub async fn create_users_canister(profile_owner: Principal) -> Principal {
         .await
         .unwrap();
 
+    let configuration = CANISTER_DATA
+        .with(|canister_data_ref_cell| canister_data_ref_cell.borrow().configuration.clone());
+
     let individual_user_tempalate_init_args = IndividualUserTemplateInitArgs {
         profile_owner: Some(profile_owner),
         known_principal_ids: Some(CANISTER_DATA.with(|canister_data_ref_cell| {
             canister_data_ref_cell.borrow().known_principal_ids.clone()
         })),
         upgrade_version_number: Some(0),
+        url_to_send_canister_metrics_to: Some(configuration.url_to_send_canister_metrics_to),
     };
 
     // * encode argument for user canister init lifecycle method

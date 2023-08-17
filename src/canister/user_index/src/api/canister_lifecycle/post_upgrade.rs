@@ -7,7 +7,7 @@ use crate::{
         upgrade_individual_user_template::update_user_index_upgrade_user_canisters_with_latest_wasm,
         well_known_principal::update_locally_stored_well_known_principals,
     },
-    data_model::CanisterData,
+    data_model::{configuration::Configuration, CanisterData},
     CANISTER_DATA,
 };
 
@@ -18,6 +18,18 @@ fn post_upgrade() {
     restore_data_from_stable_memory();
     refetch_well_known_principals();
     upgrade_all_indexed_user_canisters();
+
+    CANISTER_DATA.with(|canister_data_ref_cell| {
+        let well_known_principals = canister_data_ref_cell.borrow().known_principal_ids.clone();
+
+        canister_data_ref_cell.borrow_mut().configuration = Configuration {
+            known_principal_ids: well_known_principals,
+            signups_open_on_this_subnet: false,
+            url_to_send_canister_metrics_to:
+                "https://receive-canister-metrics-and-push-to-timeseries-d-74gsa5ifla-uc.a.run.app/receive-metrics"
+                    .to_string(),
+        };
+    });
 }
 
 fn restore_data_from_stable_memory() {
