@@ -11,6 +11,7 @@ use serde::Serialize;
 
 // Send metrics every 6 hours
 const PING_INTERVAL_FOR_CALLING_METRICS_REST_API: Duration = Duration::from_secs(60 * 60 * 6);
+const CYCLES_TO_SEND_ALONG_WITH_EVERY_REQUEST: u128 = 1_000_000_000;
 
 pub fn enqueue_timer_for_calling_metrics_rest_api(url_to_ping: String) {
     ic_cdk_timers::set_timer_interval(PING_INTERVAL_FOR_CALLING_METRICS_REST_API, move || {
@@ -29,7 +30,7 @@ async fn ping_metrics_rest_api(url_to_ping: String) {
         ..Default::default()
     };
 
-    http_request::http_request(request_arg)
+    http_request::http_request(request_arg, CYCLES_TO_SEND_ALONG_WITH_EVERY_REQUEST)
         .await
         .expect("Failed to ping");
 }

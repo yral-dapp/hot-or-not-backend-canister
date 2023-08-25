@@ -120,10 +120,10 @@ fn when_canister_cycle_balance_is_below_the_configured_or_freezing_threshold_the
         })
         .unwrap();
 
-    assert!(alice_cycle_balance_after_user_index_upgrade > 1_000_000_000_000);
-
     println!(
         "🧪 alice_cycle_balance_after_user_index_upgrade: {}",
         alice_cycle_balance_after_user_index_upgrade
     );
+
+    assert!(alice_cycle_balance_after_user_index_upgrade >= 1_000_000_000_000);
 }

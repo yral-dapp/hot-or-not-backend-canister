@@ -1,8 +1,8 @@
 use std::time::Duration;
 
 use candid::Principal;
-use ic_cdk::api::management_canister::{main::CanisterInstallMode, provisional::CanisterSettings};
-use ic_test_state_machine_client::WasmResult;
+use ic_cdk::api::management_canister::main::CanisterInstallMode;
+use ic_test_state_machine_client::{CanisterSettings, WasmResult};
 use shared_utils::{
     canister_specific::{
         configuration::types::args::ConfigurationInitArgs,

@@ -1,8 +1,7 @@
 use std::{collections::HashMap, env, path::Path};
 
 use candid::Principal;
-use ic_cdk::api::management_canister::provisional::CanisterSettings;
-use ic_test_state_machine_client::StateMachine;
+use ic_test_state_machine_client::{CanisterSettings, StateMachine};
 use shared_utils::{
     access_control::UserAccessRole,
     canister_specific::{
