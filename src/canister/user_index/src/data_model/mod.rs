@@ -11,7 +11,6 @@ pub mod configuration;
 
 #[derive(Default, CandidType, Deserialize, Serialize)]
 pub struct CanisterData {
-    #[serde(default)]
     pub configuration: Configuration,
     pub last_run_upgrade_status: UpgradeStatus,
     pub known_principal_ids: KnownPrincipalMap,

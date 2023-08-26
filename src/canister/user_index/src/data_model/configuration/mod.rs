@@ -6,6 +6,5 @@ use shared_utils::common::types::known_principal::KnownPrincipalMap;
 pub struct Configuration {
     pub known_principal_ids: KnownPrincipalMap,
     pub signups_open_on_this_subnet: bool,
-    #[serde(default)]
     pub url_to_send_canister_metrics_to: String,
 }
