@@ -17,14 +17,14 @@ fn get_current_list_of_all_well_known_principal_values_impl(
 ) -> Vec<(KnownPrincipalType, Principal)> {
     known_principal_ids
         .iter()
-        .map(|(known_principal_type, principal)| (known_principal_type.clone(), *principal))
+        .map(|(known_principal_type, principal)| (*known_principal_type, *principal))
         .collect()
 }
 
 #[cfg(test)]
 mod test {
     use test_utils::setup::test_constants::{
-        get_global_super_admin_principal_id_v1, get_mock_canister_id_configuration,
+        get_global_super_admin_principal_id, get_mock_canister_id_configuration,
         get_mock_canister_id_data_backup, get_mock_canister_id_post_cache,
         get_mock_canister_id_user_index,
     };
@@ -36,7 +36,7 @@ mod test {
         let mut known_principal_ids = KnownPrincipalMap::new();
         known_principal_ids.insert(
             KnownPrincipalType::UserIdGlobalSuperAdmin,
-            get_global_super_admin_principal_id_v1(),
+            get_global_super_admin_principal_id(),
         );
         known_principal_ids.insert(
             KnownPrincipalType::CanisterIdConfiguration,
@@ -59,7 +59,7 @@ mod test {
             get_current_list_of_all_well_known_principal_values_impl(&known_principal_ids)
                 .contains(&(
                     KnownPrincipalType::UserIdGlobalSuperAdmin,
-                    get_global_super_admin_principal_id_v1()
+                    get_global_super_admin_principal_id()
                 ))
         );
         assert!(

@@ -18,7 +18,7 @@ fn init_impl(init_args: ConfigurationInitArgs, data: &mut CanisterData) {
         .iter()
         .for_each(|(principal_belongs_to, principal_id)| {
             data.known_principal_ids
-                .insert(principal_belongs_to.clone(), *principal_id);
+                .insert(*principal_belongs_to, *principal_id);
         });
 
     data.signups_enabled = init_args.signups_enabled.unwrap_or(data.signups_enabled);
@@ -34,7 +34,7 @@ mod test {
         common::types::known_principal::{KnownPrincipalMap, KnownPrincipalType},
     };
     use test_utils::setup::test_constants::{
-        get_global_super_admin_principal_id_v1, get_mock_canister_id_configuration,
+        get_global_super_admin_principal_id, get_mock_canister_id_configuration,
         get_mock_canister_id_user_index, get_mock_user_alice_canister_id,
     };
 
@@ -46,7 +46,7 @@ mod test {
         let mut known_principal_ids = KnownPrincipalMap::new();
         known_principal_ids.insert(
             KnownPrincipalType::UserIdGlobalSuperAdmin,
-            get_global_super_admin_principal_id_v1(),
+            get_global_super_admin_principal_id(),
         );
         known_principal_ids.insert(
             KnownPrincipalType::CanisterIdConfiguration,
@@ -60,7 +60,7 @@ mod test {
         // * Add some access control roles
         let mut access_control_map = HashMap::new();
         access_control_map.insert(
-            get_global_super_admin_principal_id_v1(),
+            get_global_super_admin_principal_id(),
             vec![
                 UserAccessRole::CanisterController,
                 UserAccessRole::CanisterAdmin,
@@ -74,7 +74,6 @@ mod test {
         // * Create the init args
         let init_args = ConfigurationInitArgs {
             known_principal_ids: Some(known_principal_ids),
-            access_control_map: Some(access_control_map),
             signups_enabled: Some(true),
         };
         let mut data = CanisterData::default();
@@ -87,7 +86,7 @@ mod test {
             data.known_principal_ids
                 .get(&KnownPrincipalType::UserIdGlobalSuperAdmin)
                 .unwrap(),
-            &get_global_super_admin_principal_id_v1()
+            &get_global_super_admin_principal_id()
         );
         assert_eq!(
             data.known_principal_ids

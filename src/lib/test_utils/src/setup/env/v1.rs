@@ -13,7 +13,7 @@ use shared_utils::{
 };
 
 use crate::setup::test_constants::{
-    get_canister_wasm, get_global_super_admin_principal_id_v1,
+    get_canister_wasm, get_global_super_admin_principal_id,
     v1::{
         CANISTER_INITIAL_CYCLES_FOR_NON_SPAWNING_CANISTERS,
         CANISTER_INITIAL_CYCLES_FOR_SPAWNING_CANISTERS,
@@ -54,13 +54,11 @@ pub fn get_initialized_env_with_provisioned_known_canisters(
 ) -> KnownPrincipalMap {
     let canister_provisioner = |cycle_amount: u128| {
         let settings = Some(CanisterSettings {
-            controllers: Some(vec![get_global_super_admin_principal_id_v1()]),
+            controllers: Some(vec![get_global_super_admin_principal_id()]),
             ..Default::default()
         });
-        let canister_id = state_machine.create_canister_with_settings(
-            settings,
-            Some(get_global_super_admin_principal_id_v1()),
-        );
+        let canister_id = state_machine
+            .create_canister_with_settings(settings, Some(get_global_super_admin_principal_id()));
         state_machine.add_cycles(canister_id, cycle_amount);
         canister_id
     };
@@ -69,7 +67,7 @@ pub fn get_initialized_env_with_provisioned_known_canisters(
     let mut known_principal_map_with_all_canisters = KnownPrincipalMap::default();
     known_principal_map_with_all_canisters.insert(
         KnownPrincipalType::UserIdGlobalSuperAdmin,
-        get_global_super_admin_principal_id_v1(),
+        get_global_super_admin_principal_id(),
     );
     known_principal_map_with_all_canisters.insert(
         KnownPrincipalType::CanisterIdConfiguration,
@@ -94,7 +92,7 @@ pub fn get_initialized_env_with_provisioned_known_canisters(
             canister_id,
             wasm_module,
             arg,
-            Some(get_global_super_admin_principal_id_v1()),
+            Some(get_global_super_admin_principal_id()),
         );
     };
 
@@ -133,7 +131,7 @@ pub fn get_initialized_env_with_provisioned_known_canisters(
 
     let mut user_index_access_control_map = HashMap::new();
     user_index_access_control_map.insert(
-        get_global_super_admin_principal_id_v1(),
+        get_global_super_admin_principal_id(),
         vec![
             UserAccessRole::CanisterAdmin,
             UserAccessRole::CanisterController,

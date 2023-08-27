@@ -9,7 +9,7 @@ use shared_utils::{
 use test_utils::setup::{
     env::v1::{get_initialized_env_with_provisioned_known_canisters, get_new_state_machine},
     test_constants::{
-        get_canister_wasm, get_global_super_admin_principal_id_v1, get_mock_user_alice_principal_id,
+        get_canister_wasm, get_global_super_admin_principal_id, get_mock_user_alice_principal_id,
     },
 };
 
@@ -97,7 +97,7 @@ fn when_canister_cycle_balance_is_below_the_configured_or_freezing_threshold_the
                 ..Default::default()
             })
             .unwrap(),
-            Some(get_global_super_admin_principal_id_v1()),
+            Some(get_global_super_admin_principal_id()),
         )
         .unwrap();
 

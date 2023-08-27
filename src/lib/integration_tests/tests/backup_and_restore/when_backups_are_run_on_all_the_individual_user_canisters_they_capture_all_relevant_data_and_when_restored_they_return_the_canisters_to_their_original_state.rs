@@ -17,8 +17,8 @@ use shared_utils::{
 use test_utils::setup::{
     env::v1::{get_initialized_env_with_provisioned_known_canisters, get_new_state_machine},
     test_constants::{
-        get_canister_wasm, get_global_super_admin_principal_id_v1,
-        get_mock_user_alice_principal_id, get_mock_user_bob_principal_id,
+        get_canister_wasm, get_global_super_admin_principal_id, get_mock_user_alice_principal_id,
+        get_mock_user_bob_principal_id,
     },
 };
 
@@ -190,7 +190,7 @@ fn when_backups_are_run_on_all_the_individual_user_canisters_they_capture_all_re
             user_index_canister_id,
             get_canister_wasm(KnownPrincipalType::CanisterIdUserIndex),
             candid::encode_one(()).unwrap(),
-            Some(get_global_super_admin_principal_id_v1()),
+            Some(get_global_super_admin_principal_id()),
         )
         .unwrap();
 
@@ -254,7 +254,7 @@ fn when_backups_are_run_on_all_the_individual_user_canisters_they_capture_all_re
                 ..Default::default()
             })
             .unwrap(),
-            Some(get_global_super_admin_principal_id_v1()),
+            Some(get_global_super_admin_principal_id()),
         )
         .unwrap();
 
@@ -264,7 +264,7 @@ fn when_backups_are_run_on_all_the_individual_user_canisters_they_capture_all_re
     state_machine
         .update_call(
             user_index_canister_id,
-            get_global_super_admin_principal_id_v1(),
+            get_global_super_admin_principal_id(),
             "backup_all_individual_user_canisters",
             candid::encode_one(()).unwrap(),
         )
@@ -278,7 +278,7 @@ fn when_backups_are_run_on_all_the_individual_user_canisters_they_capture_all_re
                 ..Default::default()
             })
             .unwrap(),
-            Some(get_global_super_admin_principal_id_v1()),
+            Some(get_global_super_admin_principal_id()),
         )
         .unwrap();
 
@@ -306,7 +306,7 @@ fn when_backups_are_run_on_all_the_individual_user_canisters_they_capture_all_re
     let alice_backup_details = state_machine
         .query_call(
             data_backup_canister_id,
-            get_global_super_admin_principal_id_v1(),
+            get_global_super_admin_principal_id(),
             "get_individual_users_backup_data_entry",
             candid::encode_one(alice_principal_id).unwrap(),
         )
@@ -389,7 +389,7 @@ fn when_backups_are_run_on_all_the_individual_user_canisters_they_capture_all_re
     let bob_backup_details = state_machine
         .query_call(
             data_backup_canister_id,
-            get_global_super_admin_principal_id_v1(),
+            get_global_super_admin_principal_id(),
             "get_individual_users_backup_data_entry",
             candid::encode_one(bob_principal_id).unwrap(),
         )

@@ -23,7 +23,7 @@ pub async fn create_users_canister(profile_owner: Principal) -> Principal {
     let arg = CreateCanisterArgument {
         settings: Some(CanisterSettings {
             controllers: Some(vec![
-                // this canister
+                // * this user_index canister
                 api::id(),
             ]),
             compute_allocation: None,

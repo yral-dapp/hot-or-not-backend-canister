@@ -18,7 +18,7 @@ use shared_utils::{
 use test_utils::setup::{
     env::v1::{get_initialized_env_with_provisioned_known_canisters, get_new_state_machine},
     test_constants::{
-        get_global_super_admin_principal_id_v1, get_mock_user_alice_principal_id,
+        get_global_super_admin_principal_id, get_mock_user_alice_principal_id,
         get_mock_user_bob_principal_id, get_mock_user_charlie_principal_id,
     },
 };
@@ -236,7 +236,7 @@ fn when_restoring_all_data_to_an_individual_user_canister_after_backing_up_data_
     state_machine
         .update_call(
             alice_canister_id,
-            get_global_super_admin_principal_id_v1(),
+            get_global_super_admin_principal_id(),
             "backup_data_to_backup_canister",
             candid::encode_args((get_mock_user_alice_principal_id(), alice_canister_id)).unwrap(),
         )
@@ -263,7 +263,7 @@ fn when_restoring_all_data_to_an_individual_user_canister_after_backing_up_data_
     let alice_backup_details = state_machine
         .query_call(
             data_backup_canister_id,
-            get_global_super_admin_principal_id_v1(),
+            get_global_super_admin_principal_id(),
             "get_individual_users_backup_data_entry",
             candid::encode_one(alice_principal_id).unwrap(),
         )
@@ -346,7 +346,7 @@ fn when_restoring_all_data_to_an_individual_user_canister_after_backing_up_data_
     let canister_upgrade_result = state_machine
         .update_call(
             user_index_canister_id,
-            get_global_super_admin_principal_id_v1(),
+            get_global_super_admin_principal_id(),
             "upgrade_specific_individual_user_canister_with_latest_wasm",
             candid::encode_args((
                 get_mock_user_alice_principal_id(),
@@ -392,7 +392,7 @@ fn when_restoring_all_data_to_an_individual_user_canister_after_backing_up_data_
     let restore_operation_response = state_machine
         .update_call(
             data_backup_canister_id,
-            get_global_super_admin_principal_id_v1(),
+            get_global_super_admin_principal_id(),
             "restore_backed_up_data_to_individual_users_canister",
             candid::encode_one(get_mock_user_alice_principal_id()).unwrap(),
         )
