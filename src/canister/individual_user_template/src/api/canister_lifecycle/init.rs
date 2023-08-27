@@ -22,7 +22,7 @@ fn init_impl(init_args: IndividualUserTemplateInitArgs, data: &mut CanisterData)
         .iter()
         .for_each(|(principal_belongs_to, principal_id)| {
             data.known_principal_ids
-                .insert(principal_belongs_to.clone(), *principal_id);
+                .insert(*principal_belongs_to, *principal_id);
         });
 
     data.profile.principal_id = init_args.profile_owner;
@@ -48,7 +48,7 @@ pub fn send_canister_metrics() {
 mod test {
     use shared_utils::common::types::known_principal::{KnownPrincipalMap, KnownPrincipalType};
     use test_utils::setup::test_constants::{
-        get_global_super_admin_principal_id_v1, get_mock_canister_id_configuration,
+        get_global_super_admin_principal_id, get_mock_canister_id_configuration,
         get_mock_canister_id_user_index, get_mock_user_alice_principal_id,
     };
 
@@ -60,7 +60,7 @@ mod test {
         let mut known_principal_ids = KnownPrincipalMap::new();
         known_principal_ids.insert(
             KnownPrincipalType::UserIdGlobalSuperAdmin,
-            get_global_super_admin_principal_id_v1(),
+            get_global_super_admin_principal_id(),
         );
         known_principal_ids.insert(
             KnownPrincipalType::CanisterIdConfiguration,
@@ -90,7 +90,7 @@ mod test {
             data.known_principal_ids
                 .get(&KnownPrincipalType::UserIdGlobalSuperAdmin)
                 .unwrap(),
-            &get_global_super_admin_principal_id_v1()
+            &get_global_super_admin_principal_id()
         );
         assert_eq!(
             data.known_principal_ids
