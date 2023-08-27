@@ -1,7 +1,6 @@
 type ConfigurationInitArgs = record {
   known_principal_ids : opt vec record { KnownPrincipalType; principal };
   signups_enabled : opt bool;
-  access_control_map : opt vec record { principal; vec UserAccessRole };
 };
 type KnownPrincipalType = variant {
   CanisterIdUserIndex;
@@ -15,12 +14,6 @@ type KnownPrincipalType = variant {
   UserIdGlobalSuperAdmin;
 };
 type Result = variant { Ok; Err : text };
-type UserAccessRole = variant {
-  CanisterController;
-  ProfileOwner;
-  CanisterAdmin;
-  ProjectCanister;
-};
 service : (ConfigurationInitArgs) -> {
   are_signups_enabled : () -> (bool) query;
   get_current_list_of_all_well_known_principal_values : () -> (
