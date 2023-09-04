@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::time::{Duration, SystemTime};
 
 use candid::Principal;
 use ic_cdk::api::management_canister::{
@@ -8,6 +8,8 @@ use ic_cdk::api::management_canister::{
 };
 use rmp_serde::encode;
 use serde::Serialize;
+
+use crate::common::utils::system_time;
 
 // Send metrics every hour
 const PING_INTERVAL_FOR_CALLING_METRICS_REST_API: Duration = Duration::from_secs(60 * 60);
@@ -20,7 +22,9 @@ pub fn enqueue_timer_for_calling_metrics_rest_api(url_to_ping: String) {
 }
 
 async fn ping_metrics_rest_api(url_to_ping: String) {
-    let status = get_my_canister_cycle_balance_and_memory_usage().await;
+    let current_time = system_time::get_current_system_time_from_ic();
+
+    let status = get_my_canister_cycle_balance_and_memory_usage(current_time).await;
 
     let request_arg = CanisterHttpRequestArgument {
         url: url_to_ping,
@@ -38,9 +42,10 @@ async fn ping_metrics_rest_api(url_to_ping: String) {
 #[derive(Serialize)]
 pub struct CanisterStatus {
     pub canister_id: Principal,
-    cycle_balance: i64,
-    idle_cycles_burned_per_day: i64,
-    memory_size: i64,
+    pub cycle_balance: i64,
+    pub idle_cycles_burned_per_day: i64,
+    pub memory_size: i64,
+    pub timestamp: SystemTime,
 }
 
 #[derive(Serialize)]
@@ -50,6 +55,7 @@ pub struct CanisterStatusError {
 }
 
 pub async fn get_my_canister_cycle_balance_and_memory_usage(
+    current_time: SystemTime,
 ) -> Result<CanisterStatus, CanisterStatusError> {
     let canister_id = ic_cdk::id();
 
@@ -70,5 +76,6 @@ pub async fn get_my_canister_cycle_balance_and_memory_usage(
             .0
             .try_into()
             .unwrap(),
+        timestamp: current_time,
     })
 }
