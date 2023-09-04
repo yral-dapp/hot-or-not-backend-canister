@@ -5,7 +5,7 @@ use std::{fs::File, io::Read, path::PathBuf};
 
 pub mod v1;
 
-pub fn get_global_super_admin_principal_id_v1() -> Principal {
+pub fn get_global_super_admin_principal_id() -> Principal {
     Principal::self_authenticating([0])
 }
 

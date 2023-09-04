@@ -80,7 +80,7 @@ pub fn get_roles_for_principal_id_v2(
 mod test {
     use std::collections::HashMap;
     use test_utils::setup::test_constants::{
-        get_global_super_admin_principal_id_v1, get_mock_user_alice_principal_id,
+        get_global_super_admin_principal_id, get_mock_user_alice_principal_id,
         get_mock_user_bob_principal_id,
     };
 
@@ -90,7 +90,7 @@ mod test {
     fn test_does_principal_have_role_v2() {
         let mut user_id_access_control_map: HashMap<Principal, Vec<UserAccessRole>> =
             HashMap::new();
-        let user_id = get_global_super_admin_principal_id_v1();
+        let user_id = get_global_super_admin_principal_id();
         let role = UserAccessRole::CanisterAdmin;
         let roles = vec![role];
         user_id_access_control_map.insert(user_id, roles);
@@ -107,7 +107,7 @@ mod test {
     fn test_add_role_to_principal_id_v2() {
         let mut user_id_access_control_map: HashMap<Principal, Vec<UserAccessRole>> =
             HashMap::new();
-        let super_admin = get_global_super_admin_principal_id_v1();
+        let super_admin = get_global_super_admin_principal_id();
         let role = UserAccessRole::CanisterAdmin;
         let roles = vec![role];
         user_id_access_control_map.insert(super_admin, roles);
@@ -119,7 +119,7 @@ mod test {
             &mut user_id_access_control_map,
             user_to_add_to,
             role_to_add,
-            get_global_super_admin_principal_id_v1(),
+            get_global_super_admin_principal_id(),
         );
 
         let result = get_roles_for_principal_id_v2(&user_id_access_control_map, user_to_add_to);
@@ -142,7 +142,7 @@ mod test {
     fn test_remove_role_from_principal_id_v2() {
         let mut user_id_access_control_map: HashMap<Principal, Vec<UserAccessRole>> =
             HashMap::new();
-        let super_admin = get_global_super_admin_principal_id_v1();
+        let super_admin = get_global_super_admin_principal_id();
         let role = UserAccessRole::CanisterAdmin;
         let roles = vec![role];
         user_id_access_control_map.insert(super_admin, roles);
@@ -157,7 +157,7 @@ mod test {
             &mut user_id_access_control_map,
             user_to_remove_from,
             role_to_remove,
-            get_global_super_admin_principal_id_v1(),
+            get_global_super_admin_principal_id(),
         );
 
         let result =
@@ -186,7 +186,7 @@ mod test {
     fn test_get_role_for_principal_id_v2() {
         let mut user_id_access_control_map: HashMap<Principal, Vec<UserAccessRole>> =
             HashMap::new();
-        let user_id = get_global_super_admin_principal_id_v1();
+        let user_id = get_global_super_admin_principal_id();
         let role = UserAccessRole::CanisterAdmin;
         let roles = vec![role];
         user_id_access_control_map.insert(user_id, roles);

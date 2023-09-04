@@ -36,7 +36,7 @@ fn toggle_signups_enabled_impl(
 #[cfg(test)]
 mod test {
     use test_utils::setup::test_constants::{
-        get_global_super_admin_principal_id_v1, get_mock_user_alice_principal_id,
+        get_global_super_admin_principal_id, get_mock_user_alice_principal_id,
     };
 
     use crate::data::CanisterData;
@@ -48,10 +48,10 @@ mod test {
         let mut canister_data = CanisterData::default();
         canister_data.known_principal_ids.insert(
             KnownPrincipalType::UserIdGlobalSuperAdmin,
-            get_global_super_admin_principal_id_v1(),
+            get_global_super_admin_principal_id(),
         );
 
-        let admin_caller = get_global_super_admin_principal_id_v1();
+        let admin_caller = get_global_super_admin_principal_id();
         // super admin should be allowed to toggle
         let result = toggle_signups_enabled_impl(admin_caller, &mut canister_data);
         assert!(result.is_ok());

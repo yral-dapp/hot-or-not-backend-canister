@@ -1,4 +1,6 @@
 [workspace]
+resolver = "2"
+
 members = [
   "src/canister/configuration",
   "src/canister/data_backup",
@@ -11,13 +13,13 @@ members = [
 ]
 
 [workspace.dependencies]
-candid = "0.8.4"
+candid = "0.9.3"
 ciborium = "0.2.1"
-ic-cdk = "0.8.1"
-ic-cdk-timers = "0.2.0"
+ic-cdk = "0.10.0"
+ic-cdk-timers = "0.4.0"
 ic-stable-structures = "0.5.6"
-ic-test-state-machine-client = "2.2.1"
-rmp-serde = "1.1.1"
-serde = "1.0.173"
+ic-test-state-machine-client = "3.0.0"
+rmp-serde = "1.1.2"
+serde = "1.0.186"
 shared_utils = { path = "./src/lib/shared_utils" }
 test_utils = { path = "./src/lib/test_utils" }

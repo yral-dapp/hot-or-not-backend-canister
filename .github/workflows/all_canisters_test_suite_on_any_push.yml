@@ -3,9 +3,8 @@ on:
   push:
     branches-ignore:
       - main
-    paths:
-      - "src/**"
-      - ".github/workflows/all_canisters_test_suite_on_any_push.yml"
+    paths-ignore:
+      - "notes/**"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

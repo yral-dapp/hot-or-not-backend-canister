@@ -18,7 +18,7 @@ fn init_impl(init_args: DataBackupInitArgs, data: &mut HeapData) {
         .iter()
         .for_each(|(principal_belongs_to, principal_id)| {
             data.known_principal_ids
-                .insert(principal_belongs_to.clone(), *principal_id);
+                .insert(*principal_belongs_to, *principal_id);
         });
 
     init_args
@@ -40,7 +40,7 @@ mod test {
         common::types::known_principal::{KnownPrincipalMap, KnownPrincipalType},
     };
     use test_utils::setup::test_constants::{
-        get_global_super_admin_principal_id_v1, get_mock_canister_id_configuration,
+        get_global_super_admin_principal_id, get_mock_canister_id_configuration,
         get_mock_canister_id_user_index, get_mock_user_alice_canister_id,
     };
 
@@ -52,7 +52,7 @@ mod test {
         let mut known_principal_ids = KnownPrincipalMap::new();
         known_principal_ids.insert(
             KnownPrincipalType::UserIdGlobalSuperAdmin,
-            get_global_super_admin_principal_id_v1(),
+            get_global_super_admin_principal_id(),
         );
         known_principal_ids.insert(
             KnownPrincipalType::CanisterIdConfiguration,
@@ -66,7 +66,7 @@ mod test {
         // * Add some access control roles
         let mut access_control_map = HashMap::new();
         access_control_map.insert(
-            get_global_super_admin_principal_id_v1(),
+            get_global_super_admin_principal_id(),
             vec![
                 UserAccessRole::CanisterController,
                 UserAccessRole::CanisterAdmin,
@@ -92,7 +92,7 @@ mod test {
             data.known_principal_ids
                 .get(&KnownPrincipalType::UserIdGlobalSuperAdmin)
                 .unwrap(),
-            &get_global_super_admin_principal_id_v1()
+            &get_global_super_admin_principal_id()
         );
         assert_eq!(
             data.known_principal_ids
@@ -108,7 +108,7 @@ mod test {
         );
         assert_eq!(
             data.access_control_list
-                .get(&get_global_super_admin_principal_id_v1())
+                .get(&get_global_super_admin_principal_id())
                 .unwrap(),
             &vec![
                 UserAccessRole::CanisterController,

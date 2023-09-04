@@ -25,9 +25,9 @@ use shared_utils::{
 use test_utils::setup::{
     env::v1::{get_initialized_env_with_provisioned_known_canisters, get_new_state_machine},
     test_constants::{
-        get_canister_wasm, get_global_super_admin_principal_id_v1,
-        get_mock_user_alice_principal_id, get_mock_user_bob_principal_id,
-        get_mock_user_charlie_principal_id, get_mock_user_dan_principal_id,
+        get_canister_wasm, get_global_super_admin_principal_id, get_mock_user_alice_principal_id,
+        get_mock_user_bob_principal_id, get_mock_user_charlie_principal_id,
+        get_mock_user_dan_principal_id,
     },
 };
 
@@ -276,7 +276,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
                 ..Default::default()
             })
             .unwrap(),
-            Some(get_global_super_admin_principal_id_v1()),
+            Some(get_global_super_admin_principal_id()),
         )
         .unwrap();
 

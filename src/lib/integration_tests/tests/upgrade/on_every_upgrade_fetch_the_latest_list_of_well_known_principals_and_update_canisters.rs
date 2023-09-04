@@ -1,8 +1,8 @@
 use std::time::Duration;
 
 use candid::Principal;
-use ic_cdk::api::management_canister::{main::CanisterInstallMode, provisional::CanisterSettings};
-use ic_test_state_machine_client::WasmResult;
+use ic_cdk::api::management_canister::main::CanisterInstallMode;
+use ic_test_state_machine_client::{CanisterSettings, WasmResult};
 use shared_utils::{
     canister_specific::{
         configuration::types::args::ConfigurationInitArgs,
@@ -13,7 +13,7 @@ use shared_utils::{
 use test_utils::setup::{
     env::v1::get_new_state_machine,
     test_constants::{
-        get_canister_wasm, get_global_super_admin_principal_id_v1,
+        get_canister_wasm, get_global_super_admin_principal_id,
         v1::{
             CANISTER_INITIAL_CYCLES_FOR_NON_SPAWNING_CANISTERS,
             CANISTER_INITIAL_CYCLES_FOR_SPAWNING_CANISTERS,
@@ -27,13 +27,11 @@ fn on_every_upgrade_fetch_the_latest_list_of_well_known_principals_and_update_ca
 
     let canister_provisioner = |cycle_amount: u128| {
         let settings = Some(CanisterSettings {
-            controllers: Some(vec![get_global_super_admin_principal_id_v1()]),
+            controllers: Some(vec![get_global_super_admin_principal_id()]),
             ..Default::default()
         });
-        let canister_id = state_machine.create_canister_with_settings(
-            settings,
-            Some(get_global_super_admin_principal_id_v1()),
-        );
+        let canister_id = state_machine
+            .create_canister_with_settings(settings, Some(get_global_super_admin_principal_id()));
         state_machine.add_cycles(canister_id, cycle_amount);
         canister_id
     };
@@ -42,7 +40,7 @@ fn on_every_upgrade_fetch_the_latest_list_of_well_known_principals_and_update_ca
     let mut known_principal_map_with_all_canisters = KnownPrincipalMap::default();
     known_principal_map_with_all_canisters.insert(
         KnownPrincipalType::UserIdGlobalSuperAdmin,
-        get_global_super_admin_principal_id_v1(),
+        get_global_super_admin_principal_id(),
     );
     known_principal_map_with_all_canisters.insert(
         KnownPrincipalType::CanisterIdConfiguration,
@@ -72,7 +70,7 @@ fn on_every_upgrade_fetch_the_latest_list_of_well_known_principals_and_update_ca
                     canister_id,
                     wasm_module,
                     arg,
-                    Some(get_global_super_admin_principal_id_v1()),
+                    Some(get_global_super_admin_principal_id()),
                 );
             }
             CanisterInstallMode::Upgrade => {
@@ -81,7 +79,7 @@ fn on_every_upgrade_fetch_the_latest_list_of_well_known_principals_and_update_ca
                         canister_id,
                         wasm_module,
                         arg,
-                        Some(get_global_super_admin_principal_id_v1()),
+                        Some(get_global_super_admin_principal_id()),
                     )
                     .unwrap();
             }
@@ -105,7 +103,7 @@ fn on_every_upgrade_fetch_the_latest_list_of_well_known_principals_and_update_ca
     let mut incomplete_known_principal_map = KnownPrincipalMap::default();
     incomplete_known_principal_map.insert(
         KnownPrincipalType::UserIdGlobalSuperAdmin,
-        get_global_super_admin_principal_id_v1(),
+        get_global_super_admin_principal_id(),
     );
     incomplete_known_principal_map.insert(
         KnownPrincipalType::CanisterIdConfiguration,
@@ -193,7 +191,7 @@ fn on_every_upgrade_fetch_the_latest_list_of_well_known_principals_and_update_ca
                 ..Default::default()
             })
             .unwrap(),
-            Some(get_global_super_admin_principal_id_v1()),
+            Some(get_global_super_admin_principal_id()),
         )
         .ok();
 

@@ -4,10 +4,13 @@ use ic_cdk::api::{
     call::RejectionCode,
     management_canister::{
         main::{self, CanisterInstallMode, CreateCanisterArgument, InstallCodeArgument},
-        provisional::{CanisterIdRecord, CanisterSettings},
+        provisional::CanisterSettings,
     },
 };
-use shared_utils::canister_specific::individual_user_template::types::arg::IndividualUserTemplateInitArgs;
+use shared_utils::{
+    canister_specific::individual_user_template::types::arg::IndividualUserTemplateInitArgs,
+    constant::INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT,
+};
 
 use crate::CANISTER_DATA;
 
@@ -20,7 +23,7 @@ pub async fn create_users_canister(profile_owner: Principal) -> Principal {
     let arg = CreateCanisterArgument {
         settings: Some(CanisterSettings {
             controllers: Some(vec![
-                // this canister
+                // * this user_index canister
                 api::id(),
             ]),
             compute_allocation: None,
@@ -30,12 +33,12 @@ pub async fn create_users_canister(profile_owner: Principal) -> Principal {
     };
 
     // * provisioned canister
-    let canister_id: Principal = main::create_canister(arg).await.unwrap().0.canister_id;
-
-    // * deposit an additional 1T cycles
-    main::deposit_cycles(CanisterIdRecord { canister_id }, 1_000_000_000_000)
-        .await
-        .unwrap();
+    let canister_id: Principal =
+        main::create_canister(arg, INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT)
+            .await
+            .unwrap()
+            .0
+            .canister_id;
 
     let configuration = CANISTER_DATA
         .with(|canister_data_ref_cell| canister_data_ref_cell.borrow().configuration.clone());
