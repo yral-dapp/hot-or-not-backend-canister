@@ -17,6 +17,7 @@ use shared_utils::{
 use self::version_details::VersionDetails;
 
 pub mod version_details;
+pub mod memory;
 
 #[derive(Default, Deserialize, Serialize)]
 pub struct CanisterData {
