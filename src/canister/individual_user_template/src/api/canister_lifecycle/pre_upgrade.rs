@@ -4,7 +4,6 @@ use ic_stable_structures::writer::Writer;
 use crate::data_model::memory;
 use crate::CANISTER_DATA;
 
-pub const BUFFER_SIZE_BYTES: usize = 2 * 1024 * 1024; // 2 MiB
 
 #[ic_cdk::pre_upgrade]
 fn pre_upgrade() {
