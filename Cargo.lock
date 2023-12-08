@@ -424,10 +424,8 @@ name = "individual_user_template"
 version = "0.1.0"
 dependencies = [
  "candid",
- "ciborium",
  "ic-cdk",
  "ic-cdk-timers",
- "ic-stable-structures",
  "serde",
  "shared_utils",
  "test_utils",

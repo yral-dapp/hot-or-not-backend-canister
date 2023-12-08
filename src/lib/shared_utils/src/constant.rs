@@ -2,7 +2,7 @@ use candid::Principal;
 
 use crate::common::types::known_principal::{KnownPrincipalMap, KnownPrincipalType};
 
-pub const INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT: u128 = 600_000_000_000; // 0.6T Cycles
+pub const INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT: u128 = 1_000_000_000_000; // 1T Cycles
 pub const CYCLES_THRESHOLD_TO_INITIATE_RECHARGE: u128 = 500_000_000_000; // 0.5T Cycles
 
 pub const MAX_USERS_IN_FOLLOWER_FOLLOWING_LIST: u64 = 10000;

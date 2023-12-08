@@ -62,7 +62,7 @@ fn when_canister_cycle_balance_is_below_the_configured_or_freezing_threshold_the
             alice_canister_id,
             *user_index_canister_id,
             "return_cycles_to_user_index_canister",
-            candid::encode_one(Some(600_000_000_000_u128)).unwrap(),
+            candid::encode_one(Some(1_000_000_000_000_u128)).unwrap(),
         )
         .unwrap();
 
@@ -125,5 +125,5 @@ fn when_canister_cycle_balance_is_below_the_configured_or_freezing_threshold_the
         alice_cycle_balance_after_user_index_upgrade
     );
 
-    assert!(alice_cycle_balance_after_user_index_upgrade >= 600_000_000_000);
+    assert!(alice_cycle_balance_after_user_index_upgrade >= 1_000_000_000_000);
 }

@@ -22,6 +22,7 @@ fn post_upgrade() {
     save_upgrade_args_to_memory();
     refetch_well_known_principals();
     reenqueue_timers_for_pending_bet_outcomes();
+    send_canister_metrics();
 }
 
 fn restore_data_from_stable_memory() {
