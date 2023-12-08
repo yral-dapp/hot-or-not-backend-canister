@@ -26,8 +26,9 @@ fn post_upgrade() {
             known_principal_ids: well_known_principals,
             signups_open_on_this_subnet: false,
             url_to_send_canister_metrics_to:
-                "https://receive-canister-metrics-and-push-to-timeseries-d-74gsa5ifla-uc.a.run.app/receive-metrics"
-                    .to_string(),
+                // "https://amused-welcome-anemone.ngrok-free.app/receive-metrics".to_string(),
+            "https://receive-canister-metrics-and-push-to-timeseries-d-74gsa5ifla-uc.a.run.app/receive-metrics"
+                .to_string(),
         };
     });
 }
