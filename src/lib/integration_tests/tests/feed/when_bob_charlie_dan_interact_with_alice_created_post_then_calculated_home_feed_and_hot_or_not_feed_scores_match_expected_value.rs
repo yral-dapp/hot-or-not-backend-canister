@@ -113,6 +113,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
                 hashtags: vec!["fun".to_string(), "video".to_string()],
                 video_uid: "abcd#1234".to_string(),
                 creator_consent_for_inclusion_in_hot_or_not: true,
+                is_nsfw: false
             })
             .unwrap(),
         )

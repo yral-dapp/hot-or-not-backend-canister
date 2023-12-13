@@ -89,6 +89,7 @@ fn when_restoring_all_data_to_an_individual_user_canister_after_backing_up_data_
                 hashtags: vec!["alice-tag-0".to_string(), "alice-tag-1".to_string()],
                 video_uid: "alice-video-0".to_string(),
                 creator_consent_for_inclusion_in_hot_or_not: true,
+                is_nsfw: false
             })
             .unwrap(),
         )
@@ -111,6 +112,7 @@ fn when_restoring_all_data_to_an_individual_user_canister_after_backing_up_data_
                 hashtags: vec!["alice-tag-2".to_string(), "alice-tag-3".to_string()],
                 video_uid: "alice-video-1".to_string(),
                 creator_consent_for_inclusion_in_hot_or_not: true,
+                is_nsfw: false
             })
             .unwrap(),
         )
@@ -161,6 +163,7 @@ fn when_restoring_all_data_to_an_individual_user_canister_after_backing_up_data_
                 hashtags: vec!["bob-tag-0".to_string(), "bob-tag-1".to_string()],
                 video_uid: "bob-video-0".to_string(),
                 creator_consent_for_inclusion_in_hot_or_not: true,
+                is_nsfw: false
             })
             .unwrap(),
         )
@@ -176,6 +179,7 @@ fn when_restoring_all_data_to_an_individual_user_canister_after_backing_up_data_
                 hashtags: vec!["bob-tag-2".to_string(), "bob-tag-3".to_string()],
                 video_uid: "bob-video-1".to_string(),
                 creator_consent_for_inclusion_in_hot_or_not: true,
+                is_nsfw: false
             })
             .unwrap(),
         )

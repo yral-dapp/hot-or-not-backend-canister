@@ -87,6 +87,7 @@ fn when_backups_are_run_on_all_the_individual_user_canisters_they_capture_all_re
                 hashtags: vec!["alice-tag-0".to_string(), "alice-tag-1".to_string()],
                 video_uid: "alice-video-0".to_string(),
                 creator_consent_for_inclusion_in_hot_or_not: true,
+                is_nsfw: false
             },))
             .unwrap(),
         )
@@ -102,6 +103,7 @@ fn when_backups_are_run_on_all_the_individual_user_canisters_they_capture_all_re
                 hashtags: vec!["alice-tag-2".to_string(), "alice-tag-3".to_string()],
                 video_uid: "alice-video-1".to_string(),
                 creator_consent_for_inclusion_in_hot_or_not: true,
+                is_nsfw: false
             },))
             .unwrap(),
         )
@@ -152,6 +154,7 @@ fn when_backups_are_run_on_all_the_individual_user_canisters_they_capture_all_re
                 hashtags: vec!["bob-tag-0".to_string(), "bob-tag-1".to_string()],
                 video_uid: "bob-video-0".to_string(),
                 creator_consent_for_inclusion_in_hot_or_not: true,
+                is_nsfw: false
             },))
             .unwrap(),
         )
@@ -167,6 +170,7 @@ fn when_backups_are_run_on_all_the_individual_user_canisters_they_capture_all_re
                 hashtags: vec!["bob-tag-2".to_string(), "bob-tag-3".to_string()],
                 video_uid: "bob-video-1".to_string(),
                 creator_consent_for_inclusion_in_hot_or_not: true,
+                is_nsfw: false
             },))
             .unwrap(),
         )
