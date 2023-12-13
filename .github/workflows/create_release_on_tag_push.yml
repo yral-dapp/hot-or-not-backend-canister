@@ -1,0 +1,171 @@
+name: Release and submit proposal
+on:
+  push:
+    tags: 
+      - 'v*'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Publish canister artifacts and send upgrade proposals
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+            submodules: 'recursive'
+      - name: Cache install Nix packages
+        uses: rikhuijzer/cache-install@v1.0.9
+        with:
+          key: nix-${{ hashFiles('default.nix') }}
+      - name: Cache rust dependencies, build output and DFX build cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+            .dfx/
+          key: rust-test-${{ hashFiles('**/Cargo.lock') }}
+      - name: Import DFX identity
+        run: |
+          touch actions_identity.pem
+          echo "${{ secrets.CANISTER_CONTROLLER_SECRET_KEY }}" > actions_identity.pem
+          nix-shell --run "dfx identity import --storage-mode=plaintext actions actions_identity.pem"
+          nix-shell --run "dfx identity use actions"
+      - name: Build individual_user_template canister
+        run: |
+          nix-shell --run "dfx build individual_user_template --network=ic"
+          gzip -f -1 ./target/wasm32-unknown-unknown/release/individual_user_template.wasm
+      - name: Build user_index canister
+        run: |
+          nix-shell --run "dfx build user_index --network=ic"
+      - name: Build configuration canister
+        run: |
+          nix-shell --run "dfx build configuration --network=ic"
+      - name: Build data_backup canister
+        run: |
+          nix-shell --run "dfx build data_backup --network=ic"
+      - name: Build post_cache canister
+        run: |
+          nix-shell --run "dfx build post_cache --network=ic"
+      - name: Copy candid files for release
+        run: |
+          cp .dfx/ic/canisters/individual_user_template/service.did individual_user_template.did
+          cp .dfx/ic/canisters/user_index/service.did user_index.did
+          cp .dfx/ic/canisters/data_backup/service.did data_backup.did
+          cp .dfx/ic/canisters/post_cache/service.did post_cache.did
+          cp .dfx/ic/canisters/configuration/service.did configuration.did
+      - name: 'Create Release'
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with: 
+            repo_token: "${{ secrets.GITHUB_TOKEN }}"
+            prerelease: false
+            files: |
+                ./.dfx/ic/canisters/*/*.wasm.gz
+                ./*.did
+      - name: Get commits since last release
+        uses: loopwerk/tag-changelog@v1
+        id: changelog
+        with: 
+          token: ${{secrets.GITHUB_TOKEN}}
+      - name: Install quill from GitHub Releases
+        run: |
+          curl -LJO https://github.com/dfinity/quill/releases/download/v0.4.2/quill-linux-x86_64-musl
+          mv quill-linux-x86_64-musl quill
+          chmod +x quill
+      - name: Submit upgrade proposal for user_index canister
+        run: |
+          CANISTER_NAME=user_index
+          export CANISTER_ID=$(nix-shell --run "dfx canister id ${CANISTER_NAME} --network=ic")
+          mkdir -p "proposals/${CANISTER_NAME}"
+          touch "proposals/${CANISTER_NAME}/upgrade.json"
+          ./quill sns \
+            --canister-ids-file ./sns/sns_canister_ids.json \
+            --pem-file actions_identity.pem \
+            make-upgrade-canister-proposal \
+            --title 'Upgrade ${CANISTER_NAME} Canisters' \
+            --summary '
+            # Upgrade ${CANISTER_NAME}
+
+            ${{ steps.changelog.outputs.changes }}
+            ' \
+            --url 'https://hotornot.wtf' \
+            --target-canister-id $CANISTER_ID \
+            --wasm-path .dfx/ic/canisters/${CANISTER_NAME}/${CANISTER_NAME}.wasm.gz \
+            --canister-upgrade-arg '(record {})' \
+            ${{secrets.NEURON_ID}} > "proposals/${CANISTER_NAME}/upgrade.json"
+          ./quill send proposals/${CANISTER_NAME}/upgrade.json --yes
+      - name: Submit upgrade proposal for data_backup canister
+        run: |
+          CANISTER_NAME=data_backup
+          export CANISTER_ID=$(nix-shell --run "dfx canister id ${CANISTER_NAME} --network=ic")
+          mkdir -p "proposals/${CANISTER_NAME}"
+          touch "proposals/${CANISTER_NAME}/upgrade.json"
+          ./quill sns \
+            --canister-ids-file ./sns/sns_canister_ids.json \
+            --pem-file actions_identity.pem \
+            make-upgrade-canister-proposal \
+            --title 'Upgrade ${CANISTER_NAME} Canisters' \
+            --summary '
+            # Upgrade ${CANISTER_NAME}
+
+            ${{ steps.changelog.outputs.changes }}
+            ' \
+            --url 'https://hotornot.wtf' \
+            --target-canister-id $CANISTER_ID \
+            --wasm-path .dfx/ic/canisters/${CANISTER_NAME}/${CANISTER_NAME}.wasm.gz \
+            --canister-upgrade-arg '(record {})' \
+            ${{secrets.NEURON_ID}} > "proposals/${CANISTER_NAME}/upgrade.json"
+          ./quill send proposals/${CANISTER_NAME}/upgrade.json --yes
+      - name: Submit upgrade proposal for post_cache canister
+        run: |
+          CANISTER_NAME=post_cache
+          export CANISTER_ID=$(nix-shell --run "dfx canister id ${CANISTER_NAME} --network=ic")
+          mkdir -p "proposals/${CANISTER_NAME}"
+          touch "proposals/${CANISTER_NAME}/upgrade.json"
+          ./quill sns \
+            --canister-ids-file ./sns/sns_canister_ids.json \
+            --pem-file actions_identity.pem \
+            make-upgrade-canister-proposal \
+            --title 'Upgrade ${CANISTER_NAME} Canisters' \
+            --summary '
+            # Upgrade ${CANISTER_NAME}
+
+            ${{ steps.changelog.outputs.changes }}
+            ' \
+            --url 'https://hotornot.wtf' \
+            --target-canister-id $CANISTER_ID \
+            --wasm-path .dfx/ic/canisters/${CANISTER_NAME}/${CANISTER_NAME}.wasm.gz \
+            --canister-upgrade-arg '(record {})' \
+            ${{secrets.NEURON_ID}} > "proposals/${CANISTER_NAME}/upgrade.json"
+          ./quill send proposals/${CANISTER_NAME}/upgrade.json --yes
+      - name: Submit upgrade proposal for configuration canister
+        run: |
+          CANISTER_NAME=configuration
+          export CANISTER_ID=$(nix-shell --run "dfx canister id ${CANISTER_NAME} --network=ic")
+          mkdir -p "proposals/${CANISTER_NAME}"
+          touch "proposals/${CANISTER_NAME}/upgrade.json"
+          ./quill sns \
+            --canister-ids-file ./sns/sns_canister_ids.json \
+            --pem-file actions_identity.pem \
+            make-upgrade-canister-proposal \
+            --title 'Upgrade ${CANISTER_NAME} Canisters' \
+            --summary '
+            # Upgrade ${CANISTER_NAME}
+
+            ${{ steps.changelog.outputs.changes }}
+            ' \
+            --url 'https://hotornot.wtf' \
+            --target-canister-id $CANISTER_ID \
+            --wasm-path .dfx/ic/canisters/${CANISTER_NAME}/${CANISTER_NAME}.wasm.gz \
+            --canister-upgrade-arg '(record {})' \
+            ${{secrets.NEURON_ID}} > "proposals/${CANISTER_NAME}/upgrade.json"
+          ./quill send proposals/${CANISTER_NAME}/upgrade.json --yes
+      - name: Remove messages
+        run: rm -r proposals
