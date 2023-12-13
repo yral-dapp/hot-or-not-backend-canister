@@ -39,6 +39,7 @@ fn when_creating_a_new_post_then_post_score_should_be_calculated() {
             alice_principal_id,
             "add_post_v2",
             candid::encode_args((PostDetailsFromFrontend {
+                is_nsfw: false,
                 description: "This is a fun video to watch".to_string(),
                 hashtags: vec!["fun".to_string(), "video".to_string()],
                 video_uid: "abcd#1234".to_string(),

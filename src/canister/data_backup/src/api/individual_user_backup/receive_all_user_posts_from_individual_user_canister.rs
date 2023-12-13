@@ -89,6 +89,7 @@ mod test {
         let all_user_posts_from_individual_user_canister = vec![
             Post {
                 id: 0,
+                is_nsfw: false,
                 description: "alice post 0 - description".to_string(),
                 hashtags: ["alice-tag-0".to_string(), "alice-tag-1".to_string()].to_vec(),
                 video_uid: "alice-video-0".to_string(),
@@ -107,6 +108,7 @@ mod test {
             },
             Post {
                 id: 1,
+                is_nsfw: false,
                 description: "alice post 1 - description".to_string(),
                 hashtags: ["alice-tag-2".to_string(), "alice-tag-3".to_string()].to_vec(),
                 video_uid: "alice-video-1".to_string(),

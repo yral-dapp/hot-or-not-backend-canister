@@ -118,6 +118,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
             "add_post_v2",
             candid::encode_args((PostDetailsFromFrontend {
                 description: "This is a fun video to watch".to_string(),
+                is_nsfw: false,
                 hashtags: vec!["fun".to_string(), "video".to_string()],
                 video_uid: "abcd#1234".to_string(),
                 creator_consent_for_inclusion_in_hot_or_not: true,

@@ -129,6 +129,7 @@ type PlacedBetDetail = record {
 };
 type Post = record {
   id : nat64;
+  is_nsfw : bool;
   status : PostStatus;
   share_count : nat64;
   hashtags : vec text;
@@ -143,6 +144,7 @@ type Post = record {
 };
 type PostDetailsForFrontend = record {
   id : nat64;
+  is_nsfw : bool;
   status : PostStatus;
   home_feed_ranking_score : nat64;
   hashtags : vec text;
@@ -160,6 +162,7 @@ type PostDetailsForFrontend = record {
   created_by_profile_photo_url : opt text;
 };
 type PostDetailsFromFrontend = record {
+  is_nsfw : bool;
   hashtags : vec text;
   description : text;
   video_uid : text;

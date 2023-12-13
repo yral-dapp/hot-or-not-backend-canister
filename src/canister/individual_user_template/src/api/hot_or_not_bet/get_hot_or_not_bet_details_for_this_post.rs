@@ -59,6 +59,7 @@ mod test {
             0,
             Post {
                 id: 0,
+                is_nsfw: false,
                 description: "Singing and dancing".to_string(),
                 hashtags: vec!["sing".to_string(), "dance".to_string()],
                 video_uid: "video#0001".to_string(),

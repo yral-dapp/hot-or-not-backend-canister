@@ -94,6 +94,7 @@ mod test {
 
         let post_0 = Post {
             id: 0,
+            is_nsfw: false,
             description: "Singing and dancing".to_string(),
             hashtags: vec!["sing".to_string(), "dance".to_string()],
             video_uid: "video#0001".to_string(),
@@ -140,6 +141,7 @@ mod test {
 
         let post_1 = Post {
             id: 1,
+            is_nsfw: false,
             description: "Singing and dancing".to_string(),
             hashtags: vec!["sing".to_string(), "dance".to_string()],
             video_uid: "video#0001".to_string(),
@@ -192,6 +194,7 @@ mod test {
 
         let post_2 = Post {
             id: 2,
+            is_nsfw: false,
             description: "Singing and dancing".to_string(),
             hashtags: vec!["sing".to_string(), "dance".to_string()],
             video_uid: "video#0001".to_string(),
