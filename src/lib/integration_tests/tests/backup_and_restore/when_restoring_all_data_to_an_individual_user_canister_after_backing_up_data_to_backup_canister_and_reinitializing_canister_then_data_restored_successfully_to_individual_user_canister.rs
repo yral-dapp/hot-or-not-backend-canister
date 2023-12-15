@@ -352,6 +352,7 @@ fn when_restoring_all_data_to_an_individual_user_canister_after_backing_up_data_
                 get_mock_user_alice_principal_id(),
                 alice_canister_id,
                 Some(CanisterInstallMode::Reinstall),
+                true,
             ))
             .unwrap(),
         )
