@@ -3,7 +3,7 @@ use ic_cdk::api::{
     self,
     call::{RejectionCode, CallResult},
     management_canister::{
-        main::{self, CanisterInstallMode, CreateCanisterArgument, WasmModule},
+        main::{self, CanisterInstallMode, CreateCanisterArgument, WasmModule, InstallCodeArgument},
         provisional::CanisterSettings,
     }, canister_version,
 };
@@ -20,7 +20,7 @@ const INDIVIDUAL_USER_TEMPLATE_CANISTER_WASM: &[u8] = include_bytes!(
 );
 
 #[derive( CandidType, Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
-struct InstallCodeArgument {
+struct CustomInstallCodeArgument {
     /// See [CanisterInstallMode].
     pub mode: CanisterInstallMode,
     /// Principle of the canister.
@@ -74,15 +74,14 @@ pub async fn create_users_canister(profile_owner: Principal) -> Principal {
         .expect("Failed to serialize the install argument.");
 
     // * install wasm to provisioned canister
-    let install_args = InstallCodeArgument {
+    main::install_code(InstallCodeArgument {
         mode: CanisterInstallMode::Install,
         canister_id,
-        sender_canister_version: Some(canister_version()),
         wasm_module: INDIVIDUAL_USER_TEMPLATE_CANISTER_WASM.into(),
         arg,
-        unsafe_drop_stable_memory: Some(false),
-    };
-    let _result: CallResult<()>  = api::call::call(Principal::management_canister(), "install_code", (install_args,)).await;
+    })
+    .await
+    .unwrap();
 
     canister_id
 }
@@ -96,7 +95,7 @@ pub async fn upgrade_individual_user_canister(
     let serialized_arg =
         candid::encode_args((arg,)).expect("Failed to serialize the install argument.");
 
-        let upgrade_args = InstallCodeArgument {
+        let upgrade_args = CustomInstallCodeArgument {
             mode: install_mode,
             canister_id,
             wasm_module: INDIVIDUAL_USER_TEMPLATE_CANISTER_WASM.into(),
