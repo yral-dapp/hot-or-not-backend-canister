@@ -44,8 +44,8 @@ fn get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed_impl(
 
     Ok(all_posts
         .iter()
-        .skip(from_inclusive_index as usize)
         .take(to_exclusive_index as usize)
+        .skip(from_inclusive_index as usize)
         .cloned()
         .collect())
 }
@@ -105,5 +105,71 @@ mod test {
             );
         assert!(result.is_ok());
         assert_eq!(result.unwrap().len(), 2,);
+    }
+    
+    #[test]
+    fn test_get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed_impl_with_indexes() {
+        let mut canister_data = CanisterData::default();
+        
+        let post_score_index_item_1 = PostScoreIndexItem {
+            post_id: 1,
+            score: 1,
+            publisher_canister_id: Principal::anonymous(),
+        };
+        let post_score_index_item_2 = PostScoreIndexItem {
+            post_id: 2,
+            score: 2,
+            publisher_canister_id: Principal::anonymous(),
+        };
+        let post_score_index_item_3 = PostScoreIndexItem {
+            post_id: 3,
+            score: 3,
+            publisher_canister_id: Principal::anonymous(),
+        };
+        let post_score_index_item_4 = PostScoreIndexItem {
+            post_id: 4,
+            score: 4,
+            publisher_canister_id: Principal::anonymous(),
+        };
+        let post_score_index_item_5 = PostScoreIndexItem {
+            post_id: 5,
+            score: 5,
+            publisher_canister_id: Principal::anonymous(),
+        };
+        
+        canister_data
+            .posts_index_sorted_by_home_feed_score
+            .replace(&post_score_index_item_1);
+        canister_data
+            .posts_index_sorted_by_home_feed_score
+            .replace(&post_score_index_item_2);
+
+        canister_data
+            .posts_index_sorted_by_home_feed_score
+            .replace(&post_score_index_item_3);
+
+        canister_data
+            .posts_index_sorted_by_home_feed_score
+            .replace(&post_score_index_item_4);
+        
+        canister_data
+            .posts_index_sorted_by_home_feed_score
+            .replace(&post_score_index_item_5);
+
+        let result =
+            super::get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed_impl(
+                2,
+                3,
+                &canister_data,
+            );
+        assert!(result.is_ok());
+        
+        let posts = result.unwrap();
+        assert_eq!(posts.len(), 1);
+
+        let third_post = posts.get(0).unwrap();
+        assert_eq!(third_post.post_id, 3);
+        assert_eq!(third_post.score, 3);
+
     }
 }
