@@ -18,5 +18,12 @@ thread_local! {
 }
 
 pub fn get_upgrades_memory() -> Memory {
+    init_memory_manager();
     MEMORY_MANAGER.with(|m| m.borrow_mut().get(UPGRADES))
+}
+
+fn init_memory_manager() {
+    MEMORY_MANAGER.with(|m| {
+        *m.borrow_mut() = MemoryManager::init_with_bucket_size(DefaultMemoryImpl::default(), 1);
+    })
 }
