@@ -51,9 +51,6 @@ jobs:
       - name: Build configuration canister
         run: |
           nix-shell --run "dfx build configuration --network=ic"
-      - name: Build data_backup canister
-        run: |
-          nix-shell --run "dfx build data_backup --network=ic"
       - name: Build post_cache canister
         run: |
           nix-shell --run "dfx build post_cache --network=ic"
@@ -85,28 +82,6 @@ jobs:
       - name: Submit upgrade proposal for user_index canister
         run: |
           CANISTER_NAME=user_index
-          export CANISTER_ID=$(nix-shell --run "dfx canister id ${CANISTER_NAME} --network=ic")
-          mkdir -p "proposals/${CANISTER_NAME}"
-          touch "proposals/${CANISTER_NAME}/upgrade.json"
-          ./quill sns \
-            --canister-ids-file ./sns/sns_canister_ids.json \
-            --pem-file actions_identity.pem \
-            make-upgrade-canister-proposal \
-            --title 'Upgrade ${CANISTER_NAME} Canisters' \
-            --summary '
-            # Upgrade ${CANISTER_NAME}
-
-            ${{ steps.changelog.outputs.changes }}
-            ' \
-            --url 'https://hotornot.wtf' \
-            --target-canister-id $CANISTER_ID \
-            --wasm-path .dfx/ic/canisters/${CANISTER_NAME}/${CANISTER_NAME}.wasm.gz \
-            --canister-upgrade-arg '(record {})' \
-            $NEURON_ID > "proposals/${CANISTER_NAME}/upgrade.json"
-          ./quill send proposals/${CANISTER_NAME}/upgrade.json --yes
-      - name: Submit upgrade proposal for data_backup canister
-        run: |
-          CANISTER_NAME=data_backup
           export CANISTER_ID=$(nix-shell --run "dfx canister id ${CANISTER_NAME} --network=ic")
           mkdir -p "proposals/${CANISTER_NAME}"
           touch "proposals/${CANISTER_NAME}/upgrade.json"
