@@ -58,7 +58,6 @@ jobs:
         run: |
           cp .dfx/ic/canisters/individual_user_template/service.did individual_user_template.did
           cp .dfx/ic/canisters/user_index/service.did user_index.did
-          cp .dfx/ic/canisters/data_backup/service.did data_backup.did
           cp .dfx/ic/canisters/post_cache/service.did post_cache.did
           cp .dfx/ic/canisters/configuration/service.did configuration.did
       - name: 'Create Release'
