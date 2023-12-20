@@ -12,6 +12,9 @@ jobs:
   test:
     name: Publish canister artifacts and send upgrade proposals
     runs-on: ubuntu-latest
+    permissions:
+      packages: read
+      contents: write
     env: 
       NEURON_ID: 4de673e9cd7a1339afea6523a5f227d25e9d739ff52635ac86dbdb0447ae106a
 
