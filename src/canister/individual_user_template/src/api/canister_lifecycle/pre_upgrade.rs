@@ -1,4 +1,5 @@
 use ciborium::ser;
+use ic_stable_structures::Memory;
 use ic_stable_structures::writer::Writer;
 
 use crate::data_model::memory;
@@ -15,6 +16,9 @@ fn pre_upgrade() {
 
     let len = state_bytes.len() as u32;
     let mut memory = memory::get_upgrades_memory();
+    if memory.size() == 0 {
+        memory::init_memory_manager()
+    }
     let mut writer = Writer::new(&mut memory, 0);
     writer.write(&len.to_le_bytes()).unwrap();
     writer.write(&state_bytes).unwrap();
