@@ -65,5 +65,6 @@ service : (UserIndexInitArgs) -> {
       principal,
       principal,
       opt CanisterInstallMode,
+      bool,
     ) -> (text);
 }
