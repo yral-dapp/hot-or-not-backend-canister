@@ -91,12 +91,12 @@ jobs:
             --canister-ids-file ./sns/sns_canister_ids.json \
             --pem-file actions_identity.pem \
             make-upgrade-canister-proposal \
-            --title 'Upgrade ${CANISTER_NAME} Canisters' \
-            --summary '
+            --title "Upgrade ${CANISTER_NAME} Canisters" \
+            --summary "
             # Upgrade ${CANISTER_NAME}
 
             ${{ steps.changelog.outputs.changes }}
-            ' \
+            " \
             --url 'https://hotornot.wtf' \
             --target-canister-id $CANISTER_ID \
             --wasm-path .dfx/ic/canisters/${CANISTER_NAME}/${CANISTER_NAME}.wasm.gz \
@@ -112,12 +112,12 @@ jobs:
             --canister-ids-file ./sns/sns_canister_ids.json \
             --pem-file actions_identity.pem \
             make-upgrade-canister-proposal \
-            --title 'Upgrade ${CANISTER_NAME} Canisters' \
-            --summary '
+            --title "Upgrade ${CANISTER_NAME} Canisters" \
+            --summary "
             # Upgrade ${CANISTER_NAME}
 
             ${{ steps.changelog.outputs.changes }}
-            ' \
+            " \
             --url 'https://hotornot.wtf' \
             --target-canister-id $CANISTER_ID \
             --wasm-path .dfx/ic/canisters/${CANISTER_NAME}/${CANISTER_NAME}.wasm.gz \
@@ -133,12 +133,12 @@ jobs:
             --canister-ids-file ./sns/sns_canister_ids.json \
             --pem-file actions_identity.pem \
             make-upgrade-canister-proposal \
-            --title 'Upgrade ${CANISTER_NAME} Canisters' \
-            --summary '
+            --title "Upgrade ${CANISTER_NAME} Canisters" \
+            --summary "
             # Upgrade ${CANISTER_NAME}
 
             ${{ steps.changelog.outputs.changes }}
-            ' \
+            " \
             --url 'https://hotornot.wtf' \
             --target-canister-id $CANISTER_ID \
             --wasm-path .dfx/ic/canisters/${CANISTER_NAME}/${CANISTER_NAME}.wasm.gz \
