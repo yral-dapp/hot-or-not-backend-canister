@@ -7,3 +7,4 @@ pub mod post;
 pub mod profile;
 pub mod token;
 pub mod well_known_principal;
+pub mod canister_management;

@@ -2,7 +2,7 @@ use std::cell::RefCell;
 
 use candid::{export_service, Principal};
 use data_model::{canister_upgrade::UpgradeStatus, CanisterData};
-use ic_cdk::api::management_canister::main::CanisterInstallMode;
+use ic_cdk::api::{management_canister::main::{CanisterInstallMode, CanisterStatusResponse}, call::CallResult};
 use shared_utils::{
     canister_specific::user_index::types::args::UserIndexInitArgs,
     common::types::known_principal::KnownPrincipalType,
