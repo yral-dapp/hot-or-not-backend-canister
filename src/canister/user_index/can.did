@@ -1,4 +1,19 @@
 type CanisterInstallMode = variant { reinstall; upgrade; install };
+type CanisterStatusResponse = record {
+  status : CanisterStatusType;
+  memory_size : nat;
+  cycles : nat;
+  settings : DefiniteCanisterSettings;
+  idle_cycles_burned_per_day : nat;
+  module_hash : opt vec nat8;
+};
+type CanisterStatusType = variant { stopped; stopping; running };
+type DefiniteCanisterSettings = record {
+  freezing_threshold : nat;
+  controllers : vec principal;
+  memory_allocation : nat;
+  compute_allocation : nat;
+};
 type KnownPrincipalType = variant {
   CanisterIdUserIndex;
   CanisterIdConfiguration;
@@ -10,7 +25,20 @@ type KnownPrincipalType = variant {
   CanisterIdSNSController;
   UserIdGlobalSuperAdmin;
 };
-type Result = variant { Ok; Err : SetUniqueUsernameError };
+type RejectionCode = variant {
+  NoError;
+  CanisterError;
+  SysTransient;
+  DestinationInvalid;
+  Unknown;
+  SysFatal;
+  CanisterReject;
+};
+type Result = variant {
+  Ok : record { CanisterStatusResponse };
+  Err : record { RejectionCode; text };
+};
+type Result_1 = variant { Ok; Err : SetUniqueUsernameError };
 type SetUniqueUsernameError = variant {
   UsernameAlreadyTaken;
   SendingCanisterDoesNotMatchUserCanisterId;
@@ -47,6 +75,7 @@ service : (UserIndexInitArgs) -> {
   get_user_canister_id_from_user_principal_id : (principal) -> (
       opt principal,
     ) query;
+  get_user_canister_status : (principal) -> (Result);
   get_user_index_canister_count : () -> (nat64) query;
   get_user_index_canister_cycle_balance : () -> (nat) query;
   get_well_known_principal_value : (KnownPrincipalType) -> (
@@ -60,7 +89,7 @@ service : (UserIndexInitArgs) -> {
   update_index_with_unique_user_name_corresponding_to_user_principal_id : (
       text,
       principal,
-    ) -> (Result);
+    ) -> (Result_1);
   upgrade_specific_individual_user_canister_with_latest_wasm : (
       principal,
       principal,

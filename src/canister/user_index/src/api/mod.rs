@@ -4,3 +4,4 @@ pub mod cycle_management;
 pub mod upgrade_individual_user_template;
 pub mod user_record;
 pub mod well_known_principal;
+pub mod canister_management;
