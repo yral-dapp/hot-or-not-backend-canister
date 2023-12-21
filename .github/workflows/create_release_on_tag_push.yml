@@ -102,7 +102,7 @@ jobs:
             --wasm-path .dfx/ic/canisters/${CANISTER_NAME}/${CANISTER_NAME}.wasm.gz \
             --canister-upgrade-arg '(record {})' \
             $NEURON_ID > "proposals/${CANISTER_NAME}/upgrade.json"
-            echo proposals/user_index/upgrade.json
+            echo "proposals/user_index/upgrade.json" >> $GITHUB_OUTPUT
       - name: Submit upgrade proposal for post_cache canister
         run: |
           CANISTER_NAME=post_cache
