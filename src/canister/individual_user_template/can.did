@@ -294,6 +294,7 @@ service : (IndividualUserTemplateInitArgs) -> {
   get_profile_details : () -> (UserProfileDetailsForFrontend) query;
   get_rewarded_for_referral : (principal, principal) -> ();
   get_rewarded_for_signing_up : () -> ();
+  get_stable_memory_size : () -> (nat32) query;
   get_user_caniser_cycle_balance : () -> (nat) query;
   get_user_utility_token_transaction_history_with_pagination : (
       nat64,
