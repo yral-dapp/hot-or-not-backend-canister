@@ -258,8 +258,8 @@ fn when_backups_are_run_on_all_the_individual_user_canisters_they_capture_all_re
         )
         .unwrap();
 
-    state_machine.advance_time(Duration::from_secs(30));
-    state_machine.tick();
+    // state_machine.advance_time(Duration::from_secs(30));
+    // state_machine.tick();
 
     state_machine
         .update_call(

@@ -280,8 +280,8 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
         )
         .unwrap();
 
-    state_machine.advance_time(Duration::from_secs(30));
-    state_machine.tick();
+    // state_machine.advance_time(Duration::from_secs(30));
+    // state_machine.tick();
 
     // * advance time to the end of the first slot and then 5 minutes
     state_machine.advance_time(Duration::from_secs(60 * (60 + 5)));
