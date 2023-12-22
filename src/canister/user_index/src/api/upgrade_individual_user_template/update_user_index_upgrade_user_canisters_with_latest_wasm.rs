@@ -1,10 +1,12 @@
-use std::time::SystemTime;
+use std::{time::SystemTime, collections::HashMap, process::Output, pin::Pin};
 
 use candid::Principal;
 use ic_cdk::api::management_canister::{
     main::{self, CanisterInstallMode},
     provisional::CanisterIdRecord,
 };
+use futures::{stream::FuturesUnordered, Future, StreamExt};
+
 use shared_utils::{
     canister_specific::individual_user_template::types::arg::IndividualUserTemplateInitArgs,
     common::utils::system_time,
@@ -16,6 +18,8 @@ use crate::{
     util::canister_management,
     CANISTER_DATA,
 };
+
+const MAX_CONCURRENCY: usize = 10;
 
 pub async fn upgrade_user_canisters_with_latest_wasm() {
     let mut upgrade_count = 0;
@@ -38,50 +42,36 @@ pub async fn upgrade_user_canisters_with_latest_wasm() {
     let configuration = CANISTER_DATA
         .with(|canister_data_ref_cell| canister_data_ref_cell.borrow().configuration.clone());
 
-    for (user_principal_id, user_canister_id) in user_principal_id_to_canister_id_map.iter() {
-        let is_canister_below_threshold_balance =
-            is_canister_below_threshold_balance(user_canister_id).await;
+   let mut upgrade_individual_canister_futures = user_principal_id_to_canister_id_map.iter()
+    .map(|(user_principal_id, user_canister_id)| {
+        recharge_and_upgrade(user_canister_id.clone(), user_principal_id.clone(), saved_upgrade_status.version_number, configuration.clone())
+    });
 
-        if is_canister_below_threshold_balance {
-            let recharge_result = recharge_canister(user_canister_id).await;
+    let mut unrodered_futures: FuturesUnordered<Pin<Box<dyn Future<Output = Result<Principal, (Principal, String)>>>>> = FuturesUnordered::new();
 
-            if recharge_result.is_err() {
-                let err = recharge_result.err().unwrap();
-                failed_canister_ids.push((*user_principal_id, *user_canister_id, err));
-                continue;
-            }
-        }
+    for _ in 0..MAX_CONCURRENCY {
+        let future = match upgrade_individual_canister_futures.next() {
+            None => break,
+            Some(some) => some,
+        };
+       unrodered_futures.push(Box::pin(future))
+    }
 
-        let upgrade_result = upgrade_user_canister(
-            user_principal_id,
-            user_canister_id,
-            saved_upgrade_status.version_number,
-            &configuration,
-        )
-        .await;
-
+    for future in upgrade_individual_canister_futures {
+        let upgrade_result = unrodered_futures.next().await.unwrap(); 
         if upgrade_result.is_err() {
-            let err = upgrade_result.err().unwrap();
+            
+            let (done_user_principal_id, err) = upgrade_result.err().unwrap();
+            let done_user_canister_id = user_principal_id_to_canister_id_map.get(&done_user_principal_id).unwrap();
             ic_cdk::print(format!(
                 "Failed to upgrade canister: {:?} with error: {:?}",
-                user_canister_id.to_text(),
+                done_user_canister_id.to_text(),
                 err
             ));
-            failed_canister_ids.push((*user_principal_id, *user_canister_id, err));
-            continue;
+            failed_canister_ids.push((done_user_principal_id, *done_user_canister_id, err));
         }
-
+        unrodered_futures.push(Box::pin(future));
         upgrade_count += 1;
-
-        // * Enable for data backup
-        // let upgrade_response: CallResult<()> = call::call(
-        //     user_canister_id.clone(),
-        //     "backup_data_to_backup_canister",
-        //     (user_principal_id.clone(), user_canister_id.clone()),
-        // )
-        // .await;
-        // upgrade_response.ok();
-
         CANISTER_DATA.with(|canister_data_ref_cell| {
             update_upgrade_status(
                 &mut canister_data_ref_cell.borrow_mut(),
@@ -93,6 +83,36 @@ pub async fn upgrade_user_canisters_with_latest_wasm() {
         });
     }
 
+    loop {
+        match unrodered_futures.next().await {
+            None => break,
+            Some(upgrade_result) => {
+
+                if upgrade_result.is_err() {
+                    let (user_principal_id, err) = upgrade_result.err().unwrap();
+                    let user_canister_id = user_principal_id_to_canister_id_map.get(&user_principal_id).unwrap();
+                    ic_cdk::print(format!(
+                        "Failed to upgrade canister: {:?} with error: {:?}",
+                        user_canister_id.to_text(),
+                        err
+                    ));
+                    failed_canister_ids.push((user_principal_id, *user_canister_id, err));
+                }
+                
+                upgrade_count += 1;
+                CANISTER_DATA.with(|canister_data_ref_cell| {
+                    update_upgrade_status(
+                        &mut canister_data_ref_cell.borrow_mut(),
+                        upgrade_count,
+                        &failed_canister_ids,
+                        None,
+                        None,
+                    );
+                });
+            }
+        }
+    }
+
     CANISTER_DATA.with(|canister_data_ref_cell| {
         update_upgrade_status(
             &mut canister_data_ref_cell.borrow_mut(),
@@ -102,6 +122,19 @@ pub async fn upgrade_user_canisters_with_latest_wasm() {
             Some(system_time::get_current_system_time_from_ic()),
         );
     });
+}
+
+
+async fn recharge_and_upgrade(user_canister_id: Principal, user_principal_id: Principal, version_number: u64, configuration: Configuration) -> Result<Principal, (Principal, String)> {
+    let is_canister_below_threshold_balance = is_canister_below_threshold_balance(&user_canister_id).await;
+
+    if is_canister_below_threshold_balance {
+        recharge_canister(&user_canister_id).await.map_err(|s| (user_principal_id, s))?;
+    }
+    
+    upgrade_user_canister(&user_principal_id, &user_canister_id, version_number, &configuration).await.map_err(|s| (user_principal_id, s))?;
+
+    Ok(user_principal_id)
 }
 
 async fn is_canister_below_threshold_balance(canister_id: &Principal) -> bool {

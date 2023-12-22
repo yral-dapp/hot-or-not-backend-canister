@@ -17,7 +17,7 @@ use super::pre_upgrade::BUFFER_SIZE_BYTES;
 fn post_upgrade() {
     restore_data_from_stable_memory();
     refetch_well_known_principals();
-    // upgrade_all_indexed_user_canisters();
+    upgrade_all_indexed_user_canisters();
 
     CANISTER_DATA.with(|canister_data_ref_cell| {
         let well_known_principals = canister_data_ref_cell.borrow().known_principal_ids.clone();

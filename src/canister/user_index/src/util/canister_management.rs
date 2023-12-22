@@ -1,10 +1,10 @@
 use candid::{Principal, CandidType};
 use ic_cdk::api::{
     self,
-    call::{RejectionCode, CallResult},
+    call::RejectionCode,
     management_canister::{
-        main::{self, CanisterInstallMode, CreateCanisterArgument, WasmModule, InstallCodeArgument},
-        provisional::CanisterSettings,
+        main::{self, CanisterInstallMode, CreateCanisterArgument, WasmModule, InstallCodeArgument, stop_canister, start_canister, canister_status, CanisterStatusType},
+        provisional::{CanisterSettings, CanisterIdRecord},
     }, canister_version,
 };
 use serde::{Serialize, Deserialize};
@@ -92,17 +92,29 @@ pub async fn upgrade_individual_user_canister(
     arg: IndividualUserTemplateInitArgs,
     unsafe_drop_stable_memory: bool
 ) -> Result<(), (RejectionCode, String)> {
+    stop_canister(CanisterIdRecord {canister_id: canister_id.clone()}).await?;
+    loop {
+        let (canister_status, ) = canister_status(CanisterIdRecord {canister_id: canister_id.clone()}).await.unwrap();
+        match canister_status.status {
+            CanisterStatusType::Stopped => break,
+            _ => ic_cdk::println!("Canister {:?} is stopping", &canister_id)
+        }
+    }        
+        
+
     let serialized_arg =
         candid::encode_args((arg,)).expect("Failed to serialize the install argument.");
 
         let upgrade_args = CustomInstallCodeArgument {
             mode: install_mode,
-            canister_id,
+            canister_id: canister_id.clone(),
             wasm_module: INDIVIDUAL_USER_TEMPLATE_CANISTER_WASM.into(),
             sender_canister_version: Some(canister_version()),
             arg: serialized_arg,
             unsafe_drop_stable_memory: Some(unsafe_drop_stable_memory)
         };
 
-    api::call::call(Principal::management_canister(), "install_code", (upgrade_args, )).await    
+    api::call::call(Principal::management_canister(), "install_code", (upgrade_args, )).await?;
+
+    start_canister(CanisterIdRecord {canister_id}).await
 }
