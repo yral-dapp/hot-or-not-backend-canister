@@ -93,15 +93,6 @@ pub async fn upgrade_individual_user_canister(
     unsafe_drop_stable_memory: bool
 ) -> Result<(), (RejectionCode, String)> {
     stop_canister(CanisterIdRecord {canister_id: canister_id.clone()}).await?;
-    loop {
-        let (canister_status, ) = canister_status(CanisterIdRecord {canister_id: canister_id.clone()}).await.unwrap();
-        match canister_status.status {
-            CanisterStatusType::Stopped => break,
-            _ => ic_cdk::println!("Canister {:?} is stopping", &canister_id)
-        }
-    }        
-        
-
     let serialized_arg =
         candid::encode_args((arg,)).expect("Failed to serialize the install argument.");
 
@@ -115,6 +106,5 @@ pub async fn upgrade_individual_user_canister(
         };
 
     api::call::call(Principal::management_canister(), "install_code", (upgrade_args, )).await?;
-
     start_canister(CanisterIdRecord {canister_id}).await
 }
