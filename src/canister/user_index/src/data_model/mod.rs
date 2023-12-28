@@ -9,10 +9,17 @@ use self::{canister_upgrade::UpgradeStatus, configuration::Configuration};
 pub mod canister_upgrade;
 pub mod configuration;
 
+
+const fn _default_true() -> bool {
+    return true;
+}
+
 #[derive(Default, CandidType, Deserialize, Serialize)]
 pub struct CanisterData {
     pub configuration: Configuration,
     pub last_run_upgrade_status: UpgradeStatus,
+    #[serde(default = "_default_true")]
+    pub allow_upgrades_for_individual_canisters: bool,
     pub known_principal_ids: KnownPrincipalMap,
     pub user_principal_id_to_canister_id_map: BTreeMap<Principal, Principal>,
     pub unique_user_name_to_user_principal_id_map: BTreeMap<String, Principal>,

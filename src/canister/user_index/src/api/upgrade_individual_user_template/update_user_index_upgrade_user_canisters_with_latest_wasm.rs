@@ -1,15 +1,14 @@
-use std::{time::SystemTime, collections::HashMap, process::Output, pin::Pin};
+use std::time::SystemTime;
 
 use candid::Principal;
 use ic_cdk::api::management_canister::{
     main::{self, CanisterInstallMode},
     provisional::CanisterIdRecord,
 };
-use futures::{stream::FuturesUnordered, Future, StreamExt};
 
 use shared_utils::{
     canister_specific::individual_user_template::types::arg::IndividualUserTemplateInitArgs,
-    common::utils::system_time,
+    common::utils::{system_time, task},
     constant::{CYCLES_THRESHOLD_TO_INITIATE_RECHARGE, INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT},
 };
 
@@ -19,7 +18,7 @@ use crate::{
     CANISTER_DATA,
 };
 
-const MAX_CONCURRENCY: usize = 10;
+const MAX_CONCURRENCY: usize = 15;
 
 pub async fn upgrade_user_canisters_with_latest_wasm() {
     let mut upgrade_count = 0;
@@ -42,25 +41,14 @@ pub async fn upgrade_user_canisters_with_latest_wasm() {
     let configuration = CANISTER_DATA
         .with(|canister_data_ref_cell| canister_data_ref_cell.borrow().configuration.clone());
 
-   let mut upgrade_individual_canister_futures = user_principal_id_to_canister_id_map.iter()
+   let upgrade_individual_canister_futures = user_principal_id_to_canister_id_map.iter()
     .map(|(user_principal_id, user_canister_id)| {
         recharge_and_upgrade(*user_canister_id, *user_principal_id, saved_upgrade_status.version_number, configuration.clone())
     });
 
-    let mut in_progress_futures: FuturesUnordered<Pin<Box<dyn Future<Output = Result<Principal, (Principal, String)>>>>> = FuturesUnordered::new();
+    let result_callback = |upgrade_result: Result<Principal, (Principal, String)>| {
 
-    for _ in 0..MAX_CONCURRENCY {
-        let next_upgrade_future = match upgrade_individual_canister_futures.next() {
-            None => break,
-            Some(some) => some,
-        };
-       in_progress_futures.push(Box::pin(next_upgrade_future))
-    }
-
-    for next_upgrade_future in upgrade_individual_canister_futures {
-        let upgrade_result = in_progress_futures.next().await.unwrap(); 
         if upgrade_result.is_err() {
-            
             let (done_user_principal_id, err) = upgrade_result.err().unwrap();
             let done_user_canister_id = user_principal_id_to_canister_id_map.get(&done_user_principal_id).unwrap();
             ic_cdk::print(format!(
@@ -70,7 +58,7 @@ pub async fn upgrade_user_canisters_with_latest_wasm() {
             ));
             failed_canister_ids.push((done_user_principal_id, *done_user_canister_id, err));
         }
-        in_progress_futures.push(Box::pin(next_upgrade_future));
+        
         upgrade_count += 1;
         CANISTER_DATA.with(|canister_data_ref_cell| {
             update_upgrade_status(
@@ -81,37 +69,13 @@ pub async fn upgrade_user_canisters_with_latest_wasm() {
                 None,
             );
         });
-    }
+    };
 
-    loop {
-        match in_progress_futures.next().await {
-            None => break,
-            Some(upgrade_result) => {
+    let breaking_condition = || {
+        !CANISTER_DATA.with(|canister_data_ref| canister_data_ref.borrow().allow_upgrades_for_individual_canisters)
+    };
 
-                if upgrade_result.is_err() {
-                    let (done_user_principal_id, err) = upgrade_result.err().unwrap();
-                    let done_user_canister_id = user_principal_id_to_canister_id_map.get(&done_user_principal_id).unwrap();
-                    ic_cdk::print(format!(
-                        "Failed to upgrade canister: {:?} with error: {:?}",
-                        done_user_canister_id.to_text(),
-                        err
-                    ));
-                    failed_canister_ids.push((done_user_principal_id, *done_user_canister_id, err));
-                }
-                
-                upgrade_count += 1;
-                CANISTER_DATA.with(|canister_data_ref_cell| {
-                    update_upgrade_status(
-                        &mut canister_data_ref_cell.borrow_mut(),
-                        upgrade_count,
-                        &failed_canister_ids,
-                        None,
-                        None,
-                    );
-                });
-            }
-        }
-    }
+    task::run_task_concurrently(upgrade_individual_canister_futures, MAX_CONCURRENCY, result_callback, breaking_condition).await;
 
     CANISTER_DATA.with(|canister_data_ref_cell| {
         update_upgrade_status(

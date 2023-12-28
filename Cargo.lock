@@ -688,6 +688,7 @@ name = "shared_utils"
 version = "0.1.0"
 dependencies = [
  "candid",
+ "futures",
  "ic-cdk",
  "ic-cdk-timers",
  "ic-stable-structures",
@@ -840,7 +841,6 @@ name = "user_index"
 version = "0.1.0"
 dependencies = [
  "candid",
- "futures",
  "ic-cdk",
  "ic-cdk-timers",
  "serde",
