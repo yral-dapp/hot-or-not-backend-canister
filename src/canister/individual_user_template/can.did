@@ -301,6 +301,7 @@ service : (IndividualUserTemplateInitArgs) -> {
       nat64,
     ) -> (Result_5) query;
   get_utility_token_balance : () -> (nat64) query;
+  get_version_number : () -> (nat64) query;
   get_well_known_principal_value : (KnownPrincipalType) -> (
       opt principal,
     ) query;
