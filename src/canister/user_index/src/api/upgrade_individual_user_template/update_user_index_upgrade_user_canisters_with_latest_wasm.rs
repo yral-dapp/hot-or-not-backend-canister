@@ -18,7 +18,7 @@ use crate::{
     CANISTER_DATA,
 };
 
-const MAX_CONCURRENCY: usize = 15;
+const MAX_CONCURRENCY: usize = 11;
 
 pub async fn upgrade_user_canisters_with_latest_wasm() {
     let mut upgrade_count = 0;
