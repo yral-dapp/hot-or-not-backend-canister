@@ -3,7 +3,7 @@ use ic_cdk::api::{
     self,
     call::RejectionCode,
     management_canister::{
-        main::{self, CanisterInstallMode, CreateCanisterArgument, WasmModule, InstallCodeArgument, stop_canister, start_canister, canister_status, CanisterStatusType},
+        main::{self, CanisterInstallMode, CreateCanisterArgument, WasmModule, InstallCodeArgument, stop_canister, start_canister},
         provisional::{CanisterSettings, CanisterIdRecord},
     }, canister_version,
 };
