@@ -146,7 +146,7 @@ async fn upgrade_user_canister(
                 configuration.url_to_send_canister_metrics_to.clone(),
             ),
         },
-        true
+        false
     )
     .await
     .map_err(|e| e.1)
