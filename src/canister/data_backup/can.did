@@ -74,6 +74,7 @@ type MintEvent = variant {
 };
 type Post = record {
   id : nat64;
+  is_nsfw : bool;
   status : PostStatus;
   share_count : nat64;
   hashtags : vec text;

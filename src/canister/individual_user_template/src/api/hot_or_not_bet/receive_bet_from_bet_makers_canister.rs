@@ -105,6 +105,7 @@ mod test {
             Post::new(
                 0,
                 &PostDetailsFromFrontend {
+                    is_nsfw: false,
                     description: "Doggos and puppers".into(),
                     hashtags: vec!["doggo".into(), "pupper".into()],
                     video_uid: "abcd#1234".into(),

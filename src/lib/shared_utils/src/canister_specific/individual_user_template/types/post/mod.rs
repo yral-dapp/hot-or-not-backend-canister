@@ -23,6 +23,8 @@ pub struct Post {
     pub home_feed_score: FeedScore,
     pub creator_consent_for_inclusion_in_hot_or_not: bool,
     pub hot_or_not_details: Option<HotOrNotDetails>,
+    #[serde(default)]
+    pub is_nsfw: bool
 }
 
 #[derive(CandidType, Clone, Deserialize, Debug, Serialize)]
@@ -91,6 +93,7 @@ pub struct PostDetailsForFrontend {
     pub home_feed_ranking_score: u64,
     pub hot_or_not_feed_ranking_score: Option<u64>,
     pub hot_or_not_betting_status: Option<BettingStatus>,
+    pub is_nsfw: bool
 }
 
 #[derive(Serialize, CandidType, Deserialize)]
@@ -99,6 +102,7 @@ pub struct PostDetailsFromFrontend {
     pub hashtags: Vec<String>,
     pub video_uid: String,
     pub creator_consent_for_inclusion_in_hot_or_not: bool,
+    pub is_nsfw: bool
 }
 
 impl Post {
@@ -148,6 +152,7 @@ impl Post {
             status: self.status.clone(),
             total_view_count: self.view_stats.total_view_count,
             like_count: self.likes.len() as u64,
+            is_nsfw: self.is_nsfw,
             liked_by_me: self.likes.contains(&caller),
             home_feed_ranking_score: self.home_feed_score.current_score,
             hot_or_not_feed_ranking_score: if self.hot_or_not_details.is_some() {
@@ -188,6 +193,7 @@ impl Post {
             created_at: *current_time,
             likes: HashSet::new(),
             share_count: 0,
+            is_nsfw: post_details_from_frontend.is_nsfw,
             view_stats: PostViewStatistics {
                 total_view_count: 0,
                 threshold_view_count: 0,
@@ -405,6 +411,7 @@ mod test {
                 hashtags: vec!["#fun".to_string(), "#post".to_string()],
                 video_uid: "abcd1234".to_string(),
                 creator_consent_for_inclusion_in_hot_or_not: false,
+                is_nsfw: false
             },
             &SystemTime::now(),
         );
@@ -418,6 +425,7 @@ mod test {
                 hashtags: vec!["#fun".to_string(), "#post".to_string()],
                 video_uid: "abcd1234".to_string(),
                 creator_consent_for_inclusion_in_hot_or_not: true,
+                is_nsfw: false
             },
             &SystemTime::now(),
         );
@@ -443,6 +451,7 @@ mod test {
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
                 creator_consent_for_inclusion_in_hot_or_not: true,
+                is_nsfw: false
             },
             &post_created_at,
         );
@@ -518,6 +527,7 @@ mod test {
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
                 creator_consent_for_inclusion_in_hot_or_not: true,
+                is_nsfw: false
             },
             &post_created_at,
         );
@@ -593,6 +603,7 @@ mod test {
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
                 creator_consent_for_inclusion_in_hot_or_not: true,
+                is_nsfw: false
             },
             &post_created_at,
         );
@@ -671,6 +682,7 @@ mod test {
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
                 creator_consent_for_inclusion_in_hot_or_not: true,
+                is_nsfw: false
             },
             &post_created_at,
         );
@@ -751,6 +763,7 @@ mod test {
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
                 creator_consent_for_inclusion_in_hot_or_not: true,
+                is_nsfw: false
             },
             &post_created_at,
         );
@@ -831,6 +844,7 @@ mod test {
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
                 creator_consent_for_inclusion_in_hot_or_not: true,
+                is_nsfw: false
             },
             &post_created_at,
         );
@@ -911,6 +925,7 @@ mod test {
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
                 creator_consent_for_inclusion_in_hot_or_not: true,
+                is_nsfw: false
             },
             &post_created_at,
         );
@@ -991,6 +1006,7 @@ mod test {
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
                 creator_consent_for_inclusion_in_hot_or_not: true,
+                is_nsfw: false
             },
             &post_created_at,
         );
@@ -1071,6 +1087,7 @@ mod test {
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
                 creator_consent_for_inclusion_in_hot_or_not: true,
+                is_nsfw: false
             },
             &post_created_at,
         );
@@ -1151,6 +1168,7 @@ mod test {
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
                 creator_consent_for_inclusion_in_hot_or_not: true,
+                is_nsfw: false
             },
             &post_created_at,
         );
@@ -1231,6 +1249,7 @@ mod test {
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
                 creator_consent_for_inclusion_in_hot_or_not: true,
+                is_nsfw: false
             },
             &post_created_at,
         );
@@ -1320,6 +1339,7 @@ mod test {
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
                 creator_consent_for_inclusion_in_hot_or_not: true,
+                is_nsfw: false
             },
             &post_created_at,
         );
@@ -1409,6 +1429,7 @@ mod test {
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
                 creator_consent_for_inclusion_in_hot_or_not: true,
+                is_nsfw: false
             },
             &post_created_at,
         );
@@ -1501,6 +1522,7 @@ mod test {
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
                 creator_consent_for_inclusion_in_hot_or_not: true,
+                is_nsfw: false
             },
             &post_created_at,
         );
@@ -1595,6 +1617,7 @@ mod test {
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
                 creator_consent_for_inclusion_in_hot_or_not: true,
+                is_nsfw: false
             },
             &post_created_at,
         );
@@ -1689,6 +1712,7 @@ mod test {
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
                 creator_consent_for_inclusion_in_hot_or_not: true,
+                is_nsfw: false
             },
             &post_created_at,
         );
@@ -1783,6 +1807,7 @@ mod test {
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
                 creator_consent_for_inclusion_in_hot_or_not: true,
+                is_nsfw: false
             },
             &post_created_at,
         );
@@ -1877,6 +1902,7 @@ mod test {
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
                 creator_consent_for_inclusion_in_hot_or_not: true,
+                is_nsfw: false
             },
             &post_created_at,
         );
@@ -1971,6 +1997,7 @@ mod test {
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
                 creator_consent_for_inclusion_in_hot_or_not: true,
+                is_nsfw: false
             },
             &post_created_at,
         );
@@ -2065,6 +2092,7 @@ mod test {
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
                 creator_consent_for_inclusion_in_hot_or_not: true,
+                is_nsfw: false
             },
             &post_created_at,
         );
@@ -2153,6 +2181,7 @@ mod test {
                 hashtags: vec!["doggo".into(), "pupper".into()],
                 video_uid: "abcd#1234".into(),
                 creator_consent_for_inclusion_in_hot_or_not: true,
+                is_nsfw: false
             },
             &post_created_at,
         );

@@ -171,6 +171,7 @@ mod test {
             Post::new(
                 0,
                 &PostDetailsFromFrontend {
+                    is_nsfw: false,
                     description: "This is a new post".to_string(),
                     hashtags: vec!["#fun".to_string(), "#post".to_string()],
                     video_uid: "abcd1234".to_string(),
