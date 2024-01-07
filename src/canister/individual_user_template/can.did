@@ -102,6 +102,7 @@ type KnownPrincipalType = variant {
   CanisterIdDataBackup;
   CanisterIdPostCache;
   CanisterIdSNSController;
+  CanisterIdSnsGovernance;
   UserIdGlobalSuperAdmin;
 };
 type MintEvent = variant {

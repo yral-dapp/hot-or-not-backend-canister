@@ -10,6 +10,7 @@ pub const MAX_POSTS_IN_ONE_REQUEST: u64 = 100;
 pub const HOME_FEED_DIFFERENCE_TO_INITIATE_SYNCHRONISATION: u64 = 100;
 pub const HOT_OR_NOT_FEED_DIFFERENCE_TO_INITIATE_SYNCHRONISATION: u64 = 100;
 // * Important Principal IDs
+pub const GOVERNANCE_CANISTER_ID: &str = "6wcax-haaaa-aaaaq-aaava-cai";
 
 pub fn get_global_super_admin_principal_id_v1(
     well_known_canisters: KnownPrincipalMap,
