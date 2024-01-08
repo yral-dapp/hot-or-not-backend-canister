@@ -12,6 +12,8 @@ pub struct UpgradeStatus {
     pub last_run_on: SystemTime,
     pub successful_upgrade_count: u32,
     pub failed_canister_ids: Vec<(Principal, Principal, String)>,
+    #[serde(default)]
+    pub version: String,
 }
 
 impl Display for UpgradeStatus {
@@ -27,6 +29,7 @@ impl Default for UpgradeStatus {
             last_run_on: UNIX_EPOCH,
             successful_upgrade_count: 0,
             failed_canister_ids: Vec::new(),
+            version: String::from("v0.0.0")
         }
     }
 }

@@ -11,6 +11,7 @@ type KnownPrincipalType = variant {
   CanisterIdDataBackup;
   CanisterIdPostCache;
   CanisterIdSNSController;
+  CanisterIdSnsGovernance;
   UserIdGlobalSuperAdmin;
 };
 type Result = variant { Ok; Err : text };

@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{time::Duration, borrow::BorrowMut};
 use ciborium::de;
 use ic_stable_structures::Memory;
 
@@ -56,6 +56,8 @@ fn save_upgrade_args_to_memory() {
         if let Some(upgrade_version_number) = upgrade_args.upgrade_version_number {
             canister_data_ref_cell.version_details.version_number = upgrade_version_number;
         }
+
+        canister_data_ref_cell.borrow_mut().version_details.version = upgrade_args.version;
 
         if let Some(url_to_send_canister_metrics_to) = upgrade_args.url_to_send_canister_metrics_to
         {

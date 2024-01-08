@@ -20,6 +20,7 @@ fn init_impl(init_args: UserIndexInitArgs, data: &mut CanisterData) {
             data.known_principal_ids
                 .insert(*principal_belongs_to, *principal_id);
         });
+    data.allow_upgrades_for_individual_canisters = true;
 }
 
 #[cfg(test)]
@@ -72,6 +73,8 @@ mod test {
         let init_args = UserIndexInitArgs {
             known_principal_ids: Some(known_principal_ids),
             access_control_map: Some(access_control_map),
+            version: String::from("v1.0.0")
+
         };
         let mut data = CanisterData::default();
 

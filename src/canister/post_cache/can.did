@@ -7,6 +7,7 @@ type KnownPrincipalType = variant {
   CanisterIdDataBackup;
   CanisterIdPostCache;
   CanisterIdSNSController;
+  CanisterIdSnsGovernance;
   UserIdGlobalSuperAdmin;
 };
 type PostCacheInitArgs = record {

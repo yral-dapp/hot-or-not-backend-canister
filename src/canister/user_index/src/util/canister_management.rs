@@ -66,6 +66,7 @@ pub async fn create_users_canister(profile_owner: Principal) -> Principal {
             canister_data_ref_cell.borrow().known_principal_ids.clone()
         })),
         upgrade_version_number: Some(0),
+        version: CANISTER_DATA.with(|canister_data_ref_cell| canister_data_ref_cell.borrow().last_run_upgrade_status.version.clone()),
         url_to_send_canister_metrics_to: Some(configuration.url_to_send_canister_metrics_to),
     };
 

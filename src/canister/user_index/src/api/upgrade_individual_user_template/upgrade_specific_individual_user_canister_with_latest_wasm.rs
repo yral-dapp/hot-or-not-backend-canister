@@ -50,6 +50,7 @@ async fn upgrade_specific_individual_user_canister_with_latest_wasm(
             profile_owner: Some(user_principal_id),
             upgrade_version_number: Some(saved_upgrade_status.version_number + 1),
             url_to_send_canister_metrics_to: Some(configuration.url_to_send_canister_metrics_to),
+            version: saved_upgrade_status.version
         },
         unsafe_drop_stable_memory
     )
