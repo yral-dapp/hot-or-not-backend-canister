@@ -154,4 +154,5 @@ dfx canister install user_index --argument "(record {
       vec { variant { CanisterAdmin }; variant { CanisterController }; }
     };
   };
+  version= \"v1.0.0\"
 })"

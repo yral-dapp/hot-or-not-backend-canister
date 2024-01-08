@@ -34,4 +34,6 @@ fi
 dfx canister install configuration --mode upgrade --argument "(record {})"
 dfx canister install data_backup --mode upgrade --argument "(record {})"
 dfx canister install post_cache --mode upgrade --argument "(record {})"
-dfx canister install user_index --mode upgrade --argument "(record {})"
+dfx canister install user_index --mode upgrade --argument "(record {
+  version= \"v1.1.0\"
+})"
