@@ -79,6 +79,7 @@ mod test {
             url_to_send_canister_metrics_to: Some(
                 "http://metrics-url.com/receive-metrics".to_string(),
             ),
+            version: String::from("v1.0.0")
         };
         let mut data = CanisterData::default();
 

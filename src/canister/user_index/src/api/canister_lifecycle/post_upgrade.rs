@@ -1,13 +1,13 @@
 use std::time::Duration;
 
-use shared_utils::common::utils::stable_memory_serializer_deserializer;
+use shared_utils::{common::utils::{stable_memory_serializer_deserializer, system_time}, canister_specific::user_index::types::args::UserIndexInitArgs};
 
 use crate::{
     api::{
         upgrade_individual_user_template::update_user_index_upgrade_user_canisters_with_latest_wasm,
         well_known_principal::update_locally_stored_well_known_principals,
     },
-    data_model::{configuration::Configuration, CanisterData},
+    data_model::{configuration::Configuration, CanisterData, canister_upgrade::UpgradeStatus},
     CANISTER_DATA,
 };
 
@@ -16,6 +16,7 @@ use super::pre_upgrade::BUFFER_SIZE_BYTES;
 #[ic_cdk::post_upgrade]
 fn post_upgrade() {
     restore_data_from_stable_memory();
+    update_version_from_args();
     refetch_well_known_principals();
     upgrade_all_indexed_user_canisters();
 
@@ -31,6 +32,22 @@ fn post_upgrade() {
                 .to_string(),
         };
     });
+}
+
+fn update_version_from_args() {
+    let (upgrade_args, ) = ic_cdk::api::call::arg_data::<(UserIndexInitArgs,)>();
+    CANISTER_DATA.with(|canister_data_ref| {
+      let last_upgrade_status = canister_data_ref.borrow().last_run_upgrade_status.clone();
+       let upgrade_status = UpgradeStatus {
+        last_run_on: system_time::get_current_system_time_from_ic(),
+        failed_canister_ids: vec![],
+        version_number: last_upgrade_status.version_number,
+        successful_upgrade_count: 0,
+        version: upgrade_args.version
+       };
+       canister_data_ref.borrow_mut().last_run_upgrade_status = upgrade_status;
+    })
+
 }
 
 fn restore_data_from_stable_memory() {

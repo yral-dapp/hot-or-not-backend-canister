@@ -10,6 +10,7 @@ pub struct IndividualUserTemplateInitArgs {
     pub profile_owner: Option<Principal>,
     pub upgrade_version_number: Option<u64>,
     pub url_to_send_canister_metrics_to: Option<String>,
+    pub version: String,
 }
 
 #[derive(Deserialize, CandidType, Clone)]

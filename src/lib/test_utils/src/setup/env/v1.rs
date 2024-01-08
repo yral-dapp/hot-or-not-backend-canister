@@ -146,6 +146,7 @@ pub fn get_initialized_env_with_provisioned_known_canisters(
         candid::encode_one(UserIndexInitArgs {
             known_principal_ids: Some(known_principal_map_with_all_canisters.clone()),
             access_control_map: Some(user_index_access_control_map),
+            version: String::from("v1.0.0")
         })
         .unwrap(),
     );

@@ -189,11 +189,17 @@ fn when_backups_are_run_on_all_the_individual_user_canisters_they_capture_all_re
         )
         .unwrap();
 
+    let user_index_upgrade_arg = UserIndexInitArgs {
+        known_principal_ids: None,
+        access_control_map: None,
+        version: String::from("v1.0.0")
+    };
+
     state_machine
         .upgrade_canister(
             user_index_canister_id,
             get_canister_wasm(KnownPrincipalType::CanisterIdUserIndex),
-            candid::encode_one(()).unwrap(),
+            candid::encode_one(user_index_upgrade_arg).unwrap(),
             Some(get_global_super_admin_principal_id()),
         )
         .unwrap();

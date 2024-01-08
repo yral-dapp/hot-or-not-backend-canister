@@ -96,7 +96,8 @@ pub async fn reset_user_individual_canisters(canisters: Vec<Principal>) -> Resul
             known_principal_ids: Some(CANISTER_DATA.with(|canister_data_ref| {canister_data_ref.borrow().known_principal_ids.clone()})),
             profile_owner: None,
             upgrade_version_number: Some(CANISTER_DATA.with(|canister_data_ref| canister_data_ref.borrow().last_run_upgrade_status.version_number)),
-            url_to_send_canister_metrics_to: Some(CANISTER_DATA.with(|canister_data_ref| canister_data_ref.borrow().configuration.url_to_send_canister_metrics_to.clone()))
+            url_to_send_canister_metrics_to: Some(CANISTER_DATA.with(|canister_data_ref| canister_data_ref.borrow().configuration.url_to_send_canister_metrics_to.clone())),
+            version: CANISTER_DATA.with(|canister_data_ref_cell| canister_data_ref_cell.borrow().last_run_upgrade_status.version.clone())
         }, false).await?;
         Ok(canister.clone())
     });

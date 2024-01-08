@@ -52,6 +52,7 @@ type SystemTime = record {
 };
 type UpgradeStatus = record {
   version_number : nat64;
+  version : text;
   last_run_on : SystemTime;
   failed_canister_ids : vec record { principal; principal; text };
   successful_upgrade_count : nat32;
@@ -64,6 +65,7 @@ type UserAccessRole = variant {
 };
 type UserIndexInitArgs = record {
   known_principal_ids : opt vec record { KnownPrincipalType; principal };
+  version : text;
   access_control_map : opt vec record { principal; vec UserAccessRole };
 };
 service : (UserIndexInitArgs) -> {

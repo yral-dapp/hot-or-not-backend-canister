@@ -43,7 +43,7 @@ pub async fn upgrade_user_canisters_with_latest_wasm() {
 
    let upgrade_individual_canister_futures = user_principal_id_to_canister_id_map.iter()
     .map(|(user_principal_id, user_canister_id)| {
-        recharge_and_upgrade(*user_canister_id, *user_principal_id, saved_upgrade_status.version_number, configuration.clone())
+        recharge_and_upgrade(*user_canister_id, *user_principal_id, saved_upgrade_status.version_number, configuration.clone(), saved_upgrade_status.version.clone())
     });
 
     let result_callback = |upgrade_result: Result<Principal, (Principal, String)>| {
@@ -89,14 +89,14 @@ pub async fn upgrade_user_canisters_with_latest_wasm() {
 }
 
 
-async fn recharge_and_upgrade(user_canister_id: Principal, user_principal_id: Principal, version_number: u64, configuration: Configuration) -> Result<Principal, (Principal, String)> {
+async fn recharge_and_upgrade(user_canister_id: Principal, user_principal_id: Principal, version_number: u64, configuration: Configuration, version: String) -> Result<Principal, (Principal, String)> {
     let is_canister_below_threshold_balance = is_canister_below_threshold_balance(&user_canister_id).await;
 
     if is_canister_below_threshold_balance {
         recharge_canister(&user_canister_id).await.map_err(|s| (user_principal_id, s))?;
     }
     
-    upgrade_user_canister(&user_principal_id, &user_canister_id, version_number, &configuration).await.map_err(|s| (user_principal_id, s))?;
+    upgrade_user_canister(&user_principal_id, &user_canister_id, version_number, &configuration, version).await.map_err(|s| (user_principal_id, s))?;
 
     Ok(user_principal_id)
 }
@@ -134,6 +134,7 @@ async fn upgrade_user_canister(
     canister_id: &Principal,
     version_number: u64,
     configuration: &Configuration,
+    version: String
 ) -> Result<(), String> {
     canister_management::upgrade_individual_user_canister(
         *canister_id,
@@ -145,6 +146,7 @@ async fn upgrade_user_canister(
             url_to_send_canister_metrics_to: Some(
                 configuration.url_to_send_canister_metrics_to.clone(),
             ),
+            version
         },
         false
     )
