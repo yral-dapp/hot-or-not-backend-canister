@@ -63,7 +63,7 @@ pub async fn create_users_canister(profile_owner: Principal) -> Principal {
     let individual_user_tempalate_init_args = IndividualUserTemplateInitArgs {
         profile_owner: Some(profile_owner),
         known_principal_ids: Some(CANISTER_DATA.with(|canister_data_ref_cell| {
-            canister_data_ref_cell.borrow().known_principal_ids.clone()
+            canister_data_ref_cell.borrow().configuration.known_principal_ids.clone()
         })),
         upgrade_version_number: Some(0),
         version: CANISTER_DATA.with(|canister_data_ref_cell| canister_data_ref_cell.borrow().last_run_upgrade_status.version.clone()),

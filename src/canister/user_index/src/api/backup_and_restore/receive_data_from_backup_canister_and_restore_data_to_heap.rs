@@ -31,6 +31,7 @@ fn receive_data_from_backup_canister_and_restore_data_to_heap_impl(
     unique_user_name: String,
 ) {
     if *canister_data
+        .configuration
         .known_principal_ids
         .get(&KnownPrincipalType::CanisterIdDataBackup)
         .unwrap()
@@ -64,7 +65,7 @@ mod test {
     fn test_receive_data_from_backup_canister_and_restore_data_to_heap_impl() {
         let mut canister_data = CanisterData::default();
 
-        canister_data.known_principal_ids.insert(
+        canister_data.configuration.known_principal_ids.insert(
             KnownPrincipalType::CanisterIdDataBackup,
             get_mock_canister_id_data_backup(),
         );

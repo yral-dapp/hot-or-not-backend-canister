@@ -17,7 +17,7 @@ fn init_impl(init_args: UserIndexInitArgs, data: &mut CanisterData) {
         .unwrap_or_default()
         .iter()
         .for_each(|(principal_belongs_to, principal_id)| {
-            data.known_principal_ids
+            data.configuration.known_principal_ids
                 .insert(*principal_belongs_to, *principal_id);
         });
     data.allow_upgrades_for_individual_canisters = true;
@@ -83,19 +83,25 @@ mod test {
 
         // * Check the data
         assert_eq!(
-            data.known_principal_ids
+            data
+                .configuration
+                .known_principal_ids
                 .get(&KnownPrincipalType::UserIdGlobalSuperAdmin)
                 .unwrap(),
             &get_global_super_admin_principal_id()
         );
         assert_eq!(
-            data.known_principal_ids
+            data
+                .configuration
+                .known_principal_ids
                 .get(&KnownPrincipalType::CanisterIdConfiguration)
                 .unwrap(),
             &get_mock_canister_id_configuration()
         );
         assert_eq!(
-            data.known_principal_ids
+            data
+                .configuration
+                .known_principal_ids
                 .get(&KnownPrincipalType::CanisterIdUserIndex)
                 .unwrap(),
             &get_mock_canister_id_user_index()
