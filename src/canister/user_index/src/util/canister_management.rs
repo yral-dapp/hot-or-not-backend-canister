@@ -5,12 +5,12 @@ use ic_cdk::api::{
     management_canister::{
         main::{self, CanisterInstallMode, CreateCanisterArgument, WasmModule, InstallCodeArgument, stop_canister, start_canister},
         provisional::{CanisterSettings, CanisterIdRecord},
-    }, canister_version,
+    },
 };
 use serde::{Serialize, Deserialize};
 use shared_utils::{
     canister_specific::individual_user_template::types::arg::IndividualUserTemplateInitArgs,
-    constant::INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT,
+    constant::{INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT, CYCLES_THRESHOLD_TO_INITIATE_RECHARGE},
 };
 
 use crate::CANISTER_DATA;
@@ -91,21 +91,57 @@ pub async fn upgrade_individual_user_canister(
     canister_id: Principal,
     install_mode: CanisterInstallMode,
     arg: IndividualUserTemplateInitArgs,
-    unsafe_drop_stable_memory: bool
 ) -> Result<(), (RejectionCode, String)> {
     stop_canister(CanisterIdRecord {canister_id: canister_id.clone()}).await?;
     let serialized_arg =
         candid::encode_args((arg,)).expect("Failed to serialize the install argument.");
 
-        let upgrade_args = CustomInstallCodeArgument {
+        main::install_code(InstallCodeArgument {
             mode: install_mode,
-            canister_id: canister_id.clone(),
+            canister_id,
             wasm_module: INDIVIDUAL_USER_TEMPLATE_CANISTER_WASM.into(),
-            sender_canister_version: Some(canister_version()),
             arg: serialized_arg,
-            unsafe_drop_stable_memory: Some(unsafe_drop_stable_memory)
-        };
-
-    api::call::call(Principal::management_canister(), "install_code", (upgrade_args, )).await?;
+        })
+        .await?;
     start_canister(CanisterIdRecord {canister_id}).await
+}
+
+pub async fn recharge_canister_if_below_threshold(canister_id: &Principal) -> Result<Principal, (Principal, String)> {
+
+    let is_canister_below_threshold_balance = is_canister_below_threshold_balance(&canister_id).await;
+
+    if is_canister_below_threshold_balance {
+        recharge_canister(canister_id).await.map_err(|s| (*canister_id, s))?;    
+    }
+
+    Ok(*canister_id)
+}
+
+
+pub async fn is_canister_below_threshold_balance(canister_id: &Principal) -> bool {
+    let response: Result<(u128,), (_, _)> =
+        ic_cdk::call(*canister_id, "get_user_caniser_cycle_balance", ()).await;
+
+    if response.is_err() {
+        return true;
+    }
+
+    let (balance,): (u128,) = response.unwrap();
+
+    if balance < CYCLES_THRESHOLD_TO_INITIATE_RECHARGE {
+        return true;
+    }
+
+    false
+}
+
+pub async fn recharge_canister(canister_id: &Principal) -> Result<(), String> {
+    main::deposit_cycles(
+        CanisterIdRecord {
+            canister_id: *canister_id,
+        },
+        INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT,
+    )
+    .await
+    .map_err(|e| e.1)
 }

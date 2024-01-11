@@ -15,7 +15,6 @@ async fn upgrade_specific_individual_user_canister_with_latest_wasm(
     user_principal_id: Principal,
     user_canister_id: Principal,
     upgrade_mode: Option<CanisterInstallMode>,
-    unsafe_drop_stable_memory: bool
 ) -> String {
     let api_caller = ic_cdk::caller();
 
@@ -50,7 +49,6 @@ async fn upgrade_specific_individual_user_canister_with_latest_wasm(
             url_to_send_canister_metrics_to: Some(configuration.url_to_send_canister_metrics_to),
             version: saved_upgrade_status.version
         },
-        unsafe_drop_stable_memory
     )
     .await
     {
