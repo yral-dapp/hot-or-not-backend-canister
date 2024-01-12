@@ -17,7 +17,7 @@ use crate::setup::test_constants::{
     v1::{
         CANISTER_INITIAL_CYCLES_FOR_NON_SPAWNING_CANISTERS,
         CANISTER_INITIAL_CYCLES_FOR_SPAWNING_CANISTERS,
-    },
+    }, get_mock_canister_id_sns,
 };
 
 /// The path to the state machine binary to run the tests with
@@ -84,6 +84,11 @@ pub fn get_initialized_env_with_provisioned_known_canisters(
     known_principal_map_with_all_canisters.insert(
         KnownPrincipalType::CanisterIdUserIndex,
         canister_provisioner(CANISTER_INITIAL_CYCLES_FOR_SPAWNING_CANISTERS),
+    );
+
+    known_principal_map_with_all_canisters.insert(
+        KnownPrincipalType::CanisterIdSnsGovernance,
+        get_mock_canister_id_sns()
     );
 
     // * Install canisters
