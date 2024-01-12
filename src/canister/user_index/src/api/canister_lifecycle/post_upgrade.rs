@@ -17,7 +17,7 @@ use super::pre_upgrade::BUFFER_SIZE_BYTES;
 fn post_upgrade() {
     restore_data_from_stable_memory();
     update_version_from_args();
-    upgrade_all_indexed_user_canisters();
+    // upgrade_all_indexed_user_canisters();
 }
 
 fn update_version_from_args() {
