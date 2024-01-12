@@ -11,6 +11,7 @@ async fn backup_all_individual_user_canisters() {
     let global_super_admin_principal_id = CANISTER_DATA.with(|canister_data_ref_cell| {
         canister_data_ref_cell
             .borrow()
+            .configuration
             .known_principal_ids
             .get(&KnownPrincipalType::UserIdGlobalSuperAdmin)
             .cloned()

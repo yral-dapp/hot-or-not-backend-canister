@@ -9,6 +9,7 @@ pub async fn update_locally_stored_well_known_principals() {
     let config_canister_id = CANISTER_DATA.with(|canister_data_ref_cell| {
         *canister_data_ref_cell
             .borrow()
+            .configuration
             .known_principal_ids
             .get(&KnownPrincipalType::CanisterIdConfiguration)
             .unwrap()
@@ -26,7 +27,7 @@ pub async fn update_locally_stored_well_known_principals() {
     // update the locally stored well-known principals
     CANISTER_DATA.with(|canister_data_ref_cell| {
         let mut canister_data = canister_data_ref_cell.borrow_mut();
-        canister_data.known_principal_ids = well_known_principals
+        canister_data.configuration.known_principal_ids = well_known_principals
             .into_iter()
             .collect::<std::collections::HashMap<_, _>>();
     });

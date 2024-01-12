@@ -40,7 +40,8 @@ type Result = variant {
   Err : record { RejectionCode; text };
 };
 type Result_1 = variant { Ok : text; Err : text };
-type Result_2 = variant { Ok; Err : SetUniqueUsernameError };
+type Result_2 = variant { Ok; Err : text };
+type Result_3 = variant { Ok; Err : SetUniqueUsernameError };
 type SetUniqueUsernameError = variant {
   UsernameAlreadyTaken;
   SendingCanisterDoesNotMatchUserCanisterId;
@@ -69,7 +70,11 @@ type UserIndexInitArgs = record {
   access_control_map : opt vec record { principal; vec UserAccessRole };
 };
 service : (UserIndexInitArgs) -> {
+  are_signups_enabled : () -> (bool) query;
   backup_all_individual_user_canisters : () -> ();
+  get_current_list_of_all_well_known_principal_values : () -> (
+      vec record { KnownPrincipalType; principal },
+    ) query;
   get_index_details_is_user_name_taken : (text) -> (bool) query;
   get_index_details_last_upgrade_status : () -> (UpgradeStatus) query;
   get_list_of_available_canisters : () -> (vec principal) query;
@@ -94,15 +99,15 @@ service : (UserIndexInitArgs) -> {
   reset_user_individual_canisters : (vec principal) -> (Result_1);
   set_permission_to_upgrade_individual_canisters : (bool) -> (text);
   start_upgrades_for_individual_canisters : () -> (text);
+  toggle_signups_enabled : () -> (Result_2);
   update_index_with_unique_user_name_corresponding_to_user_principal_id : (
       text,
       principal,
-    ) -> (Result_2);
+    ) -> (Result_3);
   upgrade_specific_individual_user_canister_with_latest_wasm : (
       principal,
       principal,
       opt CanisterInstallMode,
-      bool,
     ) -> (text);
   validate_reset_user_individual_canisters : (vec principal) -> (
       Result_1,

@@ -20,7 +20,7 @@ pub async fn get_user_canister_status(canister_id: Principal) -> CallResult<(Can
 #[ic_cdk::update]
 pub async fn set_permission_to_upgrade_individual_canisters(flag: bool) -> String {
     let api_caller = ic_cdk::caller();
-    let known_principal_ids = CANISTER_DATA.with(|canister_data_ref_cell| canister_data_ref_cell.borrow().known_principal_ids.clone());
+    let known_principal_ids = CANISTER_DATA.with(|canister_data_ref_cell| canister_data_ref_cell.borrow().configuration.known_principal_ids.clone());
     if *known_principal_ids
         .get(&KnownPrincipalType::UserIdGlobalSuperAdmin)
         .unwrap()
@@ -39,7 +39,7 @@ pub async fn set_permission_to_upgrade_individual_canisters(flag: bool) -> Strin
 #[ic_cdk::update]
 pub async fn start_upgrades_for_individual_canisters() -> String {
     let api_caller = ic_cdk::caller();
-    let known_principal_ids = CANISTER_DATA.with(|canister_data_ref_cell| canister_data_ref_cell.borrow().known_principal_ids.clone());
+    let known_principal_ids = CANISTER_DATA.with(|canister_data_ref_cell| canister_data_ref_cell.borrow().configuration.known_principal_ids.clone());
     if *known_principal_ids
         .get(&KnownPrincipalType::UserIdGlobalSuperAdmin)
         .unwrap()
@@ -68,7 +68,7 @@ pub fn get_list_of_available_canisters() -> Vec<Principal> {
 pub fn validate_reset_user_individual_canisters(_canisters: Vec<Principal>) -> Result<String, String> {
     let caller_id = caller();
     let governance_canister_id = CANISTER_DATA.with(|canister_data_ref| {
-        canister_data_ref.borrow().known_principal_ids.get(&KnownPrincipalType::CanisterIdSnsGovernance).cloned()
+        canister_data_ref.borrow().configuration.known_principal_ids.get(&KnownPrincipalType::CanisterIdSnsGovernance).cloned()
     }).ok_or("Governance Canister Id not found")?;
     
     if caller_id !=  governance_canister_id {
@@ -84,25 +84,28 @@ pub fn validate_reset_user_individual_canisters(_canisters: Vec<Principal>) -> R
 pub async fn reset_user_individual_canisters(canisters: Vec<Principal>) -> Result<String, String> {
     let caller_id = caller();
     let governance_canister_id = CANISTER_DATA.with(|canister_data_ref| {
-        canister_data_ref.borrow().known_principal_ids.get(&KnownPrincipalType::CanisterIdSnsGovernance).cloned()
+        canister_data_ref.borrow().configuration.known_principal_ids.get(&KnownPrincipalType::CanisterIdSnsGovernance).cloned()
     }).ok_or("Governance Canister Id not found")?;
     
     if caller_id !=  governance_canister_id {
         return Err("This method can only be executed through DAO".to_string())
     };
     
-    let canister_reinstall_futures = canisters.iter().map(|canister| async {
+    let canister_reinstall_futures = canisters.iter().map(|canister| async move {
+        canister_management::recharge_canister_if_below_threshold(&canister).await?;
         canister_management::upgrade_individual_user_canister(canister.clone(), CanisterInstallMode::Reinstall, IndividualUserTemplateInitArgs {
-            known_principal_ids: Some(CANISTER_DATA.with(|canister_data_ref| {canister_data_ref.borrow().known_principal_ids.clone()})),
+            known_principal_ids: Some(CANISTER_DATA.with(|canister_data_ref| {canister_data_ref.borrow().configuration.known_principal_ids.clone()})),
             profile_owner: None,
             upgrade_version_number: Some(CANISTER_DATA.with(|canister_data_ref| canister_data_ref.borrow().last_run_upgrade_status.version_number)),
             url_to_send_canister_metrics_to: Some(CANISTER_DATA.with(|canister_data_ref| canister_data_ref.borrow().configuration.url_to_send_canister_metrics_to.clone())),
             version: CANISTER_DATA.with(|canister_data_ref_cell| canister_data_ref_cell.borrow().last_run_upgrade_status.version.clone())
-        }, false).await?;
-        Ok(canister.clone())
+        })
+        .await
+        .map_err(|e| (*canister, e.1))?;
+        Ok(*canister)
     });
 
-    let result_callback = |reinstall_res: CallResult<Principal>| { 
+    let result_callback = |reinstall_res: Result<Principal, (Principal, String)>| { 
         
        match reinstall_res {
         Ok(canister_id) => {

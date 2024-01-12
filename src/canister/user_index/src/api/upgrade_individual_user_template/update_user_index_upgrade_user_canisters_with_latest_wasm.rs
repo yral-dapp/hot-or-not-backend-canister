@@ -9,12 +9,11 @@ use ic_cdk::api::management_canister::{
 use shared_utils::{
     canister_specific::individual_user_template::types::arg::IndividualUserTemplateInitArgs,
     common::utils::{system_time, task},
-    constant::{CYCLES_THRESHOLD_TO_INITIATE_RECHARGE, INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT},
 };
 
 use crate::{
     data_model::{configuration::Configuration, CanisterData},
-    util::canister_management,
+    util::canister_management::{self, recharge_canister_if_below_threshold},
     CANISTER_DATA,
 };
 
@@ -90,43 +89,11 @@ pub async fn upgrade_user_canisters_with_latest_wasm() {
 
 
 async fn recharge_and_upgrade(user_canister_id: Principal, user_principal_id: Principal, version_number: u64, configuration: Configuration, version: String) -> Result<Principal, (Principal, String)> {
-    let is_canister_below_threshold_balance = is_canister_below_threshold_balance(&user_canister_id).await;
-
-    if is_canister_below_threshold_balance {
-        recharge_canister(&user_canister_id).await.map_err(|s| (user_principal_id, s))?;
-    }
+    recharge_canister_if_below_threshold(&user_canister_id).await?;
     
     upgrade_user_canister(&user_principal_id, &user_canister_id, version_number, &configuration, version).await.map_err(|s| (user_principal_id, s))?;
 
     Ok(user_principal_id)
-}
-
-async fn is_canister_below_threshold_balance(canister_id: &Principal) -> bool {
-    let response: Result<(u128,), (_, _)> =
-        ic_cdk::call(*canister_id, "get_user_caniser_cycle_balance", ()).await;
-
-    if response.is_err() {
-        return true;
-    }
-
-    let (balance,): (u128,) = response.unwrap();
-
-    if balance < CYCLES_THRESHOLD_TO_INITIATE_RECHARGE {
-        return true;
-    }
-
-    false
-}
-
-async fn recharge_canister(canister_id: &Principal) -> Result<(), String> {
-    main::deposit_cycles(
-        CanisterIdRecord {
-            canister_id: *canister_id,
-        },
-        INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT,
-    )
-    .await
-    .map_err(|e| e.1)
 }
 
 async fn upgrade_user_canister(
@@ -148,7 +115,6 @@ async fn upgrade_user_canister(
             ),
             version
         },
-        false
     )
     .await
     .map_err(|e| e.1)

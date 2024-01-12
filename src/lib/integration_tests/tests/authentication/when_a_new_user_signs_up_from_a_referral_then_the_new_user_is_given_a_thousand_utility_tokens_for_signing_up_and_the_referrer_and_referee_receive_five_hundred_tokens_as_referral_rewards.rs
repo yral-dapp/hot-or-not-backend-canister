@@ -54,6 +54,26 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
 
     assert_eq!(alice_utility_token_balance_after_signup, 1000);
 
+    // check version of alice canister
+    let alice_canister_version = state_machine
+    .query_call(
+        alice_canister_id,
+        Principal::anonymous(),
+        "get_version",
+        candid::encode_one(()).unwrap(),
+    )
+    .map(|reply_payload| {
+        let version: String = match reply_payload {
+            WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+            _ => panic!("\n🛑 get_utility_token_balance failed\n"),
+        };
+        version
+    })
+    .unwrap();
+
+    assert!(alice_canister_version.eq("v1.0.0"));
+
+
     // * getting canister id again to check if token value increased
     state_machine.update_call(
         *user_index_canister_id,

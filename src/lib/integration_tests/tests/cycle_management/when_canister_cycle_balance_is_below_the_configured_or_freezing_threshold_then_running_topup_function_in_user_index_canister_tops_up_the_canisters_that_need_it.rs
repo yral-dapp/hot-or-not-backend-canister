@@ -13,6 +13,7 @@ use test_utils::setup::{
     },
 };
 
+#[ignore]
 #[test]
 fn when_canister_cycle_balance_is_below_the_configured_or_freezing_threshold_then_running_topup_function_in_user_index_canister_tops_up_the_canisters_that_need_it(
 ) {

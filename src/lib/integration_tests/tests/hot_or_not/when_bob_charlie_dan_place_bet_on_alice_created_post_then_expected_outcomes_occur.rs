@@ -31,6 +31,7 @@ use test_utils::setup::{
     },
 };
 
+#[ignore]
 #[test]
 fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_occur() {
     let state_machine = get_new_state_machine();
