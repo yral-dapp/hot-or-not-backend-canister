@@ -1,0 +1,6 @@
+type PlatformOrchestratorInitArgs = record { version : text };
+service : (PlatformOrchestratorInitArgs) -> {
+  delete_all_caniter : (principal) -> ();
+  get_version : () -> (text) query;
+  provision_subnet_orchestrator_canister : (principal, vec nat8) -> (principal);
+}

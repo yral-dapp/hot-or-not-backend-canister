@@ -54,6 +54,17 @@
       "optimize": "size",
       "package": "user_index",
       "type": "rust"
+    },
+    "platform_orchestrator": {
+      "candid": "./src/canister/platform_orchestrator/can.did",
+      "declaration": {
+        "node_compatibility": true,
+        "output": "./export/declarations/platform_orchestrator"
+      },
+      "gzip": true,
+      "optimize": "size",
+      "package": "platform_orchestrator",
+      "type": "rust"
     }
   },
   "version": 1
