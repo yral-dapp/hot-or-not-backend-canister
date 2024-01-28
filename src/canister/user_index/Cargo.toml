@@ -14,6 +14,8 @@ ic-cdk = { workspace = true }
 ic-cdk-timers = { workspace = true }
 shared_utils = { workspace = true }
 serde = { workspace = true }
+ic-stable-structures = { workspace = true }
+ciborium = { workspace = true }
 
 [dev-dependencies]
 test_utils = { workspace = true }

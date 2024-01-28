@@ -15,10 +15,6 @@ use shared_utils::{
 
 use crate::CANISTER_DATA;
 
-const INDIVIDUAL_USER_TEMPLATE_CANISTER_WASM: &[u8] = include_bytes!(
-    "../../../../../target/wasm32-unknown-unknown/release/individual_user_template.wasm.gz"
-);
-
 #[derive( CandidType, Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 struct CustomInstallCodeArgument {
     /// See [CanisterInstallMode].
@@ -35,12 +31,12 @@ struct CustomInstallCodeArgument {
     pub unsafe_drop_stable_memory: Option<bool>,
 }
 
-pub async fn create_users_canister(profile_owner: Principal) -> Principal {
+pub async fn create_users_canister(profile_owner: Option<Principal>, version: String, individual_user_wasm: Vec<u8>) -> Principal {
     // * config for provisioning canister
     let arg = CreateCanisterArgument {
         settings: Some(CanisterSettings {
             controllers: Some(vec![
-                // * this user_index canister
+                // * this subnet_orchestrator canister
                 api::id(),
             ]),
             compute_allocation: None,
@@ -61,12 +57,12 @@ pub async fn create_users_canister(profile_owner: Principal) -> Principal {
         .with(|canister_data_ref_cell| canister_data_ref_cell.borrow().configuration.clone());
 
     let individual_user_tempalate_init_args = IndividualUserTemplateInitArgs {
-        profile_owner: Some(profile_owner),
+        profile_owner: profile_owner,
         known_principal_ids: Some(CANISTER_DATA.with(|canister_data_ref_cell| {
             canister_data_ref_cell.borrow().configuration.known_principal_ids.clone()
         })),
         upgrade_version_number: Some(0),
-        version: CANISTER_DATA.with(|canister_data_ref_cell| canister_data_ref_cell.borrow().last_run_upgrade_status.version.clone()),
+        version,
         url_to_send_canister_metrics_to: Some(configuration.url_to_send_canister_metrics_to),
     };
 
@@ -78,7 +74,7 @@ pub async fn create_users_canister(profile_owner: Principal) -> Principal {
     main::install_code(InstallCodeArgument {
         mode: CanisterInstallMode::Install,
         canister_id,
-        wasm_module: INDIVIDUAL_USER_TEMPLATE_CANISTER_WASM.into(),
+        wasm_module: individual_user_wasm,
         arg,
     })
     .await
@@ -91,6 +87,7 @@ pub async fn upgrade_individual_user_canister(
     canister_id: Principal,
     install_mode: CanisterInstallMode,
     arg: IndividualUserTemplateInitArgs,
+    individual_user_wasm: Vec<u8>
 ) -> Result<(), (RejectionCode, String)> {
     stop_canister(CanisterIdRecord {canister_id: canister_id.clone()}).await?;
     let serialized_arg =
@@ -99,7 +96,7 @@ pub async fn upgrade_individual_user_canister(
         main::install_code(InstallCodeArgument {
             mode: install_mode,
             canister_id,
-            wasm_module: INDIVIDUAL_USER_TEMPLATE_CANISTER_WASM.into(),
+            wasm_module: individual_user_wasm,
             arg: serialized_arg,
         })
         .await?;

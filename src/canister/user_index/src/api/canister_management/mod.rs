@@ -1,12 +1,15 @@
 
-use ic_cdk::{api::{management_canister::{main::{canister_status, CanisterStatusResponse, CanisterInstallMode}, provisional::CanisterIdRecord}, call::CallResult}, caller};
+use std::borrow::{Borrow, Cow};
+use ic_cdk::{api::{call::CallResult, is_controller, management_canister::{main::{canister_status, CanisterStatusResponse, CanisterInstallMode}, provisional::CanisterIdRecord}}, caller};
 use candid::Principal;
-use shared_utils::{common::{types::known_principal::KnownPrincipalType, utils::task::run_task_concurrently}, canister_specific::individual_user_template::types::arg::IndividualUserTemplateInitArgs};
+use ic_stable_structures::{storable::Blob, Storable};
+use shared_utils::{common::{types::{known_principal::KnownPrincipalType, wasm::WasmType}, utils::task::run_task_concurrently}, canister_specific::individual_user_template::types::arg::IndividualUserTemplateInitArgs};
 
 use crate::{CANISTER_DATA, util::canister_management};
 
 use super::upgrade_individual_user_template::update_user_index_upgrade_user_canisters_with_latest_wasm;
 
+pub mod create_pool_of_available_canisters;
 
 
 #[candid::candid_method(update)]
@@ -19,15 +22,10 @@ pub async fn get_user_canister_status(canister_id: Principal) -> CallResult<(Can
 #[candid::candid_method(update)]
 #[ic_cdk::update]
 pub async fn set_permission_to_upgrade_individual_canisters(flag: bool) -> String {
-    let api_caller = ic_cdk::caller();
-    let known_principal_ids = CANISTER_DATA.with(|canister_data_ref_cell| canister_data_ref_cell.borrow().configuration.known_principal_ids.clone());
-    if *known_principal_ids
-        .get(&KnownPrincipalType::UserIdGlobalSuperAdmin)
-        .unwrap()
-        != api_caller
-    {
-        return "Unauthorized caller".to_string();
-    };
+    
+    if !is_controller(&caller()) {
+        return "Unauthorized Access".to_string();
+    }
 
     CANISTER_DATA.with(|canister_data_ref| {
        canister_data_ref.borrow_mut().allow_upgrades_for_individual_canisters = flag;
@@ -37,21 +35,18 @@ pub async fn set_permission_to_upgrade_individual_canisters(flag: bool) -> Strin
 
 #[candid::candid_method(update)]
 #[ic_cdk::update]
-pub async fn start_upgrades_for_individual_canisters() -> String {
-    let api_caller = ic_cdk::caller();
-    let known_principal_ids = CANISTER_DATA.with(|canister_data_ref_cell| canister_data_ref_cell.borrow().configuration.known_principal_ids.clone());
-    if *known_principal_ids
-        .get(&KnownPrincipalType::UserIdGlobalSuperAdmin)
-        .unwrap()
-        != api_caller
-    {
+pub async fn start_upgrades_for_individual_canisters(version: String, individual_user_wasm: Vec<u8>) -> String {
+    
+    if !is_controller(&caller()) {
         return "Unauthorized caller".to_string();
-    };
+    }
 
-    CANISTER_DATA.with(|canister_data_ref| {
-        canister_data_ref.borrow_mut().allow_upgrades_for_individual_canisters = true;
+    CANISTER_DATA.with_borrow_mut(|canister_data| {
+        canister_data.allow_upgrades_for_individual_canisters = true;
+        canister_data.last_run_upgrade_status.version = version.clone();
+        canister_data.wasms.insert(WasmType::IndividualUserWasm, Blob::from_bytes(Cow::Borrowed(&individual_user_wasm)));
     });
-    ic_cdk::spawn(update_user_index_upgrade_user_canisters_with_latest_wasm::upgrade_user_canisters_with_latest_wasm());
+    ic_cdk::spawn(update_user_index_upgrade_user_canisters_with_latest_wasm::upgrade_user_canisters_with_latest_wasm(version, individual_user_wasm));
     "Success".to_string()
 }
 
@@ -90,6 +85,15 @@ pub async fn reset_user_individual_canisters(canisters: Vec<Principal>) -> Resul
     if caller_id !=  governance_canister_id {
         return Err("This method can only be executed through DAO".to_string())
     };
+
+    // Remove profile owner from the data
+    CANISTER_DATA.with_borrow_mut(|canister_data| {
+        canister_data.user_principal_id_to_canister_id_map = canister_data.user_principal_id_to_canister_id_map
+            .iter()
+            .filter(|item| !canisters.contains(&item.1))
+            .map(|item| (*item.0, *item.1))
+            .collect();
+    });
     
     let canister_reinstall_futures = canisters.iter().map(|canister| async move {
         canister_management::recharge_canister_if_below_threshold(&canister).await?;
@@ -99,7 +103,8 @@ pub async fn reset_user_individual_canisters(canisters: Vec<Principal>) -> Resul
             upgrade_version_number: Some(CANISTER_DATA.with(|canister_data_ref| canister_data_ref.borrow().last_run_upgrade_status.version_number)),
             url_to_send_canister_metrics_to: Some(CANISTER_DATA.with(|canister_data_ref| canister_data_ref.borrow().configuration.url_to_send_canister_metrics_to.clone())),
             version: CANISTER_DATA.with(|canister_data_ref_cell| canister_data_ref_cell.borrow().last_run_upgrade_status.version.clone())
-        })
+        },
+        CANISTER_DATA.with_borrow(|canister_data| canister_data.wasms.get(&WasmType::IndividualUserWasm).unwrap().as_slice().to_vec()))
         .await
         .map_err(|e| (*canister, e.1))?;
         Ok(*canister)
