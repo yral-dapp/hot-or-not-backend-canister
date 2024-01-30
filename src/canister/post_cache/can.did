@@ -29,7 +29,15 @@ service : (PostCacheInitArgs) -> {
       nat64,
       nat64,
     ) -> (Result) query;
+  get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed_cursor : (
+      nat64,
+      nat64,
+    ) -> (Result) query;
   get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed : (
+      nat64,
+      nat64,
+    ) -> (Result) query;
+  get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed_cursor : (
       nat64,
       nat64,
     ) -> (Result) query;
