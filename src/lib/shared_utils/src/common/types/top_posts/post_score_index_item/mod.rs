@@ -1,12 +1,37 @@
 use candid::{CandidType, Deserialize, Principal};
 use serde::Serialize;
-use std::cmp::Ordering;
+use std::{cmp::Ordering, time::SystemTime};
+
+#[derive(Serialize, Deserialize, CandidType, Clone, Default, Debug, PartialEq, Eq, Hash)]
+pub enum PostStatus {
+    #[default]
+    Uploaded,
+    Transcoding,
+    CheckingExplicitness,
+    BannedForExplicitness,
+    ReadyToView,
+    BannedDueToUserReporting,
+    Deleted,
+}
 
 #[derive(Clone, CandidType, Deserialize, Debug, Serialize)]
 pub struct PostScoreIndexItem {
     pub score: u64,
     pub post_id: u64,
     pub publisher_canister_id: Principal,
+}
+
+#[derive(Clone, CandidType, Deserialize, Debug, Serialize, PartialEq, Eq)]
+pub struct PostScoreIndexItemV1 {
+    pub score: u64,
+    pub post_id: u64,
+    pub publisher_canister_id: Principal,
+    #[serde(default)]
+    pub is_nsfw: bool,
+    #[serde(default)]
+    pub created_at: Option<SystemTime>,
+    #[serde(default)]
+    pub status: PostStatus,
 }
 
 // #[derive(Debug, PartialEq, Eq)]

@@ -1,6 +1,5 @@
-use shared_utils::{
-    canister_specific::individual_user_template::types::post::PostStatus,
-    common::types::known_principal::KnownPrincipalType,
+use shared_utils::common::types::{
+    known_principal::KnownPrincipalType, top_posts::post_score_index_item::PostStatus,
 };
 
 use crate::CANISTER_DATA;
