@@ -18,7 +18,32 @@ type PostScoreIndexItem = record {
   score : nat64;
   publisher_canister_id : principal;
 };
+type PostScoreIndexItemV1 = record {
+  is_nsfw : bool;
+  status : PostStatus;
+  post_id : nat64;
+  created_at : opt SystemTime;
+  score : nat64;
+  publisher_canister_id : principal;
+};
+type PostStatus = variant {
+  BannedForExplicitness;
+  BannedDueToUserReporting;
+  Uploaded;
+  CheckingExplicitness;
+  ReadyToView;
+  Transcoding;
+  Deleted;
+};
 type Result = variant { Ok : vec PostScoreIndexItem; Err : TopPostsFetchError };
+type Result_1 = variant {
+  Ok : vec PostScoreIndexItemV1;
+  Err : TopPostsFetchError;
+};
+type SystemTime = record {
+  nanos_since_epoch : nat32;
+  secs_since_epoch : nat64;
+};
 type TopPostsFetchError = variant {
   ReachedEndOfItemsList;
   InvalidBoundsPassed;
@@ -32,7 +57,9 @@ service : (PostCacheInitArgs) -> {
   get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed_cursor : (
       nat64,
       nat64,
-    ) -> (Result) query;
+      opt bool,
+      opt PostStatus,
+    ) -> (Result_1) query;
   get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed : (
       nat64,
       nat64,
@@ -40,7 +67,9 @@ service : (PostCacheInitArgs) -> {
   get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed_cursor : (
       nat64,
       nat64,
-    ) -> (Result) query;
+      opt bool,
+      opt PostStatus,
+    ) -> (Result_1) query;
   get_well_known_principal_value : (KnownPrincipalType) -> (
       opt principal,
     ) query;
