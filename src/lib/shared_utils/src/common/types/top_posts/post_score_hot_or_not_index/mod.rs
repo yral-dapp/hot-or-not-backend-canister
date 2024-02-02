@@ -85,6 +85,9 @@ impl PostScoreHotOrNotIndex {
                 old_score_index_entry.retain(|old_item| {
                     old_item.0 != item.publisher_canister_id || old_item.1 != item.post_id
                 });
+                if old_score_index_entry.is_empty() {
+                    self.items_sorted_by_score.remove(&old_score);
+                }
             }
 
             if let Some(old_latest_score_index_entry) =
@@ -93,6 +96,9 @@ impl PostScoreHotOrNotIndex {
                 old_latest_score_index_entry.retain(|old_item| {
                     old_item.0 != item.publisher_canister_id || old_item.1 != item.post_id
                 });
+                if old_latest_score_index_entry.is_empty() {
+                    self.items_latest_sorted_by_score.remove(&old_score);
+                }
             }
 
             if let Some(old_created_at) = old_created_at {
@@ -100,6 +106,9 @@ impl PostScoreHotOrNotIndex {
                 old_time_index_entry.retain(|old_item| {
                     old_item.0 != item.publisher_canister_id || old_item.1 != item.post_id
                 });
+                if old_time_index_entry.is_empty() {
+                    self.item_time_index.remove(&old_created_at);
+                }
             }
         }
 

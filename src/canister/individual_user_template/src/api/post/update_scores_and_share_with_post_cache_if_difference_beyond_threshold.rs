@@ -6,7 +6,7 @@ use shared_utils::{
     common::{
         types::{
             known_principal::KnownPrincipalType,
-            top_posts::post_score_index_item::PostScoreIndexItem,
+            top_posts::post_score_index_item::PostScoreIndexItemV1,
         },
         utils::system_time,
     },
@@ -23,8 +23,8 @@ pub fn update_scores_and_share_with_post_cache_if_difference_beyond_threshold(po
     let canisters_own_principal_id = ic_cdk::id();
 
     let (home_feed_index_score_item, hot_or_not_index_score_item): (
-        Option<PostScoreIndexItem>,
-        Option<PostScoreIndexItem>,
+        Option<PostScoreIndexItemV1>,
+        Option<PostScoreIndexItemV1>,
     ) = CANISTER_DATA.with(|canister_data_ref_cell| {
         update_home_feed_and_hot_or_not_feed_score_and_get_post_index_item_to_send(
             &mut canister_data_ref_cell.borrow_mut(),
@@ -69,14 +69,14 @@ fn update_home_feed_and_hot_or_not_feed_score_and_get_post_index_item_to_send(
     post_id: u64,
     current_time: SystemTime,
     canisters_own_principal_id: Principal,
-) -> (Option<PostScoreIndexItem>, Option<PostScoreIndexItem>) {
+) -> (Option<PostScoreIndexItemV1>, Option<PostScoreIndexItemV1>) {
     let all_posts = &mut canister_data.all_created_posts;
     if !all_posts.contains_key(&post_id) {
         return (None, None);
     }
 
-    let mut home_feed_index_score_item: Option<PostScoreIndexItem> = None;
-    let mut hot_or_not_index_score_item: Option<PostScoreIndexItem> = None;
+    let mut home_feed_index_score_item: Option<PostScoreIndexItemV1> = None;
+    let mut hot_or_not_index_score_item: Option<PostScoreIndexItemV1> = None;
 
     let mut post_to_synchronise = all_posts.get(&post_id).unwrap().clone();
 
@@ -88,10 +88,13 @@ fn update_home_feed_and_hot_or_not_feed_score_and_get_post_index_item_to_send(
     let home_feed_score_difference = current_home_feed_score.abs_diff(last_updated_home_feed_score);
 
     if home_feed_score_difference > HOME_FEED_DIFFERENCE_TO_INITIATE_SYNCHRONISATION {
-        home_feed_index_score_item = Some(PostScoreIndexItem {
+        home_feed_index_score_item = Some(PostScoreIndexItemV1 {
             post_id: post_to_synchronise.id,
             score: current_home_feed_score,
             publisher_canister_id: canisters_own_principal_id,
+            is_nsfw: post_to_synchronise.is_nsfw,
+            status: post_to_synchronise.status,
+            created_at: Some(post_to_synchronise.created_at),
         });
         post_to_synchronise.home_feed_score.last_synchronized_score = current_home_feed_score;
         post_to_synchronise.home_feed_score.last_synchronized_at = current_time;
@@ -117,10 +120,13 @@ fn update_home_feed_and_hot_or_not_feed_score_and_get_post_index_item_to_send(
 
         if hot_or_not_feed_score_difference > HOT_OR_NOT_FEED_DIFFERENCE_TO_INITIATE_SYNCHRONISATION
         {
-            hot_or_not_index_score_item = Some(PostScoreIndexItem {
+            hot_or_not_index_score_item = Some(PostScoreIndexItemV1 {
                 post_id: post_to_synchronise.id,
                 score: current_hot_or_not_feed_score,
                 publisher_canister_id: canisters_own_principal_id,
+                is_nsfw: post_to_synchronise.is_nsfw,
+                status: post_to_synchronise.status,
+                created_at: Some(post_to_synchronise.created_at),
             });
             post_to_synchronise
                 .hot_or_not_details

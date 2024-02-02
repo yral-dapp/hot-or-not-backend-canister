@@ -10,13 +10,10 @@ use shared_utils::{
     },
     common::types::{
         app_primitive_type::PostId, known_principal::KnownPrincipalMap,
-        top_posts::post_score_index::PostScoreIndex,
+        top_posts::post_score_index::PostScoreIndex, version_details::VersionDetails,
     },
 };
 
-use self::version_details::VersionDetails;
-
-pub mod version_details;
 pub mod memory;
 
 #[derive(Default, Deserialize, Serialize)]

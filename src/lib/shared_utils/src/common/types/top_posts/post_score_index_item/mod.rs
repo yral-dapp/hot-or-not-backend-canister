@@ -2,7 +2,7 @@ use candid::{CandidType, Deserialize, Principal};
 use serde::Serialize;
 use std::{cmp::Ordering, time::SystemTime};
 
-#[derive(Serialize, Deserialize, CandidType, Clone, Default, Debug, PartialEq, Eq, Hash)]
+#[derive(Serialize, Deserialize, CandidType, Clone, Default, Debug, PartialEq, Eq, Hash, Copy)]
 pub enum PostStatus {
     #[default]
     Uploaded,

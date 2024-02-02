@@ -1,11 +1,11 @@
-use shared_utils::common::types::top_posts::post_score_index_item::PostScoreIndexItem;
+use shared_utils::common::types::top_posts::post_score_index_item::PostScoreIndexItemV1;
 
 use crate::{data_model::CanisterData, CANISTER_DATA};
 
 #[ic_cdk::update]
 #[candid::candid_method(update)]
 fn receive_top_hot_or_not_feed_posts_from_publishing_canister(
-    top_posts_from_publishing_canister: Vec<PostScoreIndexItem>,
+    top_posts_from_publishing_canister: Vec<PostScoreIndexItemV1>,
 ) {
     CANISTER_DATA.with(|canister_data| {
         let mut canister_data = canister_data.borrow_mut();
@@ -18,11 +18,11 @@ fn receive_top_hot_or_not_feed_posts_from_publishing_canister(
 }
 
 fn receive_top_hot_or_not_feed_posts_from_publishing_canister_impl(
-    top_posts_from_publishing_canister: Vec<PostScoreIndexItem>,
+    top_posts_from_publishing_canister: Vec<PostScoreIndexItemV1>,
     canister_data: &mut CanisterData,
 ) {
     let posts_index_sorted_by_hot_or_not_feed_score =
-        &mut canister_data.posts_index_sorted_by_hot_or_not_feed_score;
+        &mut canister_data.posts_index_sorted_by_hot_or_not_feed_score_v1;
 
     for post_score_index_item in top_posts_from_publishing_canister {
         posts_index_sorted_by_hot_or_not_feed_score.replace(&post_score_index_item);
@@ -39,29 +39,42 @@ fn receive_top_hot_or_not_feed_posts_from_publishing_canister_impl(
 
 #[cfg(test)]
 mod test {
+    use std::time::SystemTime;
+
     use candid::Principal;
+    use shared_utils::common::types::top_posts::post_score_index_item::PostStatus;
 
     use super::*;
 
     #[test]
     fn test_receive_top_hot_or_not_feed_posts_from_publishing_canister_impl() {
         let mut canister_data = CanisterData::default();
+        let created_at_now = SystemTime::now();
 
         let top_posts_from_publishing_canister = vec![
-            PostScoreIndexItem {
+            PostScoreIndexItemV1 {
                 post_id: 1,
                 score: 1,
                 publisher_canister_id: Principal::from_text("aaaaa-aa").unwrap(),
+                is_nsfw: false,
+                status: PostStatus::ReadyToView,
+                created_at: Some(created_at_now),
             },
-            PostScoreIndexItem {
+            PostScoreIndexItemV1 {
+                post_id: 2,
+                score: 2,
+                publisher_canister_id: Principal::from_text("aaaaa-aa").unwrap(),
+                is_nsfw: false,
+                status: PostStatus::ReadyToView,
+                created_at: Some(created_at_now),
+            },
+            PostScoreIndexItemV1 {
                 post_id: 3,
                 score: 3,
-                publisher_canister_id: Principal::anonymous(),
-            },
-            PostScoreIndexItem {
-                post_id: 5,
-                score: 5,
                 publisher_canister_id: Principal::from_text("aaaaa-aa").unwrap(),
+                is_nsfw: false,
+                status: PostStatus::ReadyToView,
+                created_at: Some(created_at_now),
             },
         ];
 
@@ -71,7 +84,7 @@ mod test {
         );
 
         let posts_index_sorted_by_hot_or_not_feed_score =
-            &canister_data.posts_index_sorted_by_hot_or_not_feed_score;
+            &canister_data.posts_index_sorted_by_hot_or_not_feed_score_v1;
 
         assert_eq!(
             posts_index_sorted_by_hot_or_not_feed_score.iter().count(),
