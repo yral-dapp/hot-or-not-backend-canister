@@ -10,9 +10,6 @@ use std::{
 
 use super::{post_score_index_item::PostScoreIndexItemV1, CreatedAt, GlobalPostId, Score};
 
-// Latest posts within 48 hrs
-pub const LATEST_POSTS_WINDOW: Duration = Duration::from_secs(48 * 60 * 60);
-
 #[derive(Default, Debug, Clone, CandidType, Deserialize, Serialize)]
 pub struct PostScoreHomeIndex {
     pub items_sorted_by_score: BTreeMap<Score, Vec<GlobalPostId>>,

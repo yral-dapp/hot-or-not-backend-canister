@@ -1,3 +1,5 @@
+use std::time::SystemTime;
+
 use candid::{CandidType, Deserialize};
 use serde::Serialize;
 use shared_utils::common::types::{
@@ -19,5 +21,13 @@ pub struct CanisterData {
     #[serde(default)]
     pub posts_index_sorted_by_hot_or_not_feed_score_v1: PostScoreHotOrNotIndex,
     #[serde(default)]
+    pub metadata: Metadata,
+    #[serde(default)]
     pub version_details: Option<VersionDetails>,
+}
+
+#[derive(Default, CandidType, Deserialize, Serialize)]
+pub struct Metadata {
+    pub last_updated_hot_or_not_timestamp_index: Option<SystemTime>,
+    pub last_updated_reconcile_scores: Option<SystemTime>,
 }

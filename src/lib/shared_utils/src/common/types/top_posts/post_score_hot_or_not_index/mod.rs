@@ -8,10 +8,10 @@ use std::{
     vec,
 };
 
-use super::{post_score_index_item::PostScoreIndexItemV1, CreatedAt, GlobalPostId, Score};
-
-// Latest posts within 48 hrs
-pub const LATEST_POSTS_WINDOW: Duration = Duration::from_secs(48 * 60 * 60);
+use super::{
+    post_score_index_item::PostScoreIndexItemV1, CreatedAt, GlobalPostId, Score,
+    LATEST_POSTS_WINDOW,
+};
 
 #[derive(Default, Debug, Clone, CandidType, Deserialize, Serialize)]
 pub struct PostScoreHotOrNotIndex {
@@ -185,7 +185,7 @@ mod tests {
     fn test_post_score_index_v1_normal_functionality() {
         let mut post_score_index = PostScoreHotOrNotIndex::default();
         let created_at_now = SystemTime::now();
-        let creted_at_earlier = created_at_now - Duration::from_secs(60 * 60 * 48 + 1);
+        let creted_at_earlier = created_at_now - (LATEST_POSTS_WINDOW + Duration::from_secs(1));
 
         let posts = vec![
             PostScoreIndexItemV1 {

@@ -1,4 +1,4 @@
-use std::time::SystemTime;
+use std::time::{Duration, SystemTime};
 
 use candid::Principal;
 
@@ -12,3 +12,6 @@ pub type PostId = u64;
 pub type Score = u64;
 pub type CreatedAt = SystemTime;
 pub type GlobalPostId = (PublisherCanisterId, PostId);
+
+// Latest posts within 48 hrs
+pub const LATEST_POSTS_WINDOW: Duration = Duration::from_secs(48 * 60 * 60);
