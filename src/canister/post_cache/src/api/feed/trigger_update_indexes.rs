@@ -3,6 +3,8 @@ use std::{
     time::{Duration, SystemTime},
 };
 
+use candid::Principal;
+use ic_cdk::notify;
 use shared_utils::common::types::top_posts::{
     post_score_index_item::PostScoreIndexItemV1, LATEST_POSTS_WINDOW,
 };
@@ -10,8 +12,10 @@ use shared_utils::common::types::top_posts::{
 use crate::{data_model::CanisterData, CANISTER_DATA};
 
 const TRIGGER_UPDATE_HOT_OR_NOT_INDEX: Duration = Duration::from_secs(60 * 60);
+const TRIGGER_RECONCILE_SCORES: Duration = Duration::from_secs(60 * 60 * 5);
+const RECONCILE_SCORES_UPTO: usize = 100;
 
-fn trigger_update_hot_or_not_index() {
+pub fn trigger_update_hot_or_not_index() {
     let last_updated_hot_or_not_timestamp_index = CANISTER_DATA.with(|canister_data| {
         canister_data
             .borrow()
@@ -66,6 +70,90 @@ fn trigger_update_hot_or_not_index() {
             canister_data
                 .metadata
                 .last_updated_hot_or_not_timestamp_index = Some(now);
+        });
+    }
+}
+
+// TODO: Add integration tests
+pub fn trigger_reconcile_scores() {
+    let last_updated_reconcile_scores = CANISTER_DATA.with(|canister_data| {
+        canister_data
+            .borrow()
+            .metadata
+            .last_updated_reconcile_scores
+    });
+
+    let now = SystemTime::now();
+    if now
+        .duration_since(
+            last_updated_reconcile_scores.unwrap_or_else(|| now - TRIGGER_UPDATE_HOT_OR_NOT_INDEX),
+        )
+        .unwrap_or_default()
+        >= TRIGGER_RECONCILE_SCORES
+    {
+        // Reconcile home feed scores
+        //
+        let top_home_feed = CANISTER_DATA.with(|canister_data| {
+            canister_data
+                .borrow()
+                .posts_index_sorted_by_home_feed_score_v1
+                .iter()
+                .take(RECONCILE_SCORES_UPTO)
+                .map(|post| (post.publisher_canister_id.clone(), post.post_id))
+                .collect::<Vec<(Principal, u64)>>()
+        });
+        // Change (Principal, u64) to HashMap with Principal as key and Vec<u64> as value
+        let mut top_home_feed_by_user = std::collections::HashMap::new();
+        for (principal, post_id) in top_home_feed {
+            top_home_feed_by_user
+                .entry(principal)
+                .or_insert_with(Vec::new)
+                .push(post_id);
+        }
+
+        // cdk::api::call::notify principal with posts
+        for (principal, post_ids) in top_home_feed_by_user {
+            // cdk::api::call::notify(principal, post_ids);
+            let _ = notify(
+                principal,
+                "check_and_update_scores_and_share_with_post_cache_if_difference_beyond_threshold",
+                (post_ids,),
+            );
+        }
+
+        // Reconcile hot or not feed scores
+        //
+        let top_hot_or_not_feed = CANISTER_DATA.with(|canister_data| {
+            canister_data
+                .borrow()
+                .posts_index_sorted_by_hot_or_not_feed_score_v1
+                .iter()
+                .take(RECONCILE_SCORES_UPTO)
+                .map(|post| (post.publisher_canister_id.clone(), post.post_id))
+                .collect::<Vec<(Principal, u64)>>()
+        });
+        // Change (Principal, u64) to HashMap with Principal as key and Vec<u64> as value
+        let mut top_hot_or_not_feed_by_user = std::collections::HashMap::new();
+        for (principal, post_id) in top_hot_or_not_feed {
+            top_hot_or_not_feed_by_user
+                .entry(principal)
+                .or_insert_with(Vec::new)
+                .push(post_id);
+        }
+
+        // cdk::api::call::notify principal with posts
+        for (principal, post_ids) in top_hot_or_not_feed_by_user {
+            // cdk::api::call::notify(principal, post_ids);
+            let _ = notify(
+                principal,
+                "check_and_update_scores_and_share_with_post_cache_if_difference_beyond_threshold",
+                (post_ids,),
+            );
+        }
+
+        CANISTER_DATA.with(|canister_data| {
+            let mut canister_data = canister_data.borrow_mut();
+            canister_data.metadata.last_updated_reconcile_scores = Some(now);
         });
     }
 }

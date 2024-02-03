@@ -23,7 +23,7 @@ pub struct CanisterData {
     #[serde(default)]
     pub metadata: Metadata,
     #[serde(default)]
-    pub version_details: Option<VersionDetails>,
+    pub version_details: VersionDetails,
 }
 
 #[derive(Default, CandidType, Deserialize, Serialize)]

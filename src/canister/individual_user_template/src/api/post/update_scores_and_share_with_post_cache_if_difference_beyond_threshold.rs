@@ -1,7 +1,7 @@
 use std::time::SystemTime;
 
 use candid::Principal;
-use ic_cdk::api::call;
+use ic_cdk::{api::call, update};
 use shared_utils::{
     common::{
         types::{
@@ -17,6 +17,16 @@ use shared_utils::{
 };
 
 use crate::{data_model::CanisterData, CANISTER_DATA};
+
+#[ic_cdk::update]
+#[candid::candid_method(update)]
+fn check_and_update_scores_and_share_with_post_cache_if_difference_beyond_threshold(
+    post_ids: Vec<u64>,
+) {
+    post_ids.iter().for_each(|post_id| {
+        update_scores_and_share_with_post_cache_if_difference_beyond_threshold(post_id);
+    });
+}
 
 pub fn update_scores_and_share_with_post_cache_if_difference_beyond_threshold(post_id: &u64) {
     let current_time = system_time::get_current_system_time_from_ic();

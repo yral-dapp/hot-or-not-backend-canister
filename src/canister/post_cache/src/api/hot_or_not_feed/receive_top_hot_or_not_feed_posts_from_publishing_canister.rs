@@ -1,6 +1,12 @@
 use shared_utils::common::types::top_posts::post_score_index_item::PostScoreIndexItemV1;
 
-use crate::{data_model::CanisterData, CANISTER_DATA};
+use crate::{
+    api::feed::trigger_update_indexes::{
+        self, trigger_reconcile_scores, trigger_update_hot_or_not_index,
+    },
+    data_model::CanisterData,
+    CANISTER_DATA,
+};
 
 #[ic_cdk::update]
 #[candid::candid_method(update)]
@@ -15,6 +21,9 @@ fn receive_top_hot_or_not_feed_posts_from_publishing_canister(
             &mut canister_data,
         );
     });
+
+    trigger_update_hot_or_not_index();
+    trigger_reconcile_scores();
 }
 
 fn receive_top_hot_or_not_feed_posts_from_publishing_canister_impl(
