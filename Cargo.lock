@@ -819,6 +819,7 @@ dependencies = [
  "ic-cdk",
  "ic-test-state-machine-client",
  "pocket-ic",
+ "serde",
  "shared_utils",
  "test_utils",
 ]

@@ -13,4 +13,5 @@ shared_utils = { workspace = true }
 
 [dev-dependencies]
 ic-test-state-machine-client = { workspace = true }
+serde.workspace = true
 test_utils = { workspace = true }

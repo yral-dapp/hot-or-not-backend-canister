@@ -1,4 +1,4 @@
-use std::{collections::HashMap, thread, time::Duration};
+use std::{collections::HashMap, time::Duration};
 
 use candid::encode_one;
 use pocket_ic::{PocketIc, WasmResult};
@@ -30,8 +30,6 @@ fn hot_or_not_timely_update_test() {
 
     let alice_principal_id = get_mock_user_alice_principal_id();
     let bob_principal_id = get_mock_user_bob_principal_id();
-    let charlie_prinicipal_id = get_mock_user_charlie_principal_id();
-    let dan_prinicipal_id = get_mock_user_dan_principal_id();
 
     // Init post cache canister
 
@@ -78,69 +76,6 @@ fn hot_or_not_timely_update_test() {
 
     pic.install_canister(
         alice_individual_template_canister_id,
-        individual_template_wasm_bytes.clone(),
-        individual_template_args_bytes,
-        None,
-    );
-
-    // Init individual template canister - bob
-
-    let bob_individual_template_canister_id = pic.create_canister();
-    pic.add_cycles(bob_individual_template_canister_id, 2_000_000_000_000);
-
-    let individual_template_args = IndividualUserTemplateInitArgs {
-        known_principal_ids: Some(known_prinicipal_values.clone()),
-        profile_owner: Some(bob_principal_id),
-        upgrade_version_number: None,
-        url_to_send_canister_metrics_to: None,
-        version: "1".to_string(),
-    };
-    let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
-
-    pic.install_canister(
-        bob_individual_template_canister_id,
-        individual_template_wasm_bytes.clone(),
-        individual_template_args_bytes,
-        None,
-    );
-
-    // Init individual template canister - charlie
-
-    let charlie_individual_template_canister_id = pic.create_canister();
-    pic.add_cycles(charlie_individual_template_canister_id, 2_000_000_000_000);
-
-    let individual_template_args = IndividualUserTemplateInitArgs {
-        known_principal_ids: Some(known_prinicipal_values.clone()),
-        profile_owner: Some(charlie_prinicipal_id),
-        upgrade_version_number: None,
-        url_to_send_canister_metrics_to: None,
-        version: "1".to_string(),
-    };
-    let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
-
-    pic.install_canister(
-        charlie_individual_template_canister_id,
-        individual_template_wasm_bytes.clone(),
-        individual_template_args_bytes,
-        None,
-    );
-
-    // Init individual template canister - dan
-
-    let dan_individual_template_canister_id = pic.create_canister();
-    pic.add_cycles(dan_individual_template_canister_id, 2_000_000_000_000);
-
-    let individual_template_args = IndividualUserTemplateInitArgs {
-        known_principal_ids: Some(known_prinicipal_values.clone()),
-        profile_owner: Some(dan_prinicipal_id),
-        upgrade_version_number: None,
-        url_to_send_canister_metrics_to: None,
-        version: "1".to_string(),
-    };
-    let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
-
-    pic.install_canister(
-        dan_individual_template_canister_id,
         individual_template_wasm_bytes.clone(),
         individual_template_args_bytes,
         None,

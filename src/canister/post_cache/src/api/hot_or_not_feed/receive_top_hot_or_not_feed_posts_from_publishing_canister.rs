@@ -1,4 +1,6 @@
-use shared_utils::common::types::top_posts::post_score_index_item::PostScoreIndexItemV1;
+use shared_utils::common::types::top_posts::post_score_index_item::{
+    PostScoreIndexItem, PostScoreIndexItemV1,
+};
 
 use crate::{
     api::feed::trigger_update_indexes::{
@@ -33,8 +35,31 @@ fn receive_top_hot_or_not_feed_posts_from_publishing_canister_impl(
     let posts_index_sorted_by_hot_or_not_feed_score =
         &mut canister_data.posts_index_sorted_by_hot_or_not_feed_score_v1;
 
-    for post_score_index_item in top_posts_from_publishing_canister {
+    for post_score_index_item in top_posts_from_publishing_canister.clone() {
         posts_index_sorted_by_hot_or_not_feed_score.replace(&post_score_index_item);
+    }
+
+    if posts_index_sorted_by_hot_or_not_feed_score.iter().count() > 1500 {
+        *posts_index_sorted_by_hot_or_not_feed_score = posts_index_sorted_by_hot_or_not_feed_score
+            .into_iter()
+            .take(1000)
+            .cloned()
+            .collect();
+    }
+
+    // old code
+    // TODO: remove this after filter migration
+
+    let posts_index_sorted_by_hot_or_not_feed_score =
+        &mut canister_data.posts_index_sorted_by_hot_or_not_feed_score;
+
+    for post_score_index_item in top_posts_from_publishing_canister {
+        let old_post = PostScoreIndexItem {
+            score: post_score_index_item.score,
+            post_id: post_score_index_item.post_id,
+            publisher_canister_id: post_score_index_item.publisher_canister_id,
+        };
+        posts_index_sorted_by_hot_or_not_feed_score.replace(&old_post);
     }
 
     if posts_index_sorted_by_hot_or_not_feed_score.iter().count() > 1500 {
