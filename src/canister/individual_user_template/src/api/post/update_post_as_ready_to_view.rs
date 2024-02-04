@@ -4,6 +4,8 @@ use shared_utils::common::types::{
 
 use crate::CANISTER_DATA;
 
+use super::send_update_post_cache::send_update_post_cache;
+
 #[ic_cdk::update]
 #[candid::candid_method(update)]
 fn update_post_as_ready_to_view(id: u64) {
@@ -37,4 +39,6 @@ fn update_post_as_ready_to_view(id: u64) {
             .all_created_posts
             .insert(id, post_to_update);
     });
+
+    send_update_post_cache(&id);
 }

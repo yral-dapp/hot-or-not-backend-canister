@@ -5,12 +5,14 @@ use pocket_ic::{PocketIc, WasmResult};
 use shared_utils::{
     canister_specific::{
         individual_user_template::types::{
-            arg::IndividualUserTemplateInitArgs, post::PostDetailsFromFrontend,
+            arg::IndividualUserTemplateInitArgs,
+            post::{Post, PostDetailsFromFrontend},
         },
         post_cache::types::arg::PostCacheInitArgs,
     },
     common::types::{
-        known_principal::KnownPrincipalType, top_posts::post_score_index_item::PostScoreIndexItemV1,
+        known_principal::KnownPrincipalType,
+        top_posts::post_score_index_item::{PostScoreIndexItemV1, PostStatus},
     },
     types::canister_specific::post_cache::error_types::TopPostsFetchError,
 };
@@ -30,6 +32,7 @@ fn hot_or_not_timely_update_test() {
 
     let alice_principal_id = get_mock_user_alice_principal_id();
     let bob_principal_id = get_mock_user_bob_principal_id();
+    let admin_principal_id = get_mock_user_charlie_principal_id();
 
     // Init post cache canister
 
@@ -58,6 +61,10 @@ fn hot_or_not_timely_update_test() {
     known_prinicipal_values.insert(
         KnownPrincipalType::CanisterIdPostCache,
         post_cache_canister_id,
+    );
+    known_prinicipal_values.insert(
+        KnownPrincipalType::UserIdGlobalSuperAdmin,
+        admin_principal_id,
     );
 
     // Init individual template canister - alice
@@ -203,6 +210,66 @@ fn hot_or_not_timely_update_test() {
     assert_eq!(posts[0].post_id, 2);
     assert_eq!(posts[1].post_id, 0);
     assert_eq!(posts[2].post_id, 1);
+
+    // Update to redytoview
+    // Alice updates the post to ready to view
+
+    let res = pic
+        .update_call(
+            alice_individual_template_canister_id,
+            admin_principal_id,
+            "update_post_as_ready_to_view",
+            candid::encode_args((0 as u64,)).unwrap(),
+        )
+        .map(|reply_payload| {
+            let _ = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 update_post_status failed\n"),
+            };
+        })
+        .unwrap();
+
+    // Get post details
+
+    let res = pic
+        .query_call(
+            alice_individual_template_canister_id,
+            admin_principal_id,
+            "get_entire_individual_post_detail_by_id",
+            candid::encode_args((0 as u64,)).unwrap(),
+        )
+        .map(|reply_payload| {
+            let post: Result<Post, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 get_post_details failed\n"),
+            };
+            post
+        })
+        .unwrap();
+
+    // Call post cache canister to get the hot or not feed posts
+    let res = pic
+        .query_call(
+            post_cache_canister_id,
+            bob_principal_id,
+            "get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed_cursor",
+            candid::encode_args((0 as u64, 10 as u64)).unwrap(),
+        )
+        .map(|reply_payload| {
+            let posts: Result<Vec<PostScoreIndexItemV1>, TopPostsFetchError> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 get_posts failed\n"),
+            };
+            posts
+        })
+        .unwrap();
+
+    let posts = res.unwrap();
+    assert_eq!(posts.len(), 3);
+    assert_eq!(posts[0].post_id, 2);
+    assert_eq!(posts[1].post_id, 1);
+    assert_eq!(posts[2].post_id, 0);
+    assert_eq!(posts[2].status, PostStatus::ReadyToView);
 }
 
 fn individual_template_canister_wasm() -> Vec<u8> {
