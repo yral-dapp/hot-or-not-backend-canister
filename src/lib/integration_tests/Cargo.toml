@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 candid = { workspace = true }
 ic-cdk = { workspace = true }
+pocket-ic = "2.0.1"
 shared_utils = { workspace = true }
 
 [dev-dependencies]

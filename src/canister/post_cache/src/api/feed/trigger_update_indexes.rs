@@ -5,8 +5,9 @@ use std::{
 
 use candid::Principal;
 use ic_cdk::notify;
-use shared_utils::common::types::top_posts::{
-    post_score_index_item::PostScoreIndexItemV1, LATEST_POSTS_WINDOW,
+use shared_utils::common::{
+    types::top_posts::{post_score_index_item::PostScoreIndexItemV1, LATEST_POSTS_WINDOW},
+    utils::system_time::get_current_system_time,
 };
 
 use crate::{data_model::CanisterData, CANISTER_DATA};
@@ -23,7 +24,7 @@ pub fn trigger_update_hot_or_not_index() {
             .last_updated_hot_or_not_timestamp_index
     });
 
-    let now = SystemTime::now();
+    let now = get_current_system_time();
     if now
         .duration_since(
             last_updated_hot_or_not_timestamp_index
@@ -83,7 +84,7 @@ pub fn trigger_reconcile_scores() {
             .last_updated_reconcile_scores
     });
 
-    let now = SystemTime::now();
+    let now = get_current_system_time();
     if now
         .duration_since(
             last_updated_reconcile_scores.unwrap_or_else(|| now - TRIGGER_UPDATE_HOT_OR_NOT_INDEX),
@@ -158,13 +159,13 @@ pub fn trigger_reconcile_scores() {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "mockdata"))]
 mod tests {
-    use std::thread;
 
     use candid::Principal;
-    use shared_utils::common::types::top_posts::post_score_index_item::{
-        PostScoreIndexItemV1, PostStatus,
+    use shared_utils::common::{
+        types::top_posts::post_score_index_item::{PostScoreIndexItemV1, PostStatus},
+        utils::system_time::set_mock_time,
     };
 
     use super::*;
@@ -176,7 +177,7 @@ mod tests {
             *data.borrow_mut() = canister_data;
         });
 
-        let created_at_now = SystemTime::now();
+        let created_at_now = get_current_system_time();
         let creted_at_earlier = created_at_now - (LATEST_POSTS_WINDOW - Duration::from_secs(5));
 
         let posts = vec![
@@ -247,7 +248,8 @@ mod tests {
         assert_eq!(post_score_index_iter.next().unwrap().post_id, 1);
         assert_eq!(post_score_index_iter.next(), None);
 
-        thread::sleep(Duration::from_secs(5));
+        // MockClock::advance_system_time(Duration::from_secs(10));
+        set_mock_time(created_at_now + Duration::from_secs(10));
 
         trigger_update_hot_or_not_index();
 

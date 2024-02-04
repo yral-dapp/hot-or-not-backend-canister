@@ -68,12 +68,15 @@ fn receive_all_user_posts_from_individual_user_canister_impl(
 mod test {
     use std::{collections::HashSet, time::SystemTime};
 
-    use shared_utils::canister_specific::{
-        data_backup::types::all_user_data::{AllUserData, UserOwnedCanisterData},
-        individual_user_template::types::{
-            hot_or_not::HotOrNotDetails,
-            post::{FeedScore, PostStatus, PostViewStatistics},
+    use shared_utils::{
+        canister_specific::{
+            data_backup::types::all_user_data::{AllUserData, UserOwnedCanisterData},
+            individual_user_template::types::{
+                hot_or_not::HotOrNotDetails,
+                post::{FeedScore, PostViewStatistics},
+            },
         },
+        common::types::top_posts::post_score_index_item::PostStatus,
     };
     use test_utils::setup::test_constants::{
         get_mock_user_alice_canister_id, get_mock_user_alice_principal_id,

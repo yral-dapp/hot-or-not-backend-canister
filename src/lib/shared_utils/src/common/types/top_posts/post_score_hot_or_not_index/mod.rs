@@ -8,6 +8,8 @@ use std::{
     vec,
 };
 
+use crate::common::utils::system_time::get_current_system_time;
+
 use super::{
     post_score_index_item::PostScoreIndexItemV1, CreatedAt, GlobalPostId, Score,
     LATEST_POSTS_WINDOW,
@@ -36,11 +38,12 @@ impl PostScoreHotOrNotIndex {
             .insert(item_presence_index_entry, item.clone());
 
         // insert the item into the sorted index, nsfw, time and sorted and latest sorted indexes
+        let now = get_current_system_time();
 
         // if item created within last 48 hrs, insert into latest sorted index
         // else insert into sorted index
         if let Some(created_at) = item.created_at {
-            if created_at > (SystemTime::now() - LATEST_POSTS_WINDOW) {
+            if created_at > (now - LATEST_POSTS_WINDOW) {
                 let latest_score_index_entry = self
                     .items_latest_sorted_by_score
                     .entry(item_score)
@@ -173,7 +176,7 @@ impl FromIterator<PostScoreIndexItemV1> for PostScoreHotOrNotIndex {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "mockdata"))]
 mod tests {
     use candid::Principal;
 
