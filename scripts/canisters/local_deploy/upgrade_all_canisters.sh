@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-usage() { 
-  printf "Usage: \n[-s Skip test] \n[-h Display help] \n"; 
-  exit 0; 
+usage() {
+  printf "Usage: \n[-s Skip test] \n[-h Display help] \n";
+  exit 0;
 }
 
 skip_test=false
@@ -13,7 +13,7 @@ while getopts "sh" arg; do
     s)
       skip_test=true
       ;;
-    h) 
+    h)
       usage
       ;;
   esac
@@ -26,14 +26,16 @@ dfx build data_backup
 dfx build user_index
 dfx build post_cache
 
-if [[ $skip_test != true ]] 
+if [[ $skip_test != true ]]
 then
   cargo test
 fi
 
 dfx canister install configuration --mode upgrade --argument "(record {})"
 dfx canister install data_backup --mode upgrade --argument "(record {})"
-dfx canister install post_cache --mode upgrade --argument "(record {})"
+dfx canister install post_cache --mode upgrade --argument "(record {
+    version= \"v1.1.0\"
+})"
 dfx canister install user_index --mode upgrade --argument "(record {
   version= \"v1.1.0\"
 })"
