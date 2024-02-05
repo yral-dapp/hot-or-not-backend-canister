@@ -4,7 +4,9 @@ use crate::CANISTER_DATA;
 
 
 mod provision_subnet_orchestrator;
-// mod register_subnet_orchestrator_canister;
+mod upgrade_canister;
+mod upload_wasms;
+mod subnet_orchestrator_maxed_out;
 
 #[ic_cdk::query]
 #[candid_method(query)]

@@ -6,6 +6,8 @@ members = [
   "src/canister/post_cache/",
   "src/canister/user_index",
   "src/canister/platform_orchestrator",
+  "src/canister/configuration",
+  "src/canister/data_backup",
   "src/lib/integration_tests",
   "src/lib/shared_utils",
   "src/lib/test_utils",
@@ -21,6 +23,5 @@ ic-test-state-machine-client = "3.0.0"
 rmp-serde = "1.1.2"
 serde = "1.0.186"
 futures = "0.3.29"
-pocket-ic = "2.0.1"
 shared_utils = { path = "./src/lib/shared_utils" }
 test_utils = { path = "./src/lib/test_utils" }

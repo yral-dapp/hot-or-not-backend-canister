@@ -1,7 +1,7 @@
 use crate::{util::canister_management::create_users_canister, CANISTER_DATA};
 use candid::Principal;
 use ic_cdk::api::call;
-use shared_utils::{common::{types::wasm::WasmType, utils::task::run_task_concurrently}, constant::{INDIVIDUAL_USER_CANISTER_SUBNET_BATCH_SIZE, INDIVIDUAL_USER_CANISTER_SUBNET_MAX_CAPACITY, INDIVIDUAL_USER_CANISTER_SUBNET_THREESHOLD}};
+use shared_utils::{common::{types::{known_principal::KnownPrincipalType, wasm::WasmType}, utils::task::run_task_concurrently}, constant::{INDIVIDUAL_USER_CANISTER_SUBNET_BATCH_SIZE, INDIVIDUAL_USER_CANISTER_SUBNET_MAX_CAPACITY, INDIVIDUAL_USER_CANISTER_SUBNET_THREESHOLD}};
 
 #[ic_cdk::update]
 #[candid::candid_method(update)]
@@ -84,6 +84,13 @@ async fn new_user_signup(user_id: Principal) -> Result<Principal, String> {
     })
     .ok_or("Not Available")?;
 
+    // notify platform_orchestrator that this subnet has reached maximum capacity.
+    let platform_orchestrator_canister_id = CANISTER_DATA
+        .with_borrow(
+            |canister_data| *canister_data.configuration.known_principal_ids.get(&KnownPrincipalType::CanisterIdPlatformOrchestrator).unwrap_or(&Principal::anonymous())
+        );
+    ic_cdk::notify(platform_orchestrator_canister_id, "subnet_orchestrator_maxed_out", ()).unwrap_or_default();
+    
 
     
     // provision new canisters on the subnet if required.

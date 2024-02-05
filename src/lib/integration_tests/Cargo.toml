@@ -14,5 +14,4 @@ ic-ledger-types = { workpace = true }
 
 [dev-dependencies]
 ic-test-state-machine-client = { workspace = true }
-pocket-ic = { workspace = true }
 test_utils = { workspace = true }

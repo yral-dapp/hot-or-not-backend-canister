@@ -1,7 +1,5 @@
-use std::io::Write;
 
 use ic_stable_structures::writer::Writer;
-use shared_utils::common::utils::stable_memory_serializer_deserializer;
 use ciborium::ser;
 use crate::{data_model::memory, CANISTER_DATA};
 
@@ -20,5 +18,4 @@ fn pre_upgrade() {
     let mut writer = Writer::new(&mut upgrade_memory, 0);
     writer.write(&len.to_le_bytes()).unwrap();
     writer.write(&state_bytes).unwrap();
-    
 }

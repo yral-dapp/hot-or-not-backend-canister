@@ -1,9 +1,9 @@
-use std::{iter::Cycle, ops::Sub, str::FromStr, vec};
+use std::{str::FromStr, vec};
 
-use candid::{Principal, CandidType, utils::ArgumentEncoder};
-use ic_cdk::{api::{management_canister::{provisional::{CanisterIdRecord, CanisterSettings}, main::{self, create_canister, delete_canister, deposit_cycles, stop_canister, CanisterInstallMode, CreateCanisterArgument, InstallCodeArgument}}, call, self}, id};
+use candid::{Principal, CandidType};
+use ic_cdk::{api::{self, call, is_controller, management_canister::{main::{self,  CanisterInstallMode, InstallCodeArgument}, provisional::CanisterSettings}}, caller, id};
 use serde::{Deserialize, Serialize};
-use shared_utils::{constant::{CYCLES_THRESHOLD_TO_INITIATE_RECHARGE, INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT, NNS_CYCLE_MINTING_CANISTER}, canister_specific::user_index::types::args::UserIndexInitArgs};
+use shared_utils::{canister_specific::{post_cache::types::arg::PostCacheInitArgs, user_index::types::args::UserIndexInitArgs}, common::types::{known_principal::{KnownPrincipalMap, KnownPrincipalType}, wasm::WasmType}, constant::{INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT, NNS_CYCLE_MINTING_CANISTER, SUBNET_ORCHESTRATOR_CANISTER_INITIAL_CYCLES}};
 
 use crate::CANISTER_DATA;
 
@@ -40,9 +40,13 @@ struct CreateCanisterCmcArgument {
     subnet_type: Option<String>
 }
 
-#[candid::candid_method(update)]
 #[ic_cdk::update]
-pub async fn provision_subnet_orchestrator_canister(subnet: Principal, user_index_wasm: Vec<u8>) -> Principal {
+#[candid::candid_method(update)]
+pub async fn provision_subnet_orchestrator_canister(subnet: Principal) -> Result<Principal, String> {
+    
+    if !is_controller(&caller()) {
+        return Err("Unauthorized".into());
+    }
 
     let create_canister_arg = CreateCanisterCmcArgument {
         subnet_selection: Some(SubnetType::Subnet(Subnet {
@@ -60,51 +64,75 @@ pub async fn provision_subnet_orchestrator_canister(subnet: Principal, user_inde
         Principal::from_str(NNS_CYCLE_MINTING_CANISTER).unwrap(), 
         "create_canister",
        (create_canister_arg,),
-       INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT as u64
+       SUBNET_ORCHESTRATOR_CANISTER_INITIAL_CYCLES as u64
     )
     .await
     .unwrap();
 
     let subnet_orchestrator_canister_id = res.unwrap();
     
-    // Create PostCache Canister
+    let create_canister_arg = CreateCanisterCmcArgument {
+        subnet_selection: Some(SubnetType::Subnet(Subnet {
+            subnet
+        })),
+        canister_settings: Some(CanisterSettings {
+            controllers: Some(vec![ api::id()]),
+            compute_allocation: None,
+            memory_allocation: None,
+            freezing_threshold: None,
+        }),
+        subnet_type: None
+    };
+    let (res, ): (Result<Principal, CmcCreateCanisterError>, ) = call::call_with_payment(
+        Principal::from_str(NNS_CYCLE_MINTING_CANISTER).unwrap(), 
+        "create_canister",
+       (create_canister_arg,),
+        INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT as u64
+    )
+    .await
+    .unwrap();
+
+    let post_cache_canister_id = res.unwrap();
 
 
-    //TODO: Where should we send the known principal ids
+
+
+    let mut known_principal_map = KnownPrincipalMap::default();
+    known_principal_map.insert(KnownPrincipalType::CanisterIdPlatformOrchestrator, id());
+    known_principal_map.insert(KnownPrincipalType::CanisterIdUserIndex, subnet_orchestrator_canister_id);
+    known_principal_map.insert(KnownPrincipalType::CanisterIdPostCache, post_cache_canister_id);
+
 
     let user_index_init_arg = UserIndexInitArgs {
-        known_principal_ids: None,
+        known_principal_ids: Some(known_principal_map.clone()),
         access_control_map: None,
         version: CANISTER_DATA.with_borrow(|canister_data| canister_data.version_detail.version.clone())
     };
 
-    let install_code_arg = InstallCodeArgument {
+    let subnet_orchestrator_install_code_arg = InstallCodeArgument {
         mode: CanisterInstallMode::Install,
         canister_id: subnet_orchestrator_canister_id,
-        wasm_module: user_index_wasm.into(),
+        wasm_module: CANISTER_DATA.with_borrow(|canister_data| canister_data.wasms.get(&WasmType::SubnetOrchestratorWasm).unwrap().wasm_blob),
         arg: candid::encode_one(user_index_init_arg).unwrap()
     };
 
-    main::install_code(install_code_arg).await.unwrap();
+    main::install_code(subnet_orchestrator_install_code_arg).await.unwrap();
 
 
-    subnet_orchestrator_canister_id
+    let post_cache_init_arg = PostCacheInitArgs {
+        known_principal_ids: Some(known_principal_map)
+   };
+
+   let post_cache_install_code_arg = InstallCodeArgument {
+        mode: CanisterInstallMode::Install,
+        canister_id: post_cache_canister_id,
+        wasm_module: CANISTER_DATA.with_borrow(|canister_data| canister_data.wasms.get(&WasmType::PostCacheWasm).unwrap().wasm_blob),
+        arg: candid::encode_one(post_cache_init_arg).unwrap()
+    };
+
+    main::install_code(post_cache_install_code_arg).await.unwrap();
+
+
+    Ok(subnet_orchestrator_canister_id)
 
 }
-
-
-
-#[candid::candid_method(update)]
-#[ic_cdk::update]
-pub async fn delete_all_caniter(canister_id: Principal) {
-
-
-
-    stop_canister(CanisterIdRecord {
-        canister_id
-    }).await.unwrap();
-    delete_canister(CanisterIdRecord {
-        canister_id
-    }).await.unwrap();
-}
-

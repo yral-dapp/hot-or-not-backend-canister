@@ -1,6 +1,17 @@
-type PlatformOrchestratorInitArgs = record { version : text };
+type PlatformOrchestratorInitArgs = record {
+  post_cache_wasm : opt vec nat8;
+  version : text;
+  subnet_orchestrator_wasm : opt vec nat8;
+};
+type Result = variant { Ok : text; Err : text };
+type WasmType = variant {
+  IndividualUserWasm;
+  PostCacheWasm;
+  SubnetOrchestratorWasm;
+};
 service : (PlatformOrchestratorInitArgs) -> {
-  delete_all_caniter : (principal) -> ();
   get_version : () -> (text) query;
-  provision_subnet_orchestrator_canister : (principal, vec nat8) -> (principal);
+  provision_subnet_orchestrator_canister : (principal) -> (principal);
+  subnet_orchestrator_maxed_out : () -> ();
+  upload_wasms : (WasmType, vec nat8) -> (Result);
 }

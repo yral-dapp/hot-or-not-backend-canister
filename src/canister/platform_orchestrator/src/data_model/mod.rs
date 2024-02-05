@@ -1,30 +1,50 @@
-use std::{collections::HashSet, time::{SystemTime, UNIX_EPOCH}};
+use std::{collections::HashSet, time::{SystemTime, UNIX_EPOCH}, borrow::Cow};
+use ic_stable_structures::{StableBTreeMap, StableLog, Storable, BoundedStorable};
+use ciborium::de;
+
 
 use candid::{CandidType, Principal};
 use serde::{Serialize, Deserialize};
+use shared_utils::common::types::wasm::WasmType;
+
+use self::memory::{get_canister_upgrade_log_index_memory, get_canister_upgrade_log_memory, get_subnet_orchestrator_wasm_memory, Memory};
+
+pub mod memory;
 
 
-
-#[derive(Serialize, Deserialize, CandidType, Clone)]
+#[derive(Serialize, Deserialize)]
 pub struct CanisterData {
     pub all_subnet_orchestrator_canisters_list: HashSet<Principal>,
+    pub all_post_cache_orchestrator_list: HashSet<Principal>,
     pub subet_orchestrator_with_capacity_left: HashSet<Principal>,
-    pub version_detail: VersionDetails
+    pub version_detail: VersionDetails,
+    #[serde(skip, default = "_default_wasms")]
+    pub wasms: StableBTreeMap<WasmType, CanisterWasm, Memory>,
+    #[serde(skip, default = "_default_canister_upgrade_log")]
+    pub subnet_canister_upgrade_log: StableLog<CanisterUpgradeStatus, Memory, Memory>,
+    pub last_subnet_canister_upgrade_status: CanisterUpgradeStatus
 }
 
-/**
- * all_subnet contains all the canisters
- * subnet_orchestrator_with_capacity_left are the subnet orchestrator canisters
- */
+fn _default_wasms() -> StableBTreeMap<WasmType, CanisterWasm, Memory> { 
+    StableBTreeMap::init(get_subnet_orchestrator_wasm_memory())
+}
 
- /**
-  * Consistent Hashing 
-    Deterministically find the subnet principal from user-principal. So that given a user principal id we can tell the canister-id
-  */
+
+fn _default_canister_upgrade_log() -> StableLog<CanisterUpgradeStatus, Memory, Memory> {
+    StableLog::init(get_canister_upgrade_log_index_memory(), get_canister_upgrade_log_memory()).unwrap()
+}
+ 
 
 impl Default for CanisterData {
     fn default() -> Self {
-        Self { all_subnet_orchestrator_canisters_list: Default::default(), subet_orchestrator_with_capacity_left: Default::default(), version_detail: Default::default() }
+        Self { 
+            all_subnet_orchestrator_canisters_list: Default::default(), 
+            all_post_cache_orchestrator_list: Default::default(),  
+            subet_orchestrator_with_capacity_left: Default::default(), 
+            version_detail: Default::default(), wasms: _default_wasms(), 
+            subnet_canister_upgrade_log: _default_canister_upgrade_log(), 
+            last_subnet_canister_upgrade_status: Default::default()
+        }
     }
 }
 
@@ -32,7 +52,7 @@ impl Default for CanisterData {
 #[derive(Serialize, Deserialize, CandidType, Clone)]
 pub struct VersionDetails {
     pub version: String,
-    pub last_update_on: SystemTime
+    pub last_update_on: SystemTime,
 }
 
 impl Default for VersionDetails {
@@ -41,3 +61,72 @@ impl Default for VersionDetails {
     }
 }
 
+
+
+// To store the upgrade arguments and the failed canisters list.
+
+#[derive(Serialize, Deserialize, CandidType, Clone)]
+pub struct CanisterUpgradeStatus {
+    pub upgrade_arg: UpgradeCanisterArg,
+    pub count: u64,
+    pub failures: Vec<(Principal, String)>
+}
+
+impl Storable for CanisterUpgradeStatus {
+    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
+        let mut bytes = vec![];
+        ciborium::ser::into_writer(self, &mut bytes).unwrap();
+        Cow::Owned(bytes)
+    }
+
+    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
+        let canister_upgrade_log: CanisterUpgradeStatus = de::from_reader(bytes.as_ref()).unwrap();
+        canister_upgrade_log
+    }
+}
+
+impl Default for CanisterUpgradeStatus {
+    fn default() -> Self {
+        Self { 
+            upgrade_arg: UpgradeCanisterArg {
+                canister: WasmType::IndividualUserWasm, 
+                version: String::from(""), wasm_blob: vec![]
+            }, 
+            count: Default::default(), 
+            failures: Default::default() 
+        }
+    }
+}
+
+
+#[derive(CandidType, Deserialize, Serialize , Clone)]
+pub struct UpgradeCanisterArg {
+    pub canister: WasmType,
+    pub version: String,
+    pub wasm_blob: Vec<u8>
+}
+
+
+#[derive(Serialize, Deserialize, CandidType, Clone)]
+pub struct CanisterWasm {
+    pub wasm_blob: Vec<u8>,
+    pub version: String,
+}
+
+impl BoundedStorable for CanisterWasm {
+    const MAX_SIZE: u32 = 200_000_000; // 2 MB
+    const IS_FIXED_SIZE: bool = false;
+}
+
+impl Storable for CanisterWasm {
+    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
+        let mut bytes = vec![];
+        ciborium::ser::into_writer(self, &mut bytes).unwrap();
+        Cow::Owned(bytes)
+    }
+
+    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
+        let canister_wasm: CanisterWasm = de::from_reader(bytes.as_ref()).unwrap();
+        canister_wasm
+    }
+}
