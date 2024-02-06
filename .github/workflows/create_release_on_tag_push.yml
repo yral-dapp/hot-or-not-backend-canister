@@ -1,7 +1,7 @@
 name: Release and submit proposal
 on:
   push:
-    tags: 
+    tags:
       - 'v*'
 
 concurrency:
@@ -15,7 +15,7 @@ jobs:
     permissions:
       packages: read
       contents: write
-    env: 
+    env:
       NEURON_ID: 4de673e9cd7a1339afea6523a5f227d25e9d739ff52635ac86dbdb0447ae106a
 
     steps:
@@ -71,7 +71,7 @@ jobs:
           cp .dfx/ic/canisters/configuration/service.did configuration.did
       - name: 'Create Release'
         uses: "marvinpinto/action-automatic-releases@latest"
-        with: 
+        with:
             repo_token: "${{ secrets.GITHUB_TOKEN }}"
             prerelease: false
             files: |
@@ -80,7 +80,7 @@ jobs:
       - name: Get commits since last release
         uses: loopwerk/tag-changelog@v1
         id: changelog
-        with: 
+        with:
           token: ${{secrets.GITHUB_TOKEN}}
       - name: Install quill from GitHub Releases
         run: |
@@ -128,7 +128,7 @@ jobs:
             --url 'https://hotornot.wtf' \
             --target-canister-id $CANISTER_ID \
             --wasm-path .dfx/ic/canisters/${CANISTER_NAME}/${CANISTER_NAME}.wasm.gz \
-            --canister-upgrade-arg '(record {})' \
+            --canister-upgrade-arg "(record {version=\"${{ github.ref_name }}\"})" \
             $NEURON_ID > "proposals/${CANISTER_NAME}/upgrade.json"
           ./quill send proposals/${CANISTER_NAME}/upgrade.json --yes
       - name: Submit upgrade proposal for configuration canister
