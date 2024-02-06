@@ -43,9 +43,12 @@ mod test {
         time::{Duration, SystemTime},
     };
 
-    use shared_utils::canister_specific::individual_user_template::types::{
-        hot_or_not::HotOrNotDetails,
-        post::{FeedScore, Post, PostStatus, PostViewStatistics},
+    use shared_utils::{
+        canister_specific::individual_user_template::types::{
+            hot_or_not::HotOrNotDetails,
+            post::{FeedScore, Post, PostViewStatistics},
+        },
+        common::types::top_posts::post_score_index_item::PostStatus,
     };
 
     use super::*;

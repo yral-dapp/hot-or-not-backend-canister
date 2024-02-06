@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-usage() { 
-  printf "Usage: \n[-s Skip test] \n[-h Display help] \n"; 
-  exit 0; 
+usage() {
+  printf "Usage: \n[-s Skip test] \n[-h Display help] \n";
+  exit 0;
 }
 
 skip_test=false
@@ -13,7 +13,7 @@ while getopts "sih" arg; do
     s)
       skip_test=true
       ;;
-    h) 
+    h)
       usage
       ;;
   esac
@@ -31,8 +31,9 @@ dfx build configuration
 dfx build data_backup
 dfx build user_index
 dfx build post_cache
+gzip -f -1 ./target/wasm32-unknown-unknown/release/post_cache.wasm
 
-if [[ $skip_test != true ]] 
+if [[ $skip_test != true ]]
 then
   cargo test
 fi

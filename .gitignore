@@ -10,3 +10,4 @@ quill
 sns-testing/**
 msg.json
 candid/**
+ic-test-state-machine

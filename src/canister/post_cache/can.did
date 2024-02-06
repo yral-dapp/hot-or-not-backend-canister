@@ -12,13 +12,40 @@ type KnownPrincipalType = variant {
 };
 type PostCacheInitArgs = record {
   known_principal_ids : opt vec record { KnownPrincipalType; principal };
+  version : text;
+  upgrade_version_number : opt nat64;
 };
 type PostScoreIndexItem = record {
   post_id : nat64;
   score : nat64;
   publisher_canister_id : principal;
 };
+type PostScoreIndexItemV1 = record {
+  is_nsfw : bool;
+  status : PostStatus;
+  post_id : nat64;
+  created_at : opt SystemTime;
+  score : nat64;
+  publisher_canister_id : principal;
+};
+type PostStatus = variant {
+  BannedForExplicitness;
+  BannedDueToUserReporting;
+  Uploaded;
+  CheckingExplicitness;
+  ReadyToView;
+  Transcoding;
+  Deleted;
+};
 type Result = variant { Ok : vec PostScoreIndexItem; Err : TopPostsFetchError };
+type Result_1 = variant {
+  Ok : vec PostScoreIndexItemV1;
+  Err : TopPostsFetchError;
+};
+type SystemTime = record {
+  nanos_since_epoch : nat32;
+  secs_since_epoch : nat64;
+};
 type TopPostsFetchError = variant {
   ReachedEndOfItemsList;
   InvalidBoundsPassed;
@@ -29,18 +56,32 @@ service : (PostCacheInitArgs) -> {
       nat64,
       nat64,
     ) -> (Result) query;
+  get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed_cursor : (
+      nat64,
+      nat64,
+      opt bool,
+      opt PostStatus,
+    ) -> (Result_1) query;
   get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed : (
       nat64,
       nat64,
     ) -> (Result) query;
+  get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed_cursor : (
+      nat64,
+      nat64,
+      opt bool,
+      opt PostStatus,
+    ) -> (Result_1) query;
   get_well_known_principal_value : (KnownPrincipalType) -> (
       opt principal,
     ) query;
   receive_top_home_feed_posts_from_publishing_canister : (
-      vec PostScoreIndexItem,
+      vec PostScoreIndexItemV1,
     ) -> ();
   receive_top_hot_or_not_feed_posts_from_publishing_canister : (
-      vec PostScoreIndexItem,
+      vec PostScoreIndexItemV1,
     ) -> ();
   remove_all_feed_entries : () -> ();
+  update_post_home_feed : (PostScoreIndexItemV1) -> ();
+  update_post_hot_or_not_feed : (PostScoreIndexItemV1) -> ();
 }

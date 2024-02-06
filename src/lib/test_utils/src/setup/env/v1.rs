@@ -13,11 +13,11 @@ use shared_utils::{
 };
 
 use crate::setup::test_constants::{
-    get_canister_wasm, get_global_super_admin_principal_id,
+    get_canister_wasm, get_global_super_admin_principal_id, get_mock_canister_id_sns,
     v1::{
         CANISTER_INITIAL_CYCLES_FOR_NON_SPAWNING_CANISTERS,
         CANISTER_INITIAL_CYCLES_FOR_SPAWNING_CANISTERS,
-    }, get_mock_canister_id_sns,
+    },
 };
 
 /// The path to the state machine binary to run the tests with
@@ -88,7 +88,7 @@ pub fn get_initialized_env_with_provisioned_known_canisters(
 
     known_principal_map_with_all_canisters.insert(
         KnownPrincipalType::CanisterIdSnsGovernance,
-        get_mock_canister_id_sns()
+        get_mock_canister_id_sns(),
     );
 
     // * Install canisters
@@ -130,6 +130,7 @@ pub fn get_initialized_env_with_provisioned_known_canisters(
         get_canister_wasm(KnownPrincipalType::CanisterIdPostCache),
         candid::encode_one(PostCacheInitArgs {
             known_principal_ids: Some(known_principal_map_with_all_canisters.clone()),
+            ..Default::default()
         })
         .unwrap(),
     );
@@ -151,7 +152,7 @@ pub fn get_initialized_env_with_provisioned_known_canisters(
         candid::encode_one(UserIndexInitArgs {
             known_principal_ids: Some(known_principal_map_with_all_canisters.clone()),
             access_control_map: Some(user_index_access_control_map),
-            version: String::from("v1.0.0")
+            version: String::from("v1.0.0"),
         })
         .unwrap(),
     );
