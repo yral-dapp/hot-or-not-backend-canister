@@ -5,7 +5,8 @@ use pocket_ic::{PocketIc, WasmResult};
 use shared_utils::{
     canister_specific::{
         individual_user_template::types::{
-            arg::IndividualUserTemplateInitArgs, post::PostDetailsFromFrontend,
+            arg::IndividualUserTemplateInitArgs,
+            post::{PostDetailsForFrontend, PostDetailsFromFrontend},
         },
         post_cache::types::arg::PostCacheInitArgs,
     },
@@ -17,6 +18,7 @@ use shared_utils::{
 };
 use test_utils::setup::test_constants::{
     get_mock_user_alice_principal_id, get_mock_user_bob_principal_id,
+    get_mock_user_charlie_principal_id,
 };
 
 const OLD_POST_CACHE_WASM_PATH: &str =
@@ -40,6 +42,7 @@ fn feed_filter_upgrade_test() {
 
     let alice_principal_id = get_mock_user_alice_principal_id();
     let bob_principal_id = get_mock_user_bob_principal_id();
+    let admin_principal_id = get_mock_user_charlie_principal_id();
 
     let post_cache_canister_id = pic.create_canister();
     pic.add_cycles(post_cache_canister_id, 2_000_000_000_000);
@@ -63,6 +66,10 @@ fn feed_filter_upgrade_test() {
     known_prinicipal_values.insert(
         KnownPrincipalType::CanisterIdPostCache,
         post_cache_canister_id,
+    );
+    known_prinicipal_values.insert(
+        KnownPrincipalType::UserIdGlobalSuperAdmin,
+        admin_principal_id,
     );
 
     // Init individual template canister - alice
@@ -181,6 +188,29 @@ fn feed_filter_upgrade_test() {
         })
         .unwrap();
 
+    let bob_post_2 = PostDetailsFromFrontend {
+        is_nsfw: true,
+        description: "This is a fun video to watch - bob2".to_string(),
+        hashtags: vec!["fun".to_string(), "video".to_string()],
+        video_uid: "abcd#1234bob2".to_string(),
+        creator_consent_for_inclusion_in_hot_or_not: true,
+    };
+    let res = pic
+        .update_call(
+            bob_individual_template_canister_id,
+            bob_principal_id,
+            "add_post_v2",
+            encode_one(bob_post_2).unwrap(),
+        )
+        .map(|reply_payload| {
+            let newly_created_post_id_result: Result<u64, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 add_post failed\n"),
+            };
+            newly_created_post_id_result.unwrap()
+        })
+        .unwrap();
+
     // Call post cache canister to get the home feed posts
     let res = pic
         .query_call(
@@ -199,12 +229,13 @@ fn feed_filter_upgrade_test() {
         .unwrap();
 
     let posts = res.unwrap();
-    assert_eq!(posts.len(), 3);
+    assert_eq!(posts.len(), 4);
     assert_eq!(posts[0].post_id, 0);
     assert_eq!(posts[1].post_id, 1);
     assert_eq!(posts[2].post_id, 0);
+    assert_eq!(posts[3].post_id, 1);
 
-    // Upgrade canister
+    // Upgrade individual canister
 
     let individual_template_wasm_bytes = individual_template_canister_wasm();
 
@@ -246,6 +277,54 @@ fn feed_filter_upgrade_test() {
         panic!("Error: {:?}", e);
     }
 
+    // Delete the post
+    let res = pic.update_call(
+        bob_individual_template_canister_id,
+        admin_principal_id,
+        "delete_post_temp",
+        encode_one(1 as u64).unwrap(),
+    );
+
+    // Check if post is deleted
+
+    let res = pic
+        .query_call(
+            bob_individual_template_canister_id,
+            bob_principal_id,
+            "get_individual_post_details_by_id",
+            encode_one(1 as u64).unwrap(),
+        )
+        .map(|reply_payload| {
+            let post: Result<_, String> = match reply_payload {
+                WasmResult::Reply(payload) => panic!("\n🛑 Expected get_post to fail\n"),
+                _ => Ok(()),
+            };
+        });
+
+    // Call post cache canister to get the home feed posts - old
+    let res = pic
+        .query_call(
+            post_cache_canister_id,
+            bob_principal_id,
+            "get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed",
+            candid::encode_args((0 as u64, 10 as u64)).unwrap(),
+        )
+        .map(|reply_payload| {
+            let posts: Result<Vec<PostScoreIndexItem>, TopPostsFetchError> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 get_posts failed\n"),
+            };
+            posts
+        })
+        .unwrap();
+
+    let posts = res.unwrap();
+    assert_eq!(posts.len(), 4);
+    assert_eq!(posts[0].post_id, 0);
+    assert_eq!(posts[1].post_id, 1);
+    assert_eq!(posts[2].post_id, 0);
+    assert_eq!(posts[3].post_id, 1);
+
     // Upgrade post cache canister
 
     let post_cache_wasm_bytes = post_cache_canister_wasm();
@@ -259,8 +338,8 @@ fn feed_filter_upgrade_test() {
 
     let res = pic.upgrade_canister(
         post_cache_canister_id,
-        post_cache_wasm_bytes,
-        post_cache_args_bytes,
+        post_cache_wasm_bytes.clone(),
+        post_cache_args_bytes.clone(),
         None,
     );
     if let Err(e) = res {
@@ -269,6 +348,30 @@ fn feed_filter_upgrade_test() {
 
     pic.advance_time(Duration::from_secs(5));
     pic.tick();
+
+    // Call post cache canister to get the home feed posts - old
+    let res = pic
+        .query_call(
+            post_cache_canister_id,
+            bob_principal_id,
+            "get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed",
+            candid::encode_args((0 as u64, 10 as u64)).unwrap(),
+        )
+        .map(|reply_payload| {
+            let posts: Result<Vec<PostScoreIndexItem>, TopPostsFetchError> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 get_posts failed\n"),
+            };
+            posts
+        })
+        .unwrap();
+
+    let posts = res.unwrap();
+    assert_eq!(posts.len(), 4);
+    assert_eq!(posts[0].post_id, 0);
+    assert_eq!(posts[1].post_id, 1);
+    assert_eq!(posts[2].post_id, 0);
+    assert_eq!(posts[3].post_id, 1);
 
     // Call post cache canister to get the home feed posts
     let res = pic

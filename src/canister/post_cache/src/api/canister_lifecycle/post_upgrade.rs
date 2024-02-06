@@ -89,13 +89,22 @@ async fn migrate_data_impl() {
         let post_id = post.post_id;
         let publisher_canister_id = post.publisher_canister_id;
 
-        let (post_details,): (PostDetailsForFrontend,) = call::call(
+        let post_details: PostDetailsForFrontend = match call::call(
             publisher_canister_id,
             "get_individual_post_details_by_id",
             (post_id,),
         )
         .await
-        .expect("Call failed: get_individual_post_details_by_id");
+        {
+            Ok((post_details,)) => post_details,
+            Err((rejection_code, err)) => {
+                ic_cdk::print(format!(
+                    "Error: get_individual_post_details_by_id failed with rejection code: {:?}, error: {}",
+                    rejection_code, err
+                ));
+                continue;
+            }
+        };
 
         let new_post = PostScoreIndexItemV1 {
             score: post_details.home_feed_ranking_score,
@@ -128,13 +137,22 @@ async fn migrate_data_impl() {
         let post_id = post.post_id;
         let publisher_canister_id = post.publisher_canister_id;
 
-        let (post_details,): (PostDetailsForFrontend,) = call::call(
+        let post_details: PostDetailsForFrontend = match call::call(
             publisher_canister_id,
             "get_individual_post_details_by_id",
             (post_id,),
         )
         .await
-        .expect("Call failed: get_individual_post_details_by_id");
+        {
+            Ok((post_details,)) => post_details,
+            Err((rejection_code, err)) => {
+                ic_cdk::print(format!(
+                            "Error: get_individual_post_details_by_id failed with rejection code: {:?}, error: {}",
+                            rejection_code, err
+                        ));
+                continue;
+            }
+        };
 
         if let Some(hot_or_not_feed_ranking_score) = post_details.hot_or_not_feed_ranking_score {
             let new_post = PostScoreIndexItemV1 {
