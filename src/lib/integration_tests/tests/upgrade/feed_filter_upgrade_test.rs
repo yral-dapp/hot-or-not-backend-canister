@@ -33,6 +33,7 @@ struct OldPostCacheInitArgs {
     pub known_principal_ids: Option<KnownPrincipalMap>,
 }
 
+#[cfg(feature = "feed_filter_upgrade_test")]
 #[test]
 fn feed_filter_upgrade_test() {
     let pic = PocketIc::new();

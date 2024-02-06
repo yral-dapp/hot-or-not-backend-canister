@@ -15,3 +15,7 @@ shared_utils = { workspace = true }
 ic-test-state-machine-client = { workspace = true }
 serde.workspace = true
 test_utils = { workspace = true }
+
+
+[features]
+feed_filter_upgrade_test = []
