@@ -1,7 +1,7 @@
 use ic_cdk::{api::is_controller, caller};
-use shared_utils::common::types::wasm::WasmType;
+use shared_utils::common::types::wasm::{CanisterWasm, WasmType};
 
-use crate::{data_model::CanisterWasm, CANISTER_DATA};
+use crate::CANISTER_DATA;
 
  
  #[ic_cdk::update]

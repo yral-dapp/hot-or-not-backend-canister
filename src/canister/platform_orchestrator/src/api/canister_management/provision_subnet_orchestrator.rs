@@ -3,7 +3,7 @@ use std::{str::FromStr, vec};
 use candid::{Principal, CandidType};
 use ic_cdk::{api::{self, call, is_controller, management_canister::{main::{self,  CanisterInstallMode, InstallCodeArgument}, provisional::CanisterSettings}}, caller, id};
 use serde::{Deserialize, Serialize};
-use shared_utils::{canister_specific::{post_cache::types::arg::PostCacheInitArgs, user_index::types::args::UserIndexInitArgs}, common::types::{known_principal::{KnownPrincipalMap, KnownPrincipalType}, wasm::WasmType}, constant::{INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT, NNS_CYCLE_MINTING_CANISTER, SUBNET_ORCHESTRATOR_CANISTER_INITIAL_CYCLES}};
+use shared_utils::{canister_specific::{individual_user_template, post_cache::types::arg::PostCacheInitArgs, user_index::types::args::UserIndexInitArgs}, common::types::{known_principal::{KnownPrincipalMap, KnownPrincipalType}, wasm::WasmType}, constant::{INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT, NNS_CYCLE_MINTING_CANISTER, SUBNET_ORCHESTRATOR_CANISTER_INITIAL_CYCLES}};
 
 use crate::CANISTER_DATA;
 

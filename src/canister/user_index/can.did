@@ -16,6 +16,7 @@ type DefiniteCanisterSettings = record {
 };
 type KnownPrincipalType = variant {
   CanisterIdUserIndex;
+  CanisterIdPlatformOrchestrator;
   CanisterIdConfiguration;
   CanisterIdProjectMemberIndex;
   CanisterIdTopicCacheIndex;
@@ -35,11 +36,11 @@ type RejectionCode = variant {
   SysFatal;
   CanisterReject;
 };
-type Result = variant {
+type Result = variant { Ok : text; Err : text };
+type Result_1 = variant {
   Ok : record { CanisterStatusResponse };
   Err : record { RejectionCode; text };
 };
-type Result_1 = variant { Ok : text; Err : text };
 type Result_2 = variant { Ok; Err : text };
 type Result_3 = variant { Ok; Err : SetUniqueUsernameError };
 type SetUniqueUsernameError = variant {
@@ -72,6 +73,9 @@ type UserIndexInitArgs = record {
 service : (UserIndexInitArgs) -> {
   are_signups_enabled : () -> (bool) query;
   backup_all_individual_user_canisters : () -> ();
+  create_pool_of_individual_user_available_canisters : (text, vec nat8) -> (
+      Result,
+    );
   get_current_list_of_all_well_known_principal_values : () -> (
       vec record { KnownPrincipalType; principal },
     ) query;
@@ -81,11 +85,12 @@ service : (UserIndexInitArgs) -> {
   get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer : (
       opt principal,
     ) -> (principal);
+  get_subnet_available_capacity : () -> (nat64) query;
   get_user_canister_id_from_unique_user_name : (text) -> (opt principal) query;
   get_user_canister_id_from_user_principal_id : (principal) -> (
       opt principal,
     ) query;
-  get_user_canister_status : (principal) -> (Result);
+  get_user_canister_status : (principal) -> (Result_1);
   get_user_index_canister_count : () -> (nat64) query;
   get_user_index_canister_cycle_balance : () -> (nat) query;
   get_well_known_principal_value : (KnownPrincipalType) -> (
@@ -96,9 +101,9 @@ service : (UserIndexInitArgs) -> {
       principal,
       text,
     ) -> ();
-  reset_user_individual_canisters : (vec principal) -> (Result_1);
+  reset_user_individual_canisters : (vec principal) -> (Result);
   set_permission_to_upgrade_individual_canisters : (bool) -> (text);
-  start_upgrades_for_individual_canisters : () -> (text);
+  start_upgrades_for_individual_canisters : (text, vec nat8) -> (text);
   toggle_signups_enabled : () -> (Result_2);
   update_index_with_unique_user_name_corresponding_to_user_principal_id : (
       text,
@@ -109,7 +114,5 @@ service : (UserIndexInitArgs) -> {
       principal,
       opt CanisterInstallMode,
     ) -> (text);
-  validate_reset_user_individual_canisters : (vec principal) -> (
-      Result_1,
-    ) query;
+  validate_reset_user_individual_canisters : (vec principal) -> (Result) query;
 }

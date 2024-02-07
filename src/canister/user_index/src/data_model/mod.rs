@@ -1,11 +1,11 @@
-use std::collections::{BTreeMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashSet};
 
 
 use candid::{Deserialize, Principal};
 use ic_stable_structures::storable::Blob;
 use ic_stable_structures::StableBTreeMap;
 use serde::Serialize;
-use shared_utils::common::types::wasm::WasmType;
+use shared_utils::common::types::wasm::{CanisterWasm, WasmType};
 
 use self::memory::get_wasm_memory;
 use self::{canister_upgrade::UpgradeStatus, configuration::Configuration, memory::Memory};
@@ -32,7 +32,7 @@ pub struct CanisterData {
     pub user_principal_id_to_canister_id_map: BTreeMap<Principal, Principal>,
     pub unique_user_name_to_user_principal_id_map: BTreeMap<String, Principal>,
     #[serde(skip, default = "_empty_wasms")]
-    pub wasms: StableBTreeMap<WasmType, Blob<4096>, Memory>
+    pub wasms: StableBTreeMap<WasmType,CanisterWasm, Memory>
 }
 
 impl Default for CanisterData {
@@ -41,6 +41,6 @@ impl Default for CanisterData {
     }
 }
 
-fn _empty_wasms() -> StableBTreeMap<WasmType, Blob<4096>, Memory> {
+fn _empty_wasms() -> StableBTreeMap<WasmType, CanisterWasm, Memory> {
     StableBTreeMap::init(get_wasm_memory())
 }

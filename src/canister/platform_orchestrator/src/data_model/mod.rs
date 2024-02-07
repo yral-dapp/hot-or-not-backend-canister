@@ -5,7 +5,7 @@ use ciborium::de;
 
 use candid::{CandidType, Principal};
 use serde::{Serialize, Deserialize};
-use shared_utils::common::types::wasm::WasmType;
+use shared_utils::common::types::wasm::{CanisterWasm, WasmType};
 
 use self::memory::{get_canister_upgrade_log_index_memory, get_canister_upgrade_log_memory, get_subnet_orchestrator_wasm_memory, Memory};
 
@@ -104,29 +104,4 @@ pub struct UpgradeCanisterArg {
     pub canister: WasmType,
     pub version: String,
     pub wasm_blob: Vec<u8>
-}
-
-
-#[derive(Serialize, Deserialize, CandidType, Clone)]
-pub struct CanisterWasm {
-    pub wasm_blob: Vec<u8>,
-    pub version: String,
-}
-
-impl BoundedStorable for CanisterWasm {
-    const MAX_SIZE: u32 = 200_000_000; // 2 MB
-    const IS_FIXED_SIZE: bool = false;
-}
-
-impl Storable for CanisterWasm {
-    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
-        let mut bytes = vec![];
-        ciborium::ser::into_writer(self, &mut bytes).unwrap();
-        Cow::Owned(bytes)
-    }
-
-    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
-        let canister_wasm: CanisterWasm = de::from_reader(bytes.as_ref()).unwrap();
-        canister_wasm
-    }
 }

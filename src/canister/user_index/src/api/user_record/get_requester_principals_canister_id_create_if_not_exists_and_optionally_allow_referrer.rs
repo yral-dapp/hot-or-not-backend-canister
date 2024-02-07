@@ -118,16 +118,21 @@ async fn new_user_signup(user_id: Principal) -> Result<Principal, String> {
 
 async fn provision_new_canister(provision_canister_cnt: u64) {
     let mut create_canister_futures = vec![];
+    let individual_user_template_canister_wasm = CANISTER_DATA.with_borrow(|canister_data| canister_data.wasms.get(&WasmType::IndividualUserWasm).unwrap().clone());
+
     for _ in 0..provision_canister_cnt {
         create_canister_futures.push(
             create_users_canister(
                 None,
-                CANISTER_DATA.with_borrow(|canister_data| canister_data.last_run_upgrade_status.version.clone()),
-                CANISTER_DATA.with_borrow(|canister_data| canister_data.wasms.get(&WasmType::IndividualUserWasm).unwrap().as_ref().to_vec())
+                individual_user_template_canister_wasm.version.clone(),
+                individual_user_template_canister_wasm.wasm_blob.clone()
             )
         )
     }
-    run_task_concurrently(create_canister_futures.into_iter(), 10, |_| {}, || false).await;
+    let result_callback = |canister_id: Principal| {
+        CANISTER_DATA.with_borrow_mut(|canister_data| canister_data.available_canisters.insert(canister_id));
+    };
+    run_task_concurrently(create_canister_futures.into_iter(), 10, result_callback, || false).await;
 }
 
 #[cfg(test)]

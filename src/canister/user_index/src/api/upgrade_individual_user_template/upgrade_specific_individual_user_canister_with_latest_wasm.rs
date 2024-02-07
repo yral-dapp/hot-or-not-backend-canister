@@ -49,7 +49,7 @@ async fn upgrade_specific_individual_user_canister_with_latest_wasm(
             url_to_send_canister_metrics_to: Some(configuration.url_to_send_canister_metrics_to),
             version: saved_upgrade_status.version
         },
-        CANISTER_DATA.with_borrow(|canister_data| canister_data.wasms.get(&WasmType::IndividualUserWasm).unwrap().as_slice().to_vec())
+        CANISTER_DATA.with_borrow(|canister_data| canister_data.wasms.get(&WasmType::IndividualUserWasm).unwrap().wasm_blob.clone())
     )
     .await
     {

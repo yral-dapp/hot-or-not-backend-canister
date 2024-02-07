@@ -3,13 +3,14 @@ use std::borrow::{Borrow, Cow};
 use ic_cdk::{api::{call::CallResult, is_controller, management_canister::{main::{canister_status, CanisterStatusResponse, CanisterInstallMode}, provisional::CanisterIdRecord}}, caller};
 use candid::Principal;
 use ic_stable_structures::{storable::Blob, Storable};
-use shared_utils::{common::{types::{known_principal::KnownPrincipalType, wasm::WasmType}, utils::task::run_task_concurrently}, canister_specific::individual_user_template::types::arg::IndividualUserTemplateInitArgs};
+use shared_utils::{canister_specific::individual_user_template::types::arg::IndividualUserTemplateInitArgs, common::{types::{known_principal::KnownPrincipalType, wasm::{CanisterWasm, WasmType}}, utils::task::run_task_concurrently}};
 
 use crate::{CANISTER_DATA, util::canister_management};
 
 use super::upgrade_individual_user_template::update_user_index_upgrade_user_canisters_with_latest_wasm;
 
 pub mod create_pool_of_available_canisters;
+pub mod get_subnet_available_capacity;
 
 
 #[candid::candid_method(update)]
@@ -44,7 +45,11 @@ pub async fn start_upgrades_for_individual_canisters(version: String, individual
     CANISTER_DATA.with_borrow_mut(|canister_data| {
         canister_data.allow_upgrades_for_individual_canisters = true;
         canister_data.last_run_upgrade_status.version = version.clone();
-        canister_data.wasms.insert(WasmType::IndividualUserWasm, Blob::from_bytes(Cow::Borrowed(&individual_user_wasm)));
+        let canister_wasm = CanisterWasm {
+            version: version.clone(),
+            wasm_blob: individual_user_wasm.clone()
+        };
+        canister_data.wasms.insert(WasmType::IndividualUserWasm, canister_wasm);
     });
     ic_cdk::spawn(update_user_index_upgrade_user_canisters_with_latest_wasm::upgrade_user_canisters_with_latest_wasm(version, individual_user_wasm));
     "Success".to_string()
@@ -104,7 +109,7 @@ pub async fn reset_user_individual_canisters(canisters: Vec<Principal>) -> Resul
             url_to_send_canister_metrics_to: Some(CANISTER_DATA.with(|canister_data_ref| canister_data_ref.borrow().configuration.url_to_send_canister_metrics_to.clone())),
             version: CANISTER_DATA.with(|canister_data_ref_cell| canister_data_ref_cell.borrow().last_run_upgrade_status.version.clone())
         },
-        CANISTER_DATA.with_borrow(|canister_data| canister_data.wasms.get(&WasmType::IndividualUserWasm).unwrap().as_slice().to_vec()))
+        CANISTER_DATA.with_borrow(|canister_data| canister_data.wasms.get(&WasmType::IndividualUserWasm).unwrap().wasm_blob.clone()))
         .await
         .map_err(|e| (*canister, e.1))?;
         Ok(*canister)

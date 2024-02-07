@@ -7,7 +7,7 @@ use shared_utils::{
         user_index::types::args::UserIndexInitArgs
     },
     common::{
-        types::wasm::WasmType,
+        types::wasm::{CanisterWasm, WasmType},
         utils::task::run_task_concurrently
     },
     constant::{
@@ -18,7 +18,7 @@ use shared_utils::{
     }
 };
 
-use crate::{data_model::{CanisterUpgradeStatus, CanisterWasm, UpgradeCanisterArg}, CANISTER_DATA};
+use crate::{data_model::{CanisterUpgradeStatus, UpgradeCanisterArg}, CANISTER_DATA};
 
 
 #[ic_cdk::update]
@@ -239,5 +239,4 @@ async fn upgrade_subnet_orchestrator_canister(canister_id: Principal, wasm: Vec<
     )
     .await
     .map_err(|e| e.1)
-
 }
