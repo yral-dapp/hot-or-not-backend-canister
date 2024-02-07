@@ -66,5 +66,8 @@ jobs:
       - name: Build post_cache canister
         run: |
           nix-shell --run "dfx build post_cache"
+          gzip -f -1 ./target/wasm32-unknown-unknown/release/post_cache.wasm
       - name: Run canister test suite
         run: nix-shell --run "cargo test"
+      - name: Run canister test suite - feature mockdata
+        run: nix-shell --run "cargo test --features mockdata --package post_cache"

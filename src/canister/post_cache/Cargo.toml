@@ -17,3 +17,12 @@ serde = { workspace = true }
 
 [dev-dependencies]
 test_utils = { workspace = true }
+
+
+[dev-dependencies.shared_utils]
+path = "../../lib/shared_utils"
+features = ["mockdata"]
+
+
+[features]
+mockdata = []

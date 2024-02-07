@@ -17,3 +17,6 @@ ciborium = { workspace = true }
 
 [dev-dependencies]
 test_utils = { workspace = true }
+
+[features]
+mockdata = []

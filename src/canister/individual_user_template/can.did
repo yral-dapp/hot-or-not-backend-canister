@@ -279,6 +279,9 @@ service : (IndividualUserTemplateInitArgs) -> {
   add_post_v2 : (PostDetailsFromFrontend) -> (Result);
   backup_data_to_backup_canister : (principal, principal) -> ();
   bet_on_currently_viewing_post : (PlaceBetArg) -> (Result_1);
+  check_and_update_scores_and_share_with_post_cache_if_difference_beyond_threshold : (
+      vec nat64,
+    ) -> ();
   do_i_follow_this_user : (FolloweeArg) -> (Result_2) query;
   get_entire_individual_post_detail_by_id : (nat64) -> (Result_3) query;
   get_hot_or_not_bet_details_for_this_post : (nat64) -> (BettingStatus) query;

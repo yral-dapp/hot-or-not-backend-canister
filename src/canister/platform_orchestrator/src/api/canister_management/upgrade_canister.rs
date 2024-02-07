@@ -213,6 +213,8 @@ async fn upgrade_subnet_post_cache_canister(canister_id: Principal, wasm: Vec<u8
             canister_id,
             wasm_module: wasm,
             arg: candid::encode_one( PostCacheInitArgs {
+                version,
+                upgrade_version_number: None,
                 known_principal_ids: None,
             })
             .unwrap()

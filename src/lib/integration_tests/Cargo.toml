@@ -8,10 +8,16 @@ edition = "2021"
 [dependencies]
 candid = { workspace = true }
 ic-cdk = { workspace = true }
+pocket-ic = "2.0.1"
 shared_utils = { workspace = true }
 serde = {workspace = true }
 ic-ledger-types = { workpace = true }
 
 [dev-dependencies]
 ic-test-state-machine-client = { workspace = true }
+serde.workspace = true
 test_utils = { workspace = true }
+
+
+[features]
+feed_filter_upgrade_test = []

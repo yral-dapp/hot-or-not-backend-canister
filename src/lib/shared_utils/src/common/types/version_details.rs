@@ -5,5 +5,5 @@ use serde::Serialize;
 pub struct VersionDetails {
     pub version_number: u64,
     #[serde(default)]
-    pub version: String
+    pub version: String,
 }

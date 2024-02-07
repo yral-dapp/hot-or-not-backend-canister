@@ -118,15 +118,18 @@ pub async fn provision_subnet_orchestrator_canister(subnet: Principal) -> Result
 
     main::install_code(subnet_orchestrator_install_code_arg).await.unwrap();
 
+    let post_cache_canister_wasm = CANISTER_DATA.with_borrow(|canister_data| canister_data.wasms.get(&WasmType::PostCacheWasm).unwrap());
 
     let post_cache_init_arg = PostCacheInitArgs {
+        version: post_cache_canister_wasm.version,
+        upgrade_version_number: None,
         known_principal_ids: Some(known_principal_map)
    };
 
    let post_cache_install_code_arg = InstallCodeArgument {
         mode: CanisterInstallMode::Install,
         canister_id: post_cache_canister_id,
-        wasm_module: CANISTER_DATA.with_borrow(|canister_data| canister_data.wasms.get(&WasmType::PostCacheWasm).unwrap().wasm_blob),
+        wasm_module: post_cache_canister_wasm.wasm_blob.clone(),
         arg: candid::encode_one(post_cache_init_arg).unwrap()
     };
 

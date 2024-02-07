@@ -17,19 +17,18 @@ fn post_upgrade() {
 }
 
 fn update_version_from_args() {
-    let (upgrade_args, ) = ic_cdk::api::call::arg_data::<(UserIndexInitArgs,)>();
+    let (upgrade_args,) = ic_cdk::api::call::arg_data::<(UserIndexInitArgs,)>();
     CANISTER_DATA.with(|canister_data_ref| {
-      let last_upgrade_status = canister_data_ref.borrow().last_run_upgrade_status.clone();
-       let upgrade_status = UpgradeStatus {
-        last_run_on: system_time::get_current_system_time_from_ic(),
-        failed_canister_ids: vec![],
-        version_number: last_upgrade_status.version_number,
-        successful_upgrade_count: 0,
-        version: upgrade_args.version
-       };
-       canister_data_ref.borrow_mut().last_run_upgrade_status = upgrade_status;
+        let last_upgrade_status = canister_data_ref.borrow().last_run_upgrade_status.clone();
+        let upgrade_status = UpgradeStatus {
+            last_run_on: system_time::get_current_system_time_from_ic(),
+            failed_canister_ids: vec![],
+            version_number: last_upgrade_status.version_number,
+            successful_upgrade_count: 0,
+            version: upgrade_args.version,
+        };
+        canister_data_ref.borrow_mut().last_run_upgrade_status = upgrade_status;
     })
-
 }
 
 fn restore_data_from_stable_memory() {
