@@ -2,7 +2,9 @@ use std::{borrow::Cow, cmp::Ordering, collections::BTreeMap, ops::Bound, time::S
 
 use candid::{CandidType, Decode, Deserialize, Encode, Principal};
 use ic_cdk::api::management_canister::provisional::CanisterId;
-use ic_stable_structures::{BoundedStorable, Storable};
+use ic_stable_structures::{
+    memory_manager::VirtualMemory, BoundedStorable, DefaultMemoryImpl, Storable,
+};
 use serde::Serialize;
 
 use crate::common::types::{
@@ -298,6 +300,92 @@ impl Post {
         betting_status
     }
 
+    pub fn get_hot_or_not_betting_status_for_this_post_v1(
+        &self,
+        current_time_when_request_being_made: &SystemTime,
+        bet_maker_principal_id: &Principal,
+        room_details_map: &ic_stable_structures::btreemap::BTreeMap<
+            GlobalRoomId,
+            RoomDetailsV1,
+            VirtualMemory<DefaultMemoryImpl>,
+        >,
+        bet_details_map: &ic_stable_structures::btreemap::BTreeMap<
+            GlobalBetId,
+            BetDetails,
+            VirtualMemory<DefaultMemoryImpl>,
+        >,
+    ) -> BettingStatus {
+        let betting_status = match current_time_when_request_being_made
+            .duration_since(self.created_at)
+            .unwrap()
+            .as_secs()
+        {
+            // * contest is still ongoing
+            0..=TOTAL_DURATION_OF_ALL_SLOTS_IN_SECONDS => {
+                let started_at = self.created_at;
+                let numerator = current_time_when_request_being_made
+                    .duration_since(started_at)
+                    .unwrap()
+                    .as_secs();
+
+                let denominator = DURATION_OF_EACH_SLOT_IN_SECONDS;
+                let currently_ongoing_slot = ((numerator / denominator) + 1) as u8;
+
+                let temp_room_details_default = RoomDetailsV1::default();
+
+                // get currently active room
+                let (global_room_id, room_details) = room_details_map
+                    .range(
+                        &GlobalRoomId(self.id, 1, 0)
+                            ..&GlobalRoomId(self.id, currently_ongoing_slot + 1, 0),
+                    )
+                    .last()
+                    .unwrap_or((GlobalRoomId(self.id, 1, 1), temp_room_details_default));
+
+                // let room_id = global_room_id.2;
+                // let slot_id = global_room_id.1;
+
+                // let number_of_participants = bet_details_map
+                //     .range(
+                //         (
+                //             &GlobalRoomId(self.id, slot_id, room_id),
+                //             StablePrincipal::default(),
+                //         )
+                //             ..(
+                //                 &GlobalRoomId(self.id, slot_id, room_id + 1),
+                //                 StablePrincipal::default(),
+                //             ),
+                //     )
+                //     .len();
+
+                let number_of_participants =
+                    (room_details.total_hot_bets + room_details.total_not_bets) as u8;
+                BettingStatus::BettingOpen {
+                    started_at,
+                    number_of_participants,
+                    ongoing_slot: currently_ongoing_slot,
+                    ongoing_room: global_room_id.2,
+                    has_this_user_participated_in_this_post: if *bet_maker_principal_id
+                        == Principal::anonymous()
+                    {
+                        None
+                    } else {
+                        Some(self.has_this_principal_already_bet_on_this_post_v1(
+                            currently_ongoing_slot,
+                            global_room_id.2,
+                            bet_maker_principal_id,
+                            bet_details_map,
+                        ))
+                    },
+                }
+            }
+            // * contest is over
+            _ => BettingStatus::BettingClosed,
+        };
+
+        betting_status
+    }
+
     pub fn has_this_principal_already_bet_on_this_post(
         &self,
         principal_making_bet: &Principal,
@@ -310,6 +398,22 @@ impl Post {
             .flat_map(|slot_details| slot_details.room_details.iter())
             .flat_map(|(_, room_details)| room_details.bets_made.iter())
             .any(|(principal, _)| principal == principal_making_bet)
+    }
+
+    pub fn has_this_principal_already_bet_on_this_post_v1(
+        &self,
+        slot_id: SlotId,
+        room_id: RoomId,
+        principal_making_bet: &Principal,
+        bet_details_map: &ic_stable_structures::btreemap::BTreeMap<
+            GlobalBetId,
+            BetDetails,
+            VirtualMemory<DefaultMemoryImpl>,
+        >,
+    ) -> bool {
+        let global_room_id = GlobalRoomId(self.id, slot_id, room_id);
+        let global_bet_id = (global_room_id, StablePrincipal(*principal_making_bet));
+        bet_details_map.get(&global_bet_id).is_some()
     }
 
     pub fn place_hot_or_not_bet(
@@ -327,6 +431,140 @@ impl Post {
         let betting_status = self.get_hot_or_not_betting_status_for_this_post(
             current_time_when_request_being_made,
             bet_maker_principal_id,
+        );
+
+        match betting_status {
+            BettingStatus::BettingClosed => Err(BetOnCurrentlyViewingPostError::BettingClosed),
+            BettingStatus::BettingOpen {
+                ongoing_slot,
+                ongoing_room,
+                has_this_user_participated_in_this_post,
+                ..
+            } => {
+                if has_this_user_participated_in_this_post.unwrap() {
+                    return Err(BetOnCurrentlyViewingPostError::UserAlreadyParticipatedInThisPost);
+                }
+
+                let mut hot_or_not_details = self
+                    .hot_or_not_details
+                    .take()
+                    .unwrap_or(HotOrNotDetails::default());
+                let slot_history = hot_or_not_details
+                    .slot_history
+                    .entry(ongoing_slot)
+                    .or_default();
+                let room_detail = slot_history.room_details.entry(ongoing_room).or_default();
+                let bets_made_currently = &mut room_detail.bets_made;
+
+                // * Update bets_made currently
+                if bets_made_currently.len() < 100 {
+                    bets_made_currently.insert(
+                        *bet_maker_principal_id,
+                        BetDetails {
+                            amount: bet_amount,
+                            bet_direction: bet_direction.clone(),
+                            payout: BetPayout::default(),
+                            bet_maker_canister_id: *bet_maker_canister_id,
+                        },
+                    );
+                    room_detail.room_bets_total_pot += bet_amount;
+                } else {
+                    let new_room_number = ongoing_room + 1;
+                    let mut bets_made = BTreeMap::default();
+                    bets_made.insert(
+                        *bet_maker_principal_id,
+                        BetDetails {
+                            amount: bet_amount,
+                            bet_direction: bet_direction.clone(),
+                            payout: BetPayout::default(),
+                            bet_maker_canister_id: *bet_maker_canister_id,
+                        },
+                    );
+                    slot_history.room_details.insert(
+                        new_room_number,
+                        RoomDetails {
+                            bets_made,
+                            room_bets_total_pot: bet_amount,
+                            ..Default::default()
+                        },
+                    );
+                }
+
+                // * Update aggregate stats
+                hot_or_not_details.aggregate_stats.total_amount_bet += bet_amount;
+                let mut last_room_entry = slot_history.room_details.last_entry().unwrap();
+                match bet_direction {
+                    BetDirection::Hot => {
+                        hot_or_not_details.aggregate_stats.total_number_of_hot_bets += 1;
+                        last_room_entry.get_mut().total_hot_bets += 1;
+                    }
+                    BetDirection::Not => {
+                        hot_or_not_details.aggregate_stats.total_number_of_not_bets += 1;
+                        last_room_entry.get_mut().total_not_bets += 1;
+                    }
+                }
+
+                self.hot_or_not_details = Some(hot_or_not_details);
+
+                let slot_history = &self.hot_or_not_details.as_ref().unwrap().slot_history;
+                let started_at = self.created_at;
+                let number_of_participants = slot_history
+                    .last_key_value()
+                    .unwrap()
+                    .1
+                    .room_details
+                    .last_key_value()
+                    .unwrap()
+                    .1
+                    .bets_made
+                    .len() as u8;
+                let ongoing_slot = *slot_history.last_key_value().unwrap().0;
+                let ongoing_room = *slot_history
+                    .last_key_value()
+                    .unwrap()
+                    .1
+                    .room_details
+                    .last_key_value()
+                    .unwrap()
+                    .0;
+                Ok(BettingStatus::BettingOpen {
+                    started_at,
+                    number_of_participants,
+                    ongoing_slot,
+                    ongoing_room,
+                    has_this_user_participated_in_this_post: Some(true),
+                })
+            }
+        }
+    }
+
+    pub fn place_hot_or_not_bet_v1(
+        &mut self,
+        bet_maker_principal_id: &Principal,
+        bet_maker_canister_id: &CanisterId,
+        bet_amount: u64,
+        bet_direction: &BetDirection,
+        current_time_when_request_being_made: &SystemTime,
+        room_details_map: &ic_stable_structures::btreemap::BTreeMap<
+            GlobalRoomId,
+            RoomDetailsV1,
+            VirtualMemory<DefaultMemoryImpl>,
+        >,
+        bet_details_map: &ic_stable_structures::btreemap::BTreeMap<
+            GlobalBetId,
+            BetDetails,
+            VirtualMemory<DefaultMemoryImpl>,
+        >,
+    ) -> Result<BettingStatus, BetOnCurrentlyViewingPostError> {
+        if *bet_maker_principal_id == Principal::anonymous() {
+            return Err(BetOnCurrentlyViewingPostError::UserNotLoggedIn);
+        }
+
+        let betting_status = self.get_hot_or_not_betting_status_for_this_post_v1(
+            current_time_when_request_being_made,
+            bet_maker_principal_id,
+            room_details_map,
+            bet_details_map,
         );
 
         match betting_status {
