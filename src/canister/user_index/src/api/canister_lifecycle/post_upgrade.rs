@@ -44,10 +44,3 @@ fn restore_data_from_stable_memory() {
         *cd = canister_data;
    })
 }
-
-const DELAY_FOR_REFETCHING_WELL_KNOWN_PRINCIPALS: Duration = Duration::from_secs(1);
-fn refetch_well_known_principals() {
-    ic_cdk_timers::set_timer(DELAY_FOR_REFETCHING_WELL_KNOWN_PRINCIPALS, || {
-        ic_cdk::spawn(update_locally_stored_well_known_principals::update_locally_stored_well_known_principals())
-    });
-}
