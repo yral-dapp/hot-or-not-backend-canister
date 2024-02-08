@@ -1,7 +1,8 @@
-use std::{cmp::Ordering, collections::BTreeMap, time::SystemTime};
+use std::{borrow::Cow, cmp::Ordering, collections::BTreeMap, ops::Bound, time::SystemTime};
 
-use candid::{CandidType, Deserialize, Principal};
+use candid::{CandidType, Decode, Deserialize, Encode, Principal};
 use ic_cdk::api::management_canister::provisional::CanisterId;
+use ic_stable_structures::{BoundedStorable, Storable};
 use serde::Serialize;
 
 use crate::common::types::{
@@ -100,6 +101,30 @@ pub struct RoomDetails {
     pub total_not_bets: u64,
 }
 
+#[derive(CandidType, Clone, Deserialize, Default, Debug, Serialize)]
+pub struct RoomDetailsV1 {
+    pub bet_outcome: RoomBetPossibleOutcomes,
+    pub room_bets_total_pot: u64,
+    pub total_hot_bets: u64,
+    pub total_not_bets: u64,
+}
+const MAX_ROOM_DETAILS_VALUE_SIZE: u32 = std::mem::size_of::<RoomDetailsV1>() as u32;
+
+impl Storable for RoomDetailsV1 {
+    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
+        Cow::Owned(Encode!(self).unwrap())
+    }
+
+    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
+        Decode!(bytes.as_ref(), Self).unwrap()
+    }
+}
+
+impl BoundedStorable for RoomDetailsV1 {
+    const MAX_SIZE: u32 = MAX_ROOM_DETAILS_VALUE_SIZE;
+    const IS_FIXED_SIZE: bool = true;
+}
+
 pub type BetMaker = Principal;
 
 #[derive(CandidType, Clone, Deserialize, Debug, Serialize)]
@@ -108,6 +133,70 @@ pub struct BetDetails {
     pub bet_direction: BetDirection,
     pub payout: BetPayout,
     pub bet_maker_canister_id: CanisterId,
+}
+const MAX_BET_DETAILS_VALUE_SIZE: u32 = std::mem::size_of::<BetDetails>() as u32;
+
+impl Storable for BetDetails {
+    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
+        Cow::Owned(Encode!(self).unwrap())
+    }
+
+    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
+        Decode!(bytes.as_ref(), Self).unwrap()
+    }
+}
+
+impl BoundedStorable for BetDetails {
+    const MAX_SIZE: u32 = MAX_BET_DETAILS_VALUE_SIZE;
+    const IS_FIXED_SIZE: bool = false;
+}
+
+#[derive(CandidType, Clone, Deserialize, Debug, Serialize, Ord, PartialOrd, Eq, PartialEq)]
+pub struct StablePrincipal(pub Principal);
+
+impl Default for StablePrincipal {
+    fn default() -> Self {
+        Self(Principal::anonymous())
+    }
+}
+
+impl Storable for StablePrincipal {
+    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
+        Cow::Owned(Encode!(self).unwrap())
+    }
+
+    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
+        Decode!(bytes.as_ref(), Self).unwrap()
+    }
+}
+
+impl BoundedStorable for StablePrincipal {
+    const MAX_SIZE: u32 = std::mem::size_of::<StablePrincipal>() as u32;
+    const IS_FIXED_SIZE: bool = false;
+}
+
+pub type BetMakerPrincipal = StablePrincipal;
+
+#[derive(
+    CandidType, Clone, Deserialize, Debug, Serialize, Ord, PartialOrd, Eq, PartialEq, Default,
+)]
+pub struct GlobalRoomId(pub PostId, pub SlotId, pub RoomId);
+
+pub type GlobalBetId = (GlobalRoomId, BetMakerPrincipal);
+
+impl Storable for GlobalRoomId {
+    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
+        Cow::Owned(Encode!(self).unwrap())
+    }
+
+    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
+        Decode!(bytes.as_ref(), Self).unwrap()
+    }
+}
+
+impl BoundedStorable for GlobalRoomId {
+    const MAX_SIZE: u32 = std::mem::size_of::<GlobalRoomId>() as u32;
+    const IS_FIXED_SIZE: bool = true;
 }
 
 #[derive(Clone, Deserialize, Debug, CandidType, Serialize, Default)]
