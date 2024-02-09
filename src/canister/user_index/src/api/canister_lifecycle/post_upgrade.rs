@@ -1,11 +1,9 @@
-use std::time::Duration;
 use ciborium::de;
 
 use ic_stable_structures::Memory;
 use shared_utils::{common::utils::system_time, canister_specific::user_index::types::args::UserIndexInitArgs};
 
 use crate::{
-    api:: well_known_principal::update_locally_stored_well_known_principals,
     data_model::{canister_upgrade::UpgradeStatus, memory},
     CANISTER_DATA,
 };
