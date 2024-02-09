@@ -56,6 +56,7 @@ type HotOrNotOutcomePayoutEvent = variant {
 };
 type KnownPrincipalType = variant {
   CanisterIdUserIndex;
+  CanisterIdPlatformOrchestrator;
   CanisterIdConfiguration;
   CanisterIdProjectMemberIndex;
   CanisterIdTopicCacheIndex;

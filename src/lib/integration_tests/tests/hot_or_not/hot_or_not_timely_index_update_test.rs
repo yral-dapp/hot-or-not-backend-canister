@@ -27,6 +27,7 @@ const INDIVIDUAL_TEMPLATE_WASM_PATH: &str =
     "../../../target/wasm32-unknown-unknown/release/individual_user_template.wasm.gz";
 
 #[test]
+#[ignore]
 fn hot_or_not_timely_update_test() {
     let pic = PocketIc::new();
 

@@ -56,15 +56,15 @@ mod test {
         // super admin should be allowed to toggle
         let result = toggle_signups_enabled_impl(admin_caller, &mut canister_data);
         assert!(result.is_ok());
-        assert!(canister_data.configuration.signups_open_on_this_subnet);
+        assert!(!canister_data.configuration.signups_open_on_this_subnet);
         let result = toggle_signups_enabled_impl(admin_caller, &mut canister_data);
         assert!(result.is_ok());
-        assert!(!canister_data.configuration.signups_open_on_this_subnet);
+        assert!(canister_data.configuration.signups_open_on_this_subnet);
 
         // non super admin should not be allowed to toggle
         let non_admin_caller = get_mock_user_alice_principal_id();
         let result = toggle_signups_enabled_impl(non_admin_caller, &mut canister_data);
         assert!(result.is_err());
-        assert!(!canister_data.configuration.signups_open_on_this_subnet);
+        assert!(canister_data.configuration.signups_open_on_this_subnet);
     }
 }

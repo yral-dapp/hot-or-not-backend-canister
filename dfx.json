@@ -33,6 +33,17 @@
       "package": "individual_user_template",
       "type": "rust"
     },
+    "platform_orchestrator": {
+      "candid": "./src/canister/platform_orchestrator/can.did",
+      "declaration": {
+        "node_compatibility": true,
+        "output": "./export/declarations/platform_orchestrator"
+      },
+      "gzip": true,
+      "optimize": "size",
+      "package": "platform_orchestrator",
+      "type": "rust"
+    },
     "post_cache": {
       "candid": "./src/canister/post_cache/can.did",
       "declarations": {

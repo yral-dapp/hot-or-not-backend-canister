@@ -4,6 +4,7 @@ type ConfigurationInitArgs = record {
 };
 type KnownPrincipalType = variant {
   CanisterIdUserIndex;
+  CanisterIdPlatformOrchestrator;
   CanisterIdConfiguration;
   CanisterIdProjectMemberIndex;
   CanisterIdTopicCacheIndex;
