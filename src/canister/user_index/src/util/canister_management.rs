@@ -103,15 +103,15 @@ pub async fn upgrade_individual_user_canister(
     start_canister(CanisterIdRecord {canister_id}).await
 }
 
-pub async fn recharge_canister_if_below_threshold(canister_id: &Principal) -> Result<Principal, (Principal, String)> {
+pub async fn recharge_canister_if_below_threshold(canister_id: &Principal) -> Result<(), String> {
 
     let is_canister_below_threshold_balance = is_canister_below_threshold_balance(&canister_id).await;
 
     if is_canister_below_threshold_balance {
-        recharge_canister(canister_id).await.map_err(|s| (*canister_id, s))?;    
+        recharge_canister(canister_id).await?;    
     }
 
-    Ok(*canister_id)
+    Ok(())
 }
 
 

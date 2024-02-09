@@ -36,10 +36,10 @@ pub async fn set_permission_to_upgrade_individual_canisters(flag: bool) -> Strin
 
 #[candid::candid_method(update)]
 #[ic_cdk::update]
-pub async fn start_upgrades_for_individual_canisters(version: String, individual_user_wasm: Vec<u8>) -> String {
+async fn start_upgrades_for_individual_canisters(version: String, individual_user_wasm: Vec<u8>) -> String {
     
     if !is_controller(&caller()) {
-        return "Unauthorized caller".to_string();
+        panic!("Unauthorized caller");
     }
 
     CANISTER_DATA.with_borrow_mut(|canister_data| {
@@ -101,7 +101,7 @@ pub async fn reset_user_individual_canisters(canisters: Vec<Principal>) -> Resul
     });
     
     let canister_reinstall_futures = canisters.iter().map(|canister| async move {
-        canister_management::recharge_canister_if_below_threshold(&canister).await?;
+        canister_management::recharge_canister_if_below_threshold(&canister).await.map_err(|e| (*canister, e))?;
         canister_management::upgrade_individual_user_canister(canister.clone(), CanisterInstallMode::Reinstall, IndividualUserTemplateInitArgs {
             known_principal_ids: Some(CANISTER_DATA.with(|canister_data_ref| {canister_data_ref.borrow().configuration.known_principal_ids.clone()})),
             profile_owner: None,
