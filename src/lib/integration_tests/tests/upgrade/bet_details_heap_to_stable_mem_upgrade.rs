@@ -220,8 +220,8 @@ fn bet_details_heap_to_stable_mem_upgrade() {
     ic_cdk::println!("Bet status: {:?}", bet_status);
 
     // Forward timer
-    // pic.advance_time(Duration::from_secs(60 * 60 * 2));
-    // pic.tick();
+    pic.advance_time(Duration::from_secs(60 * 60 * 2));
+    pic.tick();
 
     // Bob places bet on Alice post 2
     let bob_place_bet_arg = PlaceBetArg {
@@ -249,8 +249,8 @@ fn bet_details_heap_to_stable_mem_upgrade() {
     ic_cdk::println!("Bet status: {:?}", bet_status);
 
     // Forward timer
-    // pic.advance_time(Duration::from_secs(60 * 60 * 2));
-    // pic.tick();
+    pic.advance_time(Duration::from_secs(60 * 60 * 2));
+    pic.tick();
 
     // Dan places bet on Alice post 1
     let dan_place_bet_arg = PlaceBetArg {
@@ -278,8 +278,8 @@ fn bet_details_heap_to_stable_mem_upgrade() {
     ic_cdk::println!("Bet status: {:?}", bet_status);
 
     // Forward timer
-    // pic.advance_time(Duration::from_secs(60 * 60 * 2));
-    // pic.tick();
+    pic.advance_time(Duration::from_secs(60 * 60 * 2));
+    pic.tick();
 
     // Dan places bet on Alice post 2
     let dan_place_bet_arg = PlaceBetArg {
@@ -367,6 +367,10 @@ fn bet_details_heap_to_stable_mem_upgrade() {
     )
     .unwrap();
 
+    // Advance timer to allow the canister spawn
+    pic.advance_time(Duration::from_secs(2));
+    pic.tick();
+
     // Get Bob bet details for post 0
 
     let bet_details = pic
@@ -432,6 +436,82 @@ fn bet_details_heap_to_stable_mem_upgrade() {
             dan_principal_id,
             "get_hot_or_not_bet_details_for_this_post_v1",
             encode_one(res1).unwrap(),
+        )
+        .map(|reply_payload| {
+            let post_details: BettingStatus = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 get_post_details failed\n"),
+            };
+            post_details
+        })
+        .unwrap();
+    ic_cdk::println!("Bet details: {:?}", bet_details);
+
+    // Get Bob bet details for post 1
+
+    let bet_details = pic
+        .query_call(
+            alice_individual_template_canister_id,
+            bob_principal_id,
+            "get_hot_or_not_bet_details_for_this_post",
+            encode_one(res2).unwrap(),
+        )
+        .map(|reply_payload| {
+            let post_details: BettingStatus = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 get_post_details failed\n"),
+            };
+            post_details
+        })
+        .unwrap();
+    ic_cdk::println!("Bet details: {:?}", bet_details);
+
+    // Get Dan bet details for post 1
+
+    let bet_details = pic
+        .query_call(
+            alice_individual_template_canister_id,
+            dan_principal_id,
+            "get_hot_or_not_bet_details_for_this_post",
+            encode_one(res2).unwrap(),
+        )
+        .map(|reply_payload| {
+            let post_details: BettingStatus = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 get_post_details failed\n"),
+            };
+            post_details
+        })
+        .unwrap();
+    ic_cdk::println!("Bet details: {:?}", bet_details);
+
+    // Get Bob bet details for post 1 - v1
+
+    let bet_details = pic
+        .query_call(
+            alice_individual_template_canister_id,
+            bob_principal_id,
+            "get_hot_or_not_bet_details_for_this_post_v1",
+            encode_one(res2).unwrap(),
+        )
+        .map(|reply_payload| {
+            let post_details: BettingStatus = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 get_post_details failed\n"),
+            };
+            post_details
+        })
+        .unwrap();
+    ic_cdk::println!("Bet details: {:?}", bet_details);
+
+    // Get Dan bet details for post 1 - v1
+
+    let bet_details = pic
+        .query_call(
+            alice_individual_template_canister_id,
+            dan_principal_id,
+            "get_hot_or_not_bet_details_for_this_post_v1",
+            encode_one(res2).unwrap(),
         )
         .map(|reply_payload| {
             let post_details: BettingStatus = match reply_payload {
