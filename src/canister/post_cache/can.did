@@ -53,6 +53,7 @@ type TopPostsFetchError = variant {
   ExceededMaxNumberOfItemsAllowedInOneRequest;
 };
 service : (PostCacheInitArgs) -> {
+  get_cycle_balance : () -> (nat) query;
   get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed : (
       nat64,
       nat64,

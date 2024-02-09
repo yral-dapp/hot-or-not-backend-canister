@@ -12,8 +12,6 @@ use shared_utils::{
     types::canister_specific::post_cache::error_types::TopPostsFetchError,
 };
 
-//TODO: add method get_cycle_balance in post_cache canister.
-
 mod api;
 mod data_model;
 #[cfg(test)]

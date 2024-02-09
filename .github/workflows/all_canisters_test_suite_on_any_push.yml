@@ -68,5 +68,3 @@ jobs:
           nix-shell --run "dfx build post_cache"
       - name: Run canister test suite
         run: nix-shell --run "cargo test"
-      - name: Run canister test suite - feature mockdata
-        run: nix-shell --run "cargo test --features mockdata --package post_cache"

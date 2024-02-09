@@ -5,7 +5,7 @@ use candid::export_service;
 use data_model::CanisterData;
 use candid::Principal;
 use shared_utils::{canister_specific::platform_orchestrator::types::args::PlatformOrchestratorInitArgs, common::types::wasm::WasmType};
-use crate::data_model::UpgradeCanisterArg;
+use crate::data_model::{UpgradeCanisterArg, CanisterUpgradeStatus};
 
 mod data_model;
 #[cfg(test)]

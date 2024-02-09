@@ -20,12 +20,21 @@ pub async fn upgrade_user_canisters_with_latest_wasm(_version: String, individua
     let mut upgrade_count = 0;
     let mut failed_canister_ids = Vec::new();
 
-    let user_principal_id_to_canister_id_map = CANISTER_DATA.with(|canister_data_ref_cell| {
+    let mut user_principal_id_to_canister_id_vec: Vec<(Principal, Principal)> = CANISTER_DATA.with(|canister_data_ref_cell| {
         canister_data_ref_cell
             .borrow()
             .user_principal_id_to_canister_id_map
             .clone()
+            .into_iter()
+            .collect()
     });
+    
+    CANISTER_DATA.with_borrow(|canister_data| {
+        canister_data.available_canisters.iter().for_each(|canister_id| {
+            user_principal_id_to_canister_id_vec.push((Principal::anonymous(), *canister_id));
+        })
+    });
+
 
     let saved_upgrade_status = CANISTER_DATA.with(|canister_data_ref_cell| {
         canister_data_ref_cell
@@ -37,22 +46,21 @@ pub async fn upgrade_user_canisters_with_latest_wasm(_version: String, individua
     let configuration = CANISTER_DATA
         .with(|canister_data_ref_cell| canister_data_ref_cell.borrow().configuration.clone());
 
-   let upgrade_individual_canister_futures = user_principal_id_to_canister_id_map.iter()
+   let upgrade_individual_canister_futures = user_principal_id_to_canister_id_vec.iter()
     .map(|(user_principal_id, user_canister_id)| {
         recharge_and_upgrade(*user_canister_id, *user_principal_id, saved_upgrade_status.version_number, configuration.clone(), saved_upgrade_status.version.clone(), individual_user_wasm.clone())
     });
 
-    let result_callback = |upgrade_result: Result<Principal, (Principal, String)>| {
+    let result_callback = |upgrade_result: Result<(Principal, Principal), ((Principal, Principal), String)>| {
 
         if upgrade_result.is_err() {
-            let (done_user_principal_id, err) = upgrade_result.err().unwrap();
-            let done_user_canister_id = user_principal_id_to_canister_id_map.get(&done_user_principal_id).unwrap();
+            let ((done_user_principal_id, done_user_canister_id), err) = upgrade_result.err().unwrap();
             ic_cdk::print(format!(
                 "Failed to upgrade canister: {:?} with error: {:?}",
                 done_user_canister_id.to_text(),
                 err
             ));
-            failed_canister_ids.push((done_user_principal_id, *done_user_canister_id, err));
+            failed_canister_ids.push((done_user_principal_id, done_user_canister_id, err));
         }
         
         upgrade_count += 1;
@@ -85,12 +93,12 @@ pub async fn upgrade_user_canisters_with_latest_wasm(_version: String, individua
 }
 
 
-async fn recharge_and_upgrade(user_canister_id: Principal, user_principal_id: Principal, version_number: u64, configuration: Configuration, version: String, individual_user_wasm: Vec<u8>) -> Result<Principal, (Principal, String)> {
-    recharge_canister_if_below_threshold(&user_canister_id).await?;
+async fn recharge_and_upgrade(user_canister_id: Principal, user_principal_id: Principal, version_number: u64, configuration: Configuration, version: String, individual_user_wasm: Vec<u8>) -> Result<(Principal, Principal), ((Principal, Principal), String)> {
+    recharge_canister_if_below_threshold(&user_canister_id).await.map_err(|e| ((user_principal_id, user_canister_id), e))?;
     
-    upgrade_user_canister(&user_principal_id, &user_canister_id, version_number, &configuration, version, individual_user_wasm).await.map_err(|s| (user_principal_id, s))?;
+    upgrade_user_canister(&user_principal_id, &user_canister_id, version_number, &configuration, version, individual_user_wasm).await.map_err(|s| ((user_principal_id, user_canister_id), s))?;
 
-    Ok(user_principal_id)
+    Ok((user_principal_id, user_canister_id))
 }
 
 async fn upgrade_user_canister(
