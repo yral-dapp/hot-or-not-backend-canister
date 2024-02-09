@@ -1,6 +1,6 @@
 use std::{borrow::BorrowMut, str::FromStr, vec};
 use candid::{Principal, CandidType};
-use ic_cdk::{api::{self, call, is_controller, management_canister::{main::{self,  CanisterInstallMode, InstallCodeArgument}, provisional::CanisterSettings}}, caller, id};
+use ic_cdk::{api::{self, call, is_controller, management_canister::{main::{self,  CanisterInstallMode, InstallCodeArgument}, provisional::CanisterSettings}}, call, caller, id};
 use serde::{Deserialize, Serialize};
 use shared_utils::{canister_specific::{individual_user_template, post_cache::types::arg::PostCacheInitArgs, user_index::types::args::UserIndexInitArgs}, common::types::{known_principal::{KnownPrincipalMap, KnownPrincipalType}, wasm::WasmType}, constant::{INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT, NNS_CYCLE_MINTING_CANISTER, POST_CACHE_CANISTER_CYCLES_RECHARGE_AMOUMT, SUBNET_ORCHESTRATOR_CANISTER_INITIAL_CYCLES}};
 
@@ -101,6 +101,11 @@ pub async fn provision_subnet_orchestrator_canister(subnet: Principal) -> Result
     known_principal_map.insert(KnownPrincipalType::CanisterIdUserIndex, subnet_orchestrator_canister_id);
     known_principal_map.insert(KnownPrincipalType::CanisterIdPostCache, post_cache_canister_id);
 
+    CANISTER_DATA.with_borrow_mut(|canister_data| {
+        canister_data.all_post_cache_orchestrator_list.insert(post_cache_canister_id);
+        canister_data.all_subnet_orchestrator_canisters_list.insert(subnet_orchestrator_canister_id);
+        canister_data.subet_orchestrator_with_capacity_left.insert(subnet_orchestrator_canister_id);
+    });
 
     let user_index_init_arg = UserIndexInitArgs {
         known_principal_ids: Some(known_principal_map.clone()),
@@ -134,11 +139,13 @@ pub async fn provision_subnet_orchestrator_canister(subnet: Principal) -> Result
 
     main::install_code(post_cache_install_code_arg).await.unwrap();
 
-    CANISTER_DATA.with_borrow_mut(|canister_data| {
-        canister_data.all_post_cache_orchestrator_list.insert(post_cache_canister_id);
-        canister_data.all_subnet_orchestrator_canisters_list.insert(subnet_orchestrator_canister_id);
-    });
+    //provision pool of canisters
+    let individual_user_template_wasm = CANISTER_DATA.with_borrow(|canister_data| canister_data.wasms.get(&WasmType::IndividualUserWasm).clone()).unwrap();
 
+    let (create_pool_of_individual_canister_res, ): (Result<String, String>, ) = call(subnet_orchestrator_canister_id, "create_pool_of_individual_user_available_canisters", (individual_user_template_wasm.version, individual_user_template_wasm.wasm_blob)).await.unwrap();
+
+    create_pool_of_individual_canister_res.unwrap();
+    
     Ok(subnet_orchestrator_canister_id)
 
 }

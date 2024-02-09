@@ -71,14 +71,15 @@ async fn upgrade_individual_canisters(upgrade_arg: UpgradeCanisterArg) {
                 continue;
             }
         }
-        let res = ic_cdk::notify(
+        let res: Result<(String, ), String> = ic_cdk::call(
                 *subnet_orchestrator, 
                 "start_upgrades_for_individual_canisters", 
                 (
-                    upgrade_arg.wasm_blob.clone(), 
-                    upgrade_arg.version.clone()
+                    upgrade_arg.version.clone(),
+                    upgrade_arg.wasm_blob.clone() 
                 )
             )
+            .await
             .map_err(|e| format!("Failed to start upgrades on {}", subnet_orchestrator));
         
         match res {
@@ -91,6 +92,9 @@ async fn upgrade_individual_canisters(upgrade_arg: UpgradeCanisterArg) {
                 })
             }
         }
+        CANISTER_DATA.with_borrow_mut(|canister_data| {
+            canister_data.last_subnet_canister_upgrade_status.count += 1;
+        })
     }
 }
 
