@@ -1,9 +1,9 @@
-use std::{str::FromStr, vec};
+use std::{borrow::BorrowMut, str::FromStr, vec};
 
 use candid::{Principal, CandidType};
 use ic_cdk::{api::{self, call, is_controller, management_canister::{main::{self,  CanisterInstallMode, InstallCodeArgument}, provisional::CanisterSettings}}, caller, id};
 use serde::{Deserialize, Serialize};
-use shared_utils::{canister_specific::{individual_user_template, post_cache::types::arg::PostCacheInitArgs, user_index::types::args::UserIndexInitArgs}, common::types::{known_principal::{KnownPrincipalMap, KnownPrincipalType}, wasm::WasmType}, constant::{INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT, NNS_CYCLE_MINTING_CANISTER, SUBNET_ORCHESTRATOR_CANISTER_INITIAL_CYCLES}};
+use shared_utils::{canister_specific::{individual_user_template, post_cache::types::arg::PostCacheInitArgs, user_index::types::args::UserIndexInitArgs}, common::types::{known_principal::{KnownPrincipalMap, KnownPrincipalType}, wasm::WasmType}, constant::{INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT, NNS_CYCLE_MINTING_CANISTER, POST_CACHE_CANISTER_CYCLES_RECHARGE_AMOUMT, SUBNET_ORCHESTRATOR_CANISTER_INITIAL_CYCLES}};
 
 use crate::CANISTER_DATA;
 
@@ -87,7 +87,7 @@ pub async fn provision_subnet_orchestrator_canister(subnet: Principal) -> Result
         Principal::from_str(NNS_CYCLE_MINTING_CANISTER).unwrap(), 
         "create_canister",
        (create_canister_arg,),
-        INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT as u64
+        POST_CACHE_CANISTER_CYCLES_RECHARGE_AMOUMT as u64
     )
     .await
     .unwrap();
@@ -135,6 +135,10 @@ pub async fn provision_subnet_orchestrator_canister(subnet: Principal) -> Result
 
     main::install_code(post_cache_install_code_arg).await.unwrap();
 
+    CANISTER_DATA.with_borrow_mut(|canister_data| {
+        canister_data.all_post_cache_orchestrator_list.insert(post_cache_canister_id);
+        canister_data.all_subnet_orchestrator_canisters_list.insert(subnet_orchestrator_canister_id);
+    });
 
     Ok(subnet_orchestrator_canister_id)
 
