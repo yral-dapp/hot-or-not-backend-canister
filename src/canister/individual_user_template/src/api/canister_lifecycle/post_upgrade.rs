@@ -7,7 +7,9 @@ use crate::data_model::memory;
 
 use shared_utils::canister_specific::individual_user_template::types::{
     arg::IndividualUserTemplateInitArgs,
-    hot_or_not::{BetMakerPrincipal, GlobalRoomId, RoomDetailsV1, StablePrincipal},
+    hot_or_not::{
+        BetDirection, BetMakerPrincipal, GlobalBetId, GlobalRoomId, RoomDetailsV1, StablePrincipal,
+    },
 };
 
 use crate::{
@@ -120,29 +122,31 @@ fn migrate_room_bets_details_to_stable_memory_impl() {
         .flatten();
 
     room_details.for_each(|(post_id, slot_id, room_id, room_details)| {
+        let global_room_id = GlobalRoomId(post_id.clone(), slot_id.clone(), room_id.clone());
+
+        room_details.bets_made.iter().for_each(|(bet_maker, bet)| {
+            CANISTER_DATA.with(|canister_data_ref_cell| {
+                let mut canister_data_ref_cell = canister_data_ref_cell.borrow_mut();
+                let global_bet_id =
+                    GlobalBetId(global_room_id.clone(), StablePrincipal(bet_maker.clone()));
+                canister_data_ref_cell
+                    .bet_details_map
+                    .insert(global_bet_id, bet.clone());
+            });
+        });
+
         let room_details_v1 = RoomDetailsV1 {
             bet_outcome: room_details.bet_outcome.clone(),
             room_bets_total_pot: room_details.room_bets_total_pot,
             total_hot_bets: room_details.total_hot_bets,
             total_not_bets: room_details.total_not_bets,
         };
-        let global_room_id = GlobalRoomId(post_id.clone(), slot_id.clone(), room_id.clone());
 
         CANISTER_DATA.with(|canister_data_ref_cell| {
             let mut canister_data_ref_cell = canister_data_ref_cell.borrow_mut();
             canister_data_ref_cell
                 .room_details_map
                 .insert(global_room_id.clone(), room_details_v1);
-        });
-
-        room_details.bets_made.iter().for_each(|(bet_maker, bet)| {
-            CANISTER_DATA.with(|canister_data_ref_cell| {
-                let mut canister_data_ref_cell = canister_data_ref_cell.borrow_mut();
-                let global_bet_id = (global_room_id.clone(), StablePrincipal(bet_maker.clone()));
-                canister_data_ref_cell
-                    .bet_details_map
-                    .insert(global_bet_id, bet.clone());
-            });
         });
     });
 }
