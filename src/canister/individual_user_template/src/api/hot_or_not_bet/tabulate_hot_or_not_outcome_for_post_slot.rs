@@ -20,11 +20,13 @@ pub fn tabulate_hot_or_not_outcome_for_post_slot(
     let post_to_tabulate_results_for = canister_data.all_created_posts.get_mut(&post_id).unwrap();
     let token_balance = &mut canister_data.my_token_balance;
 
-    post_to_tabulate_results_for.tabulate_hot_or_not_outcome_for_slot(
+    post_to_tabulate_results_for.tabulate_hot_or_not_outcome_for_slot_v1(
         &this_canister_id,
         &slot_id,
         token_balance,
         &current_time,
+        &mut canister_data.room_details_map,
+        &mut canister_data.bet_details_map,
     );
 
     inform_participants_of_outcome(post_to_tabulate_results_for, &slot_id);
