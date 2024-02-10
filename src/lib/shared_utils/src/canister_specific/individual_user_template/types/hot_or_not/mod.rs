@@ -428,7 +428,8 @@ impl Post {
             GlobalBetId(end_global_room_id, StablePrincipal(*principal_making_bet));
 
         bet_details_map
-            .range(start_global_bet_id..end_global_bet_id)
+            .range(start_global_bet_id..=end_global_bet_id)
+            .filter(|(global_bet_id, _)| global_bet_id.1 == StablePrincipal(*principal_making_bet))
             .next()
             .is_some()
     }
@@ -874,8 +875,9 @@ impl Post {
 
 #[cfg(test)]
 mod test {
-    use std::time::Duration;
+    use std::{cell::RefCell, time::Duration};
 
+    use ic_stable_structures::memory_manager::{MemoryId, MemoryManager};
     use test_utils::setup::test_constants::{
         get_mock_user_alice_canister_id, get_mock_user_alice_principal_id,
     };
@@ -883,6 +885,7 @@ mod test {
     use crate::canister_specific::individual_user_template::types::post::PostDetailsFromFrontend;
 
     use super::*;
+    pub type Memory = VirtualMemory<DefaultMemoryImpl>;
 
     #[test]
     fn test_get_hot_or_not_betting_status_for_this_post() {
@@ -1973,6 +1976,1187 @@ mod test {
                     .bets_made
                     .get(&Principal::self_authenticating(user_id.to_ne_bytes()))
                     .unwrap();
+
+                assert_eq!(bet_detail.bet_direction, *bet_direction);
+                assert_eq!(bet_detail.amount, *bet_amount);
+                assert_eq!(
+                    match bet_detail.payout {
+                        BetPayout::Calculated(n) => {
+                            n
+                        }
+                        _ => {
+                            0
+                        }
+                    },
+                    *amount_won
+                );
+            });
+    }
+
+    fn setup_room_and_bet_details_map() -> (
+        ic_stable_structures::btreemap::BTreeMap<GlobalRoomId, RoomDetailsV1, Memory>,
+        ic_stable_structures::btreemap::BTreeMap<GlobalBetId, BetDetails, Memory>,
+    ) {
+        const ROOM_DETAILS_MEMORY: MemoryId = MemoryId::new(0);
+        const BET_DETAILS_MEMORY: MemoryId = MemoryId::new(1);
+
+        thread_local! {
+            // The memory manager is used for simulating multiple memories. Given a `MemoryId` it can
+            // return a memory that can be used by stable structures.
+            static MEMORY_MANAGER: RefCell<MemoryManager<DefaultMemoryImpl>> =
+                RefCell::new(MemoryManager::init_with_bucket_size(DefaultMemoryImpl::default(), 1));
+        }
+
+        pub fn get_room_details_memory() -> Memory {
+            MEMORY_MANAGER.with(|m| m.borrow_mut().get(ROOM_DETAILS_MEMORY))
+        }
+        pub fn get_bet_details_memory() -> Memory {
+            MEMORY_MANAGER.with(|m| m.borrow_mut().get(BET_DETAILS_MEMORY))
+        }
+        fn _default_room_details(
+        ) -> ic_stable_structures::btreemap::BTreeMap<GlobalRoomId, RoomDetailsV1, Memory> {
+            ic_stable_structures::btreemap::BTreeMap::init(get_room_details_memory())
+        }
+
+        fn _default_bet_details(
+        ) -> ic_stable_structures::btreemap::BTreeMap<GlobalBetId, BetDetails, Memory> {
+            ic_stable_structures::btreemap::BTreeMap::init(get_bet_details_memory())
+        }
+
+        let room_details_map = _default_room_details();
+        let bet_details_map = _default_bet_details();
+
+        (room_details_map, bet_details_map)
+    }
+
+    #[test]
+    fn test_get_hot_or_not_betting_status_for_this_post_v1() {
+        // A memory for the StableBTreeMap we're using. A new memory should be created for
+        // every additional stable structure.
+
+        let (mut room_details_map, mut bet_details_map) = setup_room_and_bet_details_map();
+        let mut post = Post::new(
+            0,
+            &PostDetailsFromFrontend {
+                is_nsfw: false,
+                description: "Doggos and puppers".into(),
+                hashtags: vec!["doggo".into(), "pupper".into()],
+                video_uid: "abcd#1234".into(),
+                creator_consent_for_inclusion_in_hot_or_not: true,
+            },
+            &SystemTime::now(),
+        );
+
+        let result = post.get_hot_or_not_betting_status_for_this_post_v1(
+            &SystemTime::now()
+                .checked_add(Duration::from_secs(
+                    TOTAL_DURATION_OF_ALL_SLOTS_IN_SECONDS + 1,
+                ))
+                .unwrap(),
+            &Principal::anonymous(),
+            &room_details_map,
+            &bet_details_map,
+        );
+
+        assert_eq!(result, BettingStatus::BettingClosed);
+        let current_time = SystemTime::now();
+
+        let result = post.get_hot_or_not_betting_status_for_this_post_v1(
+            &current_time,
+            &Principal::anonymous(),
+            &room_details_map,
+            &bet_details_map,
+        );
+
+        assert_eq!(
+            result,
+            BettingStatus::BettingOpen {
+                started_at: post.created_at,
+                number_of_participants: 0,
+                ongoing_slot: 1,
+                ongoing_room: 1,
+                has_this_user_participated_in_this_post: None,
+            }
+        );
+
+        let result = post.get_hot_or_not_betting_status_for_this_post_v1(
+            &current_time
+                .checked_add(Duration::from_secs(
+                    DURATION_OF_EACH_SLOT_IN_SECONDS * 2 + 1,
+                ))
+                .unwrap(),
+            &Principal::anonymous(),
+            &room_details_map,
+            &bet_details_map,
+        );
+
+        assert_eq!(
+            result,
+            BettingStatus::BettingOpen {
+                started_at: post.created_at,
+                number_of_participants: 0,
+                ongoing_slot: 3,
+                ongoing_room: 1,
+                has_this_user_participated_in_this_post: None,
+            }
+        );
+
+        let result = post.place_hot_or_not_bet_v1(
+            &get_mock_user_alice_principal_id(),
+            &get_mock_user_alice_canister_id(),
+            100,
+            &BetDirection::Hot,
+            &current_time
+                .checked_add(Duration::from_secs(
+                    DURATION_OF_EACH_SLOT_IN_SECONDS * 2 + 1,
+                ))
+                .unwrap(),
+            &mut room_details_map,
+            &mut bet_details_map,
+        );
+
+        assert!(result.is_ok());
+
+        let result = post.get_hot_or_not_betting_status_for_this_post_v1(
+            &current_time
+                .checked_add(Duration::from_secs(
+                    DURATION_OF_EACH_SLOT_IN_SECONDS * 2 + 1,
+                ))
+                .unwrap(),
+            &get_mock_user_alice_principal_id(),
+            &room_details_map,
+            &bet_details_map,
+        );
+
+        assert_eq!(
+            result,
+            BettingStatus::BettingOpen {
+                started_at: post.created_at,
+                number_of_participants: 1,
+                ongoing_slot: 3,
+                ongoing_room: 1,
+                has_this_user_participated_in_this_post: Some(true),
+            }
+        );
+
+        (100..200).for_each(|num| {
+            let result = post.place_hot_or_not_bet_v1(
+                &Principal::from_slice(&[num]),
+                &Principal::from_slice(&[num]),
+                100,
+                &BetDirection::Hot,
+                &current_time
+                    .checked_add(Duration::from_secs(
+                        DURATION_OF_EACH_SLOT_IN_SECONDS * 2 + 1,
+                    ))
+                    .unwrap(),
+                &mut room_details_map,
+                &mut bet_details_map,
+            );
+
+            if result.is_err() {
+                println!("Error: {:?}", result);
+            }
+            assert!(result.is_ok());
+        });
+
+        let result = post.place_hot_or_not_bet_v1(
+            &Principal::from_slice(&[200]),
+            &Principal::from_slice(&[200]),
+            100,
+            &BetDirection::Hot,
+            &current_time
+                .checked_add(Duration::from_secs(
+                    DURATION_OF_EACH_SLOT_IN_SECONDS * 2 + 1,
+                ))
+                .unwrap(),
+            &mut room_details_map,
+            &mut bet_details_map,
+        );
+
+        assert!(result.is_ok());
+
+        let result = post.get_hot_or_not_betting_status_for_this_post_v1(
+            &current_time
+                .checked_add(Duration::from_secs(
+                    DURATION_OF_EACH_SLOT_IN_SECONDS * 2 + 1,
+                ))
+                .unwrap(),
+            &Principal::from_slice(&[100]),
+            &room_details_map,
+            &bet_details_map,
+        );
+
+        assert_eq!(
+            result,
+            BettingStatus::BettingOpen {
+                started_at: post.created_at,
+                number_of_participants: 2,
+                ongoing_slot: 3,
+                ongoing_room: 2,
+                has_this_user_participated_in_this_post: Some(true),
+            }
+        );
+
+        let result = post.place_hot_or_not_bet_v1(
+            &get_mock_user_alice_principal_id(),
+            &get_mock_user_alice_canister_id(),
+            100,
+            &BetDirection::Hot,
+            &current_time
+                .checked_add(Duration::from_secs(
+                    DURATION_OF_EACH_SLOT_IN_SECONDS * 2 + 1,
+                ))
+                .unwrap(),
+            &mut room_details_map,
+            &mut bet_details_map,
+        );
+
+        assert!(result.is_err());
+
+        let result = post.get_hot_or_not_betting_status_for_this_post_v1(
+            &current_time
+                .checked_add(Duration::from_secs(
+                    DURATION_OF_EACH_SLOT_IN_SECONDS * 2 + 1,
+                ))
+                .unwrap(),
+            &get_mock_user_alice_principal_id(),
+            &room_details_map,
+            &bet_details_map,
+        );
+
+        assert_eq!(
+            result,
+            BettingStatus::BettingOpen {
+                started_at: post.created_at,
+                number_of_participants: 2,
+                ongoing_slot: 3,
+                ongoing_room: 2,
+                has_this_user_participated_in_this_post: Some(true),
+            }
+        );
+
+        let result = post.place_hot_or_not_bet_v1(
+            &get_mock_user_alice_principal_id(),
+            &get_mock_user_alice_canister_id(),
+            100,
+            &BetDirection::Hot,
+            &current_time
+                .checked_add(Duration::from_secs(
+                    DURATION_OF_EACH_SLOT_IN_SECONDS * 4 + 1,
+                ))
+                .unwrap(),
+            &mut room_details_map,
+            &mut bet_details_map,
+        );
+
+        assert!(result.is_err());
+
+        let result = post.get_hot_or_not_betting_status_for_this_post_v1(
+            &current_time
+                .checked_add(Duration::from_secs(
+                    DURATION_OF_EACH_SLOT_IN_SECONDS * 4 + 1,
+                ))
+                .unwrap(),
+            &get_mock_user_alice_principal_id(),
+            &room_details_map,
+            &bet_details_map,
+        );
+
+        assert_eq!(
+            result,
+            BettingStatus::BettingOpen {
+                started_at: post.created_at,
+                number_of_participants: 0,
+                ongoing_slot: 5,
+                ongoing_room: 1,
+                has_this_user_participated_in_this_post: Some(true),
+            }
+        );
+    }
+
+    #[test]
+    fn test_has_this_principal_already_bet_on_this_post_v1() {
+        let (mut room_details_map, mut bet_details_map) = setup_room_and_bet_details_map();
+
+        let mut post = Post::new(
+            0,
+            &PostDetailsFromFrontend {
+                is_nsfw: false,
+                description: "Doggos and puppers".into(),
+                hashtags: vec!["doggo".into(), "pupper".into()],
+                video_uid: "abcd#1234".into(),
+                creator_consent_for_inclusion_in_hot_or_not: true,
+            },
+            &SystemTime::now(),
+        );
+
+        let result = post.has_this_principal_already_bet_on_this_post_v1(
+            1,
+            1,
+            &get_mock_user_alice_principal_id(),
+            &bet_details_map,
+        );
+
+        assert!(!result);
+
+        post.place_hot_or_not_bet_v1(
+            &get_mock_user_alice_principal_id(),
+            &get_mock_user_alice_canister_id(),
+            100,
+            &BetDirection::Hot,
+            &SystemTime::now(),
+            &mut room_details_map,
+            &mut bet_details_map,
+        )
+        .ok();
+
+        let result = post.has_this_principal_already_bet_on_this_post_v1(
+            1,
+            1,
+            &get_mock_user_alice_principal_id(),
+            &bet_details_map,
+        );
+        assert!(result);
+    }
+
+    #[test]
+    fn test_place_hot_or_not_bet_v1() {
+        let (mut room_details_map, mut bet_details_map) = setup_room_and_bet_details_map();
+
+        let mut post = Post::new(
+            0,
+            &PostDetailsFromFrontend {
+                is_nsfw: false,
+                description: "Doggos and puppers".into(),
+                hashtags: vec!["doggo".into(), "pupper".into()],
+                video_uid: "abcd#1234".into(),
+                creator_consent_for_inclusion_in_hot_or_not: true,
+            },
+            &SystemTime::now(),
+        );
+
+        assert!(post.hot_or_not_details.is_some());
+
+        let result = post.place_hot_or_not_bet_v1(
+            &get_mock_user_alice_principal_id(),
+            &get_mock_user_alice_canister_id(),
+            100,
+            &BetDirection::Hot,
+            &SystemTime::now()
+                .checked_add(Duration::from_secs(
+                    TOTAL_DURATION_OF_ALL_SLOTS_IN_SECONDS + 1,
+                ))
+                .unwrap(),
+            &mut room_details_map,
+            &mut bet_details_map,
+        );
+
+        assert_eq!(result, Err(BetOnCurrentlyViewingPostError::BettingClosed));
+
+        let result = post.place_hot_or_not_bet_v1(
+            &get_mock_user_alice_principal_id(),
+            &get_mock_user_alice_canister_id(),
+            100,
+            &BetDirection::Hot,
+            &SystemTime::now(),
+            &mut room_details_map,
+            &mut bet_details_map,
+        );
+
+        assert_eq!(
+            result,
+            Ok(BettingStatus::BettingOpen {
+                started_at: post.created_at,
+                number_of_participants: 1,
+                ongoing_slot: 1,
+                ongoing_room: 1,
+                has_this_user_participated_in_this_post: Some(true)
+            })
+        );
+        let hot_or_not_details = post.hot_or_not_details.clone().unwrap();
+
+        let start_global_room_id = GlobalRoomId(0, 1, 1);
+        let end_global_room_id = GlobalRoomId(0, 2, 1);
+        let start_global_bet_id = GlobalBetId(
+            start_global_room_id,
+            StablePrincipal(Principal::from_slice(&[1])),
+        );
+        let end_global_bet_id = GlobalBetId(
+            end_global_room_id,
+            StablePrincipal(Principal::from_slice(&[1])),
+        );
+        let rooms = room_details_map
+            .range(start_global_room_id..end_global_room_id)
+            .collect::<Vec<_>>();
+        assert_eq!(rooms.len(), 1);
+        let room_details = &rooms[0].1;
+
+        let bets = bet_details_map
+            .range(start_global_bet_id..end_global_bet_id)
+            .collect::<Vec<_>>();
+        assert_eq!(bets.len(), 1);
+        let bet_details = &bets[0].1;
+        assert_eq!(bet_details.amount, 100);
+        assert_eq!(bet_details.bet_direction, BetDirection::Hot);
+
+        assert_eq!(room_details.room_bets_total_pot, 100);
+        assert_eq!(room_details.total_hot_bets, 1);
+        assert_eq!(room_details.total_not_bets, 0);
+        assert_eq!(hot_or_not_details.aggregate_stats.total_amount_bet, 100);
+        assert_eq!(
+            hot_or_not_details.aggregate_stats.total_number_of_hot_bets,
+            1
+        );
+        assert_eq!(
+            hot_or_not_details.aggregate_stats.total_number_of_not_bets,
+            0
+        );
+
+        let result = post.place_hot_or_not_bet_v1(
+            &get_mock_user_alice_principal_id(),
+            &get_mock_user_alice_canister_id(),
+            100,
+            &BetDirection::Hot,
+            &SystemTime::now(),
+            &mut room_details_map,
+            &mut bet_details_map,
+        );
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_tabulate_hot_or_not_outcome_for_slot_case_1_v1() {
+        let (mut room_details_map, mut bet_details_map) = setup_room_and_bet_details_map();
+
+        let post_creation_time = SystemTime::now();
+        let mut post = Post::new(
+            0,
+            &PostDetailsFromFrontend {
+                is_nsfw: false,
+                description: "Doggos and puppers".into(),
+                hashtags: vec!["doggo".into(), "pupper".into()],
+                video_uid: "abcd#1234".into(),
+                creator_consent_for_inclusion_in_hot_or_not: true,
+            },
+            &post_creation_time,
+        );
+        let mut token_balance = TokenBalance::default();
+        let tabulation_canister_id = get_mock_user_alice_canister_id();
+
+        assert!(post.hot_or_not_details.is_some());
+
+        let data_set: Vec<(u64, BetDirection, u64, u64)> = vec![
+            (1, BetDirection::Not, 10, 18),
+            (2, BetDirection::Hot, 100, 0),
+            (3, BetDirection::Hot, 100, 0),
+            (4, BetDirection::Not, 100, 180),
+            (5, BetDirection::Hot, 10, 0),
+            (6, BetDirection::Not, 100, 180),
+            (7, BetDirection::Not, 50, 90),
+            (8, BetDirection::Not, 100, 180),
+            (9, BetDirection::Hot, 50, 0),
+            (10, BetDirection::Not, 50, 90),
+            (11, BetDirection::Not, 100, 180),
+            (12, BetDirection::Not, 10, 18),
+            (13, BetDirection::Hot, 100, 0),
+            (14, BetDirection::Not, 10, 18),
+            (15, BetDirection::Hot, 50, 0),
+            (16, BetDirection::Hot, 10, 0),
+            (17, BetDirection::Hot, 10, 0),
+            (18, BetDirection::Hot, 100, 0),
+            (19, BetDirection::Not, 10, 18),
+            (20, BetDirection::Hot, 50, 0),
+            (21, BetDirection::Hot, 10, 0),
+            (22, BetDirection::Not, 50, 90),
+            (23, BetDirection::Not, 50, 90),
+            (24, BetDirection::Hot, 100, 0),
+            (25, BetDirection::Not, 50, 90),
+            (26, BetDirection::Not, 10, 18),
+            (27, BetDirection::Not, 10, 18),
+            (28, BetDirection::Not, 50, 90),
+            (29, BetDirection::Hot, 50, 0),
+            (30, BetDirection::Not, 100, 180),
+            (31, BetDirection::Not, 50, 90),
+            (32, BetDirection::Not, 50, 90),
+            (33, BetDirection::Hot, 100, 0),
+            (34, BetDirection::Not, 10, 18),
+            (35, BetDirection::Not, 10, 18),
+            (36, BetDirection::Not, 100, 180),
+            (37, BetDirection::Hot, 10, 0),
+            (38, BetDirection::Not, 100, 180),
+            (39, BetDirection::Not, 50, 90),
+            (40, BetDirection::Hot, 100, 0),
+            (41, BetDirection::Hot, 50, 0),
+            (42, BetDirection::Not, 10, 18),
+            (43, BetDirection::Hot, 50, 0),
+            (44, BetDirection::Not, 10, 18),
+            (45, BetDirection::Not, 10, 18),
+            (46, BetDirection::Hot, 100, 0),
+            (47, BetDirection::Hot, 50, 0),
+            (48, BetDirection::Hot, 50, 0),
+            (49, BetDirection::Not, 100, 180),
+            (50, BetDirection::Hot, 10, 0),
+            (51, BetDirection::Not, 50, 90),
+            (52, BetDirection::Hot, 10, 0),
+            (53, BetDirection::Not, 50, 90),
+            (54, BetDirection::Not, 10, 18),
+            (55, BetDirection::Hot, 100, 0),
+            (56, BetDirection::Hot, 50, 0),
+            (57, BetDirection::Not, 50, 90),
+            (58, BetDirection::Not, 10, 18),
+            (59, BetDirection::Not, 50, 90),
+            (60, BetDirection::Hot, 10, 0),
+            (61, BetDirection::Not, 10, 18),
+            (62, BetDirection::Not, 50, 90),
+            (63, BetDirection::Not, 50, 90),
+            (64, BetDirection::Not, 10, 18),
+            (65, BetDirection::Not, 10, 18),
+            (66, BetDirection::Not, 100, 180),
+            (67, BetDirection::Hot, 100, 0),
+            (68, BetDirection::Not, 10, 18),
+            (69, BetDirection::Not, 10, 18),
+            (70, BetDirection::Not, 50, 90),
+            (71, BetDirection::Not, 100, 180),
+            (72, BetDirection::Not, 10, 18),
+            (73, BetDirection::Not, 10, 18),
+            (74, BetDirection::Hot, 10, 0),
+            (75, BetDirection::Not, 10, 18),
+        ];
+
+        data_set
+            .iter()
+            .for_each(|(user_id, bet_direction, bet_amount, _)| {
+                let result = post.place_hot_or_not_bet_v1(
+                    &Principal::self_authenticating(user_id.to_ne_bytes()),
+                    &Principal::self_authenticating(user_id.to_ne_bytes()),
+                    *bet_amount,
+                    bet_direction,
+                    &post_creation_time,
+                    &mut room_details_map,
+                    &mut bet_details_map,
+                );
+                assert!(result.is_ok());
+            });
+
+        let score_tabulation_time = post_creation_time
+            .checked_add(Duration::from_secs(60 * 5))
+            .unwrap();
+
+        post.tabulate_hot_or_not_outcome_for_slot_v1(
+            &tabulation_canister_id,
+            &1,
+            &mut token_balance,
+            &score_tabulation_time,
+            &mut room_details_map,
+            &mut bet_details_map,
+        );
+
+        assert_eq!(token_balance.utility_token_transaction_history.len(), 1);
+        assert_eq!(token_balance.utility_token_balance, 355);
+
+        let global_room_id = GlobalRoomId(0, 1, 1);
+        let room_detail = room_details_map.get(&global_room_id).unwrap();
+
+        assert_eq!(room_detail.bet_outcome, RoomBetPossibleOutcomes::NotWon);
+        assert_eq!(room_detail.room_bets_total_pot, 3550);
+        assert_eq!(room_detail.total_hot_bets, 28);
+        assert_eq!(room_detail.total_not_bets, 47);
+
+        data_set
+            .iter()
+            .for_each(|(user_id, bet_direction, bet_amount, amount_won)| {
+                let global_bet_id = GlobalBetId(
+                    global_room_id,
+                    StablePrincipal(Principal::self_authenticating(user_id.to_ne_bytes())),
+                );
+
+                let bet_detail = bet_details_map.get(&global_bet_id).unwrap();
+
+                assert_eq!(bet_detail.bet_direction, *bet_direction);
+                assert_eq!(bet_detail.amount, *bet_amount);
+                assert_eq!(
+                    match bet_detail.payout {
+                        BetPayout::Calculated(n) => {
+                            n
+                        }
+                        _ => {
+                            0
+                        }
+                    },
+                    *amount_won
+                );
+            });
+
+        let data_set: Vec<(u64, BetDirection, u64, u64)> = vec![
+            (1, BetDirection::Hot, 10, 18),
+            (2, BetDirection::Hot, 50, 90),
+            (3, BetDirection::Hot, 10, 18),
+            (4, BetDirection::Not, 100, 0),
+            (5, BetDirection::Hot, 100, 180),
+            (6, BetDirection::Not, 100, 0),
+            (7, BetDirection::Hot, 50, 90),
+            (8, BetDirection::Hot, 100, 180),
+            (9, BetDirection::Hot, 100, 180),
+            (10, BetDirection::Not, 50, 0),
+            (11, BetDirection::Not, 50, 0),
+            (12, BetDirection::Hot, 50, 90),
+            (13, BetDirection::Hot, 100, 180),
+            (14, BetDirection::Hot, 100, 180),
+            (15, BetDirection::Not, 50, 0),
+            (16, BetDirection::Not, 50, 0),
+            (17, BetDirection::Not, 100, 0),
+            (18, BetDirection::Not, 100, 0),
+            (19, BetDirection::Hot, 100, 180),
+            (20, BetDirection::Not, 10, 0),
+            (21, BetDirection::Hot, 100, 180),
+            (22, BetDirection::Hot, 10, 18),
+            (23, BetDirection::Hot, 10, 18),
+            (24, BetDirection::Hot, 50, 90),
+            (25, BetDirection::Not, 100, 0),
+            (26, BetDirection::Hot, 10, 18),
+            (27, BetDirection::Hot, 100, 180),
+            (28, BetDirection::Hot, 50, 90),
+            (29, BetDirection::Hot, 50, 90),
+            (30, BetDirection::Hot, 10, 18),
+            (31, BetDirection::Hot, 10, 18),
+            (32, BetDirection::Hot, 100, 180),
+            (33, BetDirection::Not, 100, 0),
+            (34, BetDirection::Hot, 50, 90),
+            (35, BetDirection::Hot, 100, 180),
+            (36, BetDirection::Hot, 100, 180),
+            (37, BetDirection::Hot, 50, 90),
+            (38, BetDirection::Not, 10, 0),
+            (39, BetDirection::Hot, 50, 90),
+            (40, BetDirection::Not, 10, 0),
+            (41, BetDirection::Hot, 50, 90),
+            (42, BetDirection::Not, 10, 0),
+            (43, BetDirection::Not, 100, 0),
+            (44, BetDirection::Not, 100, 0),
+            (45, BetDirection::Not, 100, 0),
+            (46, BetDirection::Hot, 100, 180),
+            (47, BetDirection::Not, 50, 0),
+            (48, BetDirection::Hot, 100, 180),
+            (49, BetDirection::Not, 100, 0),
+            (50, BetDirection::Not, 50, 0),
+            (51, BetDirection::Not, 10, 0),
+            (52, BetDirection::Not, 100, 0),
+            (53, BetDirection::Hot, 100, 180),
+            (54, BetDirection::Hot, 10, 18),
+            (55, BetDirection::Not, 100, 0),
+            (56, BetDirection::Not, 100, 0),
+            (57, BetDirection::Hot, 50, 90),
+            (58, BetDirection::Not, 100, 0),
+            (59, BetDirection::Not, 10, 0),
+            (60, BetDirection::Hot, 10, 18),
+            (61, BetDirection::Not, 10, 0),
+            (62, BetDirection::Hot, 50, 90),
+            (63, BetDirection::Hot, 10, 18),
+            (64, BetDirection::Hot, 50, 90),
+            (65, BetDirection::Not, 100, 0),
+            (66, BetDirection::Not, 50, 0),
+            (67, BetDirection::Not, 100, 0),
+            (68, BetDirection::Hot, 10, 18),
+            (69, BetDirection::Hot, 50, 90),
+            (70, BetDirection::Not, 100, 0),
+            (71, BetDirection::Hot, 50, 90),
+            (72, BetDirection::Hot, 50, 90),
+            (73, BetDirection::Not, 50, 0),
+            (74, BetDirection::Not, 50, 0),
+            (75, BetDirection::Not, 50, 0),
+        ];
+
+        // * 1 min into the 2nd hour/2nd slot
+        let post_creation_time = post_creation_time
+            .checked_add(Duration::from_secs(60 * (60 + 1)))
+            .unwrap();
+
+        data_set
+            .iter()
+            .for_each(|(user_id, bet_direction, bet_amount, _)| {
+                let result = post.place_hot_or_not_bet_v1(
+                    &Principal::self_authenticating((user_id + 75).to_ne_bytes()),
+                    &Principal::self_authenticating((user_id + 75).to_ne_bytes()),
+                    *bet_amount,
+                    bet_direction,
+                    &post_creation_time,
+                    &mut room_details_map,
+                    &mut bet_details_map,
+                );
+                assert!(result.is_ok());
+            });
+
+        let score_tabulation_time = post_creation_time
+            .checked_add(Duration::from_secs(60 * 5))
+            .unwrap();
+
+        post.tabulate_hot_or_not_outcome_for_slot_v1(
+            &get_mock_user_alice_canister_id(),
+            &2,
+            &mut token_balance,
+            &score_tabulation_time,
+            &mut room_details_map,
+            &mut bet_details_map,
+        );
+
+        assert_eq!(token_balance.utility_token_transaction_history.len(), 2);
+        assert_eq!(token_balance.utility_token_balance, 355 + 458);
+
+        let global_room_id = GlobalRoomId(0, 2, 1);
+        let room_detail = room_details_map.get(&global_room_id).unwrap();
+
+        assert_eq!(room_detail.bet_outcome, RoomBetPossibleOutcomes::HotWon);
+        assert_eq!(room_detail.room_bets_total_pot, 4580);
+        assert_eq!(room_detail.total_hot_bets, 41);
+        assert_eq!(room_detail.total_not_bets, 34);
+
+        data_set
+            .iter()
+            .for_each(|(user_id, bet_direction, bet_amount, amount_won)| {
+                let global_bet_id = GlobalBetId(
+                    global_room_id,
+                    StablePrincipal(Principal::self_authenticating((user_id + 75).to_ne_bytes())),
+                );
+
+                let bet_detail = bet_details_map.get(&global_bet_id).unwrap();
+
+                assert_eq!(bet_detail.bet_direction, *bet_direction);
+                assert_eq!(bet_detail.amount, *bet_amount);
+                assert_eq!(
+                    match bet_detail.payout {
+                        BetPayout::Calculated(n) => {
+                            n
+                        }
+                        _ => {
+                            0
+                        }
+                    },
+                    *amount_won
+                );
+            });
+    }
+
+    #[test]
+    fn test_tabulate_hot_or_not_outcome_for_slot_case_2_v1() {
+        let (mut room_details_map, mut bet_details_map) = setup_room_and_bet_details_map();
+
+        let post_creation_time = SystemTime::now();
+        let mut post = Post::new(
+            0,
+            &PostDetailsFromFrontend {
+                is_nsfw: false,
+                description: "Doggos and puppers".into(),
+                hashtags: vec!["doggo".into(), "pupper".into()],
+                video_uid: "abcd#1234".into(),
+                creator_consent_for_inclusion_in_hot_or_not: true,
+            },
+            &post_creation_time,
+        );
+        let mut token_balance = TokenBalance::default();
+
+        assert!(post.hot_or_not_details.is_some());
+
+        let data_set: Vec<(u64, BetDirection, u64, u64)> = vec![
+            (1, BetDirection::Not, 10, 18),
+            (2, BetDirection::Hot, 100, 0),
+            (3, BetDirection::Hot, 100, 0),
+            (4, BetDirection::Not, 100, 180),
+            (5, BetDirection::Hot, 10, 0),
+            (6, BetDirection::Not, 100, 180),
+            (7, BetDirection::Not, 50, 90),
+            (8, BetDirection::Not, 100, 180),
+            (9, BetDirection::Hot, 50, 0),
+            (10, BetDirection::Not, 50, 90),
+            (11, BetDirection::Not, 100, 180),
+            (12, BetDirection::Not, 10, 18),
+            (13, BetDirection::Hot, 100, 0),
+            (14, BetDirection::Not, 10, 18),
+            (15, BetDirection::Hot, 50, 0),
+            (16, BetDirection::Hot, 10, 0),
+            (17, BetDirection::Hot, 10, 0),
+            (18, BetDirection::Hot, 100, 0),
+            (19, BetDirection::Not, 10, 18),
+            (20, BetDirection::Hot, 50, 0),
+            (21, BetDirection::Hot, 10, 0),
+            (22, BetDirection::Not, 50, 90),
+            (23, BetDirection::Not, 50, 90),
+            (24, BetDirection::Hot, 100, 0),
+            (25, BetDirection::Not, 50, 90),
+            (26, BetDirection::Not, 10, 18),
+            (27, BetDirection::Not, 10, 18),
+            (28, BetDirection::Not, 50, 90),
+            (29, BetDirection::Hot, 50, 0),
+            (30, BetDirection::Not, 100, 180),
+            (31, BetDirection::Not, 50, 90),
+            (32, BetDirection::Not, 50, 90),
+            (33, BetDirection::Hot, 100, 0),
+            (34, BetDirection::Not, 10, 18),
+            (35, BetDirection::Not, 10, 18),
+            (36, BetDirection::Not, 100, 180),
+            (37, BetDirection::Hot, 10, 0),
+            (38, BetDirection::Not, 100, 180),
+            (39, BetDirection::Not, 50, 90),
+            (40, BetDirection::Hot, 100, 0),
+            (41, BetDirection::Hot, 50, 0),
+            (42, BetDirection::Not, 10, 18),
+            (43, BetDirection::Hot, 50, 0),
+            (44, BetDirection::Not, 10, 18),
+            (45, BetDirection::Not, 10, 18),
+            (46, BetDirection::Hot, 100, 0),
+            (47, BetDirection::Hot, 50, 0),
+            (48, BetDirection::Hot, 50, 0),
+            (49, BetDirection::Not, 100, 180),
+            (50, BetDirection::Hot, 10, 0),
+            (51, BetDirection::Not, 50, 90),
+            (52, BetDirection::Hot, 10, 0),
+            (53, BetDirection::Not, 50, 90),
+            (54, BetDirection::Not, 10, 18),
+            (55, BetDirection::Hot, 100, 0),
+            (56, BetDirection::Hot, 50, 0),
+            (57, BetDirection::Not, 50, 90),
+            (58, BetDirection::Not, 10, 18),
+            (59, BetDirection::Not, 50, 90),
+            (60, BetDirection::Hot, 10, 0),
+            (61, BetDirection::Not, 10, 18),
+            (62, BetDirection::Not, 50, 90),
+            (63, BetDirection::Not, 50, 90),
+            (64, BetDirection::Not, 10, 18),
+            (65, BetDirection::Not, 10, 18),
+            (66, BetDirection::Not, 100, 180),
+            (67, BetDirection::Hot, 100, 0),
+            (68, BetDirection::Not, 10, 18),
+            (69, BetDirection::Not, 10, 18),
+            (70, BetDirection::Not, 50, 90),
+            (71, BetDirection::Not, 100, 180),
+            (72, BetDirection::Not, 10, 18),
+            (73, BetDirection::Not, 10, 18),
+            (74, BetDirection::Hot, 10, 0),
+            (75, BetDirection::Not, 10, 18),
+            (76, BetDirection::Hot, 50, 0),
+            (77, BetDirection::Hot, 50, 0),
+            (78, BetDirection::Not, 100, 180),
+            (79, BetDirection::Not, 100, 180),
+            (80, BetDirection::Hot, 50, 0),
+            (81, BetDirection::Hot, 10, 0),
+            (82, BetDirection::Hot, 50, 0),
+            (83, BetDirection::Not, 10, 18),
+            (84, BetDirection::Not, 50, 90),
+            (85, BetDirection::Not, 10, 18),
+            (86, BetDirection::Not, 10, 18),
+            (87, BetDirection::Hot, 100, 0),
+            (88, BetDirection::Not, 10, 18),
+            (89, BetDirection::Not, 50, 90),
+            (90, BetDirection::Hot, 100, 0),
+            (91, BetDirection::Hot, 100, 0),
+            (92, BetDirection::Hot, 10, 0),
+            (93, BetDirection::Hot, 10, 0),
+            (94, BetDirection::Hot, 100, 0),
+            (95, BetDirection::Hot, 50, 0),
+            (96, BetDirection::Hot, 100, 0),
+            (97, BetDirection::Hot, 50, 0),
+            (98, BetDirection::Hot, 50, 0),
+            (99, BetDirection::Hot, 50, 0),
+            (100, BetDirection::Hot, 50, 0),
+            (101, BetDirection::Not, 10, 18),
+            (102, BetDirection::Not, 50, 90),
+            (103, BetDirection::Not, 10, 18),
+            (104, BetDirection::Hot, 100, 0),
+            (105, BetDirection::Not, 100, 180),
+            (106, BetDirection::Hot, 100, 0),
+            (107, BetDirection::Not, 50, 90),
+            (108, BetDirection::Not, 100, 180),
+            (109, BetDirection::Not, 100, 180),
+            (110, BetDirection::Hot, 50, 0),
+            (111, BetDirection::Hot, 50, 0),
+            (112, BetDirection::Not, 50, 90),
+            (113, BetDirection::Not, 100, 180),
+            (114, BetDirection::Not, 100, 180),
+            (115, BetDirection::Hot, 50, 0),
+            (116, BetDirection::Hot, 50, 0),
+            (117, BetDirection::Hot, 100, 0),
+            (118, BetDirection::Hot, 100, 0),
+            (119, BetDirection::Not, 100, 180),
+            (120, BetDirection::Hot, 10, 0),
+            (121, BetDirection::Not, 100, 180),
+            (122, BetDirection::Not, 10, 18),
+            (123, BetDirection::Not, 10, 18),
+            (124, BetDirection::Not, 50, 90),
+            (125, BetDirection::Hot, 100, 0),
+            (126, BetDirection::Not, 10, 18),
+            (127, BetDirection::Not, 100, 180),
+            (128, BetDirection::Not, 50, 90),
+            (129, BetDirection::Not, 50, 90),
+            (130, BetDirection::Not, 10, 18),
+            (131, BetDirection::Not, 10, 18),
+            (132, BetDirection::Not, 100, 180),
+            (133, BetDirection::Hot, 100, 0),
+            (134, BetDirection::Not, 50, 90),
+            (135, BetDirection::Not, 100, 180),
+            (136, BetDirection::Not, 100, 180),
+            (137, BetDirection::Not, 50, 90),
+            (138, BetDirection::Hot, 10, 0),
+            (139, BetDirection::Not, 50, 90),
+            (140, BetDirection::Hot, 10, 0),
+            (141, BetDirection::Not, 50, 90),
+            (142, BetDirection::Hot, 10, 0),
+            (143, BetDirection::Hot, 100, 0),
+            (144, BetDirection::Hot, 100, 0),
+            (145, BetDirection::Hot, 100, 0),
+            (146, BetDirection::Not, 100, 180),
+            (147, BetDirection::Hot, 50, 0),
+            (148, BetDirection::Not, 100, 180),
+            (149, BetDirection::Hot, 100, 0),
+            (150, BetDirection::Hot, 50, 0),
+        ];
+
+        data_set
+            .iter()
+            .for_each(|(user_id, bet_direction, bet_amount, _)| {
+                let result = post.place_hot_or_not_bet_v1(
+                    &Principal::self_authenticating(user_id.to_ne_bytes()),
+                    &Principal::self_authenticating(user_id.to_ne_bytes()),
+                    *bet_amount,
+                    bet_direction,
+                    &post_creation_time,
+                    &mut room_details_map,
+                    &mut bet_details_map,
+                );
+                assert!(result.is_ok());
+            });
+
+        let score_tabulation_time = post_creation_time
+            .checked_add(Duration::from_secs(60 * 5))
+            .unwrap();
+
+        post.tabulate_hot_or_not_outcome_for_slot_v1(
+            &get_mock_user_alice_canister_id(),
+            &1,
+            &mut token_balance,
+            &score_tabulation_time,
+            &mut room_details_map,
+            &mut bet_details_map,
+        );
+
+        assert_eq!(token_balance.utility_token_transaction_history.len(), 2);
+        assert_eq!(token_balance.utility_token_balance, 487 + 321);
+
+        // * Room 1
+        let global_room_id = GlobalRoomId(0, 1, 1);
+        let room_detail = room_details_map.get(&global_room_id).unwrap();
+
+        assert_eq!(room_detail.bet_outcome, RoomBetPossibleOutcomes::NotWon);
+        assert_eq!(room_detail.room_bets_total_pot, 4870);
+        assert_eq!(room_detail.total_hot_bets, 45);
+        assert_eq!(room_detail.total_not_bets, 55);
+
+        data_set[0..100]
+            .iter()
+            .for_each(|(user_id, bet_direction, bet_amount, amount_won)| {
+                let global_bet_id = GlobalBetId(
+                    global_room_id,
+                    StablePrincipal(Principal::self_authenticating(user_id.to_ne_bytes())),
+                );
+                let bet_detail = bet_details_map.get(&global_bet_id).unwrap();
+
+                assert_eq!(bet_detail.bet_direction, *bet_direction);
+                assert_eq!(bet_detail.amount, *bet_amount);
+                assert_eq!(
+                    match bet_detail.payout {
+                        BetPayout::Calculated(n) => {
+                            n
+                        }
+                        _ => {
+                            0
+                        }
+                    },
+                    *amount_won
+                );
+            });
+
+        // * Room 2
+        let global_room_id = GlobalRoomId(0, 1, 2);
+        let room_detail = room_details_map.get(&global_room_id).unwrap();
+
+        assert_eq!(room_detail.bet_outcome, RoomBetPossibleOutcomes::NotWon);
+        assert_eq!(room_detail.room_bets_total_pot, 3210);
+        assert_eq!(room_detail.total_hot_bets, 20);
+        assert_eq!(room_detail.total_not_bets, 30);
+
+        data_set[100..]
+            .iter()
+            .for_each(|(user_id, bet_direction, bet_amount, amount_won)| {
+                let global_bet_id = GlobalBetId(
+                    global_room_id,
+                    StablePrincipal(Principal::self_authenticating(user_id.to_ne_bytes())),
+                );
+                let bet_detail = bet_details_map.get(&global_bet_id).unwrap();
+
+                assert_eq!(bet_detail.bet_direction, *bet_direction);
+                assert_eq!(bet_detail.amount, *bet_amount);
+                assert_eq!(
+                    match bet_detail.payout {
+                        BetPayout::Calculated(n) => {
+                            n
+                        }
+                        _ => {
+                            0
+                        }
+                    },
+                    *amount_won
+                );
+            });
+    }
+
+    #[test]
+    fn test_tabulate_hot_or_not_outcome_for_slot_case_3_v1() {
+        let (mut room_details_map, mut bet_details_map) = setup_room_and_bet_details_map();
+
+        let post_creation_time = SystemTime::now();
+        let mut post = Post::new(
+            0,
+            &PostDetailsFromFrontend {
+                is_nsfw: false,
+                description: "Doggos and puppers".into(),
+                hashtags: vec!["doggo".into(), "pupper".into()],
+                video_uid: "abcd#1234".into(),
+                creator_consent_for_inclusion_in_hot_or_not: true,
+            },
+            &post_creation_time,
+        );
+        let mut token_balance = TokenBalance::default();
+
+        assert!(post.hot_or_not_details.is_some());
+
+        let data_set: Vec<(u64, BetDirection, u64, u64)> = vec![
+            (1, BetDirection::Not, 10, 9),
+            (2, BetDirection::Hot, 100, 90),
+            (3, BetDirection::Hot, 100, 90),
+            (4, BetDirection::Hot, 100, 90),
+            (5, BetDirection::Hot, 10, 9),
+            (6, BetDirection::Hot, 100, 90),
+            (7, BetDirection::Hot, 50, 45),
+            (8, BetDirection::Not, 100, 90),
+            (9, BetDirection::Hot, 50, 45),
+            (10, BetDirection::Not, 50, 45),
+            (11, BetDirection::Not, 100, 90),
+            (12, BetDirection::Hot, 10, 9),
+            (13, BetDirection::Hot, 100, 90),
+            (14, BetDirection::Not, 10, 9),
+            (15, BetDirection::Hot, 50, 45),
+            (16, BetDirection::Hot, 10, 9),
+            (17, BetDirection::Hot, 10, 9),
+            (18, BetDirection::Hot, 100, 90),
+            (19, BetDirection::Not, 10, 9),
+            (20, BetDirection::Hot, 50, 45),
+            (21, BetDirection::Hot, 10, 9),
+            (22, BetDirection::Hot, 50, 45),
+            (23, BetDirection::Not, 50, 45),
+            (24, BetDirection::Hot, 100, 90),
+            (25, BetDirection::Not, 50, 45),
+            (26, BetDirection::Not, 10, 9),
+            (27, BetDirection::Hot, 10, 9),
+            (28, BetDirection::Hot, 50, 45),
+            (29, BetDirection::Hot, 50, 45),
+            (30, BetDirection::Not, 100, 90),
+            (31, BetDirection::Hot, 50, 45),
+            (32, BetDirection::Not, 50, 45),
+            (33, BetDirection::Hot, 100, 90),
+            (34, BetDirection::Hot, 10, 9),
+            (35, BetDirection::Not, 10, 9),
+            (36, BetDirection::Not, 100, 90),
+            (37, BetDirection::Hot, 10, 9),
+            (38, BetDirection::Not, 100, 90),
+            (39, BetDirection::Not, 50, 45),
+            (40, BetDirection::Hot, 100, 90),
+            (41, BetDirection::Hot, 50, 45),
+            (42, BetDirection::Not, 10, 9),
+            (43, BetDirection::Hot, 50, 45),
+            (44, BetDirection::Not, 10, 9),
+            (45, BetDirection::Not, 10, 9),
+            (46, BetDirection::Hot, 100, 90),
+            (47, BetDirection::Hot, 50, 45),
+            (48, BetDirection::Hot, 50, 45),
+            (49, BetDirection::Not, 100, 90),
+            (50, BetDirection::Hot, 10, 9),
+            (51, BetDirection::Not, 50, 45),
+            (52, BetDirection::Hot, 10, 9),
+            (53, BetDirection::Not, 50, 45),
+            (54, BetDirection::Not, 10, 9),
+            (55, BetDirection::Hot, 100, 90),
+            (56, BetDirection::Hot, 50, 45),
+            (57, BetDirection::Not, 50, 45),
+            (58, BetDirection::Not, 10, 9),
+            (59, BetDirection::Not, 50, 45),
+            (60, BetDirection::Hot, 10, 9),
+            (61, BetDirection::Not, 10, 9),
+            (62, BetDirection::Not, 50, 45),
+            (63, BetDirection::Not, 50, 45),
+            (64, BetDirection::Not, 10, 9),
+            (65, BetDirection::Not, 10, 9),
+            (66, BetDirection::Not, 100, 90),
+            (67, BetDirection::Hot, 100, 90),
+            (68, BetDirection::Not, 10, 9),
+            (69, BetDirection::Not, 10, 9),
+            (70, BetDirection::Not, 50, 45),
+            (71, BetDirection::Not, 100, 90),
+            (72, BetDirection::Not, 10, 9),
+            (73, BetDirection::Not, 10, 9),
+            (74, BetDirection::Hot, 10, 9),
+            (75, BetDirection::Not, 10, 9),
+            (76, BetDirection::Hot, 50, 45),
+            (77, BetDirection::Hot, 50, 45),
+            (78, BetDirection::Not, 100, 90),
+            (79, BetDirection::Not, 100, 90),
+            (80, BetDirection::Hot, 50, 45),
+        ];
+
+        data_set
+            .iter()
+            .for_each(|(user_id, bet_direction, bet_amount, _)| {
+                let result = post.place_hot_or_not_bet_v1(
+                    &Principal::self_authenticating(user_id.to_ne_bytes()),
+                    &Principal::self_authenticating(user_id.to_ne_bytes()),
+                    *bet_amount,
+                    bet_direction,
+                    &post_creation_time,
+                    &mut room_details_map,
+                    &mut bet_details_map,
+                );
+                assert!(result.is_ok());
+            });
+
+        let score_tabulation_time = post_creation_time
+            .checked_add(Duration::from_secs(60 * 5))
+            .unwrap();
+
+        post.tabulate_hot_or_not_outcome_for_slot_v1(
+            &get_mock_user_alice_canister_id(),
+            &1,
+            &mut token_balance,
+            &score_tabulation_time,
+            &mut room_details_map,
+            &mut bet_details_map,
+        );
+
+        assert_eq!(token_balance.utility_token_transaction_history.len(), 1);
+        assert_eq!(token_balance.utility_token_balance, 390);
+
+        let global_room_id = GlobalRoomId(0, 1, 1);
+        let room_detail = room_details_map.get(&global_room_id).unwrap();
+
+        assert_eq!(room_detail.bet_outcome, RoomBetPossibleOutcomes::Draw);
+        assert_eq!(room_detail.room_bets_total_pot, 3900);
+        assert_eq!(room_detail.total_hot_bets, 40);
+        assert_eq!(room_detail.total_not_bets, 40);
+
+        data_set
+            .iter()
+            .for_each(|(user_id, bet_direction, bet_amount, amount_won)| {
+                let global_bet_id = GlobalBetId(
+                    global_room_id,
+                    StablePrincipal(Principal::self_authenticating(user_id.to_ne_bytes())),
+                );
+                let bet_detail = bet_details_map.get(&global_bet_id).unwrap();
 
                 assert_eq!(bet_detail.bet_direction, *bet_direction);
                 assert_eq!(bet_detail.amount, *bet_amount);
