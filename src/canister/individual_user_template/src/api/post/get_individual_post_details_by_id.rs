@@ -37,6 +37,8 @@ pub fn get_individual_post_details_by_id(post_id: u64) -> PostDetailsForFrontend
             },
             api_caller,
             &system_time::get_current_system_time_from_ic(),
+            &canister_data_ref_cell.borrow().room_details_map,
+            &canister_data_ref_cell.borrow().bet_details_map,
         )
     })
 }

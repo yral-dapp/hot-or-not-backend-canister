@@ -10,11 +10,11 @@ pub fn reenqueue_timers_for_pending_bet_outcomes() {
     let current_time = system_time::get_current_system_time_from_ic();
 
     CANISTER_DATA.with(|canister_data_ref_cell| {
-        let canister_data = canister_data_ref_cell.borrow();
+        let mut canister_data = canister_data_ref_cell.borrow_mut();
 
         let posts = get_posts_that_have_pending_outcomes(&canister_data, &current_time);
 
-        reenqueue_timers_for_these_posts(&canister_data, posts, &current_time);
+        reenqueue_timers_for_these_posts(&mut canister_data, posts, &current_time);
     });
 }
 
@@ -41,7 +41,7 @@ fn get_posts_that_have_pending_outcomes(
 }
 
 fn reenqueue_timers_for_these_posts(
-    canister_data: &CanisterData,
+    canister_data: &mut CanisterData,
     post_ids: Vec<u64>,
     current_time: &SystemTime,
 ) {
