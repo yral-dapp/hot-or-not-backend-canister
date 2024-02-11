@@ -64,6 +64,7 @@ fn get_hot_or_not_bet_details_for_this_post_impl(
         request_maker,
         &canister_data.room_details_map,
         &canister_data.bet_details_map,
+        &canister_data.post_principal_map,
     )
 }
 

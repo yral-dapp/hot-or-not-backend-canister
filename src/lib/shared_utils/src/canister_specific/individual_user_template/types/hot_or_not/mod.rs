@@ -332,6 +332,11 @@ impl Post {
             BetDetails,
             VirtualMemory<DefaultMemoryImpl>,
         >,
+        post_principal_map: &ic_stable_structures::btreemap::BTreeMap<
+            (PostId, StablePrincipal),
+            (),
+            VirtualMemory<DefaultMemoryImpl>,
+        >,
     ) -> BettingStatus {
         let betting_status = match current_time_when_request_being_made
             .duration_since(self.created_at)
@@ -379,10 +384,8 @@ impl Post {
                         None
                     } else {
                         Some(self.has_this_principal_already_bet_on_this_post_v1(
-                            currently_ongoing_slot,
-                            global_room_id.2,
                             bet_maker_principal_id,
-                            bet_details_map,
+                            post_principal_map,
                         ))
                     },
                 }
@@ -410,28 +413,14 @@ impl Post {
 
     pub fn has_this_principal_already_bet_on_this_post_v1(
         &self,
-        current_ongoing_slot_id: SlotId,
-        current_ongoing_room_id: RoomId,
         principal_making_bet: &Principal,
-        bet_details_map: &ic_stable_structures::btreemap::BTreeMap<
-            GlobalBetId,
-            BetDetails,
+        post_principal_map: &ic_stable_structures::btreemap::BTreeMap<
+            (PostId, StablePrincipal),
+            (),
             VirtualMemory<DefaultMemoryImpl>,
         >,
     ) -> bool {
-        let start_global_room_id = GlobalRoomId(self.id, 1, 1);
-        let end_global_room_id =
-            GlobalRoomId(self.id, current_ongoing_slot_id, current_ongoing_room_id);
-        let start_global_bet_id =
-            GlobalBetId(start_global_room_id, StablePrincipal(*principal_making_bet));
-        let end_global_bet_id =
-            GlobalBetId(end_global_room_id, StablePrincipal(*principal_making_bet));
-
-        bet_details_map
-            .range(start_global_bet_id..=end_global_bet_id)
-            .filter(|(global_bet_id, _)| global_bet_id.1 == StablePrincipal(*principal_making_bet))
-            .next()
-            .is_some()
+        post_principal_map.contains_key(&(self.id, StablePrincipal(*principal_making_bet)))
     }
 
     // pub fn place_hot_or_not_bet(
@@ -573,6 +562,11 @@ impl Post {
             BetDetails,
             VirtualMemory<DefaultMemoryImpl>,
         >,
+        post_principal_map: &mut ic_stable_structures::btreemap::BTreeMap<
+            (PostId, StablePrincipal),
+            (),
+            VirtualMemory<DefaultMemoryImpl>,
+        >,
     ) -> Result<BettingStatus, BetOnCurrentlyViewingPostError> {
         if *bet_maker_principal_id == Principal::anonymous() {
             return Err(BetOnCurrentlyViewingPostError::UserNotLoggedIn);
@@ -583,6 +577,7 @@ impl Post {
             bet_maker_principal_id,
             room_details_map,
             bet_details_map,
+            post_principal_map,
         );
 
         match betting_status {
@@ -652,6 +647,8 @@ impl Post {
                 let number_of_participants = (num_bets_made + 1) as u8;
                 let ongoing_slot = global_room_id.1;
                 let ongoing_room = global_room_id.2;
+
+                post_principal_map.insert((self.id, StablePrincipal(*bet_maker_principal_id)), ());
 
                 Ok(BettingStatus::BettingOpen {
                     started_at,
@@ -1996,9 +1993,11 @@ pub mod test_hot_or_not {
     pub fn setup_room_and_bet_details_map() -> (
         ic_stable_structures::btreemap::BTreeMap<GlobalRoomId, RoomDetailsV1, Memory>,
         ic_stable_structures::btreemap::BTreeMap<GlobalBetId, BetDetails, Memory>,
+        ic_stable_structures::btreemap::BTreeMap<(PostId, StablePrincipal), (), Memory>,
     ) {
         const ROOM_DETAILS_MEMORY: MemoryId = MemoryId::new(0);
         const BET_DETAILS_MEMORY: MemoryId = MemoryId::new(1);
+        const POST_PRINCIPAL_MEMORY: MemoryId = MemoryId::new(3);
 
         thread_local! {
             // The memory manager is used for simulating multiple memories. Given a `MemoryId` it can
@@ -2013,6 +2012,9 @@ pub mod test_hot_or_not {
         pub fn get_bet_details_memory() -> Memory {
             MEMORY_MANAGER.with(|m| m.borrow_mut().get(BET_DETAILS_MEMORY))
         }
+        pub fn get_post_principal_memory() -> Memory {
+            MEMORY_MANAGER.with(|m| m.borrow_mut().get(POST_PRINCIPAL_MEMORY))
+        }
         fn _default_room_details(
         ) -> ic_stable_structures::btreemap::BTreeMap<GlobalRoomId, RoomDetailsV1, Memory> {
             ic_stable_structures::btreemap::BTreeMap::init(get_room_details_memory())
@@ -2023,10 +2025,17 @@ pub mod test_hot_or_not {
             ic_stable_structures::btreemap::BTreeMap::init(get_bet_details_memory())
         }
 
+        fn _default_post_principal_map(
+        ) -> ic_stable_structures::btreemap::BTreeMap<(PostId, StablePrincipal), (), Memory>
+        {
+            ic_stable_structures::btreemap::BTreeMap::init(get_post_principal_memory())
+        }
+
         let room_details_map = _default_room_details();
         let bet_details_map = _default_bet_details();
+        let post_principal_map = _default_post_principal_map();
 
-        (room_details_map, bet_details_map)
+        (room_details_map, bet_details_map, post_principal_map)
     }
 
     #[test]
@@ -2034,7 +2043,8 @@ pub mod test_hot_or_not {
         // A memory for the StableBTreeMap we're using. A new memory should be created for
         // every additional stable structure.
 
-        let (mut room_details_map, mut bet_details_map) = setup_room_and_bet_details_map();
+        let (mut room_details_map, mut bet_details_map, mut post_principal_map) =
+            setup_room_and_bet_details_map();
         let mut post = Post::new(
             0,
             &PostDetailsFromFrontend {
@@ -2056,6 +2066,7 @@ pub mod test_hot_or_not {
             &Principal::anonymous(),
             &room_details_map,
             &bet_details_map,
+            &post_principal_map,
         );
 
         assert_eq!(result, BettingStatus::BettingClosed);
@@ -2066,6 +2077,7 @@ pub mod test_hot_or_not {
             &Principal::anonymous(),
             &room_details_map,
             &bet_details_map,
+            &post_principal_map,
         );
 
         assert_eq!(
@@ -2088,6 +2100,7 @@ pub mod test_hot_or_not {
             &Principal::anonymous(),
             &room_details_map,
             &bet_details_map,
+            &post_principal_map,
         );
 
         assert_eq!(
@@ -2113,6 +2126,7 @@ pub mod test_hot_or_not {
                 .unwrap(),
             &mut room_details_map,
             &mut bet_details_map,
+            &mut post_principal_map,
         );
 
         assert!(result.is_ok());
@@ -2126,6 +2140,7 @@ pub mod test_hot_or_not {
             &get_mock_user_alice_principal_id(),
             &room_details_map,
             &bet_details_map,
+            &post_principal_map,
         );
 
         assert_eq!(
@@ -2152,6 +2167,7 @@ pub mod test_hot_or_not {
                     .unwrap(),
                 &mut room_details_map,
                 &mut bet_details_map,
+                &mut post_principal_map,
             );
 
             if result.is_err() {
@@ -2172,6 +2188,7 @@ pub mod test_hot_or_not {
                 .unwrap(),
             &mut room_details_map,
             &mut bet_details_map,
+            &mut post_principal_map,
         );
 
         assert!(result.is_ok());
@@ -2185,6 +2202,7 @@ pub mod test_hot_or_not {
             &Principal::from_slice(&[100]),
             &room_details_map,
             &bet_details_map,
+            &post_principal_map,
         );
 
         assert_eq!(
@@ -2210,6 +2228,7 @@ pub mod test_hot_or_not {
                 .unwrap(),
             &mut room_details_map,
             &mut bet_details_map,
+            &mut post_principal_map,
         );
 
         assert!(result.is_err());
@@ -2223,6 +2242,7 @@ pub mod test_hot_or_not {
             &get_mock_user_alice_principal_id(),
             &room_details_map,
             &bet_details_map,
+            &post_principal_map,
         );
 
         assert_eq!(
@@ -2248,6 +2268,7 @@ pub mod test_hot_or_not {
                 .unwrap(),
             &mut room_details_map,
             &mut bet_details_map,
+            &mut post_principal_map,
         );
 
         assert!(result.is_err());
@@ -2261,6 +2282,7 @@ pub mod test_hot_or_not {
             &get_mock_user_alice_principal_id(),
             &room_details_map,
             &bet_details_map,
+            &post_principal_map,
         );
 
         assert_eq!(
@@ -2277,7 +2299,8 @@ pub mod test_hot_or_not {
 
     #[test]
     fn test_has_this_principal_already_bet_on_this_post_v1() {
-        let (mut room_details_map, mut bet_details_map) = setup_room_and_bet_details_map();
+        let (mut room_details_map, mut bet_details_map, mut post_principal_map) =
+            setup_room_and_bet_details_map();
 
         let mut post = Post::new(
             0,
@@ -2292,10 +2315,8 @@ pub mod test_hot_or_not {
         );
 
         let result = post.has_this_principal_already_bet_on_this_post_v1(
-            1,
-            1,
             &get_mock_user_alice_principal_id(),
-            &bet_details_map,
+            &post_principal_map,
         );
 
         assert!(!result);
@@ -2308,21 +2329,21 @@ pub mod test_hot_or_not {
             &SystemTime::now(),
             &mut room_details_map,
             &mut bet_details_map,
+            &mut post_principal_map,
         )
         .ok();
 
         let result = post.has_this_principal_already_bet_on_this_post_v1(
-            1,
-            1,
             &get_mock_user_alice_principal_id(),
-            &bet_details_map,
+            &post_principal_map,
         );
         assert!(result);
     }
 
     #[test]
     fn test_place_hot_or_not_bet_v1() {
-        let (mut room_details_map, mut bet_details_map) = setup_room_and_bet_details_map();
+        let (mut room_details_map, mut bet_details_map, mut post_principal_map) =
+            setup_room_and_bet_details_map();
 
         let mut post = Post::new(
             0,
@@ -2350,6 +2371,7 @@ pub mod test_hot_or_not {
                 .unwrap(),
             &mut room_details_map,
             &mut bet_details_map,
+            &mut post_principal_map,
         );
 
         assert_eq!(result, Err(BetOnCurrentlyViewingPostError::BettingClosed));
@@ -2362,6 +2384,7 @@ pub mod test_hot_or_not {
             &SystemTime::now(),
             &mut room_details_map,
             &mut bet_details_map,
+            &mut post_principal_map,
         );
 
         assert_eq!(
@@ -2421,13 +2444,15 @@ pub mod test_hot_or_not {
             &SystemTime::now(),
             &mut room_details_map,
             &mut bet_details_map,
+            &mut post_principal_map,
         );
         assert!(result.is_err());
     }
 
     #[test]
     fn test_tabulate_hot_or_not_outcome_for_slot_case_1_v1() {
-        let (mut room_details_map, mut bet_details_map) = setup_room_and_bet_details_map();
+        let (mut room_details_map, mut bet_details_map, mut post_principal_map) =
+            setup_room_and_bet_details_map();
 
         let post_creation_time = SystemTime::now();
         let mut post = Post::new(
@@ -2535,6 +2560,7 @@ pub mod test_hot_or_not {
                     &post_creation_time,
                     &mut room_details_map,
                     &mut bet_details_map,
+                    &mut post_principal_map,
                 );
                 assert!(result.is_ok());
             });
@@ -2682,6 +2708,7 @@ pub mod test_hot_or_not {
                     &post_creation_time,
                     &mut room_details_map,
                     &mut bet_details_map,
+                    &mut post_principal_map,
                 );
                 assert!(result.is_ok());
             });
@@ -2738,7 +2765,8 @@ pub mod test_hot_or_not {
 
     #[test]
     fn test_tabulate_hot_or_not_outcome_for_slot_case_2_v1() {
-        let (mut room_details_map, mut bet_details_map) = setup_room_and_bet_details_map();
+        let (mut room_details_map, mut bet_details_map, mut post_principal_map) =
+            setup_room_and_bet_details_map();
 
         let post_creation_time = SystemTime::now();
         let mut post = Post::new(
@@ -2920,6 +2948,7 @@ pub mod test_hot_or_not {
                     &post_creation_time,
                     &mut room_details_map,
                     &mut bet_details_map,
+                    &mut post_principal_map,
                 );
                 assert!(result.is_ok());
             });
@@ -3009,7 +3038,8 @@ pub mod test_hot_or_not {
 
     #[test]
     fn test_tabulate_hot_or_not_outcome_for_slot_case_3_v1() {
-        let (mut room_details_map, mut bet_details_map) = setup_room_and_bet_details_map();
+        let (mut room_details_map, mut bet_details_map, mut post_principal_map) =
+            setup_room_and_bet_details_map();
 
         let post_creation_time = SystemTime::now();
         let mut post = Post::new(
@@ -3121,6 +3151,7 @@ pub mod test_hot_or_not {
                     &post_creation_time,
                     &mut room_details_map,
                     &mut bet_details_map,
+                    &mut post_principal_map,
                 );
                 assert!(result.is_ok());
             });

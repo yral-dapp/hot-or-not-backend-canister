@@ -62,6 +62,7 @@ fn get_posts_of_this_user_profile_with_pagination(
                     &current_time,
                     &canister_data_ref_cell.borrow().room_details_map,
                     &canister_data_ref_cell.borrow().bet_details_map,
+                    &canister_data_ref_cell.borrow().post_principal_map,
                 )
             })
         })

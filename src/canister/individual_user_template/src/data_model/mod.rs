@@ -9,7 +9,7 @@ use shared_utils::{
         follow::FollowData,
         hot_or_not::{
             BetDetails, BetMaker, BetMakerPrincipal, GlobalBetId, GlobalRoomId, PlacedBetDetail,
-            RoomDetailsV1, RoomId, SlotId,
+            RoomDetailsV1, RoomId, SlotId, StablePrincipal,
         },
         post::Post,
         profile::UserProfile,
@@ -21,7 +21,9 @@ use shared_utils::{
     },
 };
 
-use self::memory::{get_bet_details_memory, get_room_details_memory, Memory};
+use self::memory::{
+    get_bet_details_memory, get_post_principal_memory, get_room_details_memory, Memory,
+};
 
 pub mod memory;
 
@@ -34,6 +36,9 @@ pub struct CanisterData {
         ic_stable_structures::btreemap::BTreeMap<GlobalRoomId, RoomDetailsV1, Memory>,
     #[serde(skip, default = "_default_bet_details")]
     pub bet_details_map: ic_stable_structures::btreemap::BTreeMap<GlobalBetId, BetDetails, Memory>,
+    #[serde(skip, default = "_default_post_principal_map")]
+    pub post_principal_map:
+        ic_stable_structures::btreemap::BTreeMap<(PostId, StablePrincipal), (), Memory>,
     pub all_hot_or_not_bets_placed: BTreeMap<(CanisterId, PostId), PlacedBetDetail>,
     pub configuration: IndividualUserConfiguration,
     pub follow_data: FollowData,
@@ -57,12 +62,18 @@ fn _default_bet_details(
     ic_stable_structures::btreemap::BTreeMap::init(get_bet_details_memory())
 }
 
+fn _default_post_principal_map(
+) -> ic_stable_structures::btreemap::BTreeMap<(PostId, StablePrincipal), (), Memory> {
+    ic_stable_structures::btreemap::BTreeMap::init(get_post_principal_memory())
+}
+
 impl Default for CanisterData {
     fn default() -> Self {
         Self {
             all_created_posts: BTreeMap::new(),
             room_details_map: _default_room_details(),
             bet_details_map: _default_bet_details(),
+            post_principal_map: _default_post_principal_map(),
             all_hot_or_not_bets_placed: BTreeMap::new(),
             configuration: IndividualUserConfiguration::default(),
             follow_data: FollowData::default(),
