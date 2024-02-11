@@ -2381,11 +2381,11 @@ mod test {
 
     #[test]
     fn test_recalculate_hot_or_not_feed_score_case_10() {
-        let guard = pprof::ProfilerGuardBuilder::default()
-            .frequency(1000)
-            .blocklist(&["libc", "libgcc", "pthread", "vdso"])
-            .build()
-            .unwrap();
+        // let guard = pprof::ProfilerGuardBuilder::default()
+        //     .frequency(1000)
+        //     .blocklist(&["libc", "libgcc", "pthread", "vdso"])
+        //     .build()
+        //     .unwrap();
         let (
             mut room_details_map,
             mut bet_details_map,
@@ -2424,10 +2424,6 @@ mod test {
         post.view_stats.threshold_view_count = 21_750;
         post.view_stats.average_watch_percentage = 67;
 
-        // println!("start 0");
-        // let actual_start = Instant::now();
-        // let mut start = Instant::now();
-
         (0..6_270).for_each(|number| {
             let result = post.place_hot_or_not_bet_v1(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
@@ -2440,14 +2436,6 @@ mod test {
                 &mut post_principal_map,
                 &mut slot_details_map,
             );
-            // if number % 100 == 0 {
-            //     println!(
-            //         "🧪 Number: {} mins: {}",
-            //         number,
-            //         start.elapsed().as_secs_f64() / 60.0
-            //     );
-            //     start = Instant::now();
-            // }
             if result.is_err() {
                 println!("🧪 Error: {:?}", result);
             }
@@ -2461,12 +2449,6 @@ mod test {
                 .total_number_of_hot_bets,
             6_270
         );
-        // println!(
-        //     "start 1, mins: {}",
-        //     actual_start.elapsed().as_secs_f64() / 60.0
-        // );
-        // let actual_start = Instant::now();
-        // let mut start = Instant::now();
 
         (6_270..14_250).for_each(|number| {
             let result = post.place_hot_or_not_bet_v1(
@@ -2480,20 +2462,8 @@ mod test {
                 &mut post_principal_map,
                 &mut slot_details_map,
             );
-            // if number % 100 == 0 {
-            //     println!(
-            //         "🧪 Number: {} mins: {}",
-            //         number,
-            //         start.elapsed().as_secs_f64() / 60.0
-            //     );
-            //     start = Instant::now();
-            // }
             assert!(result.is_ok());
         });
-        // println!(
-        //     "start 2, mins: {}",
-        //     actual_start.elapsed().as_secs_f64() / 60.0
-        // );
 
         assert_eq!(
             post.hot_or_not_details
@@ -2505,7 +2475,6 @@ mod test {
         );
 
         post.recalculate_hot_or_not_feed_score(&recalculation_time);
-        // println!("start 3");
 
         println!(
             "🧪 Hot or Not feed score: {}",
@@ -2524,10 +2493,10 @@ mod test {
             2_840
         );
 
-        if let Ok(report) = guard.report().build() {
-            let file = File::create("flamegraph.svg").unwrap();
-            report.flamegraph(file).unwrap();
-        };
+        // if let Ok(report) = guard.report().build() {
+        //     let file = File::create("flamegraph.svg").unwrap();
+        //     report.flamegraph(file).unwrap();
+        // };
     }
 
     #[test]
