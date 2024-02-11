@@ -13,7 +13,7 @@ use crate::{
 
 use super::hot_or_not::{
     BetDetails, BettingStatus, GlobalBetId, GlobalRoomId, HotOrNotDetails, RoomDetailsV1,
-    StablePrincipal,
+    SlotDetailsV1, SlotId, StablePrincipal,
 };
 
 #[derive(CandidType, Clone, Deserialize, Debug, Serialize)]
@@ -138,14 +138,14 @@ impl Post {
             RoomDetailsV1,
             VirtualMemory<DefaultMemoryImpl>,
         >,
-        bet_details_map: &ic_stable_structures::btreemap::BTreeMap<
-            GlobalBetId,
-            BetDetails,
-            VirtualMemory<DefaultMemoryImpl>,
-        >,
         post_principal_map: &ic_stable_structures::btreemap::BTreeMap<
             (PostId, StablePrincipal),
             (),
+            VirtualMemory<DefaultMemoryImpl>,
+        >,
+        slot_details_map: &ic_stable_structures::btreemap::BTreeMap<
+            (PostId, SlotId),
+            SlotDetailsV1,
             VirtualMemory<DefaultMemoryImpl>,
         >,
     ) -> PostDetailsForFrontend {
@@ -181,8 +181,8 @@ impl Post {
                     current_time,
                     &caller,
                     room_details_map,
-                    bet_details_map,
                     post_principal_map,
+                    slot_details_map,
                 ))
             } else {
                 None
@@ -455,8 +455,12 @@ mod test {
 
     #[test]
     fn test_recalculate_home_feed_score_case_1() {
-        let (mut room_details_map, mut bet_details_map, mut post_principal_map) =
-            setup_room_and_bet_details_map();
+        let (
+            mut room_details_map,
+            mut bet_details_map,
+            mut post_principal_map,
+            mut slot_details_map,
+        ) = setup_room_and_bet_details_map();
 
         let post_created_at = SystemTime::UNIX_EPOCH
             .checked_add(Duration::from_secs(1_678_423_915))
@@ -497,6 +501,7 @@ mod test {
                 &mut room_details_map,
                 &mut bet_details_map,
                 &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -519,6 +524,7 @@ mod test {
                 &mut room_details_map,
                 &mut bet_details_map,
                 &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -540,8 +546,12 @@ mod test {
 
     #[test]
     fn test_recalculate_home_feed_score_case_2() {
-        let (mut room_details_map, mut bet_details_map, mut post_principal_map) =
-            setup_room_and_bet_details_map();
+        let (
+            mut room_details_map,
+            mut bet_details_map,
+            mut post_principal_map,
+            mut slot_details_map,
+        ) = setup_room_and_bet_details_map();
 
         let post_created_at = SystemTime::UNIX_EPOCH
             .checked_add(Duration::from_secs(1_678_293_841))
@@ -582,6 +592,7 @@ mod test {
                 &mut room_details_map,
                 &mut bet_details_map,
                 &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -604,6 +615,7 @@ mod test {
                 &mut room_details_map,
                 &mut bet_details_map,
                 &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -625,8 +637,12 @@ mod test {
 
     #[test]
     fn test_recalculate_home_feed_score_case_3() {
-        let (mut room_details_map, mut bet_details_map, mut post_principal_map) =
-            setup_room_and_bet_details_map();
+        let (
+            mut room_details_map,
+            mut bet_details_map,
+            mut post_principal_map,
+            mut slot_details_map,
+        ) = setup_room_and_bet_details_map();
 
         let post_created_at = SystemTime::UNIX_EPOCH
             .checked_add(Duration::from_secs(1_678_105_696))
@@ -667,6 +683,7 @@ mod test {
                 &mut room_details_map,
                 &mut bet_details_map,
                 &mut post_principal_map,
+                &mut slot_details_map,
             );
             if result.is_err() {
                 println!("🧪 Error: {:?}", result);
@@ -692,6 +709,7 @@ mod test {
                 &mut room_details_map,
                 &mut bet_details_map,
                 &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -713,8 +731,12 @@ mod test {
 
     #[test]
     fn test_recalculate_home_feed_score_case_4() {
-        let (mut room_details_map, mut bet_details_map, mut post_principal_map) =
-            setup_room_and_bet_details_map();
+        let (
+            mut room_details_map,
+            mut bet_details_map,
+            mut post_principal_map,
+            mut slot_details_map,
+        ) = setup_room_and_bet_details_map();
 
         let post_created_at = SystemTime::UNIX_EPOCH
             .checked_add(Duration::from_secs(1_677_615_537))
@@ -757,6 +779,7 @@ mod test {
                 &mut room_details_map,
                 &mut bet_details_map,
                 &mut post_principal_map,
+                &mut slot_details_map,
             );
             if result.is_err() {
                 println!("🧪 Error: {:?}", result);
@@ -782,6 +805,7 @@ mod test {
                 &mut room_details_map,
                 &mut bet_details_map,
                 &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -803,8 +827,12 @@ mod test {
 
     #[test]
     fn test_recalculate_home_feed_score_case_5() {
-        let (mut room_details_map, mut bet_details_map, mut post_principal_map) =
-            setup_room_and_bet_details_map();
+        let (
+            mut room_details_map,
+            mut bet_details_map,
+            mut post_principal_map,
+            mut slot_details_map,
+        ) = setup_room_and_bet_details_map();
 
         let post_created_at = SystemTime::UNIX_EPOCH
             .checked_add(Duration::from_secs(1_675_311_162))
@@ -847,6 +875,7 @@ mod test {
                 &mut room_details_map,
                 &mut bet_details_map,
                 &mut post_principal_map,
+                &mut slot_details_map,
             );
             if result.is_err() {
                 println!("🧪 Error: {:?}", result);
@@ -872,6 +901,7 @@ mod test {
                 &mut room_details_map,
                 &mut bet_details_map,
                 &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -893,8 +923,12 @@ mod test {
 
     #[test]
     fn test_recalculate_home_feed_score_case_6() {
-        let (mut room_details_map, mut bet_details_map, mut post_principal_map) =
-            setup_room_and_bet_details_map();
+        let (
+            mut room_details_map,
+            mut bet_details_map,
+            mut post_principal_map,
+            mut slot_details_map,
+        ) = setup_room_and_bet_details_map();
 
         let post_created_at = SystemTime::UNIX_EPOCH
             .checked_add(Duration::from_secs(1_678_436_004))
@@ -937,6 +971,7 @@ mod test {
                 &mut room_details_map,
                 &mut bet_details_map,
                 &mut post_principal_map,
+                &mut slot_details_map,
             );
             if result.is_err() {
                 println!("🧪 Error: {:?}", result);
@@ -962,6 +997,7 @@ mod test {
                 &mut room_details_map,
                 &mut bet_details_map,
                 &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -983,8 +1019,12 @@ mod test {
 
     #[test]
     fn test_recalculate_home_feed_score_case_7() {
-        let (mut room_details_map, mut bet_details_map, mut post_principal_map) =
-            setup_room_and_bet_details_map();
+        let (
+            mut room_details_map,
+            mut bet_details_map,
+            mut post_principal_map,
+            mut slot_details_map,
+        ) = setup_room_and_bet_details_map();
 
         let post_created_at = SystemTime::UNIX_EPOCH
             .checked_add(Duration::from_secs(1_678_295_932))
@@ -1027,6 +1067,7 @@ mod test {
                 &mut room_details_map,
                 &mut bet_details_map,
                 &mut post_principal_map,
+                &mut slot_details_map,
             );
             if result.is_err() {
                 println!("🧪 Error: {:?}", result);
@@ -1052,6 +1093,7 @@ mod test {
                 &mut room_details_map,
                 &mut bet_details_map,
                 &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -1073,8 +1115,12 @@ mod test {
 
     #[test]
     fn test_recalculate_home_feed_score_case_8() {
-        let (mut room_details_map, mut bet_details_map, mut post_principal_map) =
-            setup_room_and_bet_details_map();
+        let (
+            mut room_details_map,
+            mut bet_details_map,
+            mut post_principal_map,
+            mut slot_details_map,
+        ) = setup_room_and_bet_details_map();
 
         let post_created_at = SystemTime::UNIX_EPOCH
             .checked_add(Duration::from_secs(1_678_005_696))
@@ -1117,6 +1163,7 @@ mod test {
                 &mut room_details_map,
                 &mut bet_details_map,
                 &mut post_principal_map,
+                &mut slot_details_map,
             );
             if result.is_err() {
                 println!("🧪 Error: {:?}", result);
@@ -1142,6 +1189,7 @@ mod test {
                 &mut room_details_map,
                 &mut bet_details_map,
                 &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -1163,8 +1211,12 @@ mod test {
 
     #[test]
     fn test_recalculate_home_feed_score_case_9() {
-        let (mut room_details_map, mut bet_details_map, mut post_principal_map) =
-            setup_room_and_bet_details_map();
+        let (
+            mut room_details_map,
+            mut bet_details_map,
+            mut post_principal_map,
+            mut slot_details_map,
+        ) = setup_room_and_bet_details_map();
 
         let post_created_at = SystemTime::UNIX_EPOCH
             .checked_add(Duration::from_secs(1_677_396_626))
@@ -1207,6 +1259,7 @@ mod test {
                 &mut room_details_map,
                 &mut bet_details_map,
                 &mut post_principal_map,
+                &mut slot_details_map,
             );
             if result.is_err() {
                 println!("🧪 Error: {:?}", result);
@@ -1232,6 +1285,7 @@ mod test {
                 &mut room_details_map,
                 &mut bet_details_map,
                 &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -1253,8 +1307,12 @@ mod test {
 
     #[test]
     fn test_recalculate_home_feed_score_case_10() {
-        let (mut room_details_map, mut bet_details_map, mut post_principal_map) =
-            setup_room_and_bet_details_map();
+        let (
+            mut room_details_map,
+            mut bet_details_map,
+            mut post_principal_map,
+            mut slot_details_map,
+        ) = setup_room_and_bet_details_map();
 
         let post_created_at = SystemTime::UNIX_EPOCH
             .checked_add(Duration::from_secs(1_673_117_006))
@@ -1297,6 +1355,7 @@ mod test {
                 &mut room_details_map,
                 &mut bet_details_map,
                 &mut post_principal_map,
+                &mut slot_details_map,
             );
             if result.is_err() {
                 println!("🧪 Error: {:?}", result);
@@ -1322,6 +1381,7 @@ mod test {
                 &mut room_details_map,
                 &mut bet_details_map,
                 &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -1343,8 +1403,12 @@ mod test {
 
     #[test]
     fn test_recalculate_hot_or_not_feed_score_case_1() {
-        let (mut room_details_map, mut bet_details_map, mut post_principal_map) =
-            setup_room_and_bet_details_map();
+        let (
+            mut room_details_map,
+            mut bet_details_map,
+            mut post_principal_map,
+            mut slot_details_map,
+        ) = setup_room_and_bet_details_map();
 
         let post_created_at = SystemTime::UNIX_EPOCH
             .checked_add(Duration::from_secs(1_678_423_915))
@@ -1385,6 +1449,7 @@ mod test {
                 &mut room_details_map,
                 &mut bet_details_map,
                 &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -1407,6 +1472,7 @@ mod test {
                 &mut room_details_map,
                 &mut bet_details_map,
                 &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -1442,8 +1508,12 @@ mod test {
 
     #[test]
     fn test_recalculate_hot_or_not_feed_score_case_2() {
-        let (mut room_details_map, mut bet_details_map, mut post_principal_map) =
-            setup_room_and_bet_details_map();
+        let (
+            mut room_details_map,
+            mut bet_details_map,
+            mut post_principal_map,
+            mut slot_details_map,
+        ) = setup_room_and_bet_details_map();
 
         let post_created_at = SystemTime::UNIX_EPOCH
             .checked_add(Duration::from_secs(1_678_293_841))
@@ -1484,6 +1554,7 @@ mod test {
                 &mut room_details_map,
                 &mut bet_details_map,
                 &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -1506,6 +1577,7 @@ mod test {
                 &mut room_details_map,
                 &mut bet_details_map,
                 &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -1541,8 +1613,12 @@ mod test {
 
     #[test]
     fn test_recalculate_hot_or_not_feed_score_case_3() {
-        let (mut room_details_map, mut bet_details_map, mut post_principal_map) =
-            setup_room_and_bet_details_map();
+        let (
+            mut room_details_map,
+            mut bet_details_map,
+            mut post_principal_map,
+            mut slot_details_map,
+        ) = setup_room_and_bet_details_map();
 
         let post_created_at = SystemTime::UNIX_EPOCH
             .checked_add(Duration::from_secs(1_678_105_696))
@@ -1583,6 +1659,7 @@ mod test {
                 &mut room_details_map,
                 &mut bet_details_map,
                 &mut post_principal_map,
+                &mut slot_details_map,
             );
             if result.is_err() {
                 println!("🧪 Error: {:?}", result);
@@ -1608,6 +1685,7 @@ mod test {
                 &mut room_details_map,
                 &mut bet_details_map,
                 &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -1643,14 +1721,12 @@ mod test {
 
     #[test]
     fn test_recalculate_hot_or_not_feed_score_case_4() {
-        let guard = pprof::ProfilerGuardBuilder::default()
-            .frequency(1000)
-            .blocklist(&["libc", "libgcc", "pthread", "vdso"])
-            .build()
-            .unwrap();
-
-        let (mut room_details_map, mut bet_details_map, mut post_principal_map) =
-            setup_room_and_bet_details_map();
+        let (
+            mut room_details_map,
+            mut bet_details_map,
+            mut post_principal_map,
+            mut slot_details_map,
+        ) = setup_room_and_bet_details_map();
 
         let post_created_at = SystemTime::UNIX_EPOCH
             .checked_add(Duration::from_secs(1_677_615_537))
@@ -1693,6 +1769,7 @@ mod test {
                 &mut room_details_map,
                 &mut bet_details_map,
                 &mut post_principal_map,
+                &mut slot_details_map,
             );
             if result.is_err() {
                 println!("🧪 Error: {:?}", result);
@@ -1718,6 +1795,7 @@ mod test {
                 &mut room_details_map,
                 &mut bet_details_map,
                 &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -1749,17 +1827,16 @@ mod test {
                 .current_score,
             5_060
         );
-
-        if let Ok(report) = guard.report().build() {
-            let file = File::create("flamegraph.svg").unwrap();
-            report.flamegraph(file).unwrap();
-        };
     }
 
     #[test]
     fn test_recalculate_hot_or_not_feed_score_case_5() {
-        let (mut room_details_map, mut bet_details_map, mut post_principal_map) =
-            setup_room_and_bet_details_map();
+        let (
+            mut room_details_map,
+            mut bet_details_map,
+            mut post_principal_map,
+            mut slot_details_map,
+        ) = setup_room_and_bet_details_map();
 
         let post_created_at = SystemTime::UNIX_EPOCH
             .checked_add(Duration::from_secs(1_675_311_162))
@@ -1802,6 +1879,7 @@ mod test {
                 &mut room_details_map,
                 &mut bet_details_map,
                 &mut post_principal_map,
+                &mut slot_details_map,
             );
             if result.is_err() {
                 println!("🧪 Error: {:?}", result);
@@ -1827,6 +1905,7 @@ mod test {
                 &mut room_details_map,
                 &mut bet_details_map,
                 &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -1862,8 +1941,12 @@ mod test {
 
     #[test]
     fn test_recalculate_hot_or_not_feed_score_case_6() {
-        let (mut room_details_map, mut bet_details_map, mut post_principal_map) =
-            setup_room_and_bet_details_map();
+        let (
+            mut room_details_map,
+            mut bet_details_map,
+            mut post_principal_map,
+            mut slot_details_map,
+        ) = setup_room_and_bet_details_map();
 
         let post_created_at = SystemTime::UNIX_EPOCH
             .checked_add(Duration::from_secs(1_678_436_004))
@@ -1906,6 +1989,7 @@ mod test {
                 &mut room_details_map,
                 &mut bet_details_map,
                 &mut post_principal_map,
+                &mut slot_details_map,
             );
             if result.is_err() {
                 println!("🧪 Error: {:?}", result);
@@ -1931,6 +2015,7 @@ mod test {
                 &mut room_details_map,
                 &mut bet_details_map,
                 &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -1966,8 +2051,12 @@ mod test {
 
     #[test]
     fn test_recalculate_hot_or_not_feed_score_case_7() {
-        let (mut room_details_map, mut bet_details_map, mut post_principal_map) =
-            setup_room_and_bet_details_map();
+        let (
+            mut room_details_map,
+            mut bet_details_map,
+            mut post_principal_map,
+            mut slot_details_map,
+        ) = setup_room_and_bet_details_map();
 
         let post_created_at = SystemTime::UNIX_EPOCH
             .checked_add(Duration::from_secs(1_678_295_932))
@@ -2010,6 +2099,7 @@ mod test {
                 &mut room_details_map,
                 &mut bet_details_map,
                 &mut post_principal_map,
+                &mut slot_details_map,
             );
             if result.is_err() {
                 println!("🧪 Error: {:?}", result);
@@ -2035,6 +2125,7 @@ mod test {
                 &mut room_details_map,
                 &mut bet_details_map,
                 &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -2070,8 +2161,12 @@ mod test {
 
     #[test]
     fn test_recalculate_hot_or_not_feed_score_case_8() {
-        let (mut room_details_map, mut bet_details_map, mut post_principal_map) =
-            setup_room_and_bet_details_map();
+        let (
+            mut room_details_map,
+            mut bet_details_map,
+            mut post_principal_map,
+            mut slot_details_map,
+        ) = setup_room_and_bet_details_map();
 
         let post_created_at = SystemTime::UNIX_EPOCH
             .checked_add(Duration::from_secs(1_678_005_696))
@@ -2114,6 +2209,7 @@ mod test {
                 &mut room_details_map,
                 &mut bet_details_map,
                 &mut post_principal_map,
+                &mut slot_details_map,
             );
             if result.is_err() {
                 println!("🧪 Error: {:?}", result);
@@ -2139,6 +2235,7 @@ mod test {
                 &mut room_details_map,
                 &mut bet_details_map,
                 &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -2174,8 +2271,12 @@ mod test {
 
     #[test]
     fn test_recalculate_hot_or_not_feed_score_case_9() {
-        let (mut room_details_map, mut bet_details_map, mut post_principal_map) =
-            setup_room_and_bet_details_map();
+        let (
+            mut room_details_map,
+            mut bet_details_map,
+            mut post_principal_map,
+            mut slot_details_map,
+        ) = setup_room_and_bet_details_map();
 
         let post_created_at = SystemTime::UNIX_EPOCH
             .checked_add(Duration::from_secs(1_677_396_626))
@@ -2218,6 +2319,7 @@ mod test {
                 &mut room_details_map,
                 &mut bet_details_map,
                 &mut post_principal_map,
+                &mut slot_details_map,
             );
             if result.is_err() {
                 println!("🧪 Error: {:?}", result);
@@ -2243,6 +2345,7 @@ mod test {
                 &mut room_details_map,
                 &mut bet_details_map,
                 &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -2278,8 +2381,17 @@ mod test {
 
     #[test]
     fn test_recalculate_hot_or_not_feed_score_case_10() {
-        let (mut room_details_map, mut bet_details_map, mut post_principal_map) =
-            setup_room_and_bet_details_map();
+        let guard = pprof::ProfilerGuardBuilder::default()
+            .frequency(1000)
+            .blocklist(&["libc", "libgcc", "pthread", "vdso"])
+            .build()
+            .unwrap();
+        let (
+            mut room_details_map,
+            mut bet_details_map,
+            mut post_principal_map,
+            mut slot_details_map,
+        ) = setup_room_and_bet_details_map();
 
         let post_created_at = SystemTime::UNIX_EPOCH
             .checked_add(Duration::from_secs(1_673_117_006))
@@ -2326,6 +2438,7 @@ mod test {
                 &mut room_details_map,
                 &mut bet_details_map,
                 &mut post_principal_map,
+                &mut slot_details_map,
             );
             // if number % 100 == 0 {
             //     println!(
@@ -2365,6 +2478,7 @@ mod test {
                 &mut room_details_map,
                 &mut bet_details_map,
                 &mut post_principal_map,
+                &mut slot_details_map,
             );
             // if number % 100 == 0 {
             //     println!(
@@ -2409,6 +2523,11 @@ mod test {
                 .current_score,
             2_840
         );
+
+        if let Ok(report) = guard.report().build() {
+            let file = File::create("flamegraph.svg").unwrap();
+            report.flamegraph(file).unwrap();
+        };
     }
 
     #[test]

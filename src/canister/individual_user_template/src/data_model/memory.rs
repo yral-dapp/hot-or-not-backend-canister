@@ -13,6 +13,7 @@ const UPGRADES: MemoryId = MemoryId::new(0);
 const ROOM_DETAILS_MEMORY: MemoryId = MemoryId::new(1);
 const BET_DETAILS_MEMORY: MemoryId = MemoryId::new(2);
 const POST_PRINCIPAL_MEMORY: MemoryId = MemoryId::new(3);
+const SLOT_DETAILS_MEMORY: MemoryId = MemoryId::new(4);
 
 pub type Memory = VirtualMemory<DefaultMemoryImpl>;
 
@@ -37,6 +38,10 @@ pub fn get_bet_details_memory() -> Memory {
 
 pub fn get_post_principal_memory() -> Memory {
     MEMORY_MANAGER.with(|m| m.borrow_mut().get(POST_PRINCIPAL_MEMORY))
+}
+
+pub fn get_slot_details_memory() -> Memory {
+    MEMORY_MANAGER.with(|m| m.borrow_mut().get(SLOT_DETAILS_MEMORY))
 }
 
 pub fn init_memory_manager() {
