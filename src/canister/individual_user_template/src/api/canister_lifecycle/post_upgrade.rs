@@ -132,6 +132,13 @@ fn migrate_room_bets_details_to_stable_memory_impl() {
                     .bet_details_map
                     .insert(global_bet_id, bet.clone());
             });
+
+            CANISTER_DATA.with(|canister_data_ref_cell| {
+                let mut canister_data_ref_cell = canister_data_ref_cell.borrow_mut();
+                canister_data_ref_cell
+                    .post_principal_map
+                    .insert((post_id.clone(), StablePrincipal(bet_maker.clone())), ());
+            });
         });
 
         let room_details_v1 = RoomDetailsV1 {

@@ -17,6 +17,7 @@ ciborium = { workspace = true }
 
 [dev-dependencies]
 test_utils = { workspace = true }
+pprof = { version = "0.13", features = ["flamegraph"] }
 
 [features]
 mockdata = []
