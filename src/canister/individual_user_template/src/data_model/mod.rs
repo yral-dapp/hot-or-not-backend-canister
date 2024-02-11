@@ -9,7 +9,7 @@ use shared_utils::{
         follow::FollowData,
         hot_or_not::{
             BetDetails, BetMaker, BetMakerPrincipal, GlobalBetId, GlobalRoomId, PlacedBetDetail,
-            RoomDetailsV1, RoomId, SlotId, StablePrincipal,
+            RoomDetailsV1, RoomId, SlotDetailsV1, SlotId, StablePrincipal,
         },
         post::Post,
         profile::UserProfile,
@@ -22,7 +22,8 @@ use shared_utils::{
 };
 
 use self::memory::{
-    get_bet_details_memory, get_post_principal_memory, get_room_details_memory, Memory,
+    get_bet_details_memory, get_post_principal_memory, get_room_details_memory,
+    get_slot_details_memory, Memory,
 };
 
 pub mod memory;
@@ -39,6 +40,9 @@ pub struct CanisterData {
     #[serde(skip, default = "_default_post_principal_map")]
     pub post_principal_map:
         ic_stable_structures::btreemap::BTreeMap<(PostId, StablePrincipal), (), Memory>,
+    #[serde(skip, default = "_default_slot_details_map")]
+    pub slot_details_map:
+        ic_stable_structures::btreemap::BTreeMap<(PostId, SlotId), SlotDetailsV1, Memory>,
     pub all_hot_or_not_bets_placed: BTreeMap<(CanisterId, PostId), PlacedBetDetail>,
     pub configuration: IndividualUserConfiguration,
     pub follow_data: FollowData,
@@ -67,6 +71,11 @@ fn _default_post_principal_map(
     ic_stable_structures::btreemap::BTreeMap::init(get_post_principal_memory())
 }
 
+fn _default_slot_details_map(
+) -> ic_stable_structures::btreemap::BTreeMap<(PostId, SlotId), SlotDetailsV1, Memory> {
+    ic_stable_structures::btreemap::BTreeMap::init(get_slot_details_memory())
+}
+
 impl Default for CanisterData {
     fn default() -> Self {
         Self {
@@ -74,6 +83,7 @@ impl Default for CanisterData {
             room_details_map: _default_room_details(),
             bet_details_map: _default_bet_details(),
             post_principal_map: _default_post_principal_map(),
+            slot_details_map: _default_slot_details_map(),
             all_hot_or_not_bets_placed: BTreeMap::new(),
             configuration: IndividualUserConfiguration::default(),
             follow_data: FollowData::default(),

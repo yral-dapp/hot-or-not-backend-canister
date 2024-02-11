@@ -71,6 +71,7 @@ fn receive_bet_from_bet_makers_canister_impl(
         &mut canister_data.room_details_map,
         &mut canister_data.bet_details_map,
         &mut canister_data.post_principal_map,
+        &mut canister_data.slot_details_map,
     )
 }
 

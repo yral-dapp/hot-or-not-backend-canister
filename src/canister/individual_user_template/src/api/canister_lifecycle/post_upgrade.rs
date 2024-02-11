@@ -7,7 +7,8 @@ use crate::data_model::memory;
 use shared_utils::canister_specific::individual_user_template::types::{
     arg::IndividualUserTemplateInitArgs,
     hot_or_not::{
-        BetDirection, BetMakerPrincipal, GlobalBetId, GlobalRoomId, RoomDetailsV1, StablePrincipal,
+        BetDirection, BetMakerPrincipal, GlobalBetId, GlobalRoomId, RoomDetailsV1, SlotDetailsV1,
+        StablePrincipal,
     },
 };
 
@@ -122,7 +123,6 @@ fn migrate_room_bets_details_to_stable_memory_impl() {
 
     room_details.for_each(|(post_id, slot_id, room_id, room_details)| {
         let global_room_id = GlobalRoomId(post_id.clone(), slot_id.clone(), room_id.clone());
-
         room_details.bets_made.iter().for_each(|(bet_maker, bet)| {
             CANISTER_DATA.with(|canister_data_ref_cell| {
                 let mut canister_data_ref_cell = canister_data_ref_cell.borrow_mut();
@@ -153,6 +153,31 @@ fn migrate_room_bets_details_to_stable_memory_impl() {
             canister_data_ref_cell
                 .room_details_map
                 .insert(global_room_id.clone(), room_details_v1);
+        });
+
+        CANISTER_DATA.with(|canister_data_ref_cell| {
+            let mut canister_data_ref_cell = canister_data_ref_cell.borrow_mut();
+            let global_slot_id = (post_id.clone(), slot_id.clone());
+            match canister_data_ref_cell.slot_details_map.get(&global_slot_id) {
+                Some(slot_details) => {
+                    if slot_details.active_room_id < *room_id {
+                        canister_data_ref_cell.slot_details_map.insert(
+                            global_slot_id,
+                            SlotDetailsV1 {
+                                active_room_id: room_id.clone(),
+                            },
+                        );
+                    }
+                }
+                None => {
+                    canister_data_ref_cell.slot_details_map.insert(
+                        global_slot_id,
+                        SlotDetailsV1 {
+                            active_room_id: room_id.clone(),
+                        },
+                    );
+                }
+            }
         });
     });
 }
