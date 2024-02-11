@@ -1,0 +1,27 @@
+type CanisterUpgradeStatus = record {
+  failures : vec record { principal; text };
+  count : nat64;
+  upgrade_arg : UpgradeCanisterArg;
+};
+type PlatformOrchestratorInitArgs = record { version : text };
+type Result = variant { Ok : principal; Err : text };
+type Result_1 = variant { Ok : text; Err : text };
+type UpgradeCanisterArg = record {
+  version : text;
+  canister : WasmType;
+  wasm_blob : vec nat8;
+};
+type WasmType = variant {
+  IndividualUserWasm;
+  PostCacheWasm;
+  SubnetOrchestratorWasm;
+};
+service : (PlatformOrchestratorInitArgs) -> {
+  get_next_available_subnet : () -> (principal) query;
+  get_subnet_last_upgrade_status : () -> (CanisterUpgradeStatus) query;
+  get_version : () -> (text) query;
+  provision_subnet_orchestrator_canister : (principal) -> (Result);
+  subnet_orchestrator_maxed_out : () -> ();
+  upgrade_canister : (UpgradeCanisterArg) -> (Result_1);
+  upload_wasms : (WasmType, vec nat8) -> (Result_1);
+}

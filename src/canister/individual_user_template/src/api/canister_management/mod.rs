@@ -2,6 +2,8 @@ use ic_cdk::api::stable::stable_size;
 
 use crate::CANISTER_DATA;
 
+pub mod update_profile_owner;
+
 #[candid::candid_method(query)]
 #[ic_cdk::query]
 pub fn get_stable_memory_size() -> u32 {

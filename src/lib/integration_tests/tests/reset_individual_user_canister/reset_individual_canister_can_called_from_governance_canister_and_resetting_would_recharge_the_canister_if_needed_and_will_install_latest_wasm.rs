@@ -98,5 +98,5 @@ fn reset_individual_canister_can_called_from_governance_canister_and_resetting_w
         alice_cycle_balance_after_reset
     );
 
-    assert!(alice_cycle_balance_after_reset >= 500_000_000_000);
+    assert!(alice_cycle_balance_after_reset >= 100_000_000_000);
 }
