@@ -26,4 +26,4 @@ char_escaped=$(printf "%s" "$char" | sed 's/../\\&/g')
 
 # Create a shell script with the escaped hexadecimal string
 printf "(variant {PostCacheWasm}, blob \"%s\")"  "$char_escaped" > argument
-dfx canister call platform_orchestrator upload_wasms --argument-file argument --network=ic --identity ravibazz-ic
+dfx canister call platform_orchestrator upload_wasms --argument-file argument --network=ic 
