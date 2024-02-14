@@ -1,10 +1,10 @@
 use ic_cdk::api::call::{self, CallResult};
+use ic_cdk_macros::update;
 use shared_utils::common::types::known_principal::KnownPrincipalType;
 
 use crate::CANISTER_DATA;
 
-#[ic_cdk::update]
-#[candid::candid_method(update)]
+#[update]
 async fn backup_all_individual_user_canisters() {
     let api_caller = ic_cdk::caller();
 

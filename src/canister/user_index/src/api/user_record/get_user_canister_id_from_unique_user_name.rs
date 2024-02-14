@@ -1,9 +1,9 @@
 use candid::Principal;
+use ic_cdk_macros::query;
 
 use crate::{data_model::CanisterData, CANISTER_DATA};
 
-#[ic_cdk::query]
-#[candid::candid_method(query)]
+#[query]
 fn get_user_canister_id_from_unique_user_name(user_name: String) -> Option<Principal> {
     CANISTER_DATA.with(|canister_data_ref_cell| {
         get_user_canister_id_from_unique_user_name_impl(user_name, &canister_data_ref_cell.borrow())

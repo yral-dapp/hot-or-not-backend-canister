@@ -1,10 +1,10 @@
 use candid::Principal;
+use ic_cdk_macros::update;
 use shared_utils::types::canister_specific::user_index::error_types::SetUniqueUsernameError;
 
 use crate::{data_model::CanisterData, CANISTER_DATA};
 
-#[ic_cdk::update]
-#[candid::candid_method(update)]
+#[update]
 fn update_index_with_unique_user_name_corresponding_to_user_principal_id(
     unique_user_name: String,
     user_principal_id: Principal,

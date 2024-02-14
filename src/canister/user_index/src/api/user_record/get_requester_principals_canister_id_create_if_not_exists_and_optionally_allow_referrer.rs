@@ -1,10 +1,10 @@
 use crate::{util::canister_management::create_users_canister, CANISTER_DATA};
 use candid::Principal;
 use ic_cdk::api::call;
+use ic_cdk_macros::update;
 use shared_utils::{common::{types::{known_principal::KnownPrincipalType, wasm::{CanisterWasm, WasmType}}, utils::task::run_task_concurrently}, constant::{INDIVIDUAL_USER_CANISTER_SUBNET_BATCH_SIZE, INDIVIDUAL_USER_CANISTER_SUBNET_MAX_CAPACITY, INDIVIDUAL_USER_CANISTER_SUBNET_THREESHOLD}};
 
-#[ic_cdk::update]
-#[candid::candid_method(update)]
+#[update]
 async fn get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer(
     referrer: Option<Principal>,
 ) -> Principal {

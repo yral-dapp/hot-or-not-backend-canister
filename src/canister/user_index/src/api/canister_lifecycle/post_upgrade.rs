@@ -1,5 +1,6 @@
 use ciborium::de;
 
+use ic_cdk_macros::post_upgrade;
 use ic_stable_structures::Memory;
 use shared_utils::{common::utils::system_time, canister_specific::user_index::types::args::UserIndexInitArgs};
 
@@ -8,7 +9,7 @@ use crate::{
     CANISTER_DATA,
 };
 
-#[ic_cdk::post_upgrade]
+#[post_upgrade]
 fn post_upgrade() {
     restore_data_from_stable_memory();
     update_version_from_args();
