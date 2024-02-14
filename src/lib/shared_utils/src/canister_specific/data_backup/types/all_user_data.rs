@@ -4,7 +4,7 @@ use std::{
 };
 
 use candid::{CandidType, Decode, Deserialize, Encode, Principal};
-use ic_stable_structures::{BoundedStorable, Storable};
+use ic_stable_structures::{storable::Bound, Storable};
 
 use crate::canister_specific::individual_user_template::types::{
     post::Post, profile::UserProfile, token::TokenBalance,
@@ -25,12 +25,11 @@ impl Storable for AllUserData {
     fn from_bytes(bytes: Cow<[u8]>) -> Self {
         Decode!(&bytes, Self).unwrap()
     }
-}
 
-impl BoundedStorable for AllUserData {
-    // * 100 kB = 100_000 Bytes
-    const MAX_SIZE: u32 = 100_000;
-    const IS_FIXED_SIZE: bool = false;
+    const BOUND: Bound = Bound::Bounded { 
+        max_size: 100_000, // 100kb
+        is_fixed_size: false
+    };
 }
 
 #[derive(Deserialize, CandidType, Default, Debug)]
