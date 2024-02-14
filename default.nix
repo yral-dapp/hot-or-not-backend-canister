@@ -7,8 +7,8 @@ let
 in
 dfx-env.overrideAttrs (old: {
   nativeBuildInputs = with pkgs; old.nativeBuildInputs ++
-    [ 
-      rustup pkg-config openssl protobuf cmake cachix killall jq coreutils bc python3Full 
+    [
+      rustup pkg-config openssl protobuf cmake cachix killall jq coreutils bc python3Full
     ] ++ (if pkgs.stdenv.isDarwin then [
       darwin.apple_sdk.frameworks.Foundation
       pkgs.darwin.libiconv
