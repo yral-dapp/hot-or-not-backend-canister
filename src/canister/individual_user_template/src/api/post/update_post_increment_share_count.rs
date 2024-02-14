@@ -1,9 +1,10 @@
+use ic_cdk_macros::update;
+
 use crate::CANISTER_DATA;
 
 use super::update_scores_and_share_with_post_cache_if_difference_beyond_threshold::update_scores_and_share_with_post_cache_if_difference_beyond_threshold;
 
-#[ic_cdk::update]
-#[candid::candid_method(update)]
+#[update]
 fn update_post_increment_share_count(id: u64) -> u64 {
     let response = CANISTER_DATA.with(|canister_data_ref_cell| {
         let mut post_to_update = canister_data_ref_cell

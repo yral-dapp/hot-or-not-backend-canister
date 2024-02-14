@@ -1,4 +1,5 @@
 use ic_cdk::api::management_canister::{main, provisional::CanisterIdRecord};
+use ic_cdk_macros::update;
 use shared_utils::{
     common::types::known_principal::KnownPrincipalType,
     constant::INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT,
@@ -6,8 +7,7 @@ use shared_utils::{
 
 use crate::CANISTER_DATA;
 
-#[ic_cdk::update]
-#[candid::candid_method(update)]
+#[update]
 async fn return_cycles_to_user_index_canister(cycle_amount: Option<u128>) {
     let api_caller = ic_cdk::caller();
 

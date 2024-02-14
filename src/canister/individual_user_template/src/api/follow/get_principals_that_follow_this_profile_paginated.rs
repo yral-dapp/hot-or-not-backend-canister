@@ -2,14 +2,14 @@ use std::ops::Bound::Included;
 
 use crate::{data_model::CanisterData, CANISTER_DATA};
 
+use ic_cdk_macros::query;
 use shared_utils::canister_specific::individual_user_template::types::follow::{
     FollowEntryDetail, FollowEntryId,
 };
 
 pub const MAX_FOLLOW_ENTRIES_PER_PAGE: usize = 10;
 
-#[ic_cdk::query]
-#[candid::candid_method(query)]
+#[query]
 pub fn get_principals_that_follow_this_profile_paginated(
     last_index_received: Option<u64>,
 ) -> Vec<(FollowEntryId, FollowEntryDetail)> {

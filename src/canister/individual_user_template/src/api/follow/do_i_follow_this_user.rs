@@ -1,12 +1,12 @@
 use candid::Principal;
+use ic_cdk_macros::query;
 use shared_utils::canister_specific::individual_user_template::types::{
     arg::FolloweeArg, error::FollowAnotherUserProfileError, follow::FollowEntryDetail,
 };
 
 use crate::{data_model::CanisterData, CANISTER_DATA};
 
-#[ic_cdk::query]
-#[candid::candid_method(query)]
+#[query]
 fn do_i_follow_this_user(arg: FolloweeArg) -> Result<bool, FollowAnotherUserProfileError> {
     let current_caller = ic_cdk::caller();
 

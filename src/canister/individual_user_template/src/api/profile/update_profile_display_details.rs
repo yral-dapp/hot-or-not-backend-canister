@@ -1,5 +1,6 @@
 use crate::CANISTER_DATA;
 use candid::CandidType;
+use ic_cdk_macros::update;
 use shared_utils::canister_specific::individual_user_template::types::profile::{
     UserProfileDetailsForFrontend, UserProfileUpdateDetailsFromFrontend,
 };
@@ -11,8 +12,7 @@ pub enum UpdateProfileDetailsError {
 
 /// # Access Control
 /// Only the user whose profile details are stored in this canister can update their details.
-#[ic_cdk::update]
-#[candid::candid_method(update)]
+#[update]
 fn update_profile_display_details(
     user_profile_details: UserProfileUpdateDetailsFromFrontend,
 ) -> Result<UserProfileDetailsForFrontend, UpdateProfileDetailsError> {

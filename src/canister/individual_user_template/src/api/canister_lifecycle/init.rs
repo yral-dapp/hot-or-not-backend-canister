@@ -1,11 +1,11 @@
 use crate::{data_model::CanisterData, CANISTER_DATA};
+use ic_cdk_macros::init;
 use shared_utils::{
     canister_specific::individual_user_template::types::arg::IndividualUserTemplateInitArgs,
     common::timer::send_metrics::enqueue_timer_for_calling_metrics_rest_api,
 };
 
-#[ic_cdk::init]
-#[candid::candid_method(init)]
+#[init]
 fn init(init_args: IndividualUserTemplateInitArgs) {
     CANISTER_DATA.with(|canister_data_ref_cell| {
         let mut data = canister_data_ref_cell.borrow_mut();

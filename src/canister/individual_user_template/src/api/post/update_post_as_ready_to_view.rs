@@ -1,3 +1,4 @@
+use ic_cdk_macros::update;
 use shared_utils::common::types::{
     known_principal::KnownPrincipalType, top_posts::post_score_index_item::PostStatus,
 };
@@ -6,8 +7,7 @@ use crate::CANISTER_DATA;
 
 use super::send_update_post_cache::send_update_post_cache;
 
-#[ic_cdk::update]
-#[candid::candid_method(update)]
+#[update]
 fn update_post_as_ready_to_view(id: u64) {
     let api_caller = ic_cdk::caller();
 

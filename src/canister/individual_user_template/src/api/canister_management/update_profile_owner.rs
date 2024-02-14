@@ -1,11 +1,11 @@
 use candid::Principal;
 use ic_cdk::api::{self, is_controller};
+use ic_cdk_macros::update;
 
 use crate::CANISTER_DATA;
 
 
-#[ic_cdk::update]
-#[candid::candid_method]
+#[update]
 pub async fn update_profile_owner(user_id: Option<Principal>) -> Result<(), String>{
 
     if !is_controller(&api::caller()) {

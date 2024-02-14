@@ -18,8 +18,7 @@ use shared_utils::{
 
 use crate::{data_model::CanisterData, CANISTER_DATA};
 
-#[ic_cdk::update]
-#[candid::candid_method(update)]
+#[update]
 fn check_and_update_scores_and_share_with_post_cache_if_difference_beyond_threshold(
     post_ids: Vec<u64>,
 ) {
