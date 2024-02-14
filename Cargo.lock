@@ -1077,6 +1077,7 @@ dependencies = [
  "candid",
  "ciborium",
  "ic-cdk",
+ "ic-cdk-macros",
  "ic-stable-structures",
  "serde",
  "shared_utils",
@@ -1110,6 +1111,7 @@ version = "0.1.0"
 dependencies = [
  "candid",
  "ic-cdk",
+ "ic-cdk-macros",
  "ic-cdk-timers",
  "serde",
  "shared_utils",

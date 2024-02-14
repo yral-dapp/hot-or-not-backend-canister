@@ -1,4 +1,5 @@
 use ciborium::de;
+use ic_cdk_macros::post_upgrade;
 use ic_stable_structures::Memory;
 
 use crate::{data_model::memory, CANISTER_DATA};
@@ -6,7 +7,7 @@ use crate::{data_model::memory, CANISTER_DATA};
  
 
 
-#[ic_cdk::post_upgrade]
+#[post_upgrade]
 pub fn post_upgrade() {
    let heap_data = memory::get_upgrades_memory();
    let mut heap_data_len_bytes = [0; 4];
