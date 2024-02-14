@@ -5,7 +5,6 @@ use crate::{
     },
     CANISTER_DATA,
 };
-use ciborium::ser;
 use ic_cdk::api::stable;
 use ic_stable_structures::{memory_manager::MemoryId, writer::Writer, Memory};
 
@@ -68,7 +67,7 @@ fn receive_and_save_snaphot(offset: u64, state_bytes: Vec<u8>) {
 #[ic_cdk::update]
 #[candid::candid_method(update)]
 fn load_snapshot(length: u64) {
-    let mut snapshot_memory = get_snapshot_memory();
+    let snapshot_memory = get_snapshot_memory();
 
     let mut state_bytes: Vec<u8> = vec![0; length as usize];
     snapshot_memory.read(0, &mut state_bytes);
