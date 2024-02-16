@@ -25,7 +25,7 @@ impl Storable for WasmType {
         wasm_type
     }
 
-    const BOUND: Bound = Bound::Bounded { max_size: 100, is_fixed_size: true };
+    const BOUND: Bound = Bound::Bounded { max_size: 19, is_fixed_size: true };
 }
 
 
