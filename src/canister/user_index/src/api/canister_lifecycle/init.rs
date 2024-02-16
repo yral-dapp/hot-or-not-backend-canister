@@ -1,9 +1,9 @@
+use ic_cdk_macros::init;
 use shared_utils::canister_specific::user_index::types::args::UserIndexInitArgs;
 
 use crate::{data_model::CanisterData, CANISTER_DATA};
 
-#[ic_cdk::init]
-#[candid::candid_method(init)]
+#[init]
 fn init(init_args: UserIndexInitArgs) {
     CANISTER_DATA.with(|canister_data_ref_cell| {
         let mut data = canister_data_ref_cell.borrow_mut();

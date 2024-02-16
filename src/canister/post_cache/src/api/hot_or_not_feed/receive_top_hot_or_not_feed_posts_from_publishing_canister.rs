@@ -1,3 +1,4 @@
+use ic_cdk_macros::update;
 use shared_utils::common::types::top_posts::post_score_index_item::{
     PostScoreIndexItem, PostScoreIndexItemV1,
 };
@@ -10,8 +11,7 @@ use crate::{
     CANISTER_DATA,
 };
 
-#[ic_cdk::update]
-#[candid::candid_method(update)]
+#[update]
 fn receive_top_hot_or_not_feed_posts_from_publishing_canister(
     top_posts_from_publishing_canister: Vec<PostScoreIndexItemV1>,
 ) {

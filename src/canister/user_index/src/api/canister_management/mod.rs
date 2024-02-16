@@ -1,8 +1,6 @@
-
-use std::borrow::{Borrow, Cow};
 use ic_cdk::{api::{call::CallResult, is_controller, management_canister::{main::{canister_status, CanisterStatusResponse, CanisterInstallMode}, provisional::CanisterIdRecord}}, caller};
 use candid::Principal;
-use ic_stable_structures::{storable::Blob, Storable};
+use ic_cdk_macros::{query, update};
 use shared_utils::{canister_specific::individual_user_template::types::arg::IndividualUserTemplateInitArgs, common::{types::{known_principal::KnownPrincipalType, wasm::{CanisterWasm, WasmType}}, utils::task::run_task_concurrently}};
 
 use crate::{CANISTER_DATA, util::canister_management};
@@ -13,15 +11,13 @@ pub mod create_pool_of_available_canisters;
 pub mod get_subnet_available_capacity;
 
 
-#[candid::candid_method(update)]
-#[ic_cdk::update]
+#[update]
 pub async fn get_user_canister_status(canister_id: Principal) -> CallResult<(CanisterStatusResponse,)>{
     canister_status(CanisterIdRecord {canister_id}).await
 }
 
 
-#[candid::candid_method(update)]
-#[ic_cdk::update]
+#[update]
 pub async fn set_permission_to_upgrade_individual_canisters(flag: bool) -> String {
     
     if !is_controller(&caller()) {
@@ -34,8 +30,7 @@ pub async fn set_permission_to_upgrade_individual_canisters(flag: bool) -> Strin
     return "Success".to_string()
 }
 
-#[candid::candid_method(update)]
-#[ic_cdk::update]
+#[update]
 async fn start_upgrades_for_individual_canisters(version: String, individual_user_wasm: Vec<u8>) -> String {
     
     if !is_controller(&caller()) {
@@ -55,16 +50,14 @@ async fn start_upgrades_for_individual_canisters(version: String, individual_use
     "Success".to_string()
 }
 
-#[ic_cdk::query]
-#[candid::candid_method(query)]
+#[query]
 pub fn get_list_of_available_canisters() -> Vec<Principal> {
     CANISTER_DATA.with(|canister_data_ref|{
         canister_data_ref.borrow().available_canisters.clone().into_iter().collect()
     })
 }
 
-#[ic_cdk::query]
-#[candid::candid_method(query)]
+#[query]
 pub fn validate_reset_user_individual_canisters(_canisters: Vec<Principal>) -> Result<String, String> {
     let caller_id = caller();
     let governance_canister_id = CANISTER_DATA.with(|canister_data_ref| {
@@ -79,8 +72,7 @@ pub fn validate_reset_user_individual_canisters(_canisters: Vec<Principal>) -> R
 }
 
 
-#[ic_cdk::update]
-#[candid::candid_method(update)]
+#[update]
 pub async fn reset_user_individual_canisters(canisters: Vec<Principal>) -> Result<String, String> {
     let caller_id = caller();
     let governance_canister_id = CANISTER_DATA.with(|canister_data_ref| {

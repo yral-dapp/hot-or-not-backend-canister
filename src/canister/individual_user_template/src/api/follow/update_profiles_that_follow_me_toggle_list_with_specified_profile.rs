@@ -1,4 +1,5 @@
 use candid::{CandidType, Deserialize, Principal};
+use ic_cdk_macros::update;
 use shared_utils::canister_specific::individual_user_template::types::{
     error::FollowAnotherUserProfileError, follow::FollowEntryDetail,
 };
@@ -15,8 +16,7 @@ pub struct FollowerArg {
 
 /// # Access Control
 /// Only allow calls from canisters of this project
-#[ic_cdk::update]
-#[candid::candid_method(update)]
+#[update]
 async fn update_profiles_that_follow_me_toggle_list_with_specified_profile(
     arg: FollowerArg,
 ) -> Result<bool, FollowAnotherUserProfileError> {

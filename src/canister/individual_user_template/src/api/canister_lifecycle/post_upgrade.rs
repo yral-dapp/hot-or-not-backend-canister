@@ -1,5 +1,6 @@
 use std::{time::Duration, borrow::BorrowMut};
 use ciborium::de;
+use ic_cdk_macros::post_upgrade;
 use ic_stable_structures::Memory;
 
 use crate::data_model::memory;
@@ -15,7 +16,7 @@ use crate::{
 };
 
 
-#[ic_cdk::post_upgrade]
+#[post_upgrade]
 fn post_upgrade() {
     restore_data_from_stable_memory();
     save_upgrade_args_to_memory();

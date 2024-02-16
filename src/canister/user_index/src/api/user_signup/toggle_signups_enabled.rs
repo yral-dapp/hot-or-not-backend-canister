@@ -1,11 +1,11 @@
 use candid::Principal;
+use ic_cdk_macros::update;
 use shared_utils::common::types::known_principal::KnownPrincipalType;
 
 use crate::{CANISTER_DATA, data_model::CanisterData};
 
 
-#[ic_cdk::update]
-#[candid::candid_method(update)]
+#[update]
 fn toggle_signups_enabled() -> Result<(), String> {
     let api_caller = ic_cdk::caller();
 

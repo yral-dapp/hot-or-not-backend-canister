@@ -1,8 +1,9 @@
 use std::cell::RefCell;
 
-use candid::{export_service, Principal};
+use candid::Principal;
 use data_model::{canister_upgrade::UpgradeStatus, CanisterData};
 use ic_cdk::api::{management_canister::main::{CanisterInstallMode, CanisterStatusResponse}, call::CallResult};
+use ic_cdk_macros::export_candid;
 use shared_utils::{
     canister_specific::user_index::types::args::UserIndexInitArgs,
     common::types::known_principal::KnownPrincipalType,
@@ -11,16 +12,10 @@ use shared_utils::{
 
 mod api;
 mod data_model;
-#[cfg(test)]
-mod test;
 mod util;
 
 thread_local! {
     static CANISTER_DATA: RefCell<CanisterData> = RefCell::default();
 }
 
-#[ic_cdk::query(name = "__get_candid_interface_tmp_hack")]
-fn export_candid() -> String {
-    export_service!();
-    __export_service()
-}
+export_candid!();

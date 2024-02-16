@@ -1,10 +1,10 @@
 use candid::Principal;
+use ic_cdk_macros::update;
 use shared_utils::common::types::known_principal::KnownPrincipalType;
 
 use crate::CANISTER_DATA;
 
-#[ic_cdk::update]
-#[candid::candid_method(update)]
+#[update]
 fn receive_principals_i_follow_from_data_backup_canister(
     principals_i_follow_chunk_vec: Vec<Principal>,
 ) {
