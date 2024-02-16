@@ -32,21 +32,12 @@ fn save_snapshot_json() -> u32 {
         let canister_data_snapshot =
             CanisterDataForSnapshot::from(&*canister_data_ref_cell.borrow());
 
-        ic_cdk::println!(
-            "serde jsonn {:?}",
-            serde_json::to_string_pretty(&canister_data_snapshot).unwrap()
-        );
-
-        // serde_json::to_writer(&mut state_bytes, &canister_data_snapshot);
         let serde_str = serde_json::to_string(&canister_data_snapshot).unwrap();
         state_bytes = serde_str.as_bytes().to_vec();
     });
 
     let len = state_bytes.len() as u32;
 
-    if stable::stable_size() == 0 {
-        memory::init_memory_manager();
-    }
     let mut snapshot_memory = get_snapshot_memory();
     let mut writer = Writer::new(&mut snapshot_memory, 0);
     writer.write(&len.to_le_bytes()).unwrap();
@@ -70,9 +61,6 @@ fn download_snapshot(offset: u64, length: u64) -> Vec<u8> {
 #[ic_cdk::update(guard = "is_reclaim_canister_id")]
 #[candid::candid_method(update)]
 fn receive_and_save_snaphot(offset: u64, state_bytes: Vec<u8>) {
-    if stable::stable_size() == 0 {
-        memory::init_memory_manager();
-    }
     let mut snapshot_memory = get_snapshot_memory();
 
     let mut writer = Writer::new(&mut snapshot_memory, offset);
