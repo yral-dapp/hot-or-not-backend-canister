@@ -1,9 +1,9 @@
-use std::{borrow::Cow, cmp::Ordering, collections::BTreeMap, ops::Bound, time::SystemTime};
+use std::{borrow::Cow, cmp::Ordering, collections::BTreeMap, time::SystemTime};
 
 use candid::{CandidType, Decode, Deserialize, Encode, Principal};
 use ic_cdk::api::management_canister::provisional::CanisterId;
 use ic_stable_structures::{
-    memory_manager::VirtualMemory, BoundedStorable, DefaultMemoryImpl, Storable,
+    memory_manager::VirtualMemory, storable::Bound, DefaultMemoryImpl, Storable,
 };
 use serde::Serialize;
 
@@ -124,10 +124,11 @@ impl Storable for SlotDetailsV1 {
     fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
         Decode!(bytes.as_ref(), Self).unwrap()
     }
-}
-impl BoundedStorable for SlotDetailsV1 {
-    const MAX_SIZE: u32 = MAX_SLOT_DETAILS_VALUE_SIZE;
-    const IS_FIXED_SIZE: bool = true;
+
+    const BOUND: Bound = Bound::Bounded {
+        max_size: MAX_SLOT_DETAILS_VALUE_SIZE,
+        is_fixed_size: false,
+    };
 }
 
 #[derive(CandidType, Clone, Deserialize, Default, Debug, Serialize)]
@@ -147,11 +148,11 @@ impl Storable for RoomDetailsV1 {
     fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
         Decode!(bytes.as_ref(), Self).unwrap()
     }
-}
 
-impl BoundedStorable for RoomDetailsV1 {
-    const MAX_SIZE: u32 = MAX_ROOM_DETAILS_VALUE_SIZE;
-    const IS_FIXED_SIZE: bool = true;
+    const BOUND: Bound = Bound::Bounded {
+        max_size: MAX_ROOM_DETAILS_VALUE_SIZE,
+        is_fixed_size: false,
+    };
 }
 
 pub type BetMaker = Principal;
@@ -173,11 +174,11 @@ impl Storable for BetDetails {
     fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
         Decode!(bytes.as_ref(), Self).unwrap()
     }
-}
 
-impl BoundedStorable for BetDetails {
-    const MAX_SIZE: u32 = MAX_BET_DETAILS_VALUE_SIZE;
-    const IS_FIXED_SIZE: bool = false;
+    const BOUND: Bound = Bound::Bounded {
+        max_size: MAX_BET_DETAILS_VALUE_SIZE,
+        is_fixed_size: false,
+    };
 }
 
 #[derive(CandidType, Clone, Deserialize, Debug, Serialize, Ord, PartialOrd, Eq, PartialEq)]
@@ -197,11 +198,11 @@ impl Storable for StablePrincipal {
     fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
         Decode!(bytes.as_ref(), Self).unwrap()
     }
-}
 
-impl BoundedStorable for StablePrincipal {
-    const MAX_SIZE: u32 = 60;
-    const IS_FIXED_SIZE: bool = false;
+    const BOUND: Bound = Bound::Bounded {
+        max_size: 60,
+        is_fixed_size: false,
+    };
 }
 
 pub type BetMakerPrincipal = StablePrincipal;
@@ -219,11 +220,11 @@ impl Storable for GlobalRoomId {
     fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
         Decode!(bytes.as_ref(), Self).unwrap()
     }
-}
 
-impl BoundedStorable for GlobalRoomId {
-    const MAX_SIZE: u32 = 50;
-    const IS_FIXED_SIZE: bool = true;
+    const BOUND: Bound = Bound::Bounded {
+        max_size: 50,
+        is_fixed_size: false,
+    };
 }
 
 #[derive(
@@ -239,11 +240,11 @@ impl Storable for GlobalBetId {
     fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
         Decode!(bytes.as_ref(), Self).unwrap()
     }
-}
 
-impl BoundedStorable for GlobalBetId {
-    const MAX_SIZE: u32 = 100;
-    const IS_FIXED_SIZE: bool = false;
+    const BOUND: Bound = Bound::Bounded {
+        max_size: 100,
+        is_fixed_size: false,
+    };
 }
 
 #[derive(Clone, Deserialize, Debug, CandidType, Serialize, Default)]
