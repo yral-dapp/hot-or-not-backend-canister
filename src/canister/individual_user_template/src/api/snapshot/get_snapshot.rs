@@ -6,6 +6,7 @@ use crate::{
     CANISTER_DATA,
 };
 use candid::Principal;
+use ic_cdk_macros::{update, query};
 use ic_cdk::api::stable;
 use ic_stable_structures::{memory_manager::MemoryId, writer::Writer, Memory};
 use shared_utils::constant::RECLAIM_CANISTER_PRINCIPAL_ID;
@@ -23,8 +24,7 @@ pub fn is_reclaim_canister_id() -> Result<(), String> {
     }
 }
 
-#[ic_cdk::update(guard = "is_reclaim_canister_id")]
-#[candid::candid_method(update)]
+#[update(guard = "is_reclaim_canister_id")]
 fn save_snapshot_json() -> u32 {
     let mut state_bytes = vec![];
 
@@ -46,8 +46,7 @@ fn save_snapshot_json() -> u32 {
     len
 }
 
-#[ic_cdk::query(guard = "is_reclaim_canister_id")]
-#[candid::candid_method(query)]
+#[query(guard = "is_reclaim_canister_id")]
 fn download_snapshot(offset: u64, length: u64) -> Vec<u8> {
     let snapshot_memory = MEMORY_MANAGER.with(|m| m.borrow_mut().get(MemoryId::new(5)));
 
@@ -58,8 +57,7 @@ fn download_snapshot(offset: u64, length: u64) -> Vec<u8> {
     state_bytes
 }
 
-#[ic_cdk::update(guard = "is_reclaim_canister_id")]
-#[candid::candid_method(update)]
+#[update(guard = "is_reclaim_canister_id")]
 fn receive_and_save_snaphot(offset: u64, state_bytes: Vec<u8>) {
     let mut snapshot_memory = get_snapshot_memory();
 
@@ -67,8 +65,7 @@ fn receive_and_save_snaphot(offset: u64, state_bytes: Vec<u8>) {
     writer.write(&state_bytes).unwrap();
 }
 
-#[ic_cdk::update(guard = "is_reclaim_canister_id")]
-#[candid::candid_method(update)]
+#[update(guard = "is_reclaim_canister_id")]
 fn load_snapshot(length: u64) {
     let snapshot_memory = get_snapshot_memory();
 
