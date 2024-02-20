@@ -1,11 +1,11 @@
+use ic_cdk_macros::update;
 use shared_utils::common::types::{
     known_principal::KnownPrincipalType, top_posts::post_score_index::PostScoreIndex,
 };
 
 use crate::{data_model::CanisterData, CANISTER_DATA};
 
-#[ic_cdk::update]
-#[candid::candid_method(update)]
+#[update]
 fn remove_all_feed_entries() {
     let api_caller = ic_cdk::caller();
 

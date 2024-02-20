@@ -1,5 +1,5 @@
 use std::{collections::HashSet, time::{SystemTime, UNIX_EPOCH}, borrow::Cow};
-use ic_stable_structures::{StableBTreeMap, StableLog, Storable, BoundedStorable};
+use ic_stable_structures::{StableBTreeMap, StableLog, Storable, storable::Bound};
 use ciborium::de;
 
 
@@ -83,6 +83,8 @@ impl Storable for CanisterUpgradeStatus {
         let canister_upgrade_log: CanisterUpgradeStatus = de::from_reader(bytes.as_ref()).unwrap();
         canister_upgrade_log
     }
+
+    const BOUND: Bound = Bound::Unbounded;
 }
 
 impl Default for CanisterUpgradeStatus {

@@ -1,6 +1,7 @@
 
 use candid::Principal;
-use ic_cdk::{api::{is_controller, management_canister::{main::{deposit_cycles, install_code, CanisterInstallMode, InstallCodeArgument}, provisional::CanisterIdRecord}}, caller};
+use ic_cdk::{api::{is_controller, management_canister::{main::{deposit_cycles, CanisterInstallMode, InstallCodeArgument}, provisional::CanisterIdRecord}}, caller};
+use ic_cdk_macros::update;
 use shared_utils::{
     canister_specific::{
         post_cache::types::arg::PostCacheInitArgs, 
@@ -8,7 +9,7 @@ use shared_utils::{
     },
     common::{
         types::wasm::{CanisterWasm, WasmType},
-        utils::task::run_task_concurrently
+        utils::{task::run_task_concurrently, upgrade_canister::upgrade_canister_util}
     },
     constant::{
         POST_CACHE_CANISTER_CYCLES_RECHARGE_AMOUMT, 
@@ -21,8 +22,7 @@ use shared_utils::{
 use crate::{data_model::{CanisterUpgradeStatus, UpgradeCanisterArg}, CANISTER_DATA};
 
 
-#[ic_cdk::update]
-#[candid::candid_method(update)]
+#[update]
 pub async fn upgrade_canister(upgrade_arg: UpgradeCanisterArg) -> Result<String, String> {
     
     if !is_controller(&caller()) {
@@ -211,38 +211,38 @@ async fn recharge_post_cache_canister_if_needed(canister_id: Principal) -> Resul
 
 
 async fn upgrade_subnet_post_cache_canister(canister_id: Principal, wasm: Vec<u8>, version: String) -> Result<(), String> {
-    install_code(
-        InstallCodeArgument {
-            mode: CanisterInstallMode::Upgrade,
-            canister_id,
-            wasm_module: wasm,
-            arg: candid::encode_one( PostCacheInitArgs {
-                version,
-                upgrade_version_number: None,
-                known_principal_ids: None,
-            })
-            .unwrap()
-        }
-    )
+    let install_code_arg = InstallCodeArgument {
+        mode: CanisterInstallMode::Upgrade,
+        canister_id,
+        wasm_module: wasm,
+        arg: candid::encode_one( PostCacheInitArgs {
+            version,
+            upgrade_version_number: None,
+            known_principal_ids: None,
+        })
+        .unwrap()
+    };
+
+    upgrade_canister_util(install_code_arg)
     .await
     .map_err(|e| e.1)
 }
 
 
 async fn upgrade_subnet_orchestrator_canister(canister_id: Principal, wasm: Vec<u8>, version: String) -> Result<(), String> {
-    install_code(
-        InstallCodeArgument {
-            mode: CanisterInstallMode::Upgrade,
-            canister_id,
-            wasm_module: wasm,
-            arg: candid::encode_one(UserIndexInitArgs {
-                known_principal_ids: None,
-                access_control_map: None,
-                version
-            })
-            .unwrap()
-        }
-    )
+    let install_code_arg = InstallCodeArgument {
+        mode: CanisterInstallMode::Upgrade,
+        canister_id,
+        wasm_module: wasm,
+        arg: candid::encode_one(UserIndexInitArgs {
+            known_principal_ids: None,
+            access_control_map: None,
+            version
+        })
+        .unwrap()
+    };
+    
+    upgrade_canister_util(install_code_arg)
     .await
     .map_err(|e| e.1)
 }

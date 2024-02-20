@@ -1,5 +1,6 @@
 use std::time::{Duration, SystemTime};
 
+use ic_cdk_macros::update;
 use shared_utils::{
     canister_specific::individual_user_template::types::post::{Post, PostDetailsFromFrontend},
     common::utils::system_time,
@@ -14,8 +15,7 @@ use super::update_scores_and_share_with_post_cache_if_difference_beyond_threshol
 
 /// #### Access Control
 /// Only the user whose profile details are stored in this canister can create a post.
-#[ic_cdk::update]
-#[candid::candid_method(update)]
+#[update]
 fn add_post_v2(post_details: PostDetailsFromFrontend) -> Result<u64, String> {
     // * access control
     let current_caller = ic_cdk::caller();

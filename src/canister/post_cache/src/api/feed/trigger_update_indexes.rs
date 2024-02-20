@@ -1,8 +1,4 @@
-use std::{
-    cell::RefCell,
-    time::{Duration, SystemTime},
-};
-
+use std:: time::Duration;
 use candid::Principal;
 use ic_cdk::notify;
 use shared_utils::common::{
@@ -10,7 +6,7 @@ use shared_utils::common::{
     utils::system_time::get_current_system_time,
 };
 
-use crate::{data_model::CanisterData, CANISTER_DATA};
+use crate::CANISTER_DATA;
 
 const TRIGGER_UPDATE_HOT_OR_NOT_INDEX: Duration = Duration::from_secs(60 * 60);
 const TRIGGER_RECONCILE_SCORES: Duration = Duration::from_secs(60 * 60 * 5);

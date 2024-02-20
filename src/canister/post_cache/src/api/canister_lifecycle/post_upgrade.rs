@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use ic_cdk::api::call;
+use ic_cdk_macros::post_upgrade;
 use shared_utils::{
     canister_specific::{
         individual_user_template::types::post::PostDetailsForFrontend,
@@ -22,7 +23,7 @@ use crate::{
 
 use super::pre_upgrade::BUFFER_SIZE_BYTES;
 
-#[ic_cdk::post_upgrade]
+#[post_upgrade]
 fn post_upgrade() {
     restore_data_from_stable_memory();
     save_upgrade_args_to_memory();

@@ -1,12 +1,13 @@
 use ciborium::ser;
 use ic_cdk::api::stable;
+use ic_cdk_macros::pre_upgrade;
 use ic_stable_structures::writer::Writer;
 
 use crate::data_model::memory;
 use crate::CANISTER_DATA;
 
 
-#[ic_cdk::pre_upgrade]
+#[pre_upgrade]
 fn pre_upgrade() {
     let mut state_bytes = vec![];
     CANISTER_DATA.with(|canister_data_ref_cell| {

@@ -3,7 +3,7 @@ use std::borrow::Cow;
 use candid::CandidType;
 use ciborium::de;
 use serde::{Deserialize, Serialize};
-use ic_stable_structures::{BoundedStorable, Storable};
+use ic_stable_structures::{storable::Bound, Storable};
 
 
 #[derive(Clone, Serialize, Deserialize, PartialEq, PartialOrd, Eq, Ord, CandidType)]
@@ -11,12 +11,6 @@ pub enum WasmType {
     SubnetOrchestratorWasm,
     IndividualUserWasm,
     PostCacheWasm
-}
-
-impl BoundedStorable for WasmType {
-    const MAX_SIZE: u32 = 100;
-
-    const IS_FIXED_SIZE: bool = true;
 }
 
 impl Storable for WasmType {
@@ -30,6 +24,8 @@ impl Storable for WasmType {
         let wasm_type: WasmType = de::from_reader(bytes.as_ref()).unwrap();
         wasm_type
     }
+
+    const BOUND: Bound = Bound::Bounded { max_size: 25, is_fixed_size: false };
 }
 
 
@@ -37,11 +33,6 @@ impl Storable for WasmType {
 pub struct CanisterWasm {
     pub wasm_blob: Vec<u8>,
     pub version: String,
-}
-
-impl BoundedStorable for CanisterWasm {
-    const MAX_SIZE: u32 = 200_000_000; // 2 MB
-    const IS_FIXED_SIZE: bool = false;
 }
 
 impl Storable for CanisterWasm {
@@ -55,4 +46,6 @@ impl Storable for CanisterWasm {
         let canister_wasm: CanisterWasm = de::from_reader(bytes.as_ref()).unwrap();
         canister_wasm
     }
+
+    const BOUND: Bound = Bound::Unbounded;
 }

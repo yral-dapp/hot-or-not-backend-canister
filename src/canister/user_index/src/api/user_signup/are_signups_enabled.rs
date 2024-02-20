@@ -1,8 +1,9 @@
+use ic_cdk_macros::query;
+
 use crate::{CANISTER_DATA, data_model::CanisterData};
 
 
-#[ic_cdk::query]
-#[candid::candid_method(query)]
+#[query]
 fn are_signups_enabled() -> bool {
     CANISTER_DATA.with(|canister_data_ref_cell| {
         let canister_data = canister_data_ref_cell.borrow();

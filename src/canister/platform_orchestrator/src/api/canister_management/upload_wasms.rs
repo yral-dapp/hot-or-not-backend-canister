@@ -1,11 +1,11 @@
 use ic_cdk::{api::is_controller, caller};
+use ic_cdk_macros::update;
 use shared_utils::common::types::wasm::{CanisterWasm, WasmType};
 
 use crate::CANISTER_DATA;
 
  
- #[ic_cdk::update]
- #[candid::candid_method(update)]
+#[update]
 pub async fn upload_wasms(wasm_type: WasmType, wasm: Vec<u8>) -> Result<String, String> {
     if !is_controller(&caller()) {
         return Err("Unauthorized".into())

@@ -1,4 +1,5 @@
 use std::time::SystemTime;
+use ic_cdk_macros::update;
 
 use candid::Principal;
 use ic_cdk::api::management_canister::provisional::CanisterId;
@@ -16,8 +17,7 @@ use crate::{
     data_model::CanisterData, CANISTER_DATA,
 };
 
-#[ic_cdk::update]
-#[candid::candid_method(update)]
+#[update]
 fn receive_bet_from_bet_makers_canister(
     place_bet_arg: PlaceBetArg,
     bet_maker_principal_id: Principal,

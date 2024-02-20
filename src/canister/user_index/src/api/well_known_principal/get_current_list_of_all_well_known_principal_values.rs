@@ -1,10 +1,10 @@
 use candid::Principal;
+use ic_cdk_macros::query;
 use shared_utils::common::types::known_principal::{KnownPrincipalMap, KnownPrincipalType};
 
 use crate::CANISTER_DATA;
 
-#[ic_cdk::query]
-#[candid::candid_method(query)]
+#[query]
 fn get_current_list_of_all_well_known_principal_values() -> Vec<(KnownPrincipalType, Principal)> {
     CANISTER_DATA.with(|canister_data_ref_cell| {
         let known_principal_ids = &canister_data_ref_cell.borrow().configuration.known_principal_ids;

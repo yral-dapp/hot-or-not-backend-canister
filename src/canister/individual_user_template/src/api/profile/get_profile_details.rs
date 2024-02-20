@@ -1,8 +1,8 @@
 use crate::CANISTER_DATA;
+use ic_cdk_macros::query;
 use shared_utils::canister_specific::individual_user_template::types::profile::UserProfileDetailsForFrontend;
 
-#[ic_cdk::query]
-#[candid::candid_method(query)]
+#[query]
 fn get_profile_details() -> UserProfileDetailsForFrontend {
     CANISTER_DATA.with(|canister_data_ref_cell| {
         let profile = canister_data_ref_cell.borrow().profile.clone();

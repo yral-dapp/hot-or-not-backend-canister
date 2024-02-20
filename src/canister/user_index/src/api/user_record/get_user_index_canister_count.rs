@@ -1,7 +1,8 @@
+use ic_cdk_macros::query;
+
 use crate::CANISTER_DATA;
 
-#[ic_cdk::query]
-#[candid::candid_method(query)]
+#[query]
 fn get_user_index_canister_count() -> usize {
     CANISTER_DATA.with(|canister_data_ref_cell| {
         canister_data_ref_cell
