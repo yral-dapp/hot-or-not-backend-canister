@@ -11,12 +11,13 @@ ic-cdk = { workspace = true }
 ic-cdk-timers = { workspace = true }
 ic-stable-structures = { workspace = true }
 rmp-serde = { workspace = true }
-futures = { workspace =true }
+futures = { workspace = true }
 serde = { workspace = true }
 ciborium = { workspace = true }
 
 [dev-dependencies]
 test_utils = { workspace = true }
+pprof = { version = "0.13", features = ["flamegraph"] }
 
 [features]
 mockdata = []

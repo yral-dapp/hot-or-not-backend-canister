@@ -21,3 +21,4 @@ test_utils = { workspace = true }
 
 [features]
 feed_filter_upgrade_test = []
+bet_details_heap_to_stable_mem_upgrade = []
