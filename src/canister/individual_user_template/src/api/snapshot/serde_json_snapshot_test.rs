@@ -35,6 +35,7 @@ mod test {
     use test_utils::setup::test_constants::get_mock_user_alice_canister_id;
 
     use crate::{
+        api::well_known_principal::get_well_known_principal_value,
         api::{
             snapshot::{
                 CanisterDataForSnapshot, HotOrNotDetailsForSnapshot, PostForSnapshot,
@@ -43,6 +44,9 @@ mod test {
             well_known_principal::get_well_known_principal_value,
         },
         data_model::CanisterData,
+        data_model::{
+            CanisterData, CanisterDataForSnapshot, HotOrNotDetailsForSnapshot, PostForSnapshot,
+        },
     };
 
     #[test]
