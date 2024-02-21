@@ -1,5 +1,6 @@
 use candid::{CandidType, Deserialize, Principal};
 use serde::Serialize;
+use serde_json_any_key::*;
 use std::{
     collections::{
         btree_map::{self, Iter},
@@ -17,7 +18,9 @@ use super::{PostId, PublisherCanisterId, Score};
 
 #[derive(Default, Debug, Clone, CandidType, Deserialize, Serialize)]
 pub struct PostScoreIndex {
+    #[serde(with = "any_key_map")]
     pub items_sorted_by_score: BTreeMap<Score, Vec<PostScoreIndexItem>>,
+    #[serde(with = "any_key_map")]
     pub item_presence_index: HashMap<(PublisherCanisterId, PostId), Score>,
 }
 
