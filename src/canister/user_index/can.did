@@ -97,6 +97,7 @@ service : (UserIndexInitArgs) -> {
   get_user_canister_id_from_user_principal_id : (principal) -> (
       opt principal,
     ) query;
+  get_user_canister_list : () -> (vec principal) query;
   get_user_canister_status : (principal) -> (Result_1);
   get_user_index_canister_count : () -> (nat64) query;
   get_user_index_canister_cycle_balance : () -> (nat) query;
