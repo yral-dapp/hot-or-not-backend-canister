@@ -169,7 +169,6 @@ type UserProfileGlobalStats = record {
   not_bets_received : nat64;
 };
 service : (DataBackupInitArgs) -> {
-  __get_candid_interface_tmp_hack : () -> (text) query;
   get_current_backup_statistics : () -> (BackupStatistics) query;
   get_individual_users_backup_data_entry : (principal) -> (
       opt AllUserData,
