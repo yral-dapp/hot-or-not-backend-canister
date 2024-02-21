@@ -6,23 +6,11 @@ use crate::{
     CANISTER_DATA,
 };
 use candid::Principal;
-use ic_cdk_macros::{update, query};
 use ic_cdk::api::stable;
+use ic_cdk_macros::{query, update};
 use ic_stable_structures::{memory_manager::MemoryId, writer::Writer, Memory};
+use shared_utils::common::utils::permissions::is_reclaim_canister_id;
 use shared_utils::constant::RECLAIM_CANISTER_PRINCIPAL_ID;
-
-pub fn is_reclaim_canister_id() -> Result<(), String> {
-    let caller = ic_cdk::caller();
-    let reclaim_canister_principal = Principal::from_text(RECLAIM_CANISTER_PRINCIPAL_ID).unwrap();
-
-    // Here accessing the args ???
-
-    if caller == reclaim_canister_principal {
-        Ok(())
-    } else {
-        Err("Caller is not allowed.".to_string())
-    }
-}
 
 #[update(guard = "is_reclaim_canister_id")]
 fn save_snapshot_json() -> u32 {
