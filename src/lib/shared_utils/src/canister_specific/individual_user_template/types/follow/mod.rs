@@ -3,13 +3,13 @@ use std::collections::{BTreeMap, HashMap};
 use candid::{CandidType, Deserialize, Principal};
 use serde::Serialize;
 
-#[derive(Default, Serialize, Deserialize)]
+#[derive(Default, Serialize, Deserialize, Clone)]
 pub struct FollowData {
     pub follower: FollowList,
     pub following: FollowList,
 }
 
-#[derive(Default, Serialize, Deserialize)]
+#[derive(Default, Serialize, Deserialize, Clone)]
 pub struct FollowList {
     pub sorted_index: BTreeMap<FollowEntryId, FollowEntryDetail>,
     pub members: HashMap<FollowEntryDetail, FollowEntryId>,

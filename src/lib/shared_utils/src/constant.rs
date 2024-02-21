@@ -5,7 +5,7 @@ use crate::common::types::known_principal::{KnownPrincipalMap, KnownPrincipalTyp
 pub const INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT: u128 = 200_000_000_000; // 0.2T Cycles
 pub const CYCLES_THRESHOLD_TO_INITIATE_RECHARGE: u128 = 100_000_000_000; // 0.1T Cycles
 
-pub const SUBNET_ORCHESTRATOR_CANISTER_INITIAL_CYCLES: u128 =  2_500_000_000_000_000; //2.5kT Cycles
+pub const SUBNET_ORCHESTRATOR_CANISTER_INITIAL_CYCLES: u128 = 2_500_000_000_000_000; //2.5kT Cycles
 pub const SUBNET_ORCHESTRATOR_CANISTER_CYCLES_THRESHOLD: u128 = 1_000_000_000_000_000; //1kT Cycles
 pub const POST_CACHE_CANISTER_CYCLES_RECHARGE_AMOUMT: u128 = 5_000_000_000_000; //5T Cycles
 pub const POST_CACHE_CANISTER_CYCLES_THRESHOLD: u128 = 2_000_000_000_000; //2T Cycles
@@ -22,7 +22,10 @@ pub const INDIVIDUAL_USER_CANISTER_SUBNET_MAX_CAPACITY: u64 = 50_000;
 pub const GOVERNANCE_CANISTER_ID: &str = "6wcax-haaaa-aaaaq-aaava-cai";
 pub const NNS_CYCLE_MINTING_CANISTER: &str = "rkp4c-7iaaa-aaaaa-aaaca-cai";
 pub const NNS_LEDGER_CANISTER_ID: &str = "ryjl3-tyaaa-aaaaa-aaaba-cai";
-pub const GLOBAL_SUPER_ADMIN_USER_ID: &str = "7gaq2-4kttl-vtbt4-oo47w-igteo-cpk2k-57h3p-yioqe-wkawi-wz45g-jae";
+pub const GLOBAL_SUPER_ADMIN_USER_ID: &str =
+    "7gaq2-4kttl-vtbt4-oo47w-igteo-cpk2k-57h3p-yioqe-wkawi-wz45g-jae";
+pub const RECLAIM_CANISTER_PRINCIPAL_ID: &str =
+    "czetz-e72b5-bvgij-ad7w7-b5gki-isgts-wemv2-unxsk-6x65l-7mvhw-qae";
 
 pub fn get_global_super_admin_principal_id_v1(
     well_known_canisters: KnownPrincipalMap,

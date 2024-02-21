@@ -60,6 +60,9 @@ fn get_posts_of_this_user_profile_with_pagination(
                     },
                     api_caller,
                     &current_time,
+                    &canister_data_ref_cell.borrow().room_details_map,
+                    &canister_data_ref_cell.borrow().post_principal_map,
+                    &canister_data_ref_cell.borrow().slot_details_map,
                 )
             })
         })

@@ -25,7 +25,7 @@ impl Storable for WasmType {
         wasm_type
     }
 
-    const BOUND: Bound = Bound::Bounded { max_size: 19, is_fixed_size: true };
+    const BOUND: Bound = Bound::Bounded { max_size: 25, is_fixed_size: false };
 }
 
 
@@ -47,8 +47,5 @@ impl Storable for CanisterWasm {
         canister_wasm
     }
 
-    const BOUND: Bound = Bound::Bounded { 
-        max_size: 200_000_000, // 2 MB 
-        is_fixed_size: false
-    };
+    const BOUND: Bound = Bound::Unbounded;
 }

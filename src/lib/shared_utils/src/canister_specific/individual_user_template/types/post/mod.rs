@@ -1,4 +1,5 @@
 use candid::{CandidType, Deserialize, Principal};
+use ic_stable_structures::{memory_manager::VirtualMemory, DefaultMemoryImpl};
 use serde::Serialize;
 use std::{
     collections::HashSet,
@@ -7,10 +8,13 @@ use std::{
 
 use crate::{
     canister_specific::individual_user_template::types::profile::UserProfileDetailsForFrontend,
-    common::types::top_posts::post_score_index_item::PostStatus,
+    common::types::{app_primitive_type::PostId, top_posts::post_score_index_item::PostStatus},
 };
 
-use super::hot_or_not::{BettingStatus, HotOrNotDetails};
+use super::hot_or_not::{
+    BetDetails, BettingStatus, GlobalBetId, GlobalRoomId, HotOrNotDetails, RoomDetailsV1,
+    SlotDetailsV1, SlotId, StablePrincipal,
+};
 
 #[derive(CandidType, Clone, Deserialize, Debug, Serialize)]
 pub struct Post {
@@ -129,6 +133,21 @@ impl Post {
         user_profile: UserProfileDetailsForFrontend,
         caller: Principal,
         current_time: &SystemTime,
+        room_details_map: &ic_stable_structures::btreemap::BTreeMap<
+            GlobalRoomId,
+            RoomDetailsV1,
+            VirtualMemory<DefaultMemoryImpl>,
+        >,
+        post_principal_map: &ic_stable_structures::btreemap::BTreeMap<
+            (PostId, StablePrincipal),
+            (),
+            VirtualMemory<DefaultMemoryImpl>,
+        >,
+        slot_details_map: &ic_stable_structures::btreemap::BTreeMap<
+            (PostId, SlotId),
+            SlotDetailsV1,
+            VirtualMemory<DefaultMemoryImpl>,
+        >,
     ) -> PostDetailsForFrontend {
         PostDetailsForFrontend {
             id: self.id,
@@ -158,7 +177,13 @@ impl Post {
                 None
             },
             hot_or_not_betting_status: if self.creator_consent_for_inclusion_in_hot_or_not {
-                Some(self.get_hot_or_not_betting_status_for_this_post(current_time, &caller))
+                Some(self.get_hot_or_not_betting_status_for_this_post_v1(
+                    current_time,
+                    &caller,
+                    room_details_map,
+                    post_principal_map,
+                    slot_details_map,
+                ))
             } else {
                 None
             },
@@ -389,7 +414,11 @@ impl Post {
 
 #[cfg(test)]
 mod test {
-    use crate::canister_specific::individual_user_template::types::hot_or_not::BetDirection;
+    use std::{fs::File, time::Instant};
+
+    use crate::canister_specific::individual_user_template::types::hot_or_not::{
+        test_hot_or_not::setup_room_and_bet_details_map, BetDirection,
+    };
 
     use super::*;
 
@@ -426,6 +455,13 @@ mod test {
 
     #[test]
     fn test_recalculate_home_feed_score_case_1() {
+        let (
+            mut room_details_map,
+            mut bet_details_map,
+            mut post_principal_map,
+            mut slot_details_map,
+        ) = setup_room_and_bet_details_map();
+
         let post_created_at = SystemTime::UNIX_EPOCH
             .checked_add(Duration::from_secs(1_678_423_915))
             .unwrap();
@@ -456,12 +492,16 @@ mod test {
         post.view_stats.average_watch_percentage = 59;
 
         (0..80).for_each(|number| {
-            let result = post.place_hot_or_not_bet(
+            let result = post.place_hot_or_not_bet_v1(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
+                &mut room_details_map,
+                &mut bet_details_map,
+                &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -475,12 +515,16 @@ mod test {
         );
 
         (80..145).for_each(|number| {
-            let result = post.place_hot_or_not_bet(
+            let result = post.place_hot_or_not_bet_v1(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Not,
                 &betting_time,
+                &mut room_details_map,
+                &mut bet_details_map,
+                &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -502,6 +546,13 @@ mod test {
 
     #[test]
     fn test_recalculate_home_feed_score_case_2() {
+        let (
+            mut room_details_map,
+            mut bet_details_map,
+            mut post_principal_map,
+            mut slot_details_map,
+        ) = setup_room_and_bet_details_map();
+
         let post_created_at = SystemTime::UNIX_EPOCH
             .checked_add(Duration::from_secs(1_678_293_841))
             .unwrap();
@@ -532,12 +583,16 @@ mod test {
         post.view_stats.average_watch_percentage = 47;
 
         (0..216).for_each(|number| {
-            let result = post.place_hot_or_not_bet(
+            let result = post.place_hot_or_not_bet_v1(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
+                &mut room_details_map,
+                &mut bet_details_map,
+                &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -551,12 +606,16 @@ mod test {
         );
 
         (216..360).for_each(|number| {
-            let result = post.place_hot_or_not_bet(
+            let result = post.place_hot_or_not_bet_v1(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Not,
                 &betting_time,
+                &mut room_details_map,
+                &mut bet_details_map,
+                &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -578,6 +637,13 @@ mod test {
 
     #[test]
     fn test_recalculate_home_feed_score_case_3() {
+        let (
+            mut room_details_map,
+            mut bet_details_map,
+            mut post_principal_map,
+            mut slot_details_map,
+        ) = setup_room_and_bet_details_map();
+
         let post_created_at = SystemTime::UNIX_EPOCH
             .checked_add(Duration::from_secs(1_678_105_696))
             .unwrap();
@@ -608,12 +674,16 @@ mod test {
         post.view_stats.average_watch_percentage = 54;
 
         (0..1_078).for_each(|number| {
-            let result = post.place_hot_or_not_bet(
+            let result = post.place_hot_or_not_bet_v1(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
+                &mut room_details_map,
+                &mut bet_details_map,
+                &mut post_principal_map,
+                &mut slot_details_map,
             );
             if result.is_err() {
                 println!("🧪 Error: {:?}", result);
@@ -630,12 +700,16 @@ mod test {
         );
 
         (1_078..2_695).for_each(|number| {
-            let result = post.place_hot_or_not_bet(
+            let result = post.place_hot_or_not_bet_v1(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Not,
                 &betting_time,
+                &mut room_details_map,
+                &mut bet_details_map,
+                &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -657,6 +731,13 @@ mod test {
 
     #[test]
     fn test_recalculate_home_feed_score_case_4() {
+        let (
+            mut room_details_map,
+            mut bet_details_map,
+            mut post_principal_map,
+            mut slot_details_map,
+        ) = setup_room_and_bet_details_map();
+
         let post_created_at = SystemTime::UNIX_EPOCH
             .checked_add(Duration::from_secs(1_677_615_537))
             .unwrap();
@@ -689,12 +770,16 @@ mod test {
         post.view_stats.average_watch_percentage = 58;
 
         (0..4_725).for_each(|number| {
-            let result = post.place_hot_or_not_bet(
+            let result = post.place_hot_or_not_bet_v1(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
+                &mut room_details_map,
+                &mut bet_details_map,
+                &mut post_principal_map,
+                &mut slot_details_map,
             );
             if result.is_err() {
                 println!("🧪 Error: {:?}", result);
@@ -711,12 +796,16 @@ mod test {
         );
 
         (4_725..10_500).for_each(|number| {
-            let result = post.place_hot_or_not_bet(
+            let result = post.place_hot_or_not_bet_v1(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Not,
                 &betting_time,
+                &mut room_details_map,
+                &mut bet_details_map,
+                &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -738,6 +827,13 @@ mod test {
 
     #[test]
     fn test_recalculate_home_feed_score_case_5() {
+        let (
+            mut room_details_map,
+            mut bet_details_map,
+            mut post_principal_map,
+            mut slot_details_map,
+        ) = setup_room_and_bet_details_map();
+
         let post_created_at = SystemTime::UNIX_EPOCH
             .checked_add(Duration::from_secs(1_675_311_162))
             .unwrap();
@@ -770,12 +866,16 @@ mod test {
         post.view_stats.average_watch_percentage = 59;
 
         (0..26_827).for_each(|number| {
-            let result = post.place_hot_or_not_bet(
+            let result = post.place_hot_or_not_bet_v1(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
+                &mut room_details_map,
+                &mut bet_details_map,
+                &mut post_principal_map,
+                &mut slot_details_map,
             );
             if result.is_err() {
                 println!("🧪 Error: {:?}", result);
@@ -792,12 +892,16 @@ mod test {
         );
 
         (26_827..54_750).for_each(|number| {
-            let result = post.place_hot_or_not_bet(
+            let result = post.place_hot_or_not_bet_v1(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Not,
                 &betting_time,
+                &mut room_details_map,
+                &mut bet_details_map,
+                &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -819,6 +923,13 @@ mod test {
 
     #[test]
     fn test_recalculate_home_feed_score_case_6() {
+        let (
+            mut room_details_map,
+            mut bet_details_map,
+            mut post_principal_map,
+            mut slot_details_map,
+        ) = setup_room_and_bet_details_map();
+
         let post_created_at = SystemTime::UNIX_EPOCH
             .checked_add(Duration::from_secs(1_678_436_004))
             .unwrap();
@@ -851,12 +962,16 @@ mod test {
         post.view_stats.average_watch_percentage = 30;
 
         (0..18).for_each(|number| {
-            let result = post.place_hot_or_not_bet(
+            let result = post.place_hot_or_not_bet_v1(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
+                &mut room_details_map,
+                &mut bet_details_map,
+                &mut post_principal_map,
+                &mut slot_details_map,
             );
             if result.is_err() {
                 println!("🧪 Error: {:?}", result);
@@ -873,12 +988,16 @@ mod test {
         );
 
         (18..45).for_each(|number| {
-            let result = post.place_hot_or_not_bet(
+            let result = post.place_hot_or_not_bet_v1(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Not,
                 &betting_time,
+                &mut room_details_map,
+                &mut bet_details_map,
+                &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -900,6 +1019,13 @@ mod test {
 
     #[test]
     fn test_recalculate_home_feed_score_case_7() {
+        let (
+            mut room_details_map,
+            mut bet_details_map,
+            mut post_principal_map,
+            mut slot_details_map,
+        ) = setup_room_and_bet_details_map();
+
         let post_created_at = SystemTime::UNIX_EPOCH
             .checked_add(Duration::from_secs(1_678_295_932))
             .unwrap();
@@ -932,12 +1058,16 @@ mod test {
         post.view_stats.average_watch_percentage = 24;
 
         (0..40).for_each(|number| {
-            let result = post.place_hot_or_not_bet(
+            let result = post.place_hot_or_not_bet_v1(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
+                &mut room_details_map,
+                &mut bet_details_map,
+                &mut post_principal_map,
+                &mut slot_details_map,
             );
             if result.is_err() {
                 println!("🧪 Error: {:?}", result);
@@ -954,12 +1084,16 @@ mod test {
         );
 
         (40..68).for_each(|number| {
-            let result = post.place_hot_or_not_bet(
+            let result = post.place_hot_or_not_bet_v1(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Not,
                 &betting_time,
+                &mut room_details_map,
+                &mut bet_details_map,
+                &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -981,6 +1115,13 @@ mod test {
 
     #[test]
     fn test_recalculate_home_feed_score_case_8() {
+        let (
+            mut room_details_map,
+            mut bet_details_map,
+            mut post_principal_map,
+            mut slot_details_map,
+        ) = setup_room_and_bet_details_map();
+
         let post_created_at = SystemTime::UNIX_EPOCH
             .checked_add(Duration::from_secs(1_678_005_696))
             .unwrap();
@@ -1013,12 +1154,16 @@ mod test {
         post.view_stats.average_watch_percentage = 18;
 
         (0..466).for_each(|number| {
-            let result = post.place_hot_or_not_bet(
+            let result = post.place_hot_or_not_bet_v1(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
+                &mut room_details_map,
+                &mut bet_details_map,
+                &mut post_principal_map,
+                &mut slot_details_map,
             );
             if result.is_err() {
                 println!("🧪 Error: {:?}", result);
@@ -1035,12 +1180,16 @@ mod test {
         );
 
         (466..805).for_each(|number| {
-            let result = post.place_hot_or_not_bet(
+            let result = post.place_hot_or_not_bet_v1(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Not,
                 &betting_time,
+                &mut room_details_map,
+                &mut bet_details_map,
+                &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -1062,6 +1211,13 @@ mod test {
 
     #[test]
     fn test_recalculate_home_feed_score_case_9() {
+        let (
+            mut room_details_map,
+            mut bet_details_map,
+            mut post_principal_map,
+            mut slot_details_map,
+        ) = setup_room_and_bet_details_map();
+
         let post_created_at = SystemTime::UNIX_EPOCH
             .checked_add(Duration::from_secs(1_677_396_626))
             .unwrap();
@@ -1094,12 +1250,16 @@ mod test {
         post.view_stats.average_watch_percentage = 50;
 
         (0..1_320).for_each(|number| {
-            let result = post.place_hot_or_not_bet(
+            let result = post.place_hot_or_not_bet_v1(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
+                &mut room_details_map,
+                &mut bet_details_map,
+                &mut post_principal_map,
+                &mut slot_details_map,
             );
             if result.is_err() {
                 println!("🧪 Error: {:?}", result);
@@ -1116,12 +1276,16 @@ mod test {
         );
 
         (1_320..2_400).for_each(|number| {
-            let result = post.place_hot_or_not_bet(
+            let result = post.place_hot_or_not_bet_v1(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Not,
                 &betting_time,
+                &mut room_details_map,
+                &mut bet_details_map,
+                &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -1143,6 +1307,13 @@ mod test {
 
     #[test]
     fn test_recalculate_home_feed_score_case_10() {
+        let (
+            mut room_details_map,
+            mut bet_details_map,
+            mut post_principal_map,
+            mut slot_details_map,
+        ) = setup_room_and_bet_details_map();
+
         let post_created_at = SystemTime::UNIX_EPOCH
             .checked_add(Duration::from_secs(1_673_117_006))
             .unwrap();
@@ -1175,12 +1346,16 @@ mod test {
         post.view_stats.average_watch_percentage = 67;
 
         (0..6_270).for_each(|number| {
-            let result = post.place_hot_or_not_bet(
+            let result = post.place_hot_or_not_bet_v1(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
+                &mut room_details_map,
+                &mut bet_details_map,
+                &mut post_principal_map,
+                &mut slot_details_map,
             );
             if result.is_err() {
                 println!("🧪 Error: {:?}", result);
@@ -1197,12 +1372,16 @@ mod test {
         );
 
         (6_270..14_250).for_each(|number| {
-            let result = post.place_hot_or_not_bet(
+            let result = post.place_hot_or_not_bet_v1(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Not,
                 &betting_time,
+                &mut room_details_map,
+                &mut bet_details_map,
+                &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -1224,6 +1403,13 @@ mod test {
 
     #[test]
     fn test_recalculate_hot_or_not_feed_score_case_1() {
+        let (
+            mut room_details_map,
+            mut bet_details_map,
+            mut post_principal_map,
+            mut slot_details_map,
+        ) = setup_room_and_bet_details_map();
+
         let post_created_at = SystemTime::UNIX_EPOCH
             .checked_add(Duration::from_secs(1_678_423_915))
             .unwrap();
@@ -1254,12 +1440,16 @@ mod test {
         post.view_stats.average_watch_percentage = 59;
 
         (0..80).for_each(|number| {
-            let result = post.place_hot_or_not_bet(
+            let result = post.place_hot_or_not_bet_v1(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
+                &mut room_details_map,
+                &mut bet_details_map,
+                &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -1273,12 +1463,16 @@ mod test {
         );
 
         (80..145).for_each(|number| {
-            let result = post.place_hot_or_not_bet(
+            let result = post.place_hot_or_not_bet_v1(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Not,
                 &betting_time,
+                &mut room_details_map,
+                &mut bet_details_map,
+                &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -1314,6 +1508,13 @@ mod test {
 
     #[test]
     fn test_recalculate_hot_or_not_feed_score_case_2() {
+        let (
+            mut room_details_map,
+            mut bet_details_map,
+            mut post_principal_map,
+            mut slot_details_map,
+        ) = setup_room_and_bet_details_map();
+
         let post_created_at = SystemTime::UNIX_EPOCH
             .checked_add(Duration::from_secs(1_678_293_841))
             .unwrap();
@@ -1344,12 +1545,16 @@ mod test {
         post.view_stats.average_watch_percentage = 47;
 
         (0..216).for_each(|number| {
-            let result = post.place_hot_or_not_bet(
+            let result = post.place_hot_or_not_bet_v1(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
+                &mut room_details_map,
+                &mut bet_details_map,
+                &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -1363,12 +1568,16 @@ mod test {
         );
 
         (216..360).for_each(|number| {
-            let result = post.place_hot_or_not_bet(
+            let result = post.place_hot_or_not_bet_v1(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Not,
                 &betting_time,
+                &mut room_details_map,
+                &mut bet_details_map,
+                &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -1404,6 +1613,13 @@ mod test {
 
     #[test]
     fn test_recalculate_hot_or_not_feed_score_case_3() {
+        let (
+            mut room_details_map,
+            mut bet_details_map,
+            mut post_principal_map,
+            mut slot_details_map,
+        ) = setup_room_and_bet_details_map();
+
         let post_created_at = SystemTime::UNIX_EPOCH
             .checked_add(Duration::from_secs(1_678_105_696))
             .unwrap();
@@ -1434,12 +1650,16 @@ mod test {
         post.view_stats.average_watch_percentage = 54;
 
         (0..1_078).for_each(|number| {
-            let result = post.place_hot_or_not_bet(
+            let result = post.place_hot_or_not_bet_v1(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
+                &mut room_details_map,
+                &mut bet_details_map,
+                &mut post_principal_map,
+                &mut slot_details_map,
             );
             if result.is_err() {
                 println!("🧪 Error: {:?}", result);
@@ -1456,12 +1676,16 @@ mod test {
         );
 
         (1_078..2_695).for_each(|number| {
-            let result = post.place_hot_or_not_bet(
+            let result = post.place_hot_or_not_bet_v1(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Not,
                 &betting_time,
+                &mut room_details_map,
+                &mut bet_details_map,
+                &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -1497,6 +1721,13 @@ mod test {
 
     #[test]
     fn test_recalculate_hot_or_not_feed_score_case_4() {
+        let (
+            mut room_details_map,
+            mut bet_details_map,
+            mut post_principal_map,
+            mut slot_details_map,
+        ) = setup_room_and_bet_details_map();
+
         let post_created_at = SystemTime::UNIX_EPOCH
             .checked_add(Duration::from_secs(1_677_615_537))
             .unwrap();
@@ -1529,12 +1760,16 @@ mod test {
         post.view_stats.average_watch_percentage = 58;
 
         (0..4_725).for_each(|number| {
-            let result = post.place_hot_or_not_bet(
+            let result = post.place_hot_or_not_bet_v1(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
+                &mut room_details_map,
+                &mut bet_details_map,
+                &mut post_principal_map,
+                &mut slot_details_map,
             );
             if result.is_err() {
                 println!("🧪 Error: {:?}", result);
@@ -1551,12 +1786,16 @@ mod test {
         );
 
         (4_725..10_500).for_each(|number| {
-            let result = post.place_hot_or_not_bet(
+            let result = post.place_hot_or_not_bet_v1(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Not,
                 &betting_time,
+                &mut room_details_map,
+                &mut bet_details_map,
+                &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -1592,6 +1831,13 @@ mod test {
 
     #[test]
     fn test_recalculate_hot_or_not_feed_score_case_5() {
+        let (
+            mut room_details_map,
+            mut bet_details_map,
+            mut post_principal_map,
+            mut slot_details_map,
+        ) = setup_room_and_bet_details_map();
+
         let post_created_at = SystemTime::UNIX_EPOCH
             .checked_add(Duration::from_secs(1_675_311_162))
             .unwrap();
@@ -1624,12 +1870,16 @@ mod test {
         post.view_stats.average_watch_percentage = 59;
 
         (0..26_827).for_each(|number| {
-            let result = post.place_hot_or_not_bet(
+            let result = post.place_hot_or_not_bet_v1(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
+                &mut room_details_map,
+                &mut bet_details_map,
+                &mut post_principal_map,
+                &mut slot_details_map,
             );
             if result.is_err() {
                 println!("🧪 Error: {:?}", result);
@@ -1646,12 +1896,16 @@ mod test {
         );
 
         (26_827..54_750).for_each(|number| {
-            let result = post.place_hot_or_not_bet(
+            let result = post.place_hot_or_not_bet_v1(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Not,
                 &betting_time,
+                &mut room_details_map,
+                &mut bet_details_map,
+                &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -1687,6 +1941,13 @@ mod test {
 
     #[test]
     fn test_recalculate_hot_or_not_feed_score_case_6() {
+        let (
+            mut room_details_map,
+            mut bet_details_map,
+            mut post_principal_map,
+            mut slot_details_map,
+        ) = setup_room_and_bet_details_map();
+
         let post_created_at = SystemTime::UNIX_EPOCH
             .checked_add(Duration::from_secs(1_678_436_004))
             .unwrap();
@@ -1719,12 +1980,16 @@ mod test {
         post.view_stats.average_watch_percentage = 30;
 
         (0..18).for_each(|number| {
-            let result = post.place_hot_or_not_bet(
+            let result = post.place_hot_or_not_bet_v1(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
+                &mut room_details_map,
+                &mut bet_details_map,
+                &mut post_principal_map,
+                &mut slot_details_map,
             );
             if result.is_err() {
                 println!("🧪 Error: {:?}", result);
@@ -1741,12 +2006,16 @@ mod test {
         );
 
         (18..45).for_each(|number| {
-            let result = post.place_hot_or_not_bet(
+            let result = post.place_hot_or_not_bet_v1(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Not,
                 &betting_time,
+                &mut room_details_map,
+                &mut bet_details_map,
+                &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -1782,6 +2051,13 @@ mod test {
 
     #[test]
     fn test_recalculate_hot_or_not_feed_score_case_7() {
+        let (
+            mut room_details_map,
+            mut bet_details_map,
+            mut post_principal_map,
+            mut slot_details_map,
+        ) = setup_room_and_bet_details_map();
+
         let post_created_at = SystemTime::UNIX_EPOCH
             .checked_add(Duration::from_secs(1_678_295_932))
             .unwrap();
@@ -1814,12 +2090,16 @@ mod test {
         post.view_stats.average_watch_percentage = 24;
 
         (0..40).for_each(|number| {
-            let result = post.place_hot_or_not_bet(
+            let result = post.place_hot_or_not_bet_v1(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
+                &mut room_details_map,
+                &mut bet_details_map,
+                &mut post_principal_map,
+                &mut slot_details_map,
             );
             if result.is_err() {
                 println!("🧪 Error: {:?}", result);
@@ -1836,12 +2116,16 @@ mod test {
         );
 
         (40..68).for_each(|number| {
-            let result = post.place_hot_or_not_bet(
+            let result = post.place_hot_or_not_bet_v1(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Not,
                 &betting_time,
+                &mut room_details_map,
+                &mut bet_details_map,
+                &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -1877,6 +2161,13 @@ mod test {
 
     #[test]
     fn test_recalculate_hot_or_not_feed_score_case_8() {
+        let (
+            mut room_details_map,
+            mut bet_details_map,
+            mut post_principal_map,
+            mut slot_details_map,
+        ) = setup_room_and_bet_details_map();
+
         let post_created_at = SystemTime::UNIX_EPOCH
             .checked_add(Duration::from_secs(1_678_005_696))
             .unwrap();
@@ -1909,12 +2200,16 @@ mod test {
         post.view_stats.average_watch_percentage = 18;
 
         (0..466).for_each(|number| {
-            let result = post.place_hot_or_not_bet(
+            let result = post.place_hot_or_not_bet_v1(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
+                &mut room_details_map,
+                &mut bet_details_map,
+                &mut post_principal_map,
+                &mut slot_details_map,
             );
             if result.is_err() {
                 println!("🧪 Error: {:?}", result);
@@ -1931,12 +2226,16 @@ mod test {
         );
 
         (466..805).for_each(|number| {
-            let result = post.place_hot_or_not_bet(
+            let result = post.place_hot_or_not_bet_v1(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Not,
                 &betting_time,
+                &mut room_details_map,
+                &mut bet_details_map,
+                &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -1972,6 +2271,13 @@ mod test {
 
     #[test]
     fn test_recalculate_hot_or_not_feed_score_case_9() {
+        let (
+            mut room_details_map,
+            mut bet_details_map,
+            mut post_principal_map,
+            mut slot_details_map,
+        ) = setup_room_and_bet_details_map();
+
         let post_created_at = SystemTime::UNIX_EPOCH
             .checked_add(Duration::from_secs(1_677_396_626))
             .unwrap();
@@ -2004,12 +2310,16 @@ mod test {
         post.view_stats.average_watch_percentage = 50;
 
         (0..1_320).for_each(|number| {
-            let result = post.place_hot_or_not_bet(
+            let result = post.place_hot_or_not_bet_v1(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
+                &mut room_details_map,
+                &mut bet_details_map,
+                &mut post_principal_map,
+                &mut slot_details_map,
             );
             if result.is_err() {
                 println!("🧪 Error: {:?}", result);
@@ -2026,12 +2336,16 @@ mod test {
         );
 
         (1_320..2_400).for_each(|number| {
-            let result = post.place_hot_or_not_bet(
+            let result = post.place_hot_or_not_bet_v1(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Not,
                 &betting_time,
+                &mut room_details_map,
+                &mut bet_details_map,
+                &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -2067,6 +2381,18 @@ mod test {
 
     #[test]
     fn test_recalculate_hot_or_not_feed_score_case_10() {
+        // let guard = pprof::ProfilerGuardBuilder::default()
+        //     .frequency(1000)
+        //     .blocklist(&["libc", "libgcc", "pthread", "vdso"])
+        //     .build()
+        //     .unwrap();
+        let (
+            mut room_details_map,
+            mut bet_details_map,
+            mut post_principal_map,
+            mut slot_details_map,
+        ) = setup_room_and_bet_details_map();
+
         let post_created_at = SystemTime::UNIX_EPOCH
             .checked_add(Duration::from_secs(1_673_117_006))
             .unwrap();
@@ -2099,12 +2425,16 @@ mod test {
         post.view_stats.average_watch_percentage = 67;
 
         (0..6_270).for_each(|number| {
-            let result = post.place_hot_or_not_bet(
+            let result = post.place_hot_or_not_bet_v1(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Hot,
                 &betting_time,
+                &mut room_details_map,
+                &mut bet_details_map,
+                &mut post_principal_map,
+                &mut slot_details_map,
             );
             if result.is_err() {
                 println!("🧪 Error: {:?}", result);
@@ -2121,12 +2451,16 @@ mod test {
         );
 
         (6_270..14_250).for_each(|number| {
-            let result = post.place_hot_or_not_bet(
+            let result = post.place_hot_or_not_bet_v1(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
                 &BetDirection::Not,
                 &betting_time,
+                &mut room_details_map,
+                &mut bet_details_map,
+                &mut post_principal_map,
+                &mut slot_details_map,
             );
             assert!(result.is_ok());
         });
@@ -2158,6 +2492,11 @@ mod test {
                 .current_score,
             2_840
         );
+
+        // if let Ok(report) = guard.report().build() {
+        //     let file = File::create("flamegraph.svg").unwrap();
+        //     report.flamegraph(file).unwrap();
+        // };
     }
 
     #[test]
