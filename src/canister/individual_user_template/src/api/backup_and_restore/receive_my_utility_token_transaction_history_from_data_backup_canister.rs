@@ -1,11 +1,11 @@
+use ic_cdk_macros::update;
 use shared_utils::common::types::{
     known_principal::KnownPrincipalType, utility_token::token_event::TokenEvent,
 };
 
 use crate::CANISTER_DATA;
 
-#[ic_cdk::update]
-#[candid::candid_method(update)]
+#[update]
 fn receive_my_utility_token_transaction_history_from_data_backup_canister(
     all_token_events_chunk_vec: Vec<(u64, TokenEvent)>,
 ) {

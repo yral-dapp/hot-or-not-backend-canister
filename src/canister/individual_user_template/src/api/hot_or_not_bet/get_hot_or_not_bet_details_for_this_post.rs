@@ -1,4 +1,5 @@
 use std::time::SystemTime;
+use ic_cdk_macros::query;
 
 use candid::Principal;
 use shared_utils::{
@@ -8,8 +9,7 @@ use shared_utils::{
 
 use crate::{data_model::CanisterData, CANISTER_DATA};
 
-#[ic_cdk::query]
-#[candid::candid_method(query)]
+#[query]
 fn get_hot_or_not_bet_details_for_this_post(post_id: u64) -> BettingStatus {
     let request_maker = ic_cdk::caller();
 

@@ -1,5 +1,6 @@
 use crate::CANISTER_DATA;
 use ic_cdk::api::call;
+use ic_cdk_macros::update;
 use shared_utils::{
     common::types::known_principal::KnownPrincipalType,
     types::canister_specific::{
@@ -10,8 +11,7 @@ use shared_utils::{
 
 /// # Access Control
 /// Only the user whose profile details are stored in this canister can update their details.
-#[ic_cdk::update]
-#[candid::candid_method(update)]
+#[update]
 async fn update_profile_set_unique_username_once(
     new_unique_username: String,
 ) -> Result<(), UpdateProfileSetUniqueUsernameError> {

@@ -1,12 +1,11 @@
-use candid::candid_method;
 use ic_cdk::{api::is_controller, caller};
 use shared_utils::{common::{types::wasm::{CanisterWasm, WasmType}, utils::task::run_task_concurrently}, constant::INDIVIDUAL_USER_CANISTER_SUBNET_BATCH_SIZE};
+use ic_cdk_macros::update;
 
 use crate::{util::canister_management::create_users_canister, CANISTER_DATA};
 
 
-#[ic_cdk::update]
-#[candid_method(update)]
+#[update]
 pub fn create_pool_of_individual_user_available_canisters(version: String, individual_user_wasm: Vec<u8>) -> Result<String, String> {
     
     if !is_controller(&caller()) {

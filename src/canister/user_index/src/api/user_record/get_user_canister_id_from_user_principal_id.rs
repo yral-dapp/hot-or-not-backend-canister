@@ -1,11 +1,11 @@
 use std::collections::BTreeMap;
 
 use candid::Principal;
+use ic_cdk_macros::query;
 
 use crate::CANISTER_DATA;
 
-#[ic_cdk::query]
-#[candid::candid_method(query)]
+#[query]
 fn get_user_canister_id_from_user_principal_id(user_id: Principal) -> Option<Principal> {
     if user_id == Principal::anonymous() {
         return None;

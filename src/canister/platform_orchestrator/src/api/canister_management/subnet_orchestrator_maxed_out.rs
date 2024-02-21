@@ -1,11 +1,10 @@
-use candid::candid_method;
 use ic_cdk::caller;
+use ic_cdk_macros::update;
 
 use crate::CANISTER_DATA;
 
 
-#[ic_cdk::update]
-#[candid_method(update)]
+#[update]
 pub fn subnet_orchestrator_maxed_out() {
     let subnet_orchestrator_canister_id = caller();
     CANISTER_DATA.with_borrow_mut(|canister_data| {

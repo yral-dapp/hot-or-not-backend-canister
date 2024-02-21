@@ -1,4 +1,5 @@
 use candid::Principal;
+use ic_cdk_macros::update;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
         arg::PlaceBetArg,
@@ -13,8 +14,7 @@ use shared_utils::{
 
 use crate::{data_model::CanisterData, CANISTER_DATA};
 
-#[ic_cdk::update]
-#[candid::candid_method(update)]
+#[update]
 async fn bet_on_currently_viewing_post(
     place_bet_arg: PlaceBetArg,
 ) -> Result<BettingStatus, BetOnCurrentlyViewingPostError> {

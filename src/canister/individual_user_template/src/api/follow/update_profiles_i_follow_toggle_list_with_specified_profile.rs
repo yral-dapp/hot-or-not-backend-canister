@@ -1,6 +1,7 @@
 use crate::{data_model::CanisterData, CANISTER_DATA};
 
 use candid::Principal;
+use ic_cdk_macros::update;
 use shared_utils::canister_specific::individual_user_template::types::{
     arg::FolloweeArg, error::FollowAnotherUserProfileError, follow::FollowEntryDetail,
 };
@@ -11,8 +12,7 @@ pub const MAX_USERS_IN_FOLLOWER_FOLLOWING_LIST: u64 = 10_000;
 
 /// # Access Control
 /// Only the user whose profile details are stored in this canister can follow another user's profile.
-#[ic_cdk::update]
-#[candid::candid_method(update)]
+#[update]
 async fn update_profiles_i_follow_toggle_list_with_specified_profile(
     arg: FolloweeArg,
 ) -> Result<bool, FollowAnotherUserProfileError> {

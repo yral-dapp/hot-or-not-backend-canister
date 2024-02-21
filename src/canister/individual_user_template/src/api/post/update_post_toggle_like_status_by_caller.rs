@@ -1,9 +1,10 @@
+use ic_cdk_macros::update;
+
 use crate::CANISTER_DATA;
 
 use super::update_scores_and_share_with_post_cache_if_difference_beyond_threshold::update_scores_and_share_with_post_cache_if_difference_beyond_threshold;
 
-#[ic_cdk::update]
-#[candid::candid_method(update)]
+#[update]
 fn update_post_toggle_like_status_by_caller(id: u64) -> bool {
     let caller_id = ic_cdk::caller();
 

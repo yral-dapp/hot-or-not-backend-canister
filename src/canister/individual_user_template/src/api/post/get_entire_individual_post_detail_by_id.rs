@@ -1,3 +1,4 @@
+use ic_cdk_macros::query;
 use shared_utils::{
     canister_specific::individual_user_template::types::post::Post,
     common::types::known_principal::KnownPrincipalType,
@@ -5,8 +6,7 @@ use shared_utils::{
 
 use crate::CANISTER_DATA;
 
-#[ic_cdk::query]
-#[candid::candid_method(query)]
+#[query]
 pub fn get_entire_individual_post_detail_by_id(post_id: u64) -> Result<Post, ()> {
     let api_caller = ic_cdk::caller();
 

@@ -1,4 +1,5 @@
 use crate::{data_model::CanisterData, CANISTER_DATA};
+use ic_cdk_macros::query;
 use shared_utils::{
     common::types::top_posts::post_score_index_item::{
         PostScoreIndexItem, PostScoreIndexItemV1, PostStatus,
@@ -7,8 +8,7 @@ use shared_utils::{
     types::canister_specific::post_cache::error_types::TopPostsFetchError,
 };
 
-#[ic_cdk::query]
-#[candid::candid_method(query)]
+#[query]
 fn get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed(
     from_inclusive_index: u64,
     to_exclusive_index: u64,

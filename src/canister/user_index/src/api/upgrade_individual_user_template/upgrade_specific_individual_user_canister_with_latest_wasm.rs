@@ -1,5 +1,6 @@
 use candid::Principal;
 use ic_cdk::api::management_canister::main::CanisterInstallMode;
+use ic_cdk_macros::update;
 use shared_utils::{
     canister_specific::individual_user_template::types::arg::IndividualUserTemplateInitArgs,
     common::types::{known_principal::KnownPrincipalType, wasm::WasmType},
@@ -9,8 +10,7 @@ use crate::{util::canister_management, CANISTER_DATA};
 
 // * dfx canister call user_index upgrade_specific_individual_user_canister_with_latest_wasm '(principal "", principal "", null)' --network ic
 
-#[ic_cdk::update]
-#[candid::candid_method(update)]
+#[update]
 async fn upgrade_specific_individual_user_canister_with_latest_wasm(
     user_principal_id: Principal,
     user_canister_id: Principal,

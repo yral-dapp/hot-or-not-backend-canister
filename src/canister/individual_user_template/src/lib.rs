@@ -4,9 +4,10 @@ use api::{
     follow::update_profiles_that_follow_me_toggle_list_with_specified_profile::FollowerArg,
     profile::update_profile_display_details::UpdateProfileDetailsError,
 };
-use candid::{export_service, Principal};
+use candid::Principal;
 use data_model::CanisterData;
 use ic_cdk::api::management_canister::provisional::CanisterId;
+use ic_cdk_macros::export_candid;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
         arg::{FolloweeArg, IndividualUserTemplateInitArgs, PlaceBetArg},
@@ -34,16 +35,10 @@ use shared_utils::{
 
 mod api;
 mod data_model;
-#[cfg(test)]
-mod test;
 mod util;
 
 thread_local! {
     static CANISTER_DATA: RefCell<CanisterData> = RefCell::default();
 }
 
-#[ic_cdk::query(name = "__get_candid_interface_tmp_hack")]
-fn export_candid() -> String {
-    export_service!();
-    __export_service()
-}
+export_candid!();

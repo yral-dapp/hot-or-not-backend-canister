@@ -1,3 +1,4 @@
+use ic_cdk_macros::query;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
         error::GetPostsOfUserProfileError, post::PostDetailsForFrontend,
@@ -9,8 +10,7 @@ use shared_utils::{
 
 use crate::CANISTER_DATA;
 
-#[ic_cdk::query]
-#[candid::candid_method(query)]
+#[query]
 fn get_posts_of_this_user_profile_with_pagination(
     from_inclusive_id: u64,
     to_exclusive_id: u64,

@@ -1,6 +1,7 @@
 
 use candid::Principal;
 use ic_cdk::{api::{is_controller, management_canister::{main::{deposit_cycles, install_code, CanisterInstallMode, InstallCodeArgument}, provisional::CanisterIdRecord}}, caller};
+use ic_cdk_macros::update;
 use shared_utils::{
     canister_specific::{
         post_cache::types::arg::PostCacheInitArgs, 
@@ -21,8 +22,7 @@ use shared_utils::{
 use crate::{data_model::{CanisterUpgradeStatus, UpgradeCanisterArg}, CANISTER_DATA};
 
 
-#[ic_cdk::update]
-#[candid::candid_method(update)]
+#[update]
 pub async fn upgrade_canister(upgrade_arg: UpgradeCanisterArg) -> Result<String, String> {
     
     if !is_controller(&caller()) {

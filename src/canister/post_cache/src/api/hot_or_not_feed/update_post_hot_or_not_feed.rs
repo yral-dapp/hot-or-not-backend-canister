@@ -1,9 +1,9 @@
+use ic_cdk_macros::update;
 use shared_utils::common::types::top_posts::post_score_index_item::PostScoreIndexItemV1;
 
 use crate::{data_model::CanisterData, CANISTER_DATA};
 
-#[ic_cdk::update]
-#[candid::candid_method(update)]
+#[update]
 fn update_post_hot_or_not_feed(post: PostScoreIndexItemV1) {
     CANISTER_DATA.with(|canister_data| {
         let mut canister_data = canister_data.borrow_mut();
