@@ -12,9 +12,7 @@ pub struct FollowData {
 
 #[derive(Default, Serialize, Deserialize, Clone)]
 pub struct FollowList {
-    #[serde(with = "any_key_map")]
     pub sorted_index: BTreeMap<FollowEntryId, FollowEntryDetail>,
-    #[serde(with = "any_key_map")]
     pub members: HashMap<FollowEntryDetail, FollowEntryId>,
 }
 

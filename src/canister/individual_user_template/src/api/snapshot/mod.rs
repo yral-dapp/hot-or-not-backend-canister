@@ -1,6 +1,6 @@
 use std::{
     borrow::Borrow,
-    collections::{BTreeMap, BTreeSet, HashSet},
+    collections::{BTreeMap, BTreeSet, HashMap, HashSet},
     time::SystemTime,
 };
 
@@ -11,7 +11,7 @@ use serde_json_any_key::*;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
         configuration::IndividualUserConfiguration,
-        follow::FollowData,
+        follow::{FollowData, FollowEntryDetail, FollowEntryId, FollowList},
         hot_or_not::{
             AggregateStats, BetDetails, BetMaker, BetMakerPrincipal, GlobalBetId, GlobalRoomId,
             HotOrNotDetails, PlacedBetDetail, RoomDetailsV1, RoomId, SlotDetailsV1, SlotId,
@@ -24,7 +24,11 @@ use shared_utils::{
     common::types::{
         app_primitive_type::PostId,
         known_principal::KnownPrincipalMap,
-        top_posts::{post_score_index::PostScoreIndex, post_score_index_item::PostStatus},
+        top_posts::{
+            post_score_index::PostScoreIndex,
+            post_score_index_item::{PostScoreIndexItem, PostStatus},
+            PublisherCanisterId, Score,
+        },
         utility_token::token_event::TokenEvent,
         version_details::VersionDetails,
     },
@@ -53,12 +57,12 @@ pub struct CanisterDataForSnapshot {
     #[serde(with = "any_key_map")]
     pub all_hot_or_not_bets_placed: BTreeMap<(CanisterId, PostId), PlacedBetDetail>,
     pub configuration: IndividualUserConfiguration,
-    pub follow_data: FollowData,
+    pub follow_data: FollowDataForSnapshot,
     #[serde(with = "any_key_map")]
     pub known_principal_ids: KnownPrincipalMap,
     pub my_token_balance: TokenBalanceForSnapshot,
-    pub posts_index_sorted_by_home_feed_score: PostScoreIndex,
-    pub posts_index_sorted_by_hot_or_not_feed_score: PostScoreIndex,
+    pub posts_index_sorted_by_home_feed_score: PostScoreIndexForSnapshot,
+    pub posts_index_sorted_by_hot_or_not_feed_score: PostScoreIndexForSnapshot,
     pub principals_i_follow: BTreeSet<Principal>,
     pub principals_that_follow_me: BTreeSet<Principal>,
     pub profile: UserProfile,
@@ -95,6 +99,28 @@ pub struct TokenBalanceForSnapshot {
     #[serde(with = "any_key_map")]
     pub utility_token_transaction_history: BTreeMap<u64, TokenEvent>,
     pub lifetime_earnings: u64,
+}
+
+#[derive(Default, Serialize, Deserialize, Clone)]
+pub struct FollowDataForSnapshot {
+    pub follower: FollowListForSnapshot,
+    pub following: FollowListForSnapshot,
+}
+
+#[derive(Default, Serialize, Deserialize, Clone)]
+pub struct FollowListForSnapshot {
+    #[serde(with = "any_key_map")]
+    pub sorted_index: BTreeMap<FollowEntryId, FollowEntryDetail>,
+    #[serde(with = "any_key_map")]
+    pub members: HashMap<FollowEntryDetail, FollowEntryId>,
+}
+
+#[derive(Default, Debug, Clone, CandidType, Deserialize, Serialize)]
+pub struct PostScoreIndexForSnapshot {
+    #[serde(with = "any_key_map")]
+    pub items_sorted_by_score: BTreeMap<Score, Vec<PostScoreIndexItem>>,
+    #[serde(with = "any_key_map")]
+    pub item_presence_index: HashMap<(PublisherCanisterId, PostId), Score>,
 }
 
 impl From<&CanisterData> for CanisterDataForSnapshot {
@@ -157,6 +183,39 @@ impl From<&CanisterData> for CanisterDataForSnapshot {
             lifetime_earnings: canister_data.my_token_balance.lifetime_earnings,
         };
 
+        let follow_data = FollowDataForSnapshot {
+            follower: FollowListForSnapshot {
+                sorted_index: canister_data.follow_data.follower.sorted_index.clone(),
+                members: canister_data.follow_data.follower.members.clone(),
+            },
+            following: FollowListForSnapshot {
+                sorted_index: canister_data.follow_data.following.sorted_index.clone(),
+                members: canister_data.follow_data.following.members.clone(),
+            },
+        };
+
+        let posts_index_sorted_by_home_feed_score = PostScoreIndexForSnapshot {
+            items_sorted_by_score: canister_data
+                .posts_index_sorted_by_home_feed_score
+                .items_sorted_by_score
+                .clone(),
+            item_presence_index: canister_data
+                .posts_index_sorted_by_home_feed_score
+                .item_presence_index
+                .clone(),
+        };
+
+        let posts_index_sorted_by_hot_or_not_feed_score = PostScoreIndexForSnapshot {
+            items_sorted_by_score: canister_data
+                .posts_index_sorted_by_hot_or_not_feed_score
+                .items_sorted_by_score
+                .clone(),
+            item_presence_index: canister_data
+                .posts_index_sorted_by_hot_or_not_feed_score
+                .item_presence_index
+                .clone(),
+        };
+
         Self {
             all_created_posts,
             room_details_map,
@@ -165,15 +224,11 @@ impl From<&CanisterData> for CanisterDataForSnapshot {
             slot_details_map,
             all_hot_or_not_bets_placed: canister_data.all_hot_or_not_bets_placed.clone(),
             configuration: canister_data.configuration.clone(),
-            follow_data: canister_data.follow_data.clone(),
+            follow_data,
             known_principal_ids: canister_data.known_principal_ids.clone(),
             my_token_balance,
-            posts_index_sorted_by_home_feed_score: canister_data
-                .posts_index_sorted_by_home_feed_score
-                .clone(),
-            posts_index_sorted_by_hot_or_not_feed_score: canister_data
-                .posts_index_sorted_by_hot_or_not_feed_score
-                .clone(),
+            posts_index_sorted_by_home_feed_score,
+            posts_index_sorted_by_hot_or_not_feed_score,
             principals_i_follow: canister_data.principals_i_follow.clone(),
             principals_that_follow_me: canister_data.principals_that_follow_me.clone(),
             profile: canister_data.profile.clone(),
@@ -243,6 +298,39 @@ impl From<CanisterDataForSnapshot> for CanisterData {
             lifetime_earnings: canister_data.my_token_balance.lifetime_earnings,
         };
 
+        let follow_data = FollowData {
+            follower: FollowList {
+                sorted_index: canister_data.follow_data.follower.sorted_index.clone(),
+                members: canister_data.follow_data.follower.members.clone(),
+            },
+            following: FollowList {
+                sorted_index: canister_data.follow_data.following.sorted_index.clone(),
+                members: canister_data.follow_data.following.members.clone(),
+            },
+        };
+
+        let posts_index_sorted_by_home_feed_score = PostScoreIndex {
+            items_sorted_by_score: canister_data
+                .posts_index_sorted_by_home_feed_score
+                .items_sorted_by_score
+                .clone(),
+            item_presence_index: canister_data
+                .posts_index_sorted_by_home_feed_score
+                .item_presence_index
+                .clone(),
+        };
+
+        let posts_index_sorted_by_hot_or_not_feed_score = PostScoreIndex {
+            items_sorted_by_score: canister_data
+                .posts_index_sorted_by_hot_or_not_feed_score
+                .items_sorted_by_score
+                .clone(),
+            item_presence_index: canister_data
+                .posts_index_sorted_by_hot_or_not_feed_score
+                .item_presence_index
+                .clone(),
+        };
+
         Self {
             all_created_posts,
             room_details_map,
@@ -251,13 +339,11 @@ impl From<CanisterDataForSnapshot> for CanisterData {
             slot_details_map,
             all_hot_or_not_bets_placed: canister_data.all_hot_or_not_bets_placed,
             configuration: canister_data.configuration,
-            follow_data: canister_data.follow_data,
+            follow_data,
             known_principal_ids: canister_data.known_principal_ids,
             my_token_balance,
-            posts_index_sorted_by_home_feed_score: canister_data
-                .posts_index_sorted_by_home_feed_score,
-            posts_index_sorted_by_hot_or_not_feed_score: canister_data
-                .posts_index_sorted_by_hot_or_not_feed_score,
+            posts_index_sorted_by_home_feed_score,
+            posts_index_sorted_by_hot_or_not_feed_score,
             principals_i_follow: canister_data.principals_i_follow,
             principals_that_follow_me: canister_data.principals_that_follow_me,
             profile: canister_data.profile,

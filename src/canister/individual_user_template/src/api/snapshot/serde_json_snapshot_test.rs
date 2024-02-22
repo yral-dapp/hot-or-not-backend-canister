@@ -37,7 +37,8 @@ mod test {
     use crate::{
         api::{
             snapshot::{
-                CanisterDataForSnapshot, HotOrNotDetailsForSnapshot, PostForSnapshot,
+                CanisterDataForSnapshot, FollowDataForSnapshot, FollowListForSnapshot,
+                HotOrNotDetailsForSnapshot, PostForSnapshot, PostScoreIndexForSnapshot,
                 TokenBalanceForSnapshot,
             },
             well_known_principal::get_well_known_principal_value,
@@ -178,11 +179,6 @@ mod test {
         let mut item_prescence_index = HashMap::<(Principal, u64), u64>::new();
         item_prescence_index.insert((temp_principal, 1), 1);
 
-        let post_score_index = PostScoreIndex {
-            items_sorted_by_score: items_sorted_by_score,
-            item_presence_index: item_prescence_index,
-        };
-
         let mut principal_list = BTreeSet::<Principal>::new();
         principal_list.insert(temp_principal);
 
@@ -196,12 +192,12 @@ mod test {
             configuration: IndividualUserConfiguration {
                 url_to_send_canister_metrics_to: Some("dsfsd".to_string()),
             },
-            follow_data: FollowData {
-                follower: FollowList {
+            follow_data: FollowDataForSnapshot {
+                follower: FollowListForSnapshot {
                     sorted_index: follow_sorted_index.clone(),
                     members: follow_members.clone(),
                 },
-                following: FollowList {
+                following: FollowListForSnapshot {
                     sorted_index: follow_sorted_index,
                     members: follow_members,
                 },
@@ -212,8 +208,14 @@ mod test {
                 utility_token_transaction_history: utility_history,
                 lifetime_earnings: 1200,
             },
-            posts_index_sorted_by_home_feed_score: post_score_index.clone(),
-            posts_index_sorted_by_hot_or_not_feed_score: post_score_index,
+            posts_index_sorted_by_home_feed_score: PostScoreIndexForSnapshot {
+                items_sorted_by_score: items_sorted_by_score.clone(),
+                item_presence_index: item_prescence_index.clone(),
+            },
+            posts_index_sorted_by_hot_or_not_feed_score: PostScoreIndexForSnapshot {
+                items_sorted_by_score: items_sorted_by_score.clone(),
+                item_presence_index: item_prescence_index.clone(),
+            },
             principals_i_follow: principal_list.clone(),
             principals_that_follow_me: principal_list,
             profile: UserProfile {
