@@ -282,6 +282,7 @@ service : (IndividualUserTemplateInitArgs) -> {
   check_and_update_scores_and_share_with_post_cache_if_difference_beyond_threshold : (
       vec nat64,
     ) -> ();
+  clear_snapshot : () -> ();
   do_i_follow_this_user : (FolloweeArg) -> (Result_2) query;
   download_snapshot : (nat64, nat64) -> (vec nat8) query;
   get_entire_individual_post_detail_by_id : (nat64) -> (Result_3) query;
