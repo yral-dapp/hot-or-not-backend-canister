@@ -44,6 +44,7 @@ mod test {
             well_known_principal::get_well_known_principal_value,
         },
         data_model::CanisterData,
+        data_model::CanisterData,
         data_model::{
             CanisterData, CanisterDataForSnapshot, HotOrNotDetailsForSnapshot, PostForSnapshot,
         },

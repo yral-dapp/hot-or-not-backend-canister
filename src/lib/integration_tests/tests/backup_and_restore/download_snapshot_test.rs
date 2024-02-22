@@ -7,6 +7,9 @@ use shared_utils::{
         individual_user_template::types::{
             arg::{FolloweeArg, IndividualUserTemplateInitArgs, PlaceBetArg},
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 180ad75... fix for key str, heam memory instead of SM, pocketic test
             error::{
                 BetOnCurrentlyViewingPostError, FollowAnotherUserProfileError,
                 GetPostsOfUserProfileError,
@@ -15,6 +18,7 @@ use shared_utils::{
             hot_or_not::{BetDirection, BettingStatus, PlacedBetDetail},
             post::{PostDetailsForFrontend, PostDetailsFromFrontend},
             profile::UserProfileDetailsForFrontend,
+<<<<<<< HEAD
         },
         post_cache::types::arg::PostCacheInitArgs,
     },
@@ -25,12 +29,18 @@ use shared_utils::{
             error::{BetOnCurrentlyViewingPostError, FollowAnotherUserProfileError},
             hot_or_not::{BetDirection, BettingStatus},
             post::PostDetailsFromFrontend,
+=======
+>>>>>>> 180ad75... fix for key str, heam memory instead of SM, pocketic test
         },
         post_cache::types::arg::PostCacheInitArgs,
     },
-    common::types::known_principal::KnownPrincipalType,
+    common::types::{known_principal::KnownPrincipalType, utility_token::token_event::TokenEvent},
     constant::RECLAIM_CANISTER_PRINCIPAL_ID,
+<<<<<<< HEAD
 >>>>>>> 18666a8... fix for key str
+=======
+    types::canister_specific::individual_user_template::error_types::GetUserUtilityTokenTransactionHistoryError,
+>>>>>>> 180ad75... fix for key str, heam memory instead of SM, pocketic test
 };
 use test_utils::setup::test_constants::{
     get_mock_user_alice_principal_id, get_mock_user_bob_principal_id,
@@ -42,7 +52,10 @@ const INDIVIDUAL_TEMPLATE_WASM_PATH: &str =
 const POST_CACHE_WASM_PATH: &str =
     "../../../target/wasm32-unknown-unknown/release/post_cache.wasm.gz";
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 180ad75... fix for key str, heam memory instead of SM, pocketic test
 #[cfg(feature = "bet_details_heap_to_stable_mem_upgrade")]
 #[test]
 fn download_snapshot_test() {
@@ -462,10 +475,14 @@ fn download_snapshot_test() {
     let reclaim_principal_id = Principal::from_text(RECLAIM_CANISTER_PRINCIPAL_ID).unwrap();
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     let alice_snap_len = pic
 =======
     let res = pic
 >>>>>>> 18666a8... fix for key str
+=======
+    let alice_snap_len = pic
+>>>>>>> 180ad75... fix for key str, heam memory instead of SM, pocketic test
         .update_call(
             alice_individual_template_canister_id,
             reclaim_principal_id,
@@ -482,6 +499,9 @@ fn download_snapshot_test() {
         .unwrap();
     println!("save_snapshot_json len: {:?}", res);
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 180ad75... fix for key str, heam memory instead of SM, pocketic test
 
     let bob_snap_len = pic
         .update_call(
@@ -1189,8 +1209,11 @@ fn download_snapshot_test() {
         .unwrap();
     println!("Alice post cache prinicpal: {:?}", fres10_1);
     assert_eq!(fres10_1, fres10);
+<<<<<<< HEAD
 =======
 >>>>>>> 18666a8... fix for key str
+=======
+>>>>>>> 180ad75... fix for key str, heam memory instead of SM, pocketic test
 }
 
 fn individual_template_canister_wasm() -> Vec<u8> {
