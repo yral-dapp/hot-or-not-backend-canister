@@ -25,6 +25,7 @@ use shared_utils::{
         app_primitive_type::PostId,
         known_principal::KnownPrincipalMap,
         top_posts::{post_score_index::PostScoreIndex, post_score_index_item::PostStatus},
+        utility_token::token_event::TokenEvent,
         version_details::VersionDetails,
     },
 };
@@ -55,7 +56,7 @@ pub struct CanisterDataForSnapshot {
     pub follow_data: FollowData,
     #[serde(with = "any_key_map")]
     pub known_principal_ids: KnownPrincipalMap,
-    pub my_token_balance: TokenBalance,
+    pub my_token_balance: TokenBalanceForSnapshot,
     pub posts_index_sorted_by_home_feed_score: PostScoreIndex,
     pub posts_index_sorted_by_hot_or_not_feed_score: PostScoreIndex,
     pub principals_i_follow: BTreeSet<Principal>,
@@ -86,6 +87,14 @@ pub struct PostForSnapshot {
 pub struct HotOrNotDetailsForSnapshot {
     pub hot_or_not_feed_score: FeedScore,
     pub aggregate_stats: AggregateStats,
+}
+
+#[derive(Default, Clone, Deserialize, CandidType, Debug, Serialize)]
+pub struct TokenBalanceForSnapshot {
+    pub utility_token_balance: u64,
+    #[serde(with = "any_key_map")]
+    pub utility_token_transaction_history: BTreeMap<u64, TokenEvent>,
+    pub lifetime_earnings: u64,
 }
 
 impl From<&CanisterData> for CanisterDataForSnapshot {
@@ -139,6 +148,15 @@ impl From<&CanisterData> for CanisterDataForSnapshot {
             slot_details_map.insert(k, v.clone());
         });
 
+        let my_token_balance = TokenBalanceForSnapshot {
+            utility_token_balance: canister_data.my_token_balance.utility_token_balance,
+            utility_token_transaction_history: canister_data
+                .my_token_balance
+                .utility_token_transaction_history
+                .clone(),
+            lifetime_earnings: canister_data.my_token_balance.lifetime_earnings,
+        };
+
         Self {
             all_created_posts,
             room_details_map,
@@ -149,7 +167,7 @@ impl From<&CanisterData> for CanisterDataForSnapshot {
             configuration: canister_data.configuration.clone(),
             follow_data: canister_data.follow_data.clone(),
             known_principal_ids: canister_data.known_principal_ids.clone(),
-            my_token_balance: canister_data.my_token_balance.clone(),
+            my_token_balance,
             posts_index_sorted_by_home_feed_score: canister_data
                 .posts_index_sorted_by_home_feed_score
                 .clone(),
@@ -216,6 +234,15 @@ impl From<CanisterDataForSnapshot> for CanisterData {
             slot_details_map.insert(*k, v.clone());
         });
 
+        let my_token_balance = TokenBalance {
+            utility_token_balance: canister_data.my_token_balance.utility_token_balance,
+            utility_token_transaction_history: canister_data
+                .my_token_balance
+                .utility_token_transaction_history
+                .clone(),
+            lifetime_earnings: canister_data.my_token_balance.lifetime_earnings,
+        };
+
         Self {
             all_created_posts,
             room_details_map,
@@ -226,7 +253,7 @@ impl From<CanisterDataForSnapshot> for CanisterData {
             configuration: canister_data.configuration,
             follow_data: canister_data.follow_data,
             known_principal_ids: canister_data.known_principal_ids,
-            my_token_balance: canister_data.my_token_balance,
+            my_token_balance,
             posts_index_sorted_by_home_feed_score: canister_data
                 .posts_index_sorted_by_home_feed_score,
             posts_index_sorted_by_hot_or_not_feed_score: canister_data

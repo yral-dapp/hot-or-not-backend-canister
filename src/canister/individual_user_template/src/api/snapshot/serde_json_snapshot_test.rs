@@ -36,7 +36,10 @@ mod test {
 
     use crate::{
         api::{
-            snapshot::{CanisterDataForSnapshot, HotOrNotDetailsForSnapshot, PostForSnapshot},
+            snapshot::{
+                CanisterDataForSnapshot, HotOrNotDetailsForSnapshot, PostForSnapshot,
+                TokenBalanceForSnapshot,
+            },
             well_known_principal::get_well_known_principal_value,
         },
         data_model::CanisterData,
@@ -204,7 +207,7 @@ mod test {
                 },
             },
             known_principal_ids: known_principal_ids,
-            my_token_balance: TokenBalance {
+            my_token_balance: TokenBalanceForSnapshot {
                 utility_token_balance: 100,
                 utility_token_transaction_history: utility_history,
                 lifetime_earnings: 1200,

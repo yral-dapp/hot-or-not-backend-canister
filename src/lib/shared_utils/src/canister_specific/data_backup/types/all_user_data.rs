@@ -26,9 +26,9 @@ impl Storable for AllUserData {
         Decode!(&bytes, Self).unwrap()
     }
 
-    const BOUND: Bound = Bound::Bounded { 
+    const BOUND: Bound = Bound::Bounded {
         max_size: 100_000, // 100kb
-        is_fixed_size: false
+        is_fixed_size: false,
     };
 }
 
