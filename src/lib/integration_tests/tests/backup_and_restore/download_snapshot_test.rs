@@ -446,6 +446,71 @@ fn download_snapshot_test() {
         .unwrap();
     assert_eq!(res, true);
 
+    // Upgrade canister
+
+    let individual_template_args = IndividualUserTemplateInitArgs {
+        known_principal_ids: Some(known_prinicipal_values.clone()),
+        profile_owner: Some(alice_principal_id),
+        upgrade_version_number: None,
+        url_to_send_canister_metrics_to: None,
+        version: "1".to_string(),
+    };
+    let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
+    match pic.upgrade_canister(
+        alice_individual_template_canister_id,
+        individual_template_wasm_bytes.clone(),
+        individual_template_args_bytes,
+        None,
+    ) {
+        Ok(_) => {}
+        Err(e) => {
+            println!("Error: {:?}", e);
+            panic!("Upgrade failed");
+        }
+    }
+
+    let individual_template_args = IndividualUserTemplateInitArgs {
+        known_principal_ids: Some(known_prinicipal_values.clone()),
+        profile_owner: Some(bob_principal_id),
+        upgrade_version_number: None,
+        url_to_send_canister_metrics_to: None,
+        version: "1".to_string(),
+    };
+    let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
+    match pic.upgrade_canister(
+        bob_individual_template_canister_id,
+        individual_template_wasm_bytes.clone(),
+        individual_template_args_bytes,
+        None,
+    ) {
+        Ok(_) => {}
+        Err(e) => {
+            println!("Error: {:?}", e);
+            panic!("Upgrade failed");
+        }
+    }
+
+    let individual_template_args = IndividualUserTemplateInitArgs {
+        known_principal_ids: Some(known_prinicipal_values.clone()),
+        profile_owner: Some(dan_principal_id),
+        upgrade_version_number: None,
+        url_to_send_canister_metrics_to: None,
+        version: "1".to_string(),
+    };
+    let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
+    match pic.upgrade_canister(
+        dan_individual_template_canister_id,
+        individual_template_wasm_bytes.clone(),
+        individual_template_args_bytes,
+        None,
+    ) {
+        Ok(_) => {}
+        Err(e) => {
+            println!("Error: {:?}", e);
+            panic!("Upgrade failed");
+        }
+    }
+
     // Save snapshot
     let reclaim_principal_id = Principal::from_text(RECLAIM_CANISTER_PRINCIPAL_ID).unwrap();
 
@@ -464,7 +529,7 @@ fn download_snapshot_test() {
             bet_status
         })
         .unwrap();
-    println!("save_snapshot_json len: {:?}", res);
+    println!("save_snapshot_json len: {:?}", alice_snap_len);
 
     let bob_snap_len = pic
         .update_call(
@@ -481,7 +546,7 @@ fn download_snapshot_test() {
             bet_status
         })
         .unwrap();
-    println!("save_snapshot_json len: {:?}", res);
+    println!("save_snapshot_json len: {:?}", bob_snap_len);
 
     let dan_snap_len = pic
         .update_call(
@@ -498,7 +563,7 @@ fn download_snapshot_test() {
             bet_status
         })
         .unwrap();
-    println!("save_snapshot_json len: {:?}", res);
+    println!("save_snapshot_json len: {:?}", dan_snap_len);
 
     // Download Snapshots
     //
@@ -511,6 +576,7 @@ fn download_snapshot_test() {
         if end > alice_snap_len {
             end = alice_snap_len;
         }
+        println!("i {} start {} end-start {}", i, start, end - start);
 
         let chunk = pic
             .update_call(
@@ -527,8 +593,10 @@ fn download_snapshot_test() {
                 payload
             })
             .unwrap();
+        println!("iter {} chunk: {:?}", i, chunk.len());
         alice_snapshot.extend(chunk);
     }
+    println!("alice_snapshot: {:?}", alice_snapshot.len());
 
     let bob_snapshot = pic
         .update_call(
@@ -546,6 +614,8 @@ fn download_snapshot_test() {
         })
         .unwrap();
 
+    println!("bob_snapshot: {:?}", bob_snapshot.len());
+
     let dan_snapshot = pic
         .update_call(
             dan_individual_template_canister_id,
@@ -561,6 +631,7 @@ fn download_snapshot_test() {
             payload
         })
         .unwrap();
+    println!("dan_snapshot: {:?}", dan_snapshot.len());
 
     // Clear snapshot
 
