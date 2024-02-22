@@ -514,15 +514,7 @@ fn download_snapshot_test() {
     // Save snapshot
     let reclaim_principal_id = Principal::from_text(RECLAIM_CANISTER_PRINCIPAL_ID).unwrap();
 
-<<<<<<< HEAD
-<<<<<<< HEAD
     let alice_snap_len = pic
-=======
-    let res = pic
->>>>>>> 18666a8... fix for key str
-=======
-    let alice_snap_len = pic
->>>>>>> 180ad75... fix for key str, heam memory instead of SM, pocketic test
         .update_call(
             alice_individual_template_canister_id,
             reclaim_principal_id,
@@ -537,15 +529,7 @@ fn download_snapshot_test() {
             bet_status
         })
         .unwrap();
-<<<<<<< HEAD
-    println!("save_snapshot_json len: {:?}", res);
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 180ad75... fix for key str, heam memory instead of SM, pocketic test
-=======
     println!("save_snapshot_json len: {:?}", alice_snap_len);
->>>>>>> ac7337a... fix post_upgrade fail
 
     let bob_snap_len = pic
         .update_call(
@@ -1259,11 +1243,6 @@ fn download_snapshot_test() {
         .unwrap();
     println!("Alice post cache prinicpal: {:?}", fres10_1);
     assert_eq!(fres10_1, fres10);
-<<<<<<< HEAD
-=======
->>>>>>> 18666a8... fix for key str
-=======
->>>>>>> 180ad75... fix for key str, heam memory instead of SM, pocketic test
 }
 
 fn individual_template_canister_wasm() -> Vec<u8> {
