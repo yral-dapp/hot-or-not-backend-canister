@@ -6,10 +6,6 @@ use shared_utils::{
     canister_specific::{
         individual_user_template::types::{
             arg::{FolloweeArg, IndividualUserTemplateInitArgs, PlaceBetArg},
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 180ad75... fix for key str, heam memory instead of SM, pocketic test
             error::{
                 BetOnCurrentlyViewingPostError, FollowAnotherUserProfileError,
                 GetPostsOfUserProfileError,
@@ -18,29 +14,12 @@ use shared_utils::{
             hot_or_not::{BetDirection, BettingStatus, PlacedBetDetail},
             post::{PostDetailsForFrontend, PostDetailsFromFrontend},
             profile::UserProfileDetailsForFrontend,
-<<<<<<< HEAD
         },
         post_cache::types::arg::PostCacheInitArgs,
     },
     common::types::{known_principal::KnownPrincipalType, utility_token::token_event::TokenEvent},
     constant::RECLAIM_CANISTER_PRINCIPAL_ID,
     types::canister_specific::individual_user_template::error_types::GetUserUtilityTokenTransactionHistoryError,
-=======
-            error::{BetOnCurrentlyViewingPostError, FollowAnotherUserProfileError},
-            hot_or_not::{BetDirection, BettingStatus},
-            post::PostDetailsFromFrontend,
-=======
->>>>>>> 180ad75... fix for key str, heam memory instead of SM, pocketic test
-        },
-        post_cache::types::arg::PostCacheInitArgs,
-    },
-    common::types::{known_principal::KnownPrincipalType, utility_token::token_event::TokenEvent},
-    constant::RECLAIM_CANISTER_PRINCIPAL_ID,
-<<<<<<< HEAD
->>>>>>> 18666a8... fix for key str
-=======
-    types::canister_specific::individual_user_template::error_types::GetUserUtilityTokenTransactionHistoryError,
->>>>>>> 180ad75... fix for key str, heam memory instead of SM, pocketic test
 };
 use test_utils::setup::test_constants::{
     get_mock_user_alice_principal_id, get_mock_user_bob_principal_id,
@@ -52,10 +31,6 @@ const INDIVIDUAL_TEMPLATE_WASM_PATH: &str =
 const POST_CACHE_WASM_PATH: &str =
     "../../../target/wasm32-unknown-unknown/release/post_cache.wasm.gz";
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 180ad75... fix for key str, heam memory instead of SM, pocketic test
 #[cfg(feature = "bet_details_heap_to_stable_mem_upgrade")]
 #[test]
 fn download_snapshot_test() {
@@ -471,6 +446,71 @@ fn download_snapshot_test() {
         .unwrap();
     assert_eq!(res, true);
 
+    // Upgrade canister
+
+    let individual_template_args = IndividualUserTemplateInitArgs {
+        known_principal_ids: Some(known_prinicipal_values.clone()),
+        profile_owner: Some(alice_principal_id),
+        upgrade_version_number: None,
+        url_to_send_canister_metrics_to: None,
+        version: "1".to_string(),
+    };
+    let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
+    match pic.upgrade_canister(
+        alice_individual_template_canister_id,
+        individual_template_wasm_bytes.clone(),
+        individual_template_args_bytes,
+        None,
+    ) {
+        Ok(_) => {}
+        Err(e) => {
+            println!("Error: {:?}", e);
+            panic!("Upgrade failed");
+        }
+    }
+
+    let individual_template_args = IndividualUserTemplateInitArgs {
+        known_principal_ids: Some(known_prinicipal_values.clone()),
+        profile_owner: Some(bob_principal_id),
+        upgrade_version_number: None,
+        url_to_send_canister_metrics_to: None,
+        version: "1".to_string(),
+    };
+    let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
+    match pic.upgrade_canister(
+        bob_individual_template_canister_id,
+        individual_template_wasm_bytes.clone(),
+        individual_template_args_bytes,
+        None,
+    ) {
+        Ok(_) => {}
+        Err(e) => {
+            println!("Error: {:?}", e);
+            panic!("Upgrade failed");
+        }
+    }
+
+    let individual_template_args = IndividualUserTemplateInitArgs {
+        known_principal_ids: Some(known_prinicipal_values.clone()),
+        profile_owner: Some(dan_principal_id),
+        upgrade_version_number: None,
+        url_to_send_canister_metrics_to: None,
+        version: "1".to_string(),
+    };
+    let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
+    match pic.upgrade_canister(
+        dan_individual_template_canister_id,
+        individual_template_wasm_bytes.clone(),
+        individual_template_args_bytes,
+        None,
+    ) {
+        Ok(_) => {}
+        Err(e) => {
+            println!("Error: {:?}", e);
+            panic!("Upgrade failed");
+        }
+    }
+
     // Save snapshot
     let reclaim_principal_id = Principal::from_text(RECLAIM_CANISTER_PRINCIPAL_ID).unwrap();
 
@@ -497,11 +537,15 @@ fn download_snapshot_test() {
             bet_status
         })
         .unwrap();
+<<<<<<< HEAD
     println!("save_snapshot_json len: {:?}", res);
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> 180ad75... fix for key str, heam memory instead of SM, pocketic test
+=======
+    println!("save_snapshot_json len: {:?}", alice_snap_len);
+>>>>>>> ac7337a... fix post_upgrade fail
 
     let bob_snap_len = pic
         .update_call(
@@ -518,7 +562,7 @@ fn download_snapshot_test() {
             bet_status
         })
         .unwrap();
-    println!("save_snapshot_json len: {:?}", res);
+    println!("save_snapshot_json len: {:?}", bob_snap_len);
 
     let dan_snap_len = pic
         .update_call(
@@ -535,7 +579,7 @@ fn download_snapshot_test() {
             bet_status
         })
         .unwrap();
-    println!("save_snapshot_json len: {:?}", res);
+    println!("save_snapshot_json len: {:?}", dan_snap_len);
 
     // Download Snapshots
     //
@@ -548,6 +592,7 @@ fn download_snapshot_test() {
         if end > alice_snap_len {
             end = alice_snap_len;
         }
+        println!("i {} start {} end-start {}", i, start, end - start);
 
         let chunk = pic
             .update_call(
@@ -564,8 +609,10 @@ fn download_snapshot_test() {
                 payload
             })
             .unwrap();
+        println!("iter {} chunk: {:?}", i, chunk.len());
         alice_snapshot.extend(chunk);
     }
+    println!("alice_snapshot: {:?}", alice_snapshot.len());
 
     let bob_snapshot = pic
         .update_call(
@@ -583,6 +630,8 @@ fn download_snapshot_test() {
         })
         .unwrap();
 
+    println!("bob_snapshot: {:?}", bob_snapshot.len());
+
     let dan_snapshot = pic
         .update_call(
             dan_individual_template_canister_id,
@@ -598,6 +647,7 @@ fn download_snapshot_test() {
             payload
         })
         .unwrap();
+    println!("dan_snapshot: {:?}", dan_snapshot.len());
 
     // Clear snapshot
 
