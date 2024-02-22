@@ -263,7 +263,7 @@ pub enum RoomBetPossibleOutcomes {
     Draw,
 }
 
-#[derive(Deserialize, Serialize, Clone, CandidType)]
+#[derive(Deserialize, Serialize, Clone, CandidType, Debug, PartialEq, Eq)]
 pub struct PlacedBetDetail {
     pub canister_id: CanisterId,
     pub post_id: PostId,

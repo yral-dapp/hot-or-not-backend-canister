@@ -27,7 +27,6 @@ fn post_upgrade() {
     save_upgrade_args_to_memory();
     refetch_well_known_principals();
     reenqueue_timers_for_pending_bet_outcomes();
-    migrate_room_bets_details_to_stable_memory();
 }
 
 fn restore_data_from_stable_memory() {
@@ -82,103 +81,103 @@ fn refetch_well_known_principals() {
     });
 }
 
-const DELAY_FOR_MIGRATING_DATA: Duration = Duration::from_secs(1);
-fn migrate_room_bets_details_to_stable_memory() {
-    ic_cdk_timers::set_timer(DELAY_FOR_MIGRATING_DATA, || {
-        migrate_room_bets_details_to_stable_memory_impl()
-    });
-}
+// const DELAY_FOR_MIGRATING_DATA: Duration = Duration::from_secs(1);
+// fn migrate_room_bets_details_to_stable_memory() {
+//     ic_cdk_timers::set_timer(DELAY_FOR_MIGRATING_DATA, || {
+//         migrate_room_bets_details_to_stable_memory_impl()
+//     });
+// }
 
-fn migrate_room_bets_details_to_stable_memory_impl() {
-    let posts = CANISTER_DATA.with(|canister_data_ref_cell| {
-        let canister_data_ref_cell = canister_data_ref_cell.borrow_mut();
+// fn migrate_room_bets_details_to_stable_memory_impl() {
+//     let posts = CANISTER_DATA.with(|canister_data_ref_cell| {
+//         let canister_data_ref_cell = canister_data_ref_cell.borrow_mut();
 
-        canister_data_ref_cell.all_created_posts.clone()
-    });
+//         canister_data_ref_cell.all_created_posts.clone()
+//     });
 
-    let room_details = posts
-        .iter()
-        .filter_map(|(post_id, post)| {
-            if let Some(hot_or_not_details) = &post.hot_or_not_details {
-                Some((post_id, hot_or_not_details))
-            } else {
-                None
-            }
-        })
-        .map(|(post_id, hot_or_not_details)| {
-            hot_or_not_details
-                .slot_history
-                .iter()
-                .map(move |(slot_id, slot_details)| (post_id, slot_id, slot_details))
-                .map(|(post_id, slot_id, slot_details)| {
-                    slot_details
-                        .room_details
-                        .iter()
-                        .map(move |(room_id, room_details)| {
-                            (post_id, slot_id, room_id, room_details)
-                        })
-                })
-        })
-        .flatten()
-        .flatten();
+//     let room_details = posts
+//         .iter()
+//         .filter_map(|(post_id, post)| {
+//             if let Some(hot_or_not_details) = &post.hot_or_not_details {
+//                 Some((post_id, hot_or_not_details))
+//             } else {
+//                 None
+//             }
+//         })
+//         .map(|(post_id, hot_or_not_details)| {
+//             hot_or_not_details
+//                 .slot_history
+//                 .iter()
+//                 .map(move |(slot_id, slot_details)| (post_id, slot_id, slot_details))
+//                 .map(|(post_id, slot_id, slot_details)| {
+//                     slot_details
+//                         .room_details
+//                         .iter()
+//                         .map(move |(room_id, room_details)| {
+//                             (post_id, slot_id, room_id, room_details)
+//                         })
+//                 })
+//         })
+//         .flatten()
+//         .flatten();
 
-    room_details.for_each(|(post_id, slot_id, room_id, room_details)| {
-        let global_room_id = GlobalRoomId(post_id.clone(), slot_id.clone(), room_id.clone());
-        room_details.bets_made.iter().for_each(|(bet_maker, bet)| {
-            CANISTER_DATA.with(|canister_data_ref_cell| {
-                let mut canister_data_ref_cell = canister_data_ref_cell.borrow_mut();
-                let global_bet_id =
-                    GlobalBetId(global_room_id.clone(), StablePrincipal(bet_maker.clone()));
-                canister_data_ref_cell
-                    .bet_details_map
-                    .insert(global_bet_id, bet.clone());
-            });
+//     room_details.for_each(|(post_id, slot_id, room_id, room_details)| {
+//         let global_room_id = GlobalRoomId(post_id.clone(), slot_id.clone(), room_id.clone());
+//         room_details.bets_made.iter().for_each(|(bet_maker, bet)| {
+//             CANISTER_DATA.with(|canister_data_ref_cell| {
+//                 let mut canister_data_ref_cell = canister_data_ref_cell.borrow_mut();
+//                 let global_bet_id =
+//                     GlobalBetId(global_room_id.clone(), StablePrincipal(bet_maker.clone()));
+//                 canister_data_ref_cell
+//                     .bet_details_map
+//                     .insert(global_bet_id, bet.clone());
+//             });
 
-            CANISTER_DATA.with(|canister_data_ref_cell| {
-                let mut canister_data_ref_cell = canister_data_ref_cell.borrow_mut();
-                canister_data_ref_cell
-                    .post_principal_map
-                    .insert((post_id.clone(), StablePrincipal(bet_maker.clone())), ());
-            });
-        });
+//             CANISTER_DATA.with(|canister_data_ref_cell| {
+//                 let mut canister_data_ref_cell = canister_data_ref_cell.borrow_mut();
+//                 canister_data_ref_cell
+//                     .post_principal_map
+//                     .insert((post_id.clone(), StablePrincipal(bet_maker.clone())), ());
+//             });
+//         });
 
-        let room_details_v1 = RoomDetailsV1 {
-            bet_outcome: room_details.bet_outcome.clone(),
-            room_bets_total_pot: room_details.room_bets_total_pot,
-            total_hot_bets: room_details.total_hot_bets,
-            total_not_bets: room_details.total_not_bets,
-        };
+//         let room_details_v1 = RoomDetailsV1 {
+//             bet_outcome: room_details.bet_outcome.clone(),
+//             room_bets_total_pot: room_details.room_bets_total_pot,
+//             total_hot_bets: room_details.total_hot_bets,
+//             total_not_bets: room_details.total_not_bets,
+//         };
 
-        CANISTER_DATA.with(|canister_data_ref_cell| {
-            let mut canister_data_ref_cell = canister_data_ref_cell.borrow_mut();
-            canister_data_ref_cell
-                .room_details_map
-                .insert(global_room_id.clone(), room_details_v1);
-        });
+//         CANISTER_DATA.with(|canister_data_ref_cell| {
+//             let mut canister_data_ref_cell = canister_data_ref_cell.borrow_mut();
+//             canister_data_ref_cell
+//                 .room_details_map
+//                 .insert(global_room_id.clone(), room_details_v1);
+//         });
 
-        CANISTER_DATA.with(|canister_data_ref_cell| {
-            let mut canister_data_ref_cell = canister_data_ref_cell.borrow_mut();
-            let global_slot_id = (post_id.clone(), slot_id.clone());
-            match canister_data_ref_cell.slot_details_map.get(&global_slot_id) {
-                Some(slot_details) => {
-                    if slot_details.active_room_id < *room_id {
-                        canister_data_ref_cell.slot_details_map.insert(
-                            global_slot_id,
-                            SlotDetailsV1 {
-                                active_room_id: room_id.clone(),
-                            },
-                        );
-                    }
-                }
-                None => {
-                    canister_data_ref_cell.slot_details_map.insert(
-                        global_slot_id,
-                        SlotDetailsV1 {
-                            active_room_id: room_id.clone(),
-                        },
-                    );
-                }
-            }
-        });
-    });
-}
+//         CANISTER_DATA.with(|canister_data_ref_cell| {
+//             let mut canister_data_ref_cell = canister_data_ref_cell.borrow_mut();
+//             let global_slot_id = (post_id.clone(), slot_id.clone());
+//             match canister_data_ref_cell.slot_details_map.get(&global_slot_id) {
+//                 Some(slot_details) => {
+//                     if slot_details.active_room_id < *room_id {
+//                         canister_data_ref_cell.slot_details_map.insert(
+//                             global_slot_id,
+//                             SlotDetailsV1 {
+//                                 active_room_id: room_id.clone(),
+//                             },
+//                         );
+//                     }
+//                 }
+//                 None => {
+//                     canister_data_ref_cell.slot_details_map.insert(
+//                         global_slot_id,
+//                         SlotDetailsV1 {
+//                             active_room_id: room_id.clone(),
+//                         },
+//                     );
+//                 }
+//             }
+//         });
+//     });
+// }
