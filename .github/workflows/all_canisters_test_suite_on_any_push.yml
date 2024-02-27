@@ -57,14 +57,18 @@ jobs:
       - name: Build user_index canister
         run: |
           nix-shell --run "dfx build user_index"
+          gzip -f -1 ./target/wasm32-unknown-unknown/release/user_index.wasm
       - name: Build configuration canister
         run: |
           nix-shell --run "dfx build configuration"
+          gzip -f -1 ./target/wasm32-unknown-unknown/release/configuration.wasm
       - name: Build data_backup canister
         run: |
           nix-shell --run "dfx build data_backup"
+          gzip -f -1 ./target/wasm32-unknown-unknown/release/data_backup.wasm
       - name: Build post_cache canister
         run: |
           nix-shell --run "dfx build post_cache"
+          gzip -f -1 ./target/wasm32-unknown-unknown/release/post_cache.wasm
       - name: Run canister test suite
         run: nix-shell --run "cargo test"
