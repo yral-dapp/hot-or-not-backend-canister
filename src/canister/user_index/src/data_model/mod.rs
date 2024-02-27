@@ -29,6 +29,8 @@ pub struct CanisterData {
     pub last_run_upgrade_status: UpgradeStatus,
     pub allow_upgrades_for_individual_canisters: bool,
     pub available_canisters: HashSet<Principal>,
+    #[serde(default)]
+    pub backup_canister_pool: HashSet<Principal>,
     pub user_principal_id_to_canister_id_map: BTreeMap<Principal, Principal>,
     pub unique_user_name_to_user_principal_id_map: BTreeMap<String, Principal>,
     #[serde(skip, default = "_empty_wasms")]
@@ -37,7 +39,7 @@ pub struct CanisterData {
 
 impl Default for CanisterData {
     fn default() -> Self {
-        Self { configuration: Default::default(), last_run_upgrade_status: Default::default(), allow_upgrades_for_individual_canisters: Default::default(), available_canisters: Default::default(), user_principal_id_to_canister_id_map: Default::default(), unique_user_name_to_user_principal_id_map: Default::default(), wasms: _empty_wasms() }
+        Self { configuration: Default::default(), last_run_upgrade_status: Default::default(), allow_upgrades_for_individual_canisters: Default::default(), available_canisters: Default::default(), user_principal_id_to_canister_id_map: Default::default(), unique_user_name_to_user_principal_id_map: Default::default(), wasms: _empty_wasms(), backup_canister_pool: Default::default() }
     }
 }
 
