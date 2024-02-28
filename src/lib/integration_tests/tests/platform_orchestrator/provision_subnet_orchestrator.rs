@@ -112,8 +112,6 @@ fn provision_subnet_orchestrator_canister() {
     pocket_ic.update_call(platform_canister_id, super_admin, "upload_wasms", candid::encode_args((WasmType::SubnetOrchestratorWasm, subnet_orchestrator_canister_wasm.to_vec())).unwrap()).unwrap();
     pocket_ic.update_call(platform_canister_id, super_admin, "upload_wasms", candid::encode_args((WasmType::PostCacheWasm, post_cache_canister_wasm.to_vec())).unwrap()).unwrap();
     pocket_ic.update_call(platform_canister_id, super_admin, "upload_wasms", candid::encode_args((WasmType::IndividualUserWasm, individual_user_template.to_vec())).unwrap()).unwrap();
-    pocket_ic.add_cycles(platform_canister_id, CANISTER_INITIAL_CYCLES_FOR_SPAWNING_CANISTERS);
-
     pocket_ic.add_cycles(platform_canister_id, 10_000_000_000_000_000);
 
 
