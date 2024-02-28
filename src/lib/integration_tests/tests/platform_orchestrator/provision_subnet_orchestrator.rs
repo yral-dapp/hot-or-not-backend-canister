@@ -3,10 +3,10 @@ use std::{collections::{HashMap, HashSet}, time::SystemTime};
 
 use candid::{CandidType, Principal};
 use ic_cdk::api::{management_canister::provisional::CanisterSettings, time};
-use pocket_ic::{PocketIcBuilder, WasmResult};
+use pocket_ic::{PocketIc, PocketIcBuilder, WasmResult};
 use serde::{Deserialize, Serialize};
 use ic_ledger_types::{AccountIdentifier, BlockIndex, Tokens, DEFAULT_SUBACCOUNT};
-use shared_utils::{canister_specific::platform_orchestrator::{self, types::args::PlatformOrchestratorInitArgs}, common::{types::{known_principal::KnownPrincipalMap, wasm::WasmType}, utils::system_time}, constant::{NNS_CYCLE_MINTING_CANISTER, NNS_LEDGER_CANISTER_ID}};
+use shared_utils::{canister_specific::{individual_user_template, platform_orchestrator::{self, types::args::PlatformOrchestratorInitArgs}}, common::{types::{known_principal::KnownPrincipalMap, wasm::WasmType}, utils::system_time}, constant::{NNS_CYCLE_MINTING_CANISTER, NNS_LEDGER_CANISTER_ID}};
 use test_utils::setup::test_constants::{get_global_super_admin_principal_id, v1::CANISTER_INITIAL_CYCLES_FOR_SPAWNING_CANISTERS};
 
 pub type CanisterId = Principal;
@@ -87,6 +87,7 @@ fn provision_subnet_orchestrator_canister() {
     let pocket_ic = PocketIcBuilder::new()
         .with_nns_subnet()
         .with_application_subnet()
+        .with_application_subnet()
         .with_system_subnet()
         .build();
 
@@ -98,21 +99,20 @@ fn provision_subnet_orchestrator_canister() {
     let platform_canister_id = pocket_ic.create_canister_with_settings(Some(super_admin), Some(CanisterSettings {controllers: Some(vec![super_admin]), compute_allocation: None, memory_allocation: None, freezing_threshold: None}));
     pocket_ic.add_cycles(platform_canister_id, CANISTER_INITIAL_CYCLES_FOR_SPAWNING_CANISTERS);
     let platform_orchestrator_wasm = include_bytes!("../../../../../target/wasm32-unknown-unknown/release/platform_orchestrator.wasm.gz");
+    let individual_user_template = include_bytes!("../../../../../target/wasm32-unknown-unknown/release/individual_user_template.wasm.gz");
     let subnet_orchestrator_canister_wasm = include_bytes!("../../../../../target/wasm32-unknown-unknown/release/user_index.wasm.gz");
     let post_cache_canister_wasm = include_bytes!("../../../../../target/wasm32-unknown-unknown/release/post_cache.wasm.gz");
     let platform_orchestrator_init_args = PlatformOrchestratorInitArgs {
         version: "v1.0.0".into(),
-        subnet_orchestrator_wasm: None,
-        post_cache_wasm: None,
     };
     pocket_ic.install_canister(platform_canister_id, platform_orchestrator_wasm.into(), candid::encode_one(platform_orchestrator_init_args).unwrap(), Some(super_admin));
     for i in 0..30 {
         pocket_ic.tick()
     }
-    pocket_ic.update_call(platform_canister_id, Principal::anonymous(), "upload_wasms", candid::encode_args((WasmType::SubnetOrchestratorWasm, subnet_orchestrator_canister_wasm.to_vec())).unwrap()).unwrap();
-    pocket_ic.update_call(platform_canister_id, Principal::anonymous(), "upload_wasms", candid::encode_args((WasmType::PostCacheWasm, post_cache_canister_wasm.to_vec())).unwrap()).unwrap();
-    pocket_ic.add_cycles(platform_canister_id, CANISTER_INITIAL_CYCLES_FOR_SPAWNING_CANISTERS);
-
+    pocket_ic.update_call(platform_canister_id, super_admin, "upload_wasms", candid::encode_args((WasmType::SubnetOrchestratorWasm, subnet_orchestrator_canister_wasm.to_vec())).unwrap()).unwrap();
+    pocket_ic.update_call(platform_canister_id, super_admin, "upload_wasms", candid::encode_args((WasmType::PostCacheWasm, post_cache_canister_wasm.to_vec())).unwrap()).unwrap();
+    pocket_ic.update_call(platform_canister_id, super_admin, "upload_wasms", candid::encode_args((WasmType::IndividualUserWasm, individual_user_template.to_vec())).unwrap()).unwrap();
+    pocket_ic.add_cycles(platform_canister_id, 10_000_000_000_000_000);
 
 
     //Ledger Canister
@@ -166,14 +166,14 @@ fn provision_subnet_orchestrator_canister() {
         platform_canister_id,
         super_admin,
         "provision_subnet_orchestrator_canister",
-        candid::encode_one(application_subnets[0]).unwrap()
+        candid::encode_one(application_subnets[1]).unwrap()
     )
     .map(|res| {
-        let canister_id: Principal = match res {
+        let canister_id_result: Result<Principal, String> = match res {
             WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
             _ => panic!("Canister call failed")
         };
-        canister_id
+        canister_id_result.unwrap()
     })
     .unwrap();
 
@@ -193,7 +193,5 @@ fn provision_subnet_orchestrator_canister() {
     })
     .unwrap();
 
-    assert_eq!(last_upgrade_status.version, "v1.0.1")
-
-
+    assert_eq!(last_upgrade_status.version, "v1.0.0")
 }
