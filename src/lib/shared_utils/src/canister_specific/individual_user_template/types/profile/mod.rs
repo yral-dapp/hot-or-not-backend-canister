@@ -10,7 +10,7 @@ pub struct UserProfile {
     pub profile_stats: UserProfileGlobalStats,
 }
 
-#[derive(CandidType, Deserialize, Debug)]
+#[derive(CandidType, Deserialize, Debug, PartialEq, Eq)]
 pub struct UserProfileDetailsForFrontend {
     pub display_name: Option<String>,
     pub followers_count: u64,
@@ -22,7 +22,7 @@ pub struct UserProfileDetailsForFrontend {
     pub unique_user_name: Option<String>,
 }
 
-#[derive(CandidType, Deserialize, Clone, Copy, Debug, Default, Serialize)]
+#[derive(CandidType, Deserialize, Clone, Copy, Debug, Default, Serialize, PartialEq, Eq)]
 pub struct UserProfileGlobalStats {
     pub hot_bets_received: u64,
     pub not_bets_received: u64,

@@ -70,7 +70,7 @@ pub struct PostViewStatistics {
     pub average_watch_percentage: u8,
 }
 
-#[derive(Serialize, CandidType, Deserialize, Debug)]
+#[derive(Serialize, CandidType, Deserialize, Debug, PartialEq, Eq)]
 pub struct PostDetailsForFrontend {
     pub id: u64,
     pub created_by_display_name: Option<String>,
