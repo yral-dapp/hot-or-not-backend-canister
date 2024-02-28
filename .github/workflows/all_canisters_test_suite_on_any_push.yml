@@ -48,6 +48,7 @@ jobs:
           nix-shell --run "dfx canister create --no-wallet individual_user_template"
           nix-shell --run "dfx canister create --no-wallet post_cache"
           nix-shell --run "dfx canister create --no-wallet user_index"
+          nix-shell --run "dfx canister create --no-wallet platform_orchestrator"
       - name: Stop local replica
         run: nix-shell --run "dfx stop"
       - name: Build platform_orchestrator canister
