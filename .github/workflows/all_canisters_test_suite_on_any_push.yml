@@ -50,6 +50,10 @@ jobs:
           nix-shell --run "dfx canister create --no-wallet user_index"
       - name: Stop local replica
         run: nix-shell --run "dfx stop"
+      - name: Build platform_orchestrator canister
+        run: |
+          nix-shell --run "dfx build platform_orchestrator"
+          gzip -f -1 ./target/wasm32-unknown-unknown/release/platform_orchestrator.wasm
       - name: Build individual_user_template canister
         run: |
           nix-shell --run "dfx build individual_user_template"
@@ -71,4 +75,6 @@ jobs:
           nix-shell --run "dfx build post_cache"
           gzip -f -1 ./target/wasm32-unknown-unknown/release/post_cache.wasm
       - name: Run canister test suite
+        env: 
+          POCKET_IC_BIN: ${{ github.workspace }}/pocket-ic-x86_64-linux
         run: nix-shell --run "cargo test"
