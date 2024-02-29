@@ -32,7 +32,14 @@ struct CustomInstallCodeArgument {
 }
 
 pub async fn create_users_canister(profile_owner: Option<Principal>, version: String, individual_user_wasm: Vec<u8>) -> Principal {
-    // * config for provisioning canister
+    let canister_id = create_empty_user_canister().await;
+    install_canister_wasm(canister_id, profile_owner, version, individual_user_wasm).await;
+    canister_id
+}
+
+
+pub async fn create_empty_user_canister() -> Principal {
+     // * config for provisioning canister
     let arg = CreateCanisterArgument {
         settings: Some(CanisterSettings {
             controllers: Some(vec![
@@ -53,8 +60,12 @@ pub async fn create_users_canister(profile_owner: Option<Principal>, version: St
             .0
             .canister_id;
 
+    canister_id
+}
+
+pub async fn install_canister_wasm(canister_id: Principal, profile_owner: Option<Principal>, version: String, wasm: Vec<u8>) -> Principal {
     let configuration = CANISTER_DATA
-        .with(|canister_data_ref_cell| canister_data_ref_cell.borrow().configuration.clone());
+    .with(|canister_data_ref_cell| canister_data_ref_cell.borrow().configuration.clone());
 
     let individual_user_tempalate_init_args = IndividualUserTemplateInitArgs {
         profile_owner: profile_owner,
@@ -74,7 +85,7 @@ pub async fn create_users_canister(profile_owner: Option<Principal>, version: St
     main::install_code(InstallCodeArgument {
         mode: CanisterInstallMode::Install,
         canister_id,
-        wasm_module: individual_user_wasm,
+        wasm_module: wasm,
         arg,
     })
     .await

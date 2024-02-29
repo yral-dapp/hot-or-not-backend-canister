@@ -1,4 +1,3 @@
-use core::time;
 use std::{collections::{HashMap, HashSet}, time::SystemTime};
 
 use candid::{CandidType, Principal};
@@ -177,7 +176,7 @@ fn provision_subnet_orchestrator_canister() {
     })
     .unwrap();
 
-    for i in 0..30 {
+    for i in 0..50 {
         pocket_ic.tick();
     }
 
@@ -193,5 +192,19 @@ fn provision_subnet_orchestrator_canister() {
     })
     .unwrap();
 
-    assert_eq!(last_upgrade_status.version, "v1.0.0")
+    assert_eq!(last_upgrade_status.version, "v1.0.0");
+
+    //check available capacity on the subnet
+    let subnet_available_canister_cnt = pocket_ic.query_call(subnet_orchestrator_canister_id, Principal::anonymous(), "get_subnet_available_capacity", candid::encode_one(()).unwrap())
+    .map(|res| {
+        let available_capacity: u64= match res {
+            WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+            _ => panic!("get subnet available capacity call failed")
+        };
+        available_capacity
+    })
+    .unwrap();
+
+    assert!(subnet_available_canister_cnt > 0);
+
 }

@@ -9,6 +9,7 @@ use super::upgrade_individual_user_template::update_user_index_upgrade_user_cani
 
 pub mod create_pool_of_available_canisters;
 pub mod get_subnet_available_capacity;
+pub mod get_subnet_backup_capacity;
 
 
 #[update]
