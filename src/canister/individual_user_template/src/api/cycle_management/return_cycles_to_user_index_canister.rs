@@ -1,19 +1,14 @@
-use ic_cdk::{api::{canister_balance, canister_balance128, is_controller, management_canister::{main, provisional::CanisterIdRecord}}, caller};
+use ic_cdk::{api::{canister_balance128, management_canister::{main, provisional::CanisterIdRecord}}, caller};
 use ic_cdk_macros::update;
 use shared_utils::{
-    common::types::known_principal::KnownPrincipalType,
+    common::{types::known_principal::KnownPrincipalType, utils::permissions::is_caller_controller},
     constant::INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT,
 };
 
 use crate::CANISTER_DATA;
 
-#[update]
+#[update(guard = "is_caller_controller")]
 async fn return_cycles_to_user_index_canister(cycle_amount: Option<u128>) {
-
-    if !is_controller(&caller()) {
-        panic!("Unauthorized")
-    }
-
 
     let user_index_canister_id = CANISTER_DATA.with(|canister_data_ref_cell| {
         canister_data_ref_cell
