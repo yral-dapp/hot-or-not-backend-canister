@@ -87,6 +87,17 @@ type HotOrNotOutcomePayoutEvent = variant {
     post_canister_id : principal;
   };
 };
+type HttpRequest = record {
+  url : text;
+  method : text;
+  body : vec nat8;
+  headers : vec record { text; text };
+};
+type HttpResponse = record {
+  body : vec nat8;
+  headers : vec record { text; text };
+  status_code : nat16;
+};
 type IndividualUserTemplateInitArgs = record {
   known_principal_ids : opt vec record { KnownPrincipalType; principal };
   version : text;
@@ -318,6 +329,7 @@ service : (IndividualUserTemplateInitArgs) -> {
   get_well_known_principal_value : (KnownPrincipalType) -> (
       opt principal,
     ) query;
+  http_request : (HttpRequest) -> (HttpResponse) query;
   load_snapshot : (nat64) -> ();
   receive_and_save_snaphot : (nat64, vec nat8) -> ();
   receive_bet_from_bet_makers_canister : (PlaceBetArg, principal) -> (Result_1);

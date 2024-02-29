@@ -2,6 +2,7 @@ use std::cell::RefCell;
 
 use api::{
     follow::update_profiles_that_follow_me_toggle_list_with_specified_profile::FollowerArg,
+    monitoring::metrics::{HttpRequest, HttpResponse},
     profile::update_profile_display_details::UpdateProfileDetailsError,
 };
 use candid::Principal;
