@@ -1,10 +1,10 @@
 use ic_cdk::call;
 use ic_cdk_macros::update;
-use shared_utils::common::utils::task::run_task_concurrently;
+use shared_utils::common::utils::{permissions::is_caller_controller, task::run_task_concurrently};
 
 use crate::CANISTER_DATA;
 
-#[update]
+#[update(guard = "is_caller_controller")]
 fn reclaim_cycles_from_individual_canisters() {
     ic_cdk::spawn(impl_reclaim_cycles_from_individual_canisters_and_send_to_plaform_orchestrator())
 }
