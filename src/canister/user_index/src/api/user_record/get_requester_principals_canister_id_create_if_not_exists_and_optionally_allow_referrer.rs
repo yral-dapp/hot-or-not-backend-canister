@@ -2,7 +2,7 @@ use crate::{util::canister_management::{create_empty_user_canister, create_users
 use candid::Principal;
 use ic_cdk::api::{call, management_canister::main::canister_status};
 use ic_cdk_macros::update;
-use shared_utils::{common::{types::{known_principal::KnownPrincipalType, wasm::{CanisterWasm, WasmType}}, utils::task::run_task_concurrently}, constant::{BACKUP_INDIVIDUAL_USER_CANISTER_BATCH_SIZE, BACKUP_INDIVIDUAL_USER_CANISTER_THRESHOLD, INDIVIDUAL_USER_CANISTER_SUBNET_BATCH_SIZE, INDIVIDUAL_USER_CANISTER_SUBNET_MAX_CAPACITY, INDIVIDUAL_USER_CANISTER_SUBNET_THREESHOLD}};
+use shared_utils::{common::{types::{known_principal::KnownPrincipalType, wasm::{CanisterWasm, WasmType}}, utils::task::run_task_concurrently}, constant::{BACKUP_INDIVIDUAL_USER_CANISTER_BATCH_SIZE, BACKUP_INDIVIDUAL_USER_CANISTER_THRESHOLD, INDIVIDUAL_USER_CANISTER_SUBNET_BATCH_SIZE, INDIVIDUAL_USER_CANISTER_SUBNET_MAX_CAPACITY, INDIVIDUAL_USER_CANISTER_SUBNET_THRESHOLD}};
 
 #[update]
 async fn get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer(
@@ -120,7 +120,7 @@ async fn new_user_signup(user_id: Principal) -> Result<Principal, String> {
 
     let individual_user_template_canister_wasm = CANISTER_DATA.with_borrow(|canister_data| canister_data.wasms.get(&WasmType::IndividualUserWasm).unwrap().clone());
    
-    if individual_user_canisters_cnt < INDIVIDUAL_USER_CANISTER_SUBNET_THREESHOLD {
+    if individual_user_canisters_cnt < INDIVIDUAL_USER_CANISTER_SUBNET_THRESHOLD {
         let new_canister_cnt = INDIVIDUAL_USER_CANISTER_SUBNET_BATCH_SIZE.min(backup_individual_user_canister_cnt);
         ic_cdk::spawn(provision_new_available_canisters(new_canister_cnt, individual_user_template_canister_wasm));
     }
@@ -140,10 +140,10 @@ async fn new_user_signup(user_id: Principal) -> Result<Principal, String> {
 
 
 
-async fn provision_new_available_canisters(cnt: u64, individual_user_template_canister_wasm: CanisterWasm) {
+async fn provision_new_available_canisters(canister_count: u64, individual_user_template_canister_wasm: CanisterWasm) {
     let install_canister_wasm_futures = CANISTER_DATA.with_borrow(|canister_data| {
         let mut backup_pool_canister = canister_data.backup_canister_pool.clone().into_iter();
-        (0..cnt).map(move |_| {
+        (0..canister_count).map(move |_| {
             let canister_id = backup_pool_canister.next().unwrap();
             let future = install_canister_wasm(canister_id, None, individual_user_template_canister_wasm.version.clone(), individual_user_template_canister_wasm.wasm_blob.clone());
             future
@@ -157,14 +157,14 @@ async fn provision_new_available_canisters(cnt: u64, individual_user_template_ca
         })
     };
     
-    let breaking_condition = || { CANISTER_DATA.with_borrow(|canister_data| canister_data.available_canisters.len() as u64 >= cnt) };
+    let breaking_condition = || { CANISTER_DATA.with_borrow(|canister_data| canister_data.available_canisters.len() as u64 >= canister_count) };
 
     run_task_concurrently(install_canister_wasm_futures, 10, result_callback, breaking_condition).await;
 }
 
 
-async fn provision_new_backup_canisters(provision_canister_cnt: u64) {
-    let create_canister_futures = (0..provision_canister_cnt).map(|_| {
+async fn provision_new_backup_canisters(canister_count: u64) {
+    let create_canister_futures = (0..canister_count).map(|_| {
         let future = create_empty_user_canister();
         future
     });
@@ -174,7 +174,7 @@ async fn provision_new_backup_canisters(provision_canister_cnt: u64) {
     };
 
     let breaking_condition = || {
-        CANISTER_DATA.with_borrow(|canister_data| canister_data.backup_canister_pool.len() as u64 > provision_canister_cnt)
+        CANISTER_DATA.with_borrow(|canister_data| canister_data.backup_canister_pool.len() as u64 > canister_count)
     };
 
     run_task_concurrently(create_canister_futures.into_iter(), 10, result_callback, breaking_condition).await;
