@@ -22,6 +22,7 @@ service : (PlatformOrchestratorInitArgs) -> {
   get_subnet_last_upgrade_status : () -> (CanisterUpgradeStatus) query;
   get_version : () -> (text) query;
   provision_subnet_orchestrator_canister : (principal) -> (Result);
+  start_reclaiming_cycles_from_individual_canisters : () -> (Result_1);
   stop_upgrades_for_individual_user_canisters : () -> (Result_1);
   subnet_orchestrator_maxed_out : () -> ();
   upgrade_canister : (UpgradeCanisterArg) -> (Result_1);

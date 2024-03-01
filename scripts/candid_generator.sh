@@ -13,5 +13,6 @@ CANISTERS=user_index,post_cache,platform_orchestrator,individual_user_template
 
 for canister in $(echo $CANISTERS | sed "s/,/ /g")
 do
+    dfx build $canister
     generate_did "$canister"
 done

@@ -110,6 +110,7 @@ service : (UserIndexInitArgs) -> {
       principal,
       text,
     ) -> ();
+  reclaim_cycles_from_individual_canisters : () -> ();
   reset_user_individual_canisters : (vec principal) -> (Result);
   set_permission_to_upgrade_individual_canisters : (bool) -> (text);
   start_upgrades_for_individual_canisters : (text, vec nat8) -> (text);

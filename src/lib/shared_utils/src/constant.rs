@@ -27,7 +27,7 @@ pub const NNS_LEDGER_CANISTER_ID: &str = "ryjl3-tyaaa-aaaaa-aaaba-cai";
 pub const GLOBAL_SUPER_ADMIN_USER_ID: &str =
     "7gaq2-4kttl-vtbt4-oo47w-igteo-cpk2k-57h3p-yioqe-wkawi-wz45g-jae";
 pub const RECLAIM_CANISTER_PRINCIPAL_ID: &str =
-    "czetz-e72b5-bvgij-ad7w7-b5gki-isgts-wemv2-unxsk-6x65l-7mvhw-qae";
+    "7gaq2-4kttl-vtbt4-oo47w-igteo-cpk2k-57h3p-yioqe-wkawi-wz45g-jae";
 
 pub fn get_global_super_admin_principal_id_v1(
     well_known_canisters: KnownPrincipalMap,
