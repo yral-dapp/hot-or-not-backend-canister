@@ -1,7 +1,7 @@
 use ciborium::de;
 use ic_cdk_macros::post_upgrade;
 use ic_stable_structures::Memory;
-use std::{borrow::BorrowMut, time::Duration};
+use std::{alloc::System, borrow::BorrowMut, time::{Duration, SystemTime}};
 
 use crate::data_model::memory;
 
@@ -10,7 +10,7 @@ use shared_utils::canister_specific::individual_user_template::types::{
     hot_or_not::{
         BetDirection, BetMakerPrincipal, GlobalBetId, GlobalRoomId, RoomDetailsV1, SlotDetailsV1,
         StablePrincipal,
-    },
+    }, session::SessionType,
 };
 
 use crate::{
@@ -27,6 +27,16 @@ fn post_upgrade() {
     save_upgrade_args_to_memory();
     refetch_well_known_principals();
     reenqueue_timers_for_pending_bet_outcomes();
+    set_registered_users_and_last_access_time();
+}
+
+fn set_registered_users_and_last_access_time() {
+    CANISTER_DATA.with_borrow_mut(|canister_data| {
+        if canister_data.profile.principal_id.is_some() {
+            canister_data.session_type = Some(SessionType::RegisteredSession);
+            canister_data.last_access_time = Some(SystemTime::now());
+        }
+    })
 }
 
 fn restore_data_from_stable_memory() {

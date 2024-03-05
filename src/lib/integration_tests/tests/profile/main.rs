@@ -1,1 +1,2 @@
 pub mod when_setting_unique_username_then_new_username_persisted_in_personal_canister_and_updated_in_user_index;
+pub mod when_a_new_user_signup_canister_is_marked_as_anonymous_login;

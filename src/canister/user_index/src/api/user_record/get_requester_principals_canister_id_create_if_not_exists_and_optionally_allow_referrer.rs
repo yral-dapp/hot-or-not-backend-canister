@@ -2,7 +2,7 @@ use crate::{util::canister_management::{create_empty_user_canister, create_users
 use candid::Principal;
 use ic_cdk::api::{call, management_canister::main::canister_status};
 use ic_cdk_macros::update;
-use shared_utils::{common::{types::{known_principal::KnownPrincipalType, wasm::{CanisterWasm, WasmType}}, utils::task::run_task_concurrently}, constant::{BACKUP_INDIVIDUAL_USER_CANISTER_BATCH_SIZE, BACKUP_INDIVIDUAL_USER_CANISTER_THRESHOLD, INDIVIDUAL_USER_CANISTER_SUBNET_BATCH_SIZE, INDIVIDUAL_USER_CANISTER_SUBNET_MAX_CAPACITY, INDIVIDUAL_USER_CANISTER_SUBNET_THRESHOLD}};
+use shared_utils::{canister_specific::individual_user_template::types::session::SessionType, common::{types::{known_principal::KnownPrincipalType, wasm::{CanisterWasm, WasmType}}, utils::task::run_task_concurrently}, constant::{BACKUP_INDIVIDUAL_USER_CANISTER_BATCH_SIZE, BACKUP_INDIVIDUAL_USER_CANISTER_THRESHOLD, INDIVIDUAL_USER_CANISTER_SUBNET_BATCH_SIZE, INDIVIDUAL_USER_CANISTER_SUBNET_MAX_CAPACITY, INDIVIDUAL_USER_CANISTER_SUBNET_THRESHOLD}};
 
 #[update]
 async fn get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer(
@@ -97,6 +97,16 @@ async fn new_user_signup(user_id: Principal) -> Result<Principal, String> {
             CANISTER_DATA.with_borrow_mut(|canister_data|
                 canister_data.user_principal_id_to_canister_id_map.insert(user_id, canister_id)
             );
+
+            //update session type for the user
+            call::call(
+                canister_id,
+                "update_session_type", 
+                (Some(SessionType::AnonymousSession),)
+            )
+            .await
+            .map_err(|e| e.1)?;
+
             Ok(canister_id)
         }
         Err(e) => {
