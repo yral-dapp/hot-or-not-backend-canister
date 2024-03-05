@@ -1,1 +1,2 @@
 pub mod start_reclaiming_cycles_from_individual_canisters;
+pub mod start_reclaiming_cycles_from_subnet_orchestrator_canister;
