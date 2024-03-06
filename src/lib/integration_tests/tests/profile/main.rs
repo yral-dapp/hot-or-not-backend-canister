@@ -1,1 +1,2 @@
 pub mod when_setting_unique_username_then_new_username_persisted_in_personal_canister_and_updated_in_user_index;
+pub mod requesting_new_canister_for_a_user_sets_the_profile_owner;

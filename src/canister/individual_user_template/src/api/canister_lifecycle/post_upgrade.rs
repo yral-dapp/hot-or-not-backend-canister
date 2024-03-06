@@ -1,3 +1,4 @@
+use candid::Principal;
 use ciborium::de;
 use ic_cdk_macros::post_upgrade;
 use ic_stable_structures::Memory;
@@ -27,8 +28,20 @@ fn post_upgrade() {
     save_upgrade_args_to_memory();
     refetch_well_known_principals();
     reenqueue_timers_for_pending_bet_outcomes();
+    reset_profile_owner();
 }
 
+
+fn reset_profile_owner() {
+    CANISTER_DATA.with_borrow_mut(|canister_data| {
+        if let Some(profile_owner) = canister_data.profile.principal_id {
+            if profile_owner.eq(&Principal::anonymous()){
+                canister_data.profile.principal_id = None;
+            }
+        }
+    })
+}
+ 
 fn restore_data_from_stable_memory() {
     let heap_data = memory::get_upgrades_memory();
     let mut heap_data_len_bytes = [0; 4];

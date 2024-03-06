@@ -6,10 +6,10 @@ use crate::CANISTER_DATA;
 
 
 #[update]
-pub async fn update_profile_owner(user_id: Option<Principal>) -> Result<(), String>{
+pub async fn update_profile_owner(user_id: Option<Principal>) -> Result<(), String> {
 
     if !is_controller(&api::caller()) {
-        return Err("UnAuthorised Access".into());
+        return Err("Unauthorised".into());
     }
 
     CANISTER_DATA.with_borrow_mut(|canister_data| {
