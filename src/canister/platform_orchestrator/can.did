@@ -4,8 +4,8 @@ type CanisterUpgradeStatus = record {
   upgrade_arg : UpgradeCanisterArg;
 };
 type PlatformOrchestratorInitArgs = record { version : text };
-type Result = variant { Ok : principal; Err : text };
-type Result_1 = variant { Ok : text; Err : text };
+type Result = variant { Ok : text; Err : text };
+type Result_1 = variant { Ok : principal; Err : text };
 type UpgradeCanisterArg = record {
   version : text;
   canister : WasmType;
@@ -17,15 +17,17 @@ type WasmType = variant {
   SubnetOrchestratorWasm;
 };
 service : (PlatformOrchestratorInitArgs) -> {
+  deposit_cycles_to_canister : (principal, nat) -> (Result);
   get_all_available_subnet_orchestrators : () -> (vec principal) query;
   get_all_subnet_orchestrators : () -> (vec principal) query;
   get_subnet_last_upgrade_status : () -> (CanisterUpgradeStatus) query;
   get_version : () -> (text) query;
-  provision_subnet_orchestrator_canister : (principal) -> (Result);
-  start_reclaiming_cycles_from_individual_canisters : () -> (Result_1);
+  provision_subnet_orchestrator_canister : (principal) -> (Result_1);
+  start_reclaiming_cycles_from_individual_canisters : () -> (Result);
   start_reclaiming_cycles_from_subnet_orchestrator_canister : () -> (text);
-  stop_upgrades_for_individual_user_canisters : () -> (Result_1);
+  stop_upgrades_for_individual_user_canisters : () -> (Result);
   subnet_orchestrator_maxed_out : () -> ();
-  upgrade_canister : (UpgradeCanisterArg) -> (Result_1);
-  upload_wasms : (WasmType, vec nat8) -> (Result_1);
+  upgrade_canister : (UpgradeCanisterArg) -> (Result);
+  upgrade_specific_individual_canister : (principal) -> ();
+  upload_wasms : (WasmType, vec nat8) -> (Result);
 }
