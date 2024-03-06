@@ -1,16 +1,13 @@
 use ciborium::de;
 use ic_cdk_macros::post_upgrade;
 use ic_stable_structures::Memory;
-use std::{alloc::System, borrow::BorrowMut, time::{Duration, SystemTime}};
+use std::{borrow::BorrowMut, time::{Duration, SystemTime}};
 
 use crate::data_model::memory;
 
 use shared_utils::canister_specific::individual_user_template::types::{
     arg::IndividualUserTemplateInitArgs,
-    hot_or_not::{
-        BetDirection, BetMakerPrincipal, GlobalBetId, GlobalRoomId, RoomDetailsV1, SlotDetailsV1,
-        StablePrincipal,
-    }, session::SessionType,
+    session::SessionType,
 };
 
 use crate::{
