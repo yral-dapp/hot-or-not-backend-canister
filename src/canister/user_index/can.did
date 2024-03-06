@@ -122,7 +122,7 @@ service : (UserIndexInitArgs) -> {
     ) -> (Result_3);
   upgrade_specific_individual_user_canister_with_latest_wasm : (
       principal,
-      principal,
+      opt principal,
       opt CanisterInstallMode,
     ) -> (text);
   validate_reset_user_individual_canisters : (vec principal) -> (Result) query;
