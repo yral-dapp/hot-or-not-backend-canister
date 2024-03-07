@@ -96,29 +96,25 @@ pub async fn upgrade_user_canisters_with_latest_wasm(_version: String, individua
 async fn recharge_and_upgrade(user_canister_id: Principal, user_principal_id: Principal, version_number: u64, configuration: Configuration, version: String, individual_user_wasm: Vec<u8>) -> Result<(Principal, Principal), ((Principal, Principal), String)> {
     recharge_canister_if_below_threshold(&user_canister_id).await.map_err(|e| ((user_principal_id, user_canister_id), e))?;
     
-    upgrade_user_canister(&user_principal_id, &user_canister_id, version_number, &configuration, version, individual_user_wasm).await.map_err(|s| ((user_principal_id, user_canister_id), s))?;
+    upgrade_user_canister(user_canister_id, &configuration, version, individual_user_wasm).await.map_err(|s| ((user_principal_id, user_canister_id), s))?;
 
     Ok((user_principal_id, user_canister_id))
 }
 
 async fn upgrade_user_canister(
-    user_principal_id: &Principal,
-    canister_id: &Principal,
-    version_number: u64,
+    canister_id: Principal,
     configuration: &Configuration,
     version: String,
     individual_user_wasm: Vec<u8>
 ) -> Result<(), String> {
     canister_management::upgrade_individual_user_canister(
-        *canister_id,
+        canister_id,
         CanisterInstallMode::Upgrade,
         IndividualUserTemplateInitArgs {
             known_principal_ids: Some(configuration.known_principal_ids.clone()),
-            profile_owner: Some(*user_principal_id),
-            upgrade_version_number: Some(version_number + 1),
-            url_to_send_canister_metrics_to: Some(
-                configuration.url_to_send_canister_metrics_to.clone(),
-            ),
+            profile_owner: None,
+            upgrade_version_number: None,
+            url_to_send_canister_metrics_to: None,
             version,
         },
         individual_user_wasm

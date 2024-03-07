@@ -5,11 +5,11 @@ use shared_utils::{canister_specific::individual_user_template::types::arg::Indi
 
 use crate::{CANISTER_DATA, util::canister_management};
 
-use super::upgrade_individual_user_template::update_user_index_upgrade_user_canisters_with_latest_wasm;
 
 pub mod create_pool_of_available_canisters;
 pub mod get_subnet_available_capacity;
 pub mod get_subnet_backup_capacity;
+pub mod start_upgrades_for_individual_canisters;
 
 
 #[update]
@@ -29,26 +29,6 @@ pub async fn set_permission_to_upgrade_individual_canisters(flag: bool) -> Strin
        canister_data_ref.borrow_mut().allow_upgrades_for_individual_canisters = flag;
     });
     return "Success".to_string()
-}
-
-#[update]
-async fn start_upgrades_for_individual_canisters(version: String, individual_user_wasm: Vec<u8>) -> String {
-    
-    if !is_controller(&caller()) {
-        panic!("Unauthorized caller");
-    }
-
-    CANISTER_DATA.with_borrow_mut(|canister_data| {
-        canister_data.allow_upgrades_for_individual_canisters = true;
-        canister_data.last_run_upgrade_status.version = version.clone();
-        let canister_wasm = CanisterWasm {
-            version: version.clone(),
-            wasm_blob: individual_user_wasm.clone()
-        };
-        canister_data.wasms.insert(WasmType::IndividualUserWasm, canister_wasm);
-    });
-    ic_cdk::spawn(update_user_index_upgrade_user_canisters_with_latest_wasm::upgrade_user_canisters_with_latest_wasm(version, individual_user_wasm));
-    "Success".to_string()
 }
 
 #[query]
