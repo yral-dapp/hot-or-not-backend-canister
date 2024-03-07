@@ -15,6 +15,17 @@ type DefiniteCanisterSettings = record {
   memory_allocation : nat;
   compute_allocation : nat;
 };
+type HttpRequest = record {
+  url : text;
+  method : text;
+  body : vec nat8;
+  headers : vec record { text; text };
+};
+type HttpResponse = record {
+  body : vec nat8;
+  headers : vec record { text; text };
+  status_code : nat16;
+};
 type KnownPrincipalType = variant {
   CanisterIdUserIndex;
   CanisterIdPlatformOrchestrator;
@@ -98,6 +109,7 @@ service : (UserIndexInitArgs) -> {
   get_user_canister_id_from_user_principal_id : (principal) -> (
       opt principal,
     ) query;
+  get_user_canister_incl_avail_list : () -> (vec principal) query;
   get_user_canister_list : () -> (vec principal) query;
   get_user_canister_status : (principal) -> (Result_1);
   get_user_index_canister_count : () -> (nat64) query;
@@ -105,6 +117,7 @@ service : (UserIndexInitArgs) -> {
   get_well_known_principal_value : (KnownPrincipalType) -> (
       opt principal,
     ) query;
+  http_request : (HttpRequest) -> (HttpResponse) query;
   receive_data_from_backup_canister_and_restore_data_to_heap : (
       principal,
       principal,

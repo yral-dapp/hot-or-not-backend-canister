@@ -1742,6 +1742,7 @@ dependencies = [
  "pprof",
  "rmp-serde",
  "serde",
+ "serde_bytes",
  "serde_json_any_key",
  "test_utils",
 ]
