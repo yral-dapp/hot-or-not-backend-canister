@@ -75,6 +75,7 @@ pub struct HotOrNotBetId {
 pub struct HotOrNotDetails {
     pub hot_or_not_feed_score: FeedScore,
     pub aggregate_stats: AggregateStats,
+    #[serde(skip)]
     pub slot_history: BTreeMap<SlotId, SlotDetails>,
 }
 
