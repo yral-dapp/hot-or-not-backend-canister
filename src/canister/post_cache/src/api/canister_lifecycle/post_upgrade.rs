@@ -82,7 +82,7 @@ async fn migrate_data_impl() {
         let canister_data_ref_cell = canister_data_ref_cell.borrow_mut();
 
         canister_data_ref_cell
-            .posts_index_sorted_by_home_feed_score
+            .posts_index_sorted_by_home_feed_score_v1
             .clone()
     });
 
@@ -130,7 +130,7 @@ async fn migrate_data_impl() {
         let canister_data_ref_cell = canister_data_ref_cell.borrow_mut();
 
         canister_data_ref_cell
-            .posts_index_sorted_by_hot_or_not_feed_score
+            .posts_index_sorted_by_hot_or_not_feed_score_v1
             .clone()
     });
 
