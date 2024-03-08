@@ -14,7 +14,9 @@ use shared_utils::common::types::{
 #[derive(Default, CandidType, Deserialize, Serialize)]
 pub struct CanisterData {
     pub known_principal_ids: KnownPrincipalMap,
+    #[serde(skip)]
     pub posts_index_sorted_by_home_feed_score: PostScoreIndex,
+    #[serde(skip)]
     pub posts_index_sorted_by_hot_or_not_feed_score: PostScoreIndex,
     #[serde(default)]
     pub posts_index_sorted_by_home_feed_score_v1: PostScoreHomeIndex,

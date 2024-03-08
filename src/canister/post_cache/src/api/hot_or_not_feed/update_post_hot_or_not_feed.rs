@@ -5,6 +5,11 @@ use crate::{data_model::CanisterData, CANISTER_DATA};
 
 #[update]
 fn update_post_hot_or_not_feed(post: PostScoreIndexItemV1) {
+    let caller = ic_cdk::caller();
+    if post.publisher_canister_id != caller {
+        return;
+    }
+
     CANISTER_DATA.with(|canister_data| {
         let mut canister_data = canister_data.borrow_mut();
 
