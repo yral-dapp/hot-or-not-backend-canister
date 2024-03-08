@@ -128,6 +128,27 @@ fn hotornot_game_simultation_test() {
         None,
     );
 
+    // Init charlie individual template canister
+
+    let charlie_individual_template_canister_id = pic.create_canister();
+    pic.add_cycles(charlie_individual_template_canister_id, 2_000_000_000_000);
+
+    let individual_template_args = IndividualUserTemplateInitArgs {
+        known_principal_ids: Some(known_prinicipal_values.clone()),
+        profile_owner: Some(admin_principal_id),
+        upgrade_version_number: None,
+        url_to_send_canister_metrics_to: None,
+        version: "1".to_string(),
+    };
+    let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
+
+    pic.install_canister(
+        charlie_individual_template_canister_id,
+        individual_template_wasm_bytes.clone(),
+        individual_template_args_bytes,
+        None,
+    );
+
     // Show alice rewards
 
     let alice_rewards = pic
@@ -250,6 +271,14 @@ fn hotornot_game_simultation_test() {
         encode_one(()).unwrap(),
     );
 
+    // Top up Charlie's account
+    let reward = pic.update_call(
+        charlie_individual_template_canister_id,
+        admin_principal_id,
+        "get_rewarded_for_signing_up",
+        encode_one(()).unwrap(),
+    );
+
     // Bob places bet on Alice post 1
     let bob_place_bet_arg = PlaceBetArg {
         post_canister_id: alice_individual_template_canister_id,
@@ -280,7 +309,7 @@ fn hotornot_game_simultation_test() {
         post_canister_id: alice_individual_template_canister_id,
         post_id: res2,
         bet_amount: 100,
-        bet_direction: BetDirection::Hot,
+        bet_direction: BetDirection::Not,
     };
     let bet_status = pic
         .update_call(
@@ -305,7 +334,7 @@ fn hotornot_game_simultation_test() {
         post_canister_id: alice_individual_template_canister_id,
         post_id: res1,
         bet_amount: 200,
-        bet_direction: BetDirection::Not,
+        bet_direction: BetDirection::Hot,
     };
     let bet_status = pic
         .update_call(
@@ -324,10 +353,6 @@ fn hotornot_game_simultation_test() {
         })
         .unwrap();
     ic_cdk::println!("Bet status: {:?}", bet_status);
-
-    // Forward timer
-    pic.advance_time(Duration::from_secs(60 * 60 * 2));
-    pic.tick();
 
     // Dan places bet on Alice post 2
     let dan_place_bet_arg = PlaceBetArg {
@@ -354,8 +379,134 @@ fn hotornot_game_simultation_test() {
         .unwrap();
     ic_cdk::println!("Bet status: {:?}", bet_status);
 
+    // Charlie places bet on Alice post 1
+    let charlie_place_bet_arg = PlaceBetArg {
+        post_canister_id: alice_individual_template_canister_id,
+        post_id: res1,
+        bet_amount: 100,
+        bet_direction: BetDirection::Not,
+    };
+    let bet_status = pic
+        .update_call(
+            charlie_individual_template_canister_id,
+            admin_principal_id,
+            "bet_on_currently_viewing_post",
+            encode_one(charlie_place_bet_arg).unwrap(),
+        )
+        .map(|reply_payload| {
+            let bet_status: Result<BettingStatus, BetOnCurrentlyViewingPostError> =
+                match reply_payload {
+                    WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                    _ => panic!("\n🛑 place_bet failed\n"),
+                };
+            bet_status.unwrap()
+        })
+        .unwrap();
+    ic_cdk::println!("Bet status: {:?}", bet_status);
+
+    // Charlie places bet on Alice post 2
+    let charlie_place_bet_arg = PlaceBetArg {
+        post_canister_id: alice_individual_template_canister_id,
+        post_id: res2,
+        bet_amount: 100,
+        bet_direction: BetDirection::Hot,
+    };
+    let bet_status = pic
+        .update_call(
+            charlie_individual_template_canister_id,
+            admin_principal_id,
+            "bet_on_currently_viewing_post",
+            encode_one(charlie_place_bet_arg).unwrap(),
+        )
+        .map(|reply_payload| {
+            let bet_status: Result<BettingStatus, BetOnCurrentlyViewingPostError> =
+                match reply_payload {
+                    WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                    _ => panic!("\n🛑 place_bet failed\n"),
+                };
+            bet_status.unwrap()
+        })
+        .unwrap();
+    ic_cdk::println!("Bet status: {:?}", bet_status);
+
+    // Show alice rewards
+
+    let alice_rewards = pic
+        .query_call(
+            alice_individual_template_canister_id,
+            alice_principal_id,
+            "get_profile_details",
+            encode_one(()).unwrap(),
+        )
+        .map(|reply_payload| {
+            let profile: UserProfileDetailsForFrontend = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 get_rewards failed\n"),
+            };
+            profile
+        })
+        .unwrap();
+    println!("Alice rewards: {:?}", alice_rewards);
+
+    // Show bob rewards
+
+    let bob_rewards = pic
+        .query_call(
+            bob_individual_template_canister_id,
+            bob_principal_id,
+            "get_profile_details",
+            encode_one(()).unwrap(),
+        )
+        .map(|reply_payload| {
+            let profile: UserProfileDetailsForFrontend = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 get_rewards failed\n"),
+            };
+            profile
+        })
+        .unwrap();
+    println!("Bob rewards: {:?}", bob_rewards);
+
+    // Show dan rewards
+
+    let dan_rewards = pic
+        .query_call(
+            dan_individual_template_canister_id,
+            dan_principal_id,
+            "get_profile_details",
+            encode_one(()).unwrap(),
+        )
+        .map(|reply_payload| {
+            let profile: UserProfileDetailsForFrontend = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 get_rewards failed\n"),
+            };
+            profile
+        })
+        .unwrap();
+    println!("Dan rewards: {:?}", dan_rewards);
+
+    // Show charlie rewards
+
+    let charlie_rewards = pic
+        .query_call(
+            charlie_individual_template_canister_id,
+            admin_principal_id,
+            "get_profile_details",
+            encode_one(()).unwrap(),
+        )
+        .map(|reply_payload| {
+            let profile: UserProfileDetailsForFrontend = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 get_rewards failed\n"),
+            };
+            profile
+        })
+        .unwrap();
+    println!("Charlie rewards: {:?}", charlie_rewards);
+
     // Forward timer
-    pic.advance_time(Duration::from_secs(60 * 60 * 2));
+    pic.advance_time(Duration::from_secs(60 * 60));
     pic.tick();
 
     // Show alice rewards
@@ -414,6 +565,25 @@ fn hotornot_game_simultation_test() {
         })
         .unwrap();
     println!("Dan rewards: {:?}", dan_rewards);
+
+    // Show charlie rewards
+
+    let charlie_rewards = pic
+        .query_call(
+            charlie_individual_template_canister_id,
+            admin_principal_id,
+            "get_profile_details",
+            encode_one(()).unwrap(),
+        )
+        .map(|reply_payload| {
+            let profile: UserProfileDetailsForFrontend = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 get_rewards failed\n"),
+            };
+            profile
+        })
+        .unwrap();
+    println!("Charlie rewards: {:?}", charlie_rewards);
 }
 
 fn individual_template_canister_wasm() -> Vec<u8> {
