@@ -1,8 +1,9 @@
 pub mod backup_and_restore;
 pub mod canister_lifecycle;
+pub mod canister_management;
 pub mod cycle_management;
+pub mod monitoring;
 pub mod upgrade_individual_user_template;
 pub mod user_record;
-pub mod well_known_principal;
-pub mod canister_management;
 pub mod user_signup;
+pub mod well_known_principal;

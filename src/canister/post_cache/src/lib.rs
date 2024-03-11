@@ -7,6 +7,7 @@ use ic_cdk_macros::export_candid;
 use shared_utils::{
     canister_specific::post_cache::types::arg::PostCacheInitArgs,
     common::types::{
+        http::{HttpRequest, HttpResponse},
         known_principal::KnownPrincipalType,
         top_posts::post_score_index_item::{PostScoreIndexItem, PostScoreIndexItemV1, PostStatus},
     },
