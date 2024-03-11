@@ -22,6 +22,7 @@ type KnownPrincipalType = variant {
   CanisterIdSnsGovernance;
   UserIdGlobalSuperAdmin;
 };
+type NsfwFilter = variant { IncludeNsfw; OnlyNsfw; ExcludeNsfw };
 type PostCacheInitArgs = record {
   known_principal_ids : opt vec record { KnownPrincipalType; principal };
   version : text;
@@ -64,12 +65,14 @@ service : (PostCacheInitArgs) -> {
       nat64,
       opt bool,
       opt PostStatus,
+      opt NsfwFilter,
     ) -> (Result) query;
   get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed_cursor : (
       nat64,
       nat64,
       opt bool,
       opt PostStatus,
+      opt NsfwFilter,
     ) -> (Result) query;
   get_well_known_principal_value : (KnownPrincipalType) -> (
       opt principal,

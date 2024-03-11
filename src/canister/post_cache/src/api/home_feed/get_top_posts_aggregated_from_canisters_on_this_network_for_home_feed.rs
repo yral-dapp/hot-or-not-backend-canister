@@ -44,20 +44,8 @@ fn get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed_cursor_
     let filter_fn = |post_item: &PostScoreIndexItemV1, nsfw: Option<NsfwFilter>| {
         let nsfw_filter = if let Some(nsfw_val) = nsfw {
             match nsfw_val {
-                NsfwFilter::ExcludeNsfw => {
-                    if post_item.is_nsfw {
-                        false
-                    } else {
-                        true
-                    }
-                }
-                NsfwFilter::OnlyNsfw => {
-                    if !post_item.is_nsfw {
-                        false
-                    } else {
-                        true
-                    }
-                }
+                NsfwFilter::ExcludeNsfw => !post_item.is_nsfw,
+                NsfwFilter::OnlyNsfw => post_item.is_nsfw,
                 NsfwFilter::IncludeNsfw => true,
             }
         } else {
@@ -65,27 +53,18 @@ fn get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed_cursor_
         };
 
         let nsfw_filter_2 = if let Some(is_nsfw) = is_nsfw {
-            if post_item.is_nsfw != is_nsfw {
-                false
-            } else {
-                true
-            }
+            post_item.is_nsfw == is_nsfw
         } else {
             true
         };
 
         let status_filter = if let Some(status) = status.clone() {
-            if post_item.status != status {
-                false
-            } else {
-                true
-            }
+            post_item.status == status
         } else {
             true
         };
 
-        let res = nsfw_filter_2 && status_filter;
-        res
+        nsfw_filter && nsfw_filter_2 && status_filter
     };
 
     let (from_inclusive_index, limit) = pagination::get_pagination_bounds_cursor(
@@ -292,6 +271,19 @@ mod test {
         assert_eq!(posts[0].post_id, 5);
         assert_eq!(posts[1].post_id, 2);
 
+        // Test with NSFW filter
+        let result
+            = super::get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed_cursor_impl(
+                    0,
+                    3,
+                    &canister_data, None, None, Some(NsfwFilter::ExcludeNsfw));
+
+        assert!(result.is_ok());
+        let posts = result.unwrap();
+        assert_eq!(posts.len(), 2);
+        assert_eq!(posts[0].post_id, 5);
+        assert_eq!(posts[1].post_id, 2);
+
         // Test with status filter
         let result
             = super::get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed_cursor_impl(
@@ -311,6 +303,19 @@ mod test {
                     0,
                     3,
                     &canister_data, Some(true), Some(PostStatus::Deleted), None);
+
+        assert!(result.is_ok());
+        let posts = result.unwrap();
+        assert_eq!(posts.len(), 1);
+        assert_eq!(posts[0].post_id, 3);
+
+        // Test with both filters
+
+        let result
+            = super::get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed_cursor_impl(
+                    0,
+                    3,
+                    &canister_data, None, Some(PostStatus::Deleted), Some(NsfwFilter::IncludeNsfw));
 
         assert!(result.is_ok());
         let posts = result.unwrap();
