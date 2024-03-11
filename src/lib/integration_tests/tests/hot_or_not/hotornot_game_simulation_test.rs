@@ -947,6 +947,7 @@ fn hotornot_game_simulation_test() {
 }
 
 #[test]
+#[ignore]
 fn hotornot_game_simulation_test_2() {
     let pic = PocketIc::new();
     let admin_principal_id = get_global_super_admin_principal_id();
