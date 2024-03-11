@@ -20,13 +20,27 @@ use test_utils::setup::test_constants::{
     get_mock_user_charlie_principal_id, get_mock_user_dan_principal_id,
 };
 
+const OLD_INDIVIDUAL_TEMPLATE_WASM_PATH: &str =
+    "../../../target/wasm32-unknown-unknown/release/old_individual_user_template.wasm.gz";
 const INDIVIDUAL_TEMPLATE_WASM_PATH: &str =
     "../../../target/wasm32-unknown-unknown/release/individual_user_template.wasm.gz";
 const POST_CACHE_WASM_PATH: &str =
     "../../../target/wasm32-unknown-unknown/release/post_cache.wasm.gz";
 
+fn old_individual_template_canister_wasm() -> Vec<u8> {
+    std::fs::read(OLD_INDIVIDUAL_TEMPLATE_WASM_PATH).unwrap()
+}
+
+fn individual_template_canister_wasm() -> Vec<u8> {
+    std::fs::read(INDIVIDUAL_TEMPLATE_WASM_PATH).unwrap()
+}
+
+fn post_cache_canister_wasm() -> Vec<u8> {
+    std::fs::read(POST_CACHE_WASM_PATH).unwrap()
+}
+
 #[test]
-fn hotornot_game_simultation_test() {
+fn reconcile_scores_test() {
     let pic = PocketIc::new();
 
     let alice_principal_id = get_mock_user_alice_principal_id();
@@ -63,7 +77,7 @@ fn hotornot_game_simultation_test() {
     );
 
     // Individual template canisters
-    let individual_template_wasm_bytes = individual_template_canister_wasm();
+    let individual_template_wasm_bytes = old_individual_template_canister_wasm();
 
     // Init individual template canister - alice
 
@@ -935,12 +949,4 @@ fn hotornot_game_simultation_test() {
         .unwrap();
     println!("Charlie token balance: {:?}", charlie_token_balance);
     assert_eq!(charlie_token_balance, 700);
-}
-
-fn individual_template_canister_wasm() -> Vec<u8> {
-    std::fs::read(INDIVIDUAL_TEMPLATE_WASM_PATH).unwrap()
-}
-
-fn post_cache_canister_wasm() -> Vec<u8> {
-    std::fs::read(POST_CACHE_WASM_PATH).unwrap()
 }
