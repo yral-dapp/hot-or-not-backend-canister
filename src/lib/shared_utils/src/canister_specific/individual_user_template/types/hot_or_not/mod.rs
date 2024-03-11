@@ -75,7 +75,6 @@ pub struct HotOrNotBetId {
 pub struct HotOrNotDetails {
     pub hot_or_not_feed_score: FeedScore,
     pub aggregate_stats: AggregateStats,
-    #[serde(skip)]
     pub slot_history: BTreeMap<SlotId, SlotDetails>,
 }
 
@@ -182,7 +181,9 @@ impl Storable for BetDetails {
     };
 }
 
-#[derive(CandidType, Clone, Deserialize, Debug, Serialize, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(
+    CandidType, Clone, Deserialize, Debug, Serialize, Ord, PartialOrd, Eq, PartialEq, Hash,
+)]
 pub struct StablePrincipal(pub Principal);
 
 impl Default for StablePrincipal {
@@ -209,7 +210,18 @@ impl Storable for StablePrincipal {
 pub type BetMakerPrincipal = StablePrincipal;
 
 #[derive(
-    CandidType, Clone, Deserialize, Debug, Serialize, Ord, PartialOrd, Eq, PartialEq, Default, Copy,
+    CandidType,
+    Clone,
+    Deserialize,
+    Debug,
+    Serialize,
+    Ord,
+    PartialOrd,
+    Eq,
+    PartialEq,
+    Default,
+    Copy,
+    Hash,
 )]
 pub struct GlobalRoomId(pub PostId, pub SlotId, pub RoomId);
 

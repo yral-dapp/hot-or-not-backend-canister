@@ -41,7 +41,7 @@ pub fn tabulate_hot_or_not_outcome_for_post_slot(
     );
 }
 
-fn inform_participants_of_outcome(
+pub fn inform_participants_of_outcome(
     post: &Post,
     slot_id: &u8,
     room_details_map: &ic_stable_structures::btreemap::BTreeMap<
