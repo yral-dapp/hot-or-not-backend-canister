@@ -2,10 +2,17 @@ use candid::Principal;
 use ciborium::de;
 use ic_cdk_macros::post_upgrade;
 use ic_stable_structures::Memory;
-use std::{borrow::BorrowMut, collections::HashSet, time::Duration};
+use std::{
+    borrow::BorrowMut,
+    collections::{BTreeMap, HashSet},
+    time::Duration,
+};
 
 use crate::{
-    api::hot_or_not_bet::tabulate_hot_or_not_outcome_for_post_slot::inform_participants_of_outcome,
+    api::{
+        hot_or_not_bet::tabulate_hot_or_not_outcome_for_post_slot::inform_participants_of_outcome,
+        snapshot::CanisterDataForSnapshot,
+    },
     data_model::memory,
 };
 
@@ -13,7 +20,7 @@ use shared_utils::{
     canister_specific::individual_user_template::types::{
         arg::IndividualUserTemplateInitArgs,
         hot_or_not::{
-            BetDirection, BetMakerPrincipal, GlobalBetId, GlobalRoomId, RoomDetailsV1,
+            BetDetails, BetDirection, BetMakerPrincipal, GlobalBetId, GlobalRoomId, RoomDetailsV1,
             SlotDetailsV1, SlotId, StablePrincipal,
         },
     },
@@ -103,7 +110,7 @@ fn reconcile_canister_winnings_impl() {
         canister_data_ref_cell.all_created_posts.clone()
     });
 
-    let slots_list = posts
+    let rooms_list = posts
         .iter()
         .filter_map(|(post_id, post)| {
             if let Some(hot_or_not_details) = &post.hot_or_not_details {
@@ -116,23 +123,41 @@ fn reconcile_canister_winnings_impl() {
             hot_or_not_details
                 .slot_history
                 .iter()
-                .map(move |(slot_id, _)| (*post_id, *slot_id))
+                .map(move |(slot_id, slot_details)| (post_id, slot_id, slot_details))
+                .map(|(post_id, slot_id, slot_details)| {
+                    slot_details
+                        .room_details
+                        .iter()
+                        .map(move |(room_id, room_details)| {
+                            GlobalRoomId(*post_id, *slot_id, *room_id)
+                        })
+                })
         })
         .flatten()
-        .collect::<HashSet<(PostId, SlotId)>>();
+        .flatten()
+        .collect::<HashSet<GlobalRoomId>>();
 
     CANISTER_DATA.with(|canister_data_ref_cell| {
         let canister_data_ref_cell = canister_data_ref_cell.borrow();
 
+        let mut slots_set = HashSet::new();
+
         canister_data_ref_cell
-            .slot_details_map
+            .room_details_map
             .iter()
-            .for_each(|((post_id, slot_id), _)| {
-                if !slots_list.contains(&(post_id, slot_id)) {
+            .for_each(|(groomid, _)| {
+                if !rooms_list.contains(&groomid) {
+                    let GlobalRoomId(post_id, slot_id, room_id) = groomid;
                     let post_to_tabulate_results_for = canister_data_ref_cell
                         .all_created_posts
                         .get(&post_id)
                         .unwrap();
+
+                    // Skip if slot has already been processed
+                    if slots_set.contains(&(post_id, slot_id)) {
+                        return;
+                    }
+                    slots_set.insert((post_id, slot_id));
 
                     inform_participants_of_outcome(
                         post_to_tabulate_results_for,
