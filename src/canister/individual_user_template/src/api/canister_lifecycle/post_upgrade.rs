@@ -96,9 +96,9 @@ fn refetch_well_known_principals() {
     });
 }
 
-const DELAY_FOR_MIGRATING_DATA: Duration = Duration::from_secs(1);
+const DELAY_FOR_RECONCILE_WINNINGS: Duration = Duration::from_secs(3);
 fn reconcile_canister_winnings() {
-    ic_cdk_timers::set_timer(DELAY_FOR_MIGRATING_DATA, || {
+    ic_cdk_timers::set_timer(DELAY_FOR_RECONCILE_WINNINGS, || {
         reconcile_canister_winnings_impl()
     });
 }
@@ -128,9 +128,7 @@ fn reconcile_canister_winnings_impl() {
                     slot_details
                         .room_details
                         .iter()
-                        .map(move |(room_id, room_details)| {
-                            GlobalRoomId(*post_id, *slot_id, *room_id)
-                        })
+                        .map(move |(room_id, _)| GlobalRoomId(*post_id, *slot_id, *room_id))
                 })
         })
         .flatten()
@@ -147,7 +145,7 @@ fn reconcile_canister_winnings_impl() {
             .iter()
             .for_each(|(groomid, _)| {
                 if !rooms_list.contains(&groomid) {
-                    let GlobalRoomId(post_id, slot_id, room_id) = groomid;
+                    let GlobalRoomId(post_id, slot_id, _) = groomid;
                     let post_to_tabulate_results_for = canister_data_ref_cell
                         .all_created_posts
                         .get(&post_id)

@@ -1,6 +1,6 @@
 use std::{collections::HashMap, time::Duration};
 
-use candid::encode_one;
+use candid::{encode_one, Principal};
 use pocket_ic::{PocketIc, WasmResult};
 use shared_utils::{
     canister_specific::{
@@ -16,8 +16,9 @@ use shared_utils::{
     common::types::known_principal::KnownPrincipalType,
 };
 use test_utils::setup::test_constants::{
-    get_mock_user_alice_principal_id, get_mock_user_bob_principal_id,
-    get_mock_user_charlie_principal_id, get_mock_user_dan_principal_id,
+    get_global_super_admin_principal_id, get_mock_user_alice_principal_id,
+    get_mock_user_bob_principal_id, get_mock_user_charlie_principal_id,
+    get_mock_user_dan_principal_id,
 };
 
 const INDIVIDUAL_TEMPLATE_WASM_PATH: &str =
@@ -25,8 +26,16 @@ const INDIVIDUAL_TEMPLATE_WASM_PATH: &str =
 const POST_CACHE_WASM_PATH: &str =
     "../../../target/wasm32-unknown-unknown/release/post_cache.wasm.gz";
 
+fn individual_template_canister_wasm() -> Vec<u8> {
+    std::fs::read(INDIVIDUAL_TEMPLATE_WASM_PATH).unwrap()
+}
+
+fn post_cache_canister_wasm() -> Vec<u8> {
+    std::fs::read(POST_CACHE_WASM_PATH).unwrap()
+}
+
 #[test]
-fn hotornot_game_simultation_test() {
+fn hotornot_game_simulation_test() {
     let pic = PocketIc::new();
 
     let alice_principal_id = get_mock_user_alice_principal_id();
@@ -937,10 +946,218 @@ fn hotornot_game_simultation_test() {
     assert_eq!(charlie_token_balance, 700);
 }
 
-fn individual_template_canister_wasm() -> Vec<u8> {
-    std::fs::read(INDIVIDUAL_TEMPLATE_WASM_PATH).unwrap()
-}
+#[test]
+fn hotornot_game_simulation_test_2() {
+    let pic = PocketIc::new();
+    let admin_principal_id = get_global_super_admin_principal_id();
 
-fn post_cache_canister_wasm() -> Vec<u8> {
-    std::fs::read(POST_CACHE_WASM_PATH).unwrap()
+    let post_cache_canister_id = pic.create_canister();
+    pic.add_cycles(post_cache_canister_id, 2_000_000_000_000);
+
+    let mut known_prinicipal_values = HashMap::new();
+    known_prinicipal_values.insert(
+        KnownPrincipalType::CanisterIdPostCache,
+        post_cache_canister_id,
+    );
+    known_prinicipal_values.insert(
+        KnownPrincipalType::UserIdGlobalSuperAdmin,
+        admin_principal_id,
+    );
+    known_prinicipal_values.insert(KnownPrincipalType::CanisterIdUserIndex, admin_principal_id);
+
+    let post_cache_wasm_bytes = post_cache_canister_wasm();
+    let post_cache_args = PostCacheInitArgs {
+        known_principal_ids: Some(known_prinicipal_values.clone()),
+        upgrade_version_number: Some(1),
+        version: "1".to_string(),
+    };
+    let post_cache_args_bytes = encode_one(post_cache_args).unwrap();
+    pic.install_canister(
+        post_cache_canister_id,
+        post_cache_wasm_bytes,
+        post_cache_args_bytes,
+        None,
+    );
+
+    // Individual template canisters
+    let individual_template_wasm_bytes = individual_template_canister_wasm();
+
+    // Init N canisters
+    let mut individual_template_canister_ids = vec![];
+    for i in 1..=111 {
+        let individual_template_canister_id = pic.create_canister();
+        pic.add_cycles(individual_template_canister_id, 2_000_000_000_000);
+
+        let individual_template_args = IndividualUserTemplateInitArgs {
+            known_principal_ids: Some(known_prinicipal_values.clone()),
+            profile_owner: Some(Principal::self_authenticating((i as usize).to_ne_bytes())),
+            upgrade_version_number: None,
+            url_to_send_canister_metrics_to: None,
+            version: "1".to_string(),
+        };
+        let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
+
+        pic.install_canister(
+            individual_template_canister_id,
+            individual_template_wasm_bytes.clone(),
+            individual_template_args_bytes,
+            None,
+        );
+
+        let reward = pic.update_call(
+            individual_template_canister_id,
+            admin_principal_id,
+            "get_rewarded_for_signing_up",
+            encode_one(()).unwrap(),
+        );
+
+        individual_template_canister_ids.push(individual_template_canister_id);
+
+        if i % 10 == 0 {
+            println!(
+                "Installed {} canisters",
+                individual_template_canister_ids.len()
+            );
+        }
+    }
+
+    let last_individual_template_canister_id = individual_template_canister_ids.pop().unwrap();
+    let last_individual_template_principal_id =
+        Principal::self_authenticating((111 as usize).to_ne_bytes());
+
+    // Create a post
+
+    let last_post_1 = PostDetailsFromFrontend {
+        is_nsfw: false,
+        description: "This is a fun video to watch".to_string(),
+        hashtags: vec!["fun".to_string(), "video".to_string()],
+        video_uid: "abcd#1234".to_string(),
+        creator_consent_for_inclusion_in_hot_or_not: true,
+    };
+    let res1 = pic
+        .update_call(
+            last_individual_template_canister_id,
+            last_individual_template_principal_id,
+            "add_post_v2",
+            encode_one(last_post_1).unwrap(),
+        )
+        .map(|reply_payload| {
+            let newly_created_post_id_result: Result<u64, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 add_post failed\n"),
+            };
+            newly_created_post_id_result.unwrap()
+        })
+        .unwrap();
+
+    // All 500 users bet on the post
+
+    for i in 1..=110 {
+        let bob_place_bet_arg = PlaceBetArg {
+            post_canister_id: last_individual_template_canister_id,
+            post_id: res1,
+            bet_amount: 100,
+            bet_direction: BetDirection::Hot,
+        };
+        let bet_status = pic
+            .update_call(
+                individual_template_canister_ids[i - 1],
+                Principal::self_authenticating((i as usize).to_ne_bytes()),
+                "bet_on_currently_viewing_post",
+                encode_one(bob_place_bet_arg).unwrap(),
+            )
+            .map(|reply_payload| {
+                let bet_status: Result<BettingStatus, BetOnCurrentlyViewingPostError> =
+                    match reply_payload {
+                        WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                        _ => panic!("\n🛑 place_bet failed\n"),
+                    };
+                bet_status.unwrap()
+            })
+            .unwrap();
+        // ic_cdk::println!("Bet status: {:?}", bet_status);
+        if i % 10 == 0 {
+            println!("Betted for {} users", i);
+        }
+    }
+
+    // Forward timer
+    pic.advance_time(Duration::from_secs(60 * 60));
+    pic.tick();
+
+    // Check rewards
+
+    let last_rewards = pic
+        .query_call(
+            last_individual_template_canister_id,
+            last_individual_template_principal_id,
+            "get_profile_details",
+            encode_one(()).unwrap(),
+        )
+        .map(|reply_payload| {
+            let profile: UserProfileDetailsForFrontend = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 get_rewards failed\n"),
+            };
+            profile
+        })
+        .unwrap();
+    assert_eq!(last_rewards.lifetime_earnings, 2100);
+    // println!("Last rewards: {:?}", last_rewards.lifetime_earnings);
+
+    let last_token_balance = pic
+        .query_call(
+            last_individual_template_canister_id,
+            last_individual_template_principal_id,
+            "get_utility_token_balance",
+            encode_one(()).unwrap(),
+        )
+        .map(|reply_payload| {
+            let token_balance: u64 = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 get_token_balance failed\n"),
+            };
+            token_balance
+        })
+        .unwrap();
+    assert_eq!(last_token_balance, 2100);
+    // println!("Last token balance: {:?}", last_token_balance);
+
+    for i in 1..=110 {
+        let rewards = pic
+            .query_call(
+                individual_template_canister_ids[i - 1],
+                Principal::self_authenticating((i as usize).to_ne_bytes()),
+                "get_profile_details",
+                encode_one(()).unwrap(),
+            )
+            .map(|reply_payload| {
+                let profile: UserProfileDetailsForFrontend = match reply_payload {
+                    WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                    _ => panic!("\n🛑 get_rewards failed\n"),
+                };
+                profile
+            })
+            .unwrap();
+        assert_eq!(rewards.lifetime_earnings, 1080);
+        // println!("Rewards for user {}: {:?}", i, rewards.lifetime_earnings);
+
+        let token_balance = pic
+            .query_call(
+                individual_template_canister_ids[i - 1],
+                Principal::self_authenticating((i as usize).to_ne_bytes()),
+                "get_utility_token_balance",
+                encode_one(()).unwrap(),
+            )
+            .map(|reply_payload| {
+                let token_balance: u64 = match reply_payload {
+                    WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                    _ => panic!("\n🛑 get_token_balance failed\n"),
+                };
+                token_balance
+            })
+            .unwrap();
+        assert_eq!(token_balance, 1080);
+        // println!("Token balance for user {}: {:?}", i, token_balance);
+    }
 }

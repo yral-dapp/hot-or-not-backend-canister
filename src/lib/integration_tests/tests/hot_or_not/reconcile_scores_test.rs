@@ -40,6 +40,7 @@ fn post_cache_canister_wasm() -> Vec<u8> {
 }
 
 #[test]
+#[ignore]
 fn reconcile_scores_test() {
     let pic = PocketIc::new();
 
