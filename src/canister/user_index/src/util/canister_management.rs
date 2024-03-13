@@ -116,17 +116,25 @@ pub async fn upgrade_individual_user_canister(
 
 pub async fn recharge_canister_if_below_threshold(canister_id: &Principal) -> Result<(), String> {
 
-    let (individual_canister_status, ) = canister_status(CanisterIdRecord {canister_id: *canister_id}).await.map_err(|e| format!(" failed to get canister status {}", e.1))?;
-    let idle_cycles_burned_per_day = u128::try_from(individual_canister_status.idle_cycles_burned_per_day.0).map_err(|e| e.to_string())?;
-    let (threshold_balance, recharge_amount) = calculate_recharge_and_threshold_cycles_for_canister(idle_cycles_burned_per_day, None);
-    let individual_canister_current_balance = u128::try_from(individual_canister_status.cycles.0).map_err(|e| e.to_string())?;
-    if individual_canister_current_balance < threshold_balance {
-        let mut recharge_amount = recharge_amount - individual_canister_current_balance;
-        recharge_amount = u128::min(1_000_000_000_000, recharge_amount);
-        recharge_canister(canister_id, recharge_amount).await?;
+    match canister_status(CanisterIdRecord {canister_id: *canister_id}).await {
+        Ok((individual_canister_status,)) => {
+            let idle_cycles_burned_per_day = u128::try_from(individual_canister_status.idle_cycles_burned_per_day.0).map_err(|e| e.to_string())?;
+            let (threshold_balance, recharge_amount) = calculate_recharge_and_threshold_cycles_for_canister(idle_cycles_burned_per_day, None);
+            let individual_canister_current_balance = u128::try_from(individual_canister_status.cycles.0).map_err(|e| e.to_string())?;
+            if individual_canister_current_balance < threshold_balance {
+                let mut recharge_amount = recharge_amount - individual_canister_current_balance;
+                recharge_amount = u128::min(1_000_000_000_000, recharge_amount);
+                recharge_canister(canister_id, recharge_amount).await?;
+            }
+        
+            Ok(())
+        },
+        Err(e) => {
+            recharge_canister(canister_id, INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT).await?;
+            Ok(())
+        }
     }
-
-    Ok(())
+   
 }
 
 
