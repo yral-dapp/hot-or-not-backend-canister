@@ -2,14 +2,11 @@ use std::borrow::Cow;
 
 use candid::{candid_method, types::principal, CandidType};
 use ic_cdk::api;
-use ic_stable_structures::Storable;
 use serde::Deserialize;
 use shared_utils::common::{
     types::http::{HeaderField, HttpRequest, HttpResponse},
     utils::{get_heap_memory_size, get_stable_memory_size},
 };
-
-use crate::CANISTER_DATA;
 
 fn get_path(url: &str) -> Option<&str> {
     url.split('?').next()
@@ -18,17 +15,7 @@ fn get_path(url: &str) -> Option<&str> {
 fn metrics() -> String {
     // Prometheus expects timestamps in ms. Time.now() returns ns.
     let timestamp = api::time() / 1000000;
-    let version =
-        CANISTER_DATA.with(|canister_data| canister_data.borrow().version_details.version_number);
-    let principal =
-        match CANISTER_DATA.with(|canister_data| canister_data.borrow().profile.principal_id) {
-            Some(principal) => principal.to_string(),
-            None => "None".to_string(),
-        };
-    let canister_type = match principal.as_str() {
-        "None" => "anonymous".to_string(),
-        _ => "authenticated".to_string(),
-    };
+    let canister_type = "user_index";
 
     vec![
         format!(
@@ -52,8 +39,6 @@ fn metrics() -> String {
             timestamp
         )
         .as_str(),
-        format!("version {} {}", version, timestamp).as_str(),
-        format!("profile{{principal=\"{}\"}} 1 {}", principal, timestamp).as_str(),
     ]
     .connect("\n")
 }

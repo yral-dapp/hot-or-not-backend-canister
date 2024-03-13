@@ -2,7 +2,8 @@ use crate::{util::canister_management::{create_empty_user_canister, create_users
 use candid::Principal;
 use ic_cdk::api::{call, management_canister::main::canister_status};
 use ic_cdk_macros::update;
-use shared_utils::{canister_specific::individual_user_template::types::session::SessionType, common::{types::{known_principal::KnownPrincipalType, wasm::{CanisterWasm, WasmType}}, utils::task::run_task_concurrently}, constant::{BACKUP_INDIVIDUAL_USER_CANISTER_BATCH_SIZE, BACKUP_INDIVIDUAL_USER_CANISTER_THRESHOLD, INDIVIDUAL_USER_CANISTER_SUBNET_BATCH_SIZE, INDIVIDUAL_USER_CANISTER_SUBNET_MAX_CAPACITY, INDIVIDUAL_USER_CANISTER_SUBNET_THRESHOLD}};
+use shared_utils::{common::{types::{known_principal::KnownPrincipalType, wasm::{CanisterWasm, WasmType}}, utils::task::run_task_concurrently}, constant::{get_backup_individual_user_canister_batch_size, get_backup_individual_user_canister_threshold, get_individual_user_canister_subnet_batch_size, get_individual_user_canister_subnet_threshold, INDIVIDUAL_USER_CANISTER_SUBNET_MAX_CAPACITY}};
+use shared_utils::canister_specific::individual_user_template::types::session::SessionType;
 
 #[update]
 async fn get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer(
@@ -129,14 +130,17 @@ async fn new_user_signup(user_id: Principal) -> Result<Principal, String> {
     }
 
     let individual_user_template_canister_wasm = CANISTER_DATA.with_borrow(|canister_data| canister_data.wasms.get(&WasmType::IndividualUserWasm).unwrap().clone());
-   
-    if individual_user_canisters_cnt < INDIVIDUAL_USER_CANISTER_SUBNET_THRESHOLD {
-        let new_canister_cnt = INDIVIDUAL_USER_CANISTER_SUBNET_BATCH_SIZE.min(backup_individual_user_canister_cnt);
+    let individual_user_canister_subnet_threshold = get_individual_user_canister_subnet_threshold();
+    let individual_user_canister_subnet_batch_size = get_individual_user_canister_subnet_batch_size();
+    if individual_user_canisters_cnt < individual_user_canister_subnet_threshold {
+        let new_canister_cnt = individual_user_canister_subnet_batch_size.min(backup_individual_user_canister_cnt);
         ic_cdk::spawn(provision_new_available_canisters(new_canister_cnt, individual_user_template_canister_wasm));
     }
 
-    if total_canister_provisioned_on_subnet < INDIVIDUAL_USER_CANISTER_SUBNET_MAX_CAPACITY && backup_individual_user_canister_cnt < BACKUP_INDIVIDUAL_USER_CANISTER_THRESHOLD {
-        let new_canister_cnt = BACKUP_INDIVIDUAL_USER_CANISTER_BATCH_SIZE.min(INDIVIDUAL_USER_CANISTER_SUBNET_MAX_CAPACITY - total_canister_provisioned_on_subnet);
+    let backup_individual_user_canister_batch_size = get_backup_individual_user_canister_batch_size();
+    let backup_individual_user_canister_threshold = get_backup_individual_user_canister_threshold();
+    if total_canister_provisioned_on_subnet < INDIVIDUAL_USER_CANISTER_SUBNET_MAX_CAPACITY && backup_individual_user_canister_cnt < backup_individual_user_canister_threshold {
+        let new_canister_cnt = backup_individual_user_canister_batch_size.min(INDIVIDUAL_USER_CANISTER_SUBNET_MAX_CAPACITY - total_canister_provisioned_on_subnet);
         ic_cdk::spawn(provision_new_backup_canisters(new_canister_cnt));
     }
 
