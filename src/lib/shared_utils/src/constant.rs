@@ -15,11 +15,74 @@ pub const MAX_POSTS_IN_ONE_REQUEST: u64 = 100;
 pub const HOME_FEED_DIFFERENCE_TO_INITIATE_SYNCHRONISATION: u64 = 100;
 pub const HOT_OR_NOT_FEED_DIFFERENCE_TO_INITIATE_SYNCHRONISATION: u64 = 100;
 
-pub const BACKUP_INDIVIDUAL_USER_CANISTER_BATCH_SIZE: u64 = 7_000;
-pub const BACKUP_INDIVIDUAL_USER_CANISTER_THRESHOLD: u64 = 3_000;
-pub const INDIVIDUAL_USER_CANISTER_SUBNET_BATCH_SIZE: u64 = 3_000;
-pub const INDIVIDUAL_USER_CANISTER_SUBNET_THRESHOLD: u64 = 1_000;
+const BACKUP_INDIVIDUAL_USER_CANISTER_BATCH_SIZE: u64 = 7_000;
+const BACKUP_INDIVIDUAL_USER_CANISTER_THRESHOLD: u64 = 3_000;
+const INDIVIDUAL_USER_CANISTER_SUBNET_BATCH_SIZE: u64 = 3_000;
+const INDIVIDUAL_USER_CANISTER_SUBNET_THRESHOLD: u64 = 1_000;
+
+const TEST_BACKUP_INDIVIDUAL_USER_CANISTER_BATCH_SIZE: u64 = 10;
+const TEST_INDIVIDUAL_USER_CANISTER_SUBNET_BATCH_SIZE: u64 = 20;
+const TEST_BACKUP_INDIVIDUAL_USER_CANISTER_THRESHOLD: u64 = 1;
+const TEST_INDIVIDUAL_USER_CANISTER_SUBNET_THRESHOLD: u64 = 1;
+
 pub const INDIVIDUAL_USER_CANISTER_SUBNET_MAX_CAPACITY: u64 = 50_000;
+
+
+pub fn get_backup_individual_user_canister_batch_size() -> u64 {
+    match option_env!("DFX_NETWORK") {
+        Some(val) => {
+             if val == "local" {
+                TEST_BACKUP_INDIVIDUAL_USER_CANISTER_BATCH_SIZE
+            } else {
+                BACKUP_INDIVIDUAL_USER_CANISTER_BATCH_SIZE
+            }
+        },
+        None =>  BACKUP_INDIVIDUAL_USER_CANISTER_BATCH_SIZE
+    }
+}
+
+pub fn get_backup_individual_user_canister_threshold() -> u64 {
+    match option_env!("DFX_NETWORK") {
+        Some(val) => {
+             if val == "local" {
+                TEST_BACKUP_INDIVIDUAL_USER_CANISTER_THRESHOLD
+            } else {
+                BACKUP_INDIVIDUAL_USER_CANISTER_THRESHOLD
+            }
+        },
+        None =>  BACKUP_INDIVIDUAL_USER_CANISTER_THRESHOLD
+    }
+}
+
+pub fn get_individual_user_canister_subnet_threshold() -> u64 {
+    match option_env!("DFX_NETWORK") {
+        Some(val) => {
+             if val == "local" {
+                TEST_INDIVIDUAL_USER_CANISTER_SUBNET_THRESHOLD
+            } else {
+                INDIVIDUAL_USER_CANISTER_SUBNET_THRESHOLD
+            }
+        },
+        None =>  INDIVIDUAL_USER_CANISTER_SUBNET_THRESHOLD
+    }
+}
+
+
+pub fn get_individual_user_canister_subnet_batch_size() -> u64 {
+    match option_env!("DFX_NETWORK") {
+        Some(val) => {
+             if val == "local" {
+                TEST_INDIVIDUAL_USER_CANISTER_SUBNET_BATCH_SIZE
+            } else {
+                INDIVIDUAL_USER_CANISTER_SUBNET_BATCH_SIZE
+            }
+        },
+        None =>  INDIVIDUAL_USER_CANISTER_SUBNET_BATCH_SIZE
+    }
+}
+
+
+
 // * Important Principal IDs
 pub const GOVERNANCE_CANISTER_ID: &str = "6wcax-haaaa-aaaaq-aaava-cai";
 pub const NNS_CYCLE_MINTING_CANISTER: &str = "rkp4c-7iaaa-aaaaa-aaaca-cai";
