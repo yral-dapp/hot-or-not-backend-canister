@@ -3,14 +3,14 @@ use ic_cdk::api::{
     self,
     call::RejectionCode,
     management_canister::{
-        main::{self, CanisterInstallMode, CreateCanisterArgument, WasmModule, InstallCodeArgument, stop_canister, start_canister},
-        provisional::{CanisterSettings, CanisterIdRecord},
+        main::{self, canister_info, canister_status, start_canister, stop_canister, CanisterInfoRequest, CanisterInstallMode, CreateCanisterArgument, InstallCodeArgument, WasmModule},
+        provisional::{CanisterIdRecord, CanisterSettings},
     },
 };
 use serde::{Serialize, Deserialize};
 use shared_utils::{
     canister_specific::individual_user_template::types::arg::IndividualUserTemplateInitArgs,
-    constant::{INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT, CYCLES_THRESHOLD_TO_INITIATE_RECHARGE},
+    constant::{INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT}, cycles::calculate_recharge_and_threshold_cycles_for_canister,
 };
 
 use crate::CANISTER_DATA;
@@ -116,39 +116,35 @@ pub async fn upgrade_individual_user_canister(
 
 pub async fn recharge_canister_if_below_threshold(canister_id: &Principal) -> Result<(), String> {
 
-    let is_canister_below_threshold_balance = is_canister_below_threshold_balance(&canister_id).await;
-
-    if is_canister_below_threshold_balance {
-        recharge_canister(canister_id).await?;    
+    match canister_status(CanisterIdRecord {canister_id: *canister_id}).await {
+        Ok((individual_canister_status,)) => {
+            let idle_cycles_burned_per_day = u128::try_from(individual_canister_status.idle_cycles_burned_per_day.0).map_err(|e| e.to_string())?;
+            let (threshold_balance, recharge_amount) = calculate_recharge_and_threshold_cycles_for_canister(idle_cycles_burned_per_day, None);
+            let individual_canister_current_balance = u128::try_from(individual_canister_status.cycles.0).map_err(|e| e.to_string())?;
+            if individual_canister_current_balance < threshold_balance {
+                let mut recharge_amount = recharge_amount - individual_canister_current_balance;
+                recharge_amount = u128::min(1_000_000_000_000, recharge_amount);
+                recharge_canister(canister_id, recharge_amount).await?;
+            }
+        
+            Ok(())
+        },
+        Err(e) => {
+            recharge_canister(canister_id, INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT).await?;
+            Ok(())
+        }
     }
-
-    Ok(())
+   
 }
 
 
-pub async fn is_canister_below_threshold_balance(canister_id: &Principal) -> bool {
-    let response: Result<(u128,), (_, _)> =
-        ic_cdk::call(*canister_id, "get_user_caniser_cycle_balance", ()).await;
 
-    if response.is_err() {
-        return true;
-    }
-
-    let (balance,): (u128,) = response.unwrap();
-
-    if balance < CYCLES_THRESHOLD_TO_INITIATE_RECHARGE {
-        return true;
-    }
-
-    false
-}
-
-pub async fn recharge_canister(canister_id: &Principal) -> Result<(), String> {
+pub async fn recharge_canister(canister_id: &Principal, recharge_amount: u128) -> Result<(), String> {
     main::deposit_cycles(
         CanisterIdRecord {
             canister_id: *canister_id,
         },
-        INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT,
+        recharge_amount,
     )
     .await
     .map_err(|e| e.1)
