@@ -6,10 +6,10 @@ use std::{borrow::BorrowMut, time::{Duration, SystemTime}};
 
 use crate::data_model::memory;
 
-use shared_utils::canister_specific::individual_user_template::types::{
+use shared_utils::{canister_specific::individual_user_template::types::{
     arg::IndividualUserTemplateInitArgs,
     session::SessionType,
-};
+}, common::utils::system_time::get_current_system_time_from_ic};
 
 use crate::{
     api::{
@@ -32,7 +32,7 @@ fn set_registered_users_and_last_access_time() {
     CANISTER_DATA.with_borrow_mut(|canister_data| {
         if canister_data.profile.principal_id.is_some() {
             canister_data.session_type = Some(SessionType::RegisteredSession);
-            canister_data.last_access_time = Some(SystemTime::now());
+            canister_data.last_access_time = Some(get_current_system_time_from_ic());
         }
     })
 }
