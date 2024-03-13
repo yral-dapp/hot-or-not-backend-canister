@@ -1,3 +1,14 @@
+type HttpRequest = record {
+  url : text;
+  method : text;
+  body : vec nat8;
+  headers : vec record { text; text };
+};
+type HttpResponse = record {
+  body : vec nat8;
+  headers : vec record { text; text };
+  status_code : nat16;
+};
 type KnownPrincipalType = variant {
   CanisterIdUserIndex;
   CanisterIdPlatformOrchestrator;
@@ -77,6 +88,7 @@ service : (PostCacheInitArgs) -> {
   get_well_known_principal_value : (KnownPrincipalType) -> (
       opt principal,
     ) query;
+  http_request : (HttpRequest) -> (HttpResponse) query;
   receive_top_home_feed_posts_from_publishing_canister : (
       vec PostScoreIndexItemV1,
     ) -> ();
