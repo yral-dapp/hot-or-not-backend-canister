@@ -2,17 +2,14 @@ use candid::Principal;
 use ciborium::de;
 use ic_cdk_macros::post_upgrade;
 use ic_stable_structures::Memory;
-use std::{borrow::BorrowMut, time::Duration};
+use std::{borrow::BorrowMut, time::{Duration, SystemTime}};
 
 use crate::data_model::memory;
 
-use shared_utils::canister_specific::individual_user_template::types::{
+use shared_utils::{canister_specific::individual_user_template::types::{
     arg::IndividualUserTemplateInitArgs,
-    hot_or_not::{
-        BetDirection, BetMakerPrincipal, GlobalBetId, GlobalRoomId, RoomDetailsV1, SlotDetailsV1,
-        StablePrincipal,
-    },
-};
+    session::SessionType,
+}, common::utils::system_time::get_current_system_time_from_ic};
 
 use crate::{
     api::{
@@ -28,19 +25,18 @@ fn post_upgrade() {
     save_upgrade_args_to_memory();
     refetch_well_known_principals();
     reenqueue_timers_for_pending_bet_outcomes();
-    reset_profile_owner();
+    set_registered_users_and_last_access_time();
 }
 
-
-fn reset_profile_owner() {
+fn set_registered_users_and_last_access_time() {
     CANISTER_DATA.with_borrow_mut(|canister_data| {
-        if let Some(profile_owner) = canister_data.profile.principal_id {
-            if profile_owner.eq(&Principal::anonymous()){
-                canister_data.profile.principal_id = None;
-            }
+        if canister_data.profile.principal_id.is_some() {
+            canister_data.session_type = Some(SessionType::RegisteredSession);
+            canister_data.last_access_time = Some(get_current_system_time_from_ic());
         }
     })
 }
+
  
 fn restore_data_from_stable_memory() {
     let heap_data = memory::get_upgrades_memory();

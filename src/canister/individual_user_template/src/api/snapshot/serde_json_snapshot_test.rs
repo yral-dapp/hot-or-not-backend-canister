@@ -10,16 +10,11 @@ mod test {
     use ic_cdk::api::management_canister::main::CanisterId;
     use shared_utils::{
         canister_specific::individual_user_template::types::{
-            configuration::IndividualUserConfiguration,
-            follow::{FollowData, FollowEntryDetail, FollowList},
-            hot_or_not::{
+            configuration::IndividualUserConfiguration, follow::{FollowData, FollowEntryDetail, FollowList}, hot_or_not::{
                 AggregateStats, BetDetails, BetDirection, BetOutcomeForBetMaker, BetPayout,
                 GlobalBetId, GlobalRoomId, PlacedBetDetail, RoomBetPossibleOutcomes, RoomDetailsV1,
                 SlotDetailsV1, SlotId, StablePrincipal,
-            },
-            post::{FeedScore, PostViewStatistics},
-            profile::{UserProfile, UserProfileGlobalStats},
-            token::TokenBalance,
+            }, post::{FeedScore, PostViewStatistics}, profile::{UserProfile, UserProfileGlobalStats}, session::SessionType, token::TokenBalance
         },
         common::types::{
             app_primitive_type::PostId,
@@ -230,6 +225,8 @@ mod test {
                 version_number: 1,
                 version: "1.0.0".to_string(),
             },
+            session_type: Some(SessionType::RegisteredSession),
+            last_access_time: Some(SystemTime::now())
         };
 
         let serde_str = serde_json::to_string(&canister_data_snapshot);

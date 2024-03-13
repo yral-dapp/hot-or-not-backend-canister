@@ -1,7 +1,5 @@
 use std::{
-    borrow::Borrow,
-    collections::{BTreeMap, BTreeSet, HashSet},
-    time::SystemTime,
+    alloc::System, borrow::Borrow, collections::{BTreeMap, BTreeSet, HashSet}, time::SystemTime
 };
 
 use candid::{CandidType, Deserialize, Principal};
@@ -10,16 +8,11 @@ use serde::Serialize;
 use serde_json_any_key::*;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
-        configuration::IndividualUserConfiguration,
-        follow::FollowData,
-        hot_or_not::{
+        configuration::IndividualUserConfiguration, follow::FollowData, hot_or_not::{
             AggregateStats, BetDetails, BetMaker, BetMakerPrincipal, GlobalBetId, GlobalRoomId,
             HotOrNotDetails, PlacedBetDetail, RoomDetailsV1, RoomId, SlotDetailsV1, SlotId,
             StablePrincipal,
-        },
-        post::{FeedScore, Post, PostViewStatistics},
-        profile::UserProfile,
-        token::TokenBalance,
+        }, post::{FeedScore, Post, PostViewStatistics}, profile::UserProfile, session::SessionType, token::TokenBalance
     },
     common::types::{
         app_primitive_type::PostId,
@@ -62,6 +55,10 @@ pub struct CanisterData {
     pub principals_that_follow_me: BTreeSet<Principal>,
     pub profile: UserProfile,
     pub version_details: VersionDetails,
+    #[serde(default)]
+    pub session_type: Option<SessionType>,
+    #[serde(default)]
+    pub last_access_time: Option<SystemTime>
 }
 
 pub fn _default_room_details(
@@ -103,6 +100,8 @@ impl Default for CanisterData {
             principals_that_follow_me: BTreeSet::new(),
             profile: UserProfile::default(),
             version_details: VersionDetails::default(),
+            session_type: None,
+            last_access_time: None,
         }
     }
 }

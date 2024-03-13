@@ -10,16 +10,11 @@ use serde::Serialize;
 use serde_json_any_key::*;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
-        configuration::IndividualUserConfiguration,
-        follow::{FollowData, FollowEntryDetail, FollowEntryId, FollowList},
-        hot_or_not::{
+        configuration::IndividualUserConfiguration, follow::{FollowData, FollowEntryDetail, FollowEntryId, FollowList}, hot_or_not::{
             AggregateStats, BetDetails, BetMaker, BetMakerPrincipal, GlobalBetId, GlobalRoomId,
             HotOrNotDetails, PlacedBetDetail, RoomDetailsV1, RoomId, SlotDetailsV1, SlotId,
             StablePrincipal,
-        },
-        post::{FeedScore, Post, PostViewStatistics},
-        profile::UserProfile,
-        token::TokenBalance,
+        }, post::{FeedScore, Post, PostViewStatistics}, profile::UserProfile, session::SessionType, token::TokenBalance
     },
     common::types::{
         app_primitive_type::PostId,
@@ -67,6 +62,8 @@ pub struct CanisterDataForSnapshot {
     pub principals_that_follow_me: BTreeSet<Principal>,
     pub profile: UserProfile,
     pub version_details: VersionDetails,
+    pub session_type: Option<SessionType>,
+    pub last_access_time: Option<SystemTime>
 }
 
 #[derive(CandidType, Clone, Deserialize, Debug, Serialize)]
@@ -233,6 +230,8 @@ impl From<&CanisterData> for CanisterDataForSnapshot {
             principals_that_follow_me: canister_data.principals_that_follow_me.clone(),
             profile: canister_data.profile.clone(),
             version_details: canister_data.version_details.clone(),
+            session_type: canister_data.session_type,
+            last_access_time: canister_data.last_access_time
         }
     }
 }
@@ -348,6 +347,8 @@ impl From<CanisterDataForSnapshot> for CanisterData {
             principals_that_follow_me: canister_data.principals_that_follow_me,
             profile: canister_data.profile,
             version_details: canister_data.version_details,
+            session_type: canister_data.session_type,
+            last_access_time: canister_data.last_access_time
         }
     }
 }
