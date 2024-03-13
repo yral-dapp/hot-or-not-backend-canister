@@ -1,3 +1,4 @@
+use candid::Principal;
 use ciborium::de;
 use ic_cdk_macros::post_upgrade;
 use ic_stable_structures::Memory;
@@ -36,6 +37,7 @@ fn set_registered_users_and_last_access_time() {
     })
 }
 
+ 
 fn restore_data_from_stable_memory() {
     let heap_data = memory::get_upgrades_memory();
     let mut heap_data_len_bytes = [0; 4];

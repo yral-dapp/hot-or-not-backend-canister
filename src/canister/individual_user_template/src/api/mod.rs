@@ -4,6 +4,7 @@ pub mod canister_management;
 pub mod cycle_management;
 pub mod follow;
 pub mod hot_or_not_bet;
+pub mod monitoring;
 pub mod post;
 pub mod profile;
 pub mod snapshot;

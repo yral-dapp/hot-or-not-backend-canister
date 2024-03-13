@@ -353,8 +353,8 @@ fn when_restoring_all_data_to_an_individual_user_canister_after_backing_up_data_
             get_global_super_admin_principal_id(),
             "upgrade_specific_individual_user_canister_with_latest_wasm",
             candid::encode_args((
-                get_mock_user_alice_principal_id(),
                 alice_canister_id,
+                Some(get_mock_user_alice_principal_id()),
                 Some(CanisterInstallMode::Reinstall),
                 true,
             ))

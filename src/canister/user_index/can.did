@@ -112,6 +112,7 @@ service : (UserIndexInitArgs) -> {
     ) -> ();
   reclaim_cycles_from_individual_canisters : () -> ();
   reset_user_individual_canisters : (vec principal) -> (Result);
+  return_cycles_to_platform_orchestrator_canister : () -> (Result);
   set_permission_to_upgrade_individual_canisters : (bool) -> (text);
   start_upgrades_for_individual_canisters : (text, vec nat8) -> (text);
   toggle_signups_enabled : () -> (Result_2);
@@ -119,9 +120,10 @@ service : (UserIndexInitArgs) -> {
       text,
       principal,
     ) -> (Result_3);
+  update_profile_owner_for_individual_canisters : () -> ();
   upgrade_specific_individual_user_canister_with_latest_wasm : (
       principal,
-      principal,
+      opt principal,
       opt CanisterInstallMode,
     ) -> (text);
   validate_reset_user_individual_canisters : (vec principal) -> (Result) query;

@@ -11,6 +11,8 @@ mod get_last_subnet_upgrade_status;
 mod get_all_available_subnet_orchestrators;
 mod get_all_subnet_orchestrators;
 mod stop_upgrades_for_individual_user_canisters;
+mod upgrade_specific_individual_canister;
+mod update_profile_owner_for_individual_users;
 
 #[query]
 pub fn get_version() -> String {
