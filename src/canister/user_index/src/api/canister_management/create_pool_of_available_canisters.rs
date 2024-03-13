@@ -2,7 +2,7 @@ use std::pin::Pin;
 
 use futures::Future;
 use ic_cdk::{api::is_controller, caller};
-use shared_utils::{common::{types::wasm::{CanisterWasm, WasmType}, utils::task::run_task_concurrently}, constant::{get_backup_individual_user_canister_threshold, get_individual_user_canister_subnet_batch_size,}};
+use shared_utils::{common::{types::wasm::{CanisterWasm, WasmType}, utils::task::run_task_concurrently}, constant::{get_backup_individual_user_canister_batch_size, get_backup_individual_user_canister_threshold, get_individual_user_canister_subnet_batch_size}};
 use ic_cdk_macros::update;
 
 use crate::{util::canister_management::{create_empty_user_canister, create_users_canister}, CANISTER_DATA};
@@ -34,10 +34,10 @@ pub fn create_pool_of_individual_user_available_canisters(version: String, indiv
 
 pub async fn impl_create_pool_of_individual_user_available_canisters(version: String, individual_user_wasm: Vec<u8>) {
 
-    let backup_individual_canister_threshold = get_backup_individual_user_canister_threshold();
+    let backup_individual_user_canister_batch_size = get_backup_individual_user_canister_batch_size();
 
     //empty canister for backup
-    let create_empty_canister_futures = (0..backup_individual_canister_threshold)
+    let create_empty_canister_futures = (0..backup_individual_user_canister_batch_size)
     .map(|_| Box::pin(async {
         let canister_id = create_empty_user_canister().await;
         (canister_id, CanisterCodeState::Empty)
