@@ -4,7 +4,7 @@
 dfx build individual_user_template
 
 # Specify the path to your Wasm.gz file
-wasm=".dfx/ic/canisters/individual_user_template/individual_user_template.wasm.gz"
+wasm=".dfx/local/canisters/individual_user_template/individual_user_template.wasm.gz"
 
 
 
