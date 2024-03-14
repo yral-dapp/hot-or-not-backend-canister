@@ -1,7 +1,11 @@
 use candid::Principal;
+use ic_stable_structures::{memory_manager::VirtualMemory, DefaultMemoryImpl};
 use shared_utils::{
     canister_specific::individual_user_template::types::{
-        hot_or_not::{BetDirection, BetOutcomeForBetMaker, BetPayout, RoomBetPossibleOutcomes},
+        hot_or_not::{
+            BetDetails, BetDirection, BetOutcomeForBetMaker, BetPayout, GlobalBetId, GlobalRoomId,
+            RoomBetPossibleOutcomes, RoomDetailsV1, SlotDetails, StablePrincipal,
+        },
         post::Post,
     },
     common::utils::system_time,
@@ -29,24 +33,52 @@ pub fn tabulate_hot_or_not_outcome_for_post_slot(
         &mut canister_data.bet_details_map,
     );
 
-    inform_participants_of_outcome(post_to_tabulate_results_for, &slot_id);
+    inform_participants_of_outcome(
+        post_to_tabulate_results_for,
+        &slot_id,
+        &canister_data.room_details_map,
+        &canister_data.bet_details_map,
+    );
 }
 
-fn inform_participants_of_outcome(post: &Post, slot_id: &u8) {
+pub fn inform_participants_of_outcome(
+    post: &Post,
+    slot_id: &u8,
+    room_details_map: &ic_stable_structures::btreemap::BTreeMap<
+        GlobalRoomId,
+        RoomDetailsV1,
+        VirtualMemory<DefaultMemoryImpl>,
+    >,
+    bet_details_map: &ic_stable_structures::btreemap::BTreeMap<
+        GlobalBetId,
+        BetDetails,
+        VirtualMemory<DefaultMemoryImpl>,
+    >,
+) {
     let hot_or_not_details = post.hot_or_not_details.as_ref();
 
     if hot_or_not_details.is_none() {
         return;
     }
 
-    let slot_details = hot_or_not_details.unwrap().slot_history.get(slot_id);
+    let start_global_room_id = GlobalRoomId(post.id, *slot_id, 1);
+    let end_global_room_id = GlobalRoomId(post.id, *slot_id + 1, 1);
 
-    if slot_details.is_none() {
-        return;
-    }
+    let room_details = room_details_map
+        .range(start_global_room_id..end_global_room_id)
+        .collect::<Vec<_>>();
 
-    for (_room_id, room_detail) in slot_details.unwrap().room_details.iter() {
-        for (_participant, bet) in room_detail.bets_made.iter() {
+    room_details.iter().for_each(|(groomid, room_detail)| {
+        let mut room_detail = room_detail.clone();
+        let room_id = groomid.2;
+
+        let start_global_bet_id = GlobalBetId(start_global_room_id, StablePrincipal::default());
+        let end_global_bet_id = GlobalBetId(end_global_room_id, StablePrincipal::default());
+        let bet_details = bet_details_map
+            .range(start_global_bet_id..end_global_bet_id)
+            .collect::<Vec<_>>();
+
+        for (_, bet) in bet_details.iter() {
             let bet_outcome_for_bet_maker: BetOutcomeForBetMaker = match room_detail.bet_outcome {
                 RoomBetPossibleOutcomes::BetOngoing => BetOutcomeForBetMaker::AwaitingResult,
                 RoomBetPossibleOutcomes::Draw => BetOutcomeForBetMaker::Draw(match bet.payout {
@@ -79,7 +111,7 @@ fn inform_participants_of_outcome(post: &Post, slot_id: &u8) {
                 bet_outcome_for_bet_maker,
             ));
         }
-    }
+    });
 }
 
 async fn receive_bet_winnings_when_distributed(

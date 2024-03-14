@@ -22,15 +22,11 @@ type KnownPrincipalType = variant {
   CanisterIdSnsGovernance;
   UserIdGlobalSuperAdmin;
 };
+type NsfwFilter = variant { IncludeNsfw; OnlyNsfw; ExcludeNsfw };
 type PostCacheInitArgs = record {
   known_principal_ids : opt vec record { KnownPrincipalType; principal };
   version : text;
   upgrade_version_number : opt nat64;
-};
-type PostScoreIndexItem = record {
-  post_id : nat64;
-  score : nat64;
-  publisher_canister_id : principal;
 };
 type PostScoreIndexItemV1 = record {
   is_nsfw : bool;
@@ -49,8 +45,7 @@ type PostStatus = variant {
   Transcoding;
   Deleted;
 };
-type Result = variant { Ok : vec PostScoreIndexItem; Err : TopPostsFetchError };
-type Result_1 = variant {
+type Result = variant {
   Ok : vec PostScoreIndexItemV1;
   Err : TopPostsFetchError;
 };
@@ -65,26 +60,20 @@ type TopPostsFetchError = variant {
 };
 service : (PostCacheInitArgs) -> {
   get_cycle_balance : () -> (nat) query;
-  get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed : (
-      nat64,
-      nat64,
-    ) -> (Result) query;
   get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed_cursor : (
       nat64,
       nat64,
       opt bool,
       opt PostStatus,
-    ) -> (Result_1) query;
-  get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed : (
-      nat64,
-      nat64,
+      opt NsfwFilter,
     ) -> (Result) query;
   get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed_cursor : (
       nat64,
       nat64,
       opt bool,
       opt PostStatus,
-    ) -> (Result_1) query;
+      opt NsfwFilter,
+    ) -> (Result) query;
   get_well_known_principal_value : (KnownPrincipalType) -> (
       opt principal,
     ) query;

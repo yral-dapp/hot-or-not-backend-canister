@@ -5,7 +5,7 @@ use candid::Principal;
 use data_model::CanisterData;
 use ic_cdk_macros::export_candid;
 use shared_utils::{
-    canister_specific::post_cache::types::arg::PostCacheInitArgs,
+    canister_specific::post_cache::types::arg::{NsfwFilter, PostCacheInitArgs},
     common::types::{
         http::{HttpRequest, HttpResponse},
         known_principal::KnownPrincipalType,

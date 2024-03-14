@@ -1,10 +1,10 @@
-use std:: time::Duration;
 use candid::Principal;
 use ic_cdk::notify;
 use shared_utils::common::{
     types::top_posts::{post_score_index_item::PostScoreIndexItemV1, LATEST_POSTS_WINDOW},
     utils::system_time::get_current_system_time,
 };
+use std::time::Duration;
 
 use crate::CANISTER_DATA;
 
@@ -71,7 +71,6 @@ pub fn trigger_update_hot_or_not_index() {
     }
 }
 
-// TODO: Add integration tests
 pub fn trigger_reconcile_scores() {
     let last_updated_reconcile_scores = CANISTER_DATA.with(|canister_data| {
         canister_data
@@ -163,6 +162,8 @@ mod tests {
         types::top_posts::post_score_index_item::{PostScoreIndexItemV1, PostStatus},
         utils::system_time::set_mock_time,
     };
+
+    use crate::data_model::CanisterData;
 
     use super::*;
 
