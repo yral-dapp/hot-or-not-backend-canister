@@ -34,6 +34,7 @@ pub fn get_individual_post_details_by_id(post_id: u64) -> PostDetailsForFrontend
                 profile_stats: profile.profile_stats,
                 unique_user_name: profile.unique_user_name.clone(),
                 lifetime_earnings: token_balance.lifetime_earnings,
+                referrer_details: profile.referrer_details.clone()
             },
             api_caller,
             &system_time::get_current_system_time_from_ic(),

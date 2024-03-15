@@ -96,6 +96,7 @@ mod test {
                 hot_bets_received: 10,
                 not_bets_received: 5,
             },
+            referrer_details: None
         };
 
         receive_profile_details_from_individual_user_canister_impl(

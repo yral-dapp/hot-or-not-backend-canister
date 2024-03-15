@@ -100,9 +100,9 @@ service : (UserIndexInitArgs) -> {
   get_index_details_is_user_name_taken : (text) -> (bool) query;
   get_index_details_last_upgrade_status : () -> (UpgradeStatus) query;
   get_list_of_available_canisters : () -> (vec principal) query;
-  get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer : (
-      opt principal,
-    ) -> (principal);
+  get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer : () -> (
+      principal,
+    );
   get_subnet_available_capacity : () -> (nat64) query;
   get_subnet_backup_capacity : () -> (nat64) query;
   get_user_canister_id_from_unique_user_name : (text) -> (opt principal) query;
@@ -118,6 +118,7 @@ service : (UserIndexInitArgs) -> {
       opt principal,
     ) query;
   http_request : (HttpRequest) -> (HttpResponse) query;
+  issue_rewards_for_referral : (principal, principal, principal) -> (Result);
   receive_data_from_backup_canister_and_restore_data_to_heap : (
       principal,
       principal,

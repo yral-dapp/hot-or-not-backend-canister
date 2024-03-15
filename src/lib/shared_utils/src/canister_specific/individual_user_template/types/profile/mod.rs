@@ -8,7 +8,17 @@ pub struct UserProfile {
     pub principal_id: Option<Principal>,
     pub profile_picture_url: Option<String>,
     pub profile_stats: UserProfileGlobalStats,
+    #[serde(default)]
+    pub referrer_details: Option<UserCanisterDetails>,
 }
+
+#[derive(Clone, CandidType, Deserialize, Debug, Serialize, PartialEq, Eq)]
+pub struct UserCanisterDetails {
+    pub profile_owner: Principal,
+    pub user_canister_id: Principal,
+}
+
+
 
 #[derive(CandidType, Deserialize, Debug, PartialEq, Eq)]
 pub struct UserProfileDetailsForFrontend {
@@ -20,6 +30,7 @@ pub struct UserProfileDetailsForFrontend {
     pub profile_stats: UserProfileGlobalStats,
     pub lifetime_earnings: u64,
     pub unique_user_name: Option<String>,
+    pub referrer_details: Option<UserCanisterDetails>
 }
 
 #[derive(CandidType, Deserialize, Clone, Copy, Debug, Default, Serialize, PartialEq, Eq)]

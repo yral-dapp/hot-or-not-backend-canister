@@ -50,6 +50,7 @@ fn update_profile_display_details(
                 .len() as u64,
             following_count: canister_data_ref_cell.borrow().principals_i_follow.len() as u64,
             lifetime_earnings: *lifetime_earnings,
+            referrer_details: profile.referrer_details.clone()
         }
     }))
 }

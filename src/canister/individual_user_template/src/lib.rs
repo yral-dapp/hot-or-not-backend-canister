@@ -23,7 +23,7 @@ use shared_utils::{
             Post, PostDetailsForFrontend, PostDetailsFromFrontend, PostViewDetailsFromFrontend,
         },
         profile::{
-            UserProfile, UserProfileDetailsForFrontend, UserProfileUpdateDetailsFromFrontend,
+            UserProfile, UserProfileDetailsForFrontend, UserProfileUpdateDetailsFromFrontend, UserCanisterDetails
         },
     },
     common::types::{
