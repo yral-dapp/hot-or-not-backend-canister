@@ -33,7 +33,7 @@ fn when_new_user_signup_canister_is_marked_as_anonymous_login(
     }).unwrap();
 
     let session_type = state_machine
-        .update_call(
+        .query_call(
             alice_canister_id,
             alice_principal_id,
             "get_session_type",
@@ -49,5 +49,5 @@ fn when_new_user_signup_canister_is_marked_as_anonymous_login(
         .unwrap()
         .unwrap();
 
-        assert_eq!(session_type, SessionType::AnonymousSession);
+    assert_eq!(session_type, SessionType::AnonymousSession);
 }

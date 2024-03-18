@@ -220,6 +220,7 @@ mod test {
                     hot_bets_received: 100,
                     not_bets_received: 100,
                 },
+                referrer_details: None
             },
             version_details: VersionDetails {
                 version_number: 1,

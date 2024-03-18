@@ -57,6 +57,7 @@ fn get_posts_of_this_user_profile_with_pagination(
                         profile_stats: profile.profile_stats,
                         unique_user_name: profile.unique_user_name.clone(),
                         lifetime_earnings: token_balance.lifetime_earnings,
+                        referrer_details: profile.referrer_details.clone()
                     },
                     api_caller,
                     &current_time,

@@ -265,12 +265,17 @@ type UpdateProfileSetUniqueUsernameError = variant {
   NotAuthorized;
   UserCanisterEntryDoesNotExist;
 };
+type UserCanisterDetails = record {
+  user_canister_id : principal;
+  profile_owner : principal;
+};
 type UserProfile = record {
   unique_user_name : opt text;
   profile_picture_url : opt text;
   display_name : opt text;
   principal_id : opt principal;
   profile_stats : UserProfileGlobalStats;
+  referrer_details : opt UserCanisterDetails;
 };
 type UserProfileDetailsForFrontend = record {
   unique_user_name : opt text;
@@ -281,6 +286,7 @@ type UserProfileDetailsForFrontend = record {
   principal_id : principal;
   profile_stats : UserProfileGlobalStats;
   followers_count : nat64;
+  referrer_details : opt UserCanisterDetails;
 };
 type UserProfileGlobalStats = record {
   hot_bets_received : nat64;
@@ -368,5 +374,6 @@ service : (IndividualUserTemplateInitArgs) -> {
   update_profiles_that_follow_me_toggle_list_with_specified_profile : (
       FollowerArg,
     ) -> (Result_2);
-  update_session_type : (opt SessionType) -> (text);
+  update_referrer_details : (UserCanisterDetails) -> (Result_8);
+  update_session_type : (SessionType) -> (Result_8);
 }

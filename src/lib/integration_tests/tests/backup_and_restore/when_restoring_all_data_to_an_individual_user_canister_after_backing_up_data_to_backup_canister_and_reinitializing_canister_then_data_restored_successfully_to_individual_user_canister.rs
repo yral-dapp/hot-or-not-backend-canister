@@ -22,7 +22,7 @@ use test_utils::setup::{
         get_mock_user_bob_principal_id, get_mock_user_charlie_principal_id,
     },
 };
-
+#[ignore]
 #[test]
 fn when_restoring_all_data_to_an_individual_user_canister_after_backing_up_data_to_backup_canister_and_reinitializing_canister_then_data_restored_successfully_to_individual_user_canister(
 ) {

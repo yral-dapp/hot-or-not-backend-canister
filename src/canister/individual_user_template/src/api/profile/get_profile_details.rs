@@ -17,6 +17,7 @@ fn get_profile_details() -> UserProfileDetailsForFrontend {
             followers_count: canister_data_ref_cell.borrow().follow_data.follower.len() as u64,
             following_count: canister_data_ref_cell.borrow().follow_data.following.len() as u64,
             lifetime_earnings: token_balance.lifetime_earnings,
+            referrer_details: profile.referrer_details
         }
     })
 }
