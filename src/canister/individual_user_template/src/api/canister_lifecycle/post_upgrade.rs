@@ -41,7 +41,6 @@ fn post_upgrade() {
     save_upgrade_args_to_memory();
     refetch_well_known_principals();
     reenqueue_timers_for_pending_bet_outcomes();
-    reconcile_canister_winnings();
 }
 
 fn restore_data_from_stable_memory() {
@@ -93,77 +92,5 @@ const DELAY_FOR_REFETCHING_WELL_KNOWN_PRINCIPALS: Duration = Duration::from_secs
 fn refetch_well_known_principals() {
     ic_cdk_timers::set_timer(DELAY_FOR_REFETCHING_WELL_KNOWN_PRINCIPALS, || {
         ic_cdk::spawn(update_locally_stored_well_known_principals::update_locally_stored_well_known_principals())
-    });
-}
-
-const DELAY_FOR_RECONCILE_WINNINGS: Duration = Duration::from_secs(3);
-fn reconcile_canister_winnings() {
-    ic_cdk_timers::set_timer(DELAY_FOR_RECONCILE_WINNINGS, || {
-        reconcile_canister_winnings_impl()
-    });
-}
-
-fn reconcile_canister_winnings_impl() {
-    let posts = CANISTER_DATA.with(|canister_data_ref_cell| {
-        let canister_data_ref_cell = canister_data_ref_cell.borrow_mut();
-
-        canister_data_ref_cell.all_created_posts.clone()
-    });
-
-    let rooms_list = posts
-        .iter()
-        .filter_map(|(post_id, post)| {
-            if let Some(hot_or_not_details) = &post.hot_or_not_details {
-                Some((post_id, hot_or_not_details))
-            } else {
-                None
-            }
-        })
-        .map(|(post_id, hot_or_not_details)| {
-            hot_or_not_details
-                .slot_history
-                .iter()
-                .map(move |(slot_id, slot_details)| (post_id, slot_id, slot_details))
-                .map(|(post_id, slot_id, slot_details)| {
-                    slot_details
-                        .room_details
-                        .iter()
-                        .map(move |(room_id, _)| GlobalRoomId(*post_id, *slot_id, *room_id))
-                })
-        })
-        .flatten()
-        .flatten()
-        .collect::<HashSet<GlobalRoomId>>();
-
-    CANISTER_DATA.with(|canister_data_ref_cell| {
-        let canister_data_ref_cell = canister_data_ref_cell.borrow();
-
-        let mut slots_set = HashSet::new();
-
-        canister_data_ref_cell
-            .room_details_map
-            .iter()
-            .for_each(|(groomid, _)| {
-                if !rooms_list.contains(&groomid) {
-                    let GlobalRoomId(post_id, slot_id, _) = groomid;
-                    let post_to_tabulate_results_for = canister_data_ref_cell
-                        .all_created_posts
-                        .get(&post_id)
-                        .unwrap();
-
-                    // Skip if slot has already been processed
-                    if slots_set.contains(&(post_id, slot_id)) {
-                        return;
-                    }
-                    slots_set.insert((post_id, slot_id));
-
-                    inform_participants_of_outcome(
-                        post_to_tabulate_results_for,
-                        &slot_id,
-                        &canister_data_ref_cell.room_details_map,
-                        &canister_data_ref_cell.bet_details_map,
-                    );
-                };
-            });
     });
 }
