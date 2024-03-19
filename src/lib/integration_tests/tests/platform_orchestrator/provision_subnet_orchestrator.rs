@@ -5,7 +5,7 @@ use ic_cdk::api::{management_canister::provisional::CanisterSettings, time};
 use pocket_ic::{PocketIc, PocketIcBuilder, WasmResult};
 use serde::{Deserialize, Serialize};
 use ic_ledger_types::{AccountIdentifier, BlockIndex, Tokens, DEFAULT_SUBACCOUNT};
-use shared_utils::{canister_specific::{individual_user_template, platform_orchestrator::{self, types::args::PlatformOrchestratorInitArgs}}, common::{types::{known_principal::KnownPrincipalMap, wasm::WasmType}, utils::system_time}, constant::{NNS_CYCLE_MINTING_CANISTER, NNS_LEDGER_CANISTER_ID}};
+use shared_utils::{canister_specific::{individual_user_template, platform_orchestrator::{self, types::args::PlatformOrchestratorInitArgs}, post_cache::types::arg::PostCacheInitArgs}, common::{types::{known_principal::KnownPrincipalMap, wasm::WasmType}, utils::system_time}, constant::{NNS_CYCLE_MINTING_CANISTER, NNS_LEDGER_CANISTER_ID, YRAL_POST_CACHE_CANISTER_ID}};
 use test_utils::setup::test_constants::{get_global_super_admin_principal_id, v1::CANISTER_INITIAL_CYCLES_FOR_SPAWNING_CANISTERS};
 
 pub type CanisterId = Principal;
@@ -100,7 +100,6 @@ fn provision_subnet_orchestrator_canister() {
     let platform_orchestrator_wasm = include_bytes!("../../../../../target/wasm32-unknown-unknown/release/platform_orchestrator.wasm.gz");
     let individual_user_template = include_bytes!("../../../../../target/wasm32-unknown-unknown/release/individual_user_template.wasm.gz");
     let subnet_orchestrator_canister_wasm = include_bytes!("../../../../../target/wasm32-unknown-unknown/release/user_index.wasm.gz");
-    let post_cache_canister_wasm = include_bytes!("../../../../../target/wasm32-unknown-unknown/release/post_cache.wasm.gz");
     let platform_orchestrator_init_args = PlatformOrchestratorInitArgs {
         version: "v1.0.0".into(),
     };
@@ -109,7 +108,6 @@ fn provision_subnet_orchestrator_canister() {
         pocket_ic.tick()
     }
     pocket_ic.update_call(platform_canister_id, super_admin, "upload_wasms", candid::encode_args((WasmType::SubnetOrchestratorWasm, subnet_orchestrator_canister_wasm.to_vec())).unwrap()).unwrap();
-    pocket_ic.update_call(platform_canister_id, super_admin, "upload_wasms", candid::encode_args((WasmType::PostCacheWasm, post_cache_canister_wasm.to_vec())).unwrap()).unwrap();
     pocket_ic.update_call(platform_canister_id, super_admin, "upload_wasms", candid::encode_args((WasmType::IndividualUserWasm, individual_user_template.to_vec())).unwrap()).unwrap();
     pocket_ic.add_cycles(platform_canister_id, 10_000_000_000_000_000);
 

@@ -97,6 +97,7 @@ pub fn get_individual_user_canister_subnet_batch_size() -> u64 {
 
 
 // * Important Principal IDs
+pub const YRAL_POST_CACHE_CANISTER_ID: &str = "zyajx-3yaaa-aaaag-acoga-cai";
 pub const GOVERNANCE_CANISTER_ID: &str = "6wcax-haaaa-aaaaq-aaava-cai";
 pub const NNS_CYCLE_MINTING_CANISTER: &str = "rkp4c-7iaaa-aaaaa-aaaca-cai";
 pub const NNS_LEDGER_CANISTER_ID: &str = "ryjl3-tyaaa-aaaaa-aaaba-cai";
