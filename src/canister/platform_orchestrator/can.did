@@ -35,6 +35,7 @@ service : (PlatformOrchestratorInitArgs) -> {
   get_version : () -> (text) query;
   http_request : (HttpRequest) -> (HttpResponse) query;
   provision_subnet_orchestrator_canister : (principal) -> (Result_1);
+  remove_subnet_orchestrators_from_available_list : (principal) -> (Result);
   start_reclaiming_cycles_from_individual_canisters : () -> (Result);
   start_reclaiming_cycles_from_subnet_orchestrator_canister : () -> (text);
   stop_upgrades_for_individual_user_canisters : () -> (Result);
