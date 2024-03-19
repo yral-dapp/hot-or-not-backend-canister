@@ -2,3 +2,4 @@ pub mod when_setting_unique_username_then_new_username_persisted_in_personal_can
 pub mod when_a_new_user_signup_canister_is_marked_as_anonymous_login;
 pub mod requesting_new_canister_for_a_user_sets_the_profile_owner;
 pub mod update_session_type_tests;
+pub mod update_last_access_time_test;
