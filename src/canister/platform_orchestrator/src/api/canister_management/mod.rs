@@ -14,6 +14,7 @@ mod stop_upgrades_for_individual_user_canisters;
 mod upgrade_specific_individual_canister;
 mod update_profile_owner_for_individual_users;
 mod remove_subnet_orchestrator_from_available_list;
+mod reinstall_yral_post_cache_canister;
 
 #[query]
 pub fn get_version() -> String {
