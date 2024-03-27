@@ -15,6 +15,9 @@ mod upgrade_specific_individual_canister;
 mod update_profile_owner_for_individual_users;
 mod remove_subnet_orchestrator_from_available_list;
 mod reinstall_yral_post_cache_canister;
+mod known_principal;
+mod global_admin;
+mod populate_known_principal_for_all_subnet;
 
 #[query]
 pub fn get_version() -> String {

@@ -8,12 +8,12 @@ use shared_utils::{
     canister_specific::platform_orchestrator::types::args::PlatformOrchestratorInitArgs,
     common::types::http::{HttpRequest, HttpResponse},
     common::types::wasm::WasmType,
+    common::types::known_principal::KnownPrincipalType
 };
 
 mod api;
 mod data_model;
-
-//TODO: add method to deposit cycle
+mod guard;
 
 thread_local! {
     pub static CANISTER_DATA: RefCell<CanisterData> = RefCell::default();

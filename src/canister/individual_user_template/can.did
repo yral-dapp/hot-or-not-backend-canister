@@ -376,4 +376,5 @@ service : (IndividualUserTemplateInitArgs) -> {
     ) -> (Result_2);
   update_referrer_details : (UserCanisterDetails) -> (Result_8);
   update_session_type : (SessionType) -> (Result_8);
+  update_well_known_principal : (KnownPrincipalType, principal) -> ();
 }
