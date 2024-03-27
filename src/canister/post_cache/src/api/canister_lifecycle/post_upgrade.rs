@@ -55,6 +55,10 @@ fn save_upgrade_args_to_memory() {
             canister_data_ref_cell.version_details.version_number = upgrade_version_number;
         }
 
+        if let Some(known_principal_map) = upgrade_args.known_principal_ids {
+            canister_data_ref_cell.known_principal_ids = known_principal_map;
+        }
+
         canister_data_ref_cell.version_details.version = upgrade_args.version;
     });
 }
