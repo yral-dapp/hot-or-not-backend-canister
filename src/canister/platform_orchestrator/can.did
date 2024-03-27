@@ -54,6 +54,7 @@ service : (PlatformOrchestratorInitArgs) -> {
   http_request : (HttpRequest) -> (HttpResponse) query;
   populate_known_principal_for_all_subnet : () -> ();
   provision_subnet_orchestrator_canister : (principal) -> (Result_1);
+  reinstall_yral_post_cache_canister : () -> ();
   remove_principal_from_global_admins : (principal) -> ();
   remove_subnet_orchestrators_from_available_list : (principal) -> (Result);
   start_reclaiming_cycles_from_individual_canisters : () -> (Result);
