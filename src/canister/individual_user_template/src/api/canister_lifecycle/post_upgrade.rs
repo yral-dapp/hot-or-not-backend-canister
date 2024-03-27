@@ -28,10 +28,7 @@ use shared_utils::{
 };
 
 use crate::{
-    api::{
-        hot_or_not_bet::reenqueue_timers_for_pending_bet_outcomes::reenqueue_timers_for_pending_bet_outcomes,
-        well_known_principal::update_locally_stored_well_known_principals,
-    },
+    api::hot_or_not_bet::reenqueue_timers_for_pending_bet_outcomes::reenqueue_timers_for_pending_bet_outcomes,
     CANISTER_DATA,
 };
 
@@ -39,7 +36,6 @@ use crate::{
 fn post_upgrade() {
     restore_data_from_stable_memory();
     save_upgrade_args_to_memory();
-    refetch_well_known_principals();
     reenqueue_timers_for_pending_bet_outcomes();
 }
 
@@ -85,12 +81,5 @@ fn save_upgrade_args_to_memory() {
                 .configuration
                 .url_to_send_canister_metrics_to = Some(url_to_send_canister_metrics_to);
         }
-    });
-}
-
-const DELAY_FOR_REFETCHING_WELL_KNOWN_PRINCIPALS: Duration = Duration::from_secs(1);
-fn refetch_well_known_principals() {
-    ic_cdk_timers::set_timer(DELAY_FOR_REFETCHING_WELL_KNOWN_PRINCIPALS, || {
-        ic_cdk::spawn(update_locally_stored_well_known_principals::update_locally_stored_well_known_principals())
     });
 }
