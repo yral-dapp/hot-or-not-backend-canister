@@ -135,6 +135,7 @@ service : (UserIndexInitArgs) -> {
       principal,
     ) -> (Result_3);
   update_profile_owner_for_individual_canisters : () -> ();
+  update_well_known_principal : (KnownPrincipalType, principal) -> ();
   upgrade_specific_individual_user_canister_with_latest_wasm : (
       principal,
       opt principal,

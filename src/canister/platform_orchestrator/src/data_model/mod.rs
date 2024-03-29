@@ -1,11 +1,11 @@
-use std::{collections::HashSet, time::{SystemTime, UNIX_EPOCH}, borrow::Cow};
+use std::{borrow::Cow, collections::HashSet, time::{SystemTime, UNIX_EPOCH}};
 use ic_stable_structures::{StableBTreeMap, StableLog, Storable, storable::Bound};
 use ciborium::de;
 
 
 use candid::{CandidType, Principal};
 use serde::{Serialize, Deserialize};
-use shared_utils::common::types::wasm::{CanisterWasm, WasmType};
+use shared_utils::{canister_specific::platform_orchestrator::types::well_known_principal::PlatformOrchestratorKnownPrincipal, common::types::wasm::{CanisterWasm, WasmType}};
 
 use self::memory::{get_canister_upgrade_log_index_memory, get_canister_upgrade_log_memory, get_subnet_orchestrator_wasm_memory, Memory};
 
@@ -22,7 +22,11 @@ pub struct CanisterData {
     pub wasms: StableBTreeMap<WasmType, CanisterWasm, Memory>,
     #[serde(skip, default = "_default_canister_upgrade_log")]
     pub subnet_canister_upgrade_log: StableLog<CanisterUpgradeStatus, Memory, Memory>,
-    pub last_subnet_canister_upgrade_status: CanisterUpgradeStatus
+    pub last_subnet_canister_upgrade_status: CanisterUpgradeStatus,
+    #[serde(default)]
+    pub platform_global_admins: HashSet<Principal>,
+    #[serde(default)]
+    pub known_principals: PlatformOrchestratorKnownPrincipal,
 }
 
 fn _default_wasms() -> StableBTreeMap<WasmType, CanisterWasm, Memory> { 
@@ -33,7 +37,6 @@ fn _default_wasms() -> StableBTreeMap<WasmType, CanisterWasm, Memory> {
 fn _default_canister_upgrade_log() -> StableLog<CanisterUpgradeStatus, Memory, Memory> {
     StableLog::init(get_canister_upgrade_log_index_memory(), get_canister_upgrade_log_memory()).unwrap()
 }
- 
 
 impl Default for CanisterData {
     fn default() -> Self {
@@ -43,7 +46,9 @@ impl Default for CanisterData {
             subet_orchestrator_with_capacity_left: Default::default(), 
             version_detail: Default::default(), wasms: _default_wasms(), 
             subnet_canister_upgrade_log: _default_canister_upgrade_log(), 
-            last_subnet_canister_upgrade_status: Default::default()
+            last_subnet_canister_upgrade_status: Default::default(),
+            known_principals: Default::default(),
+            platform_global_admins: Default::default(),
         }
     }
 }
