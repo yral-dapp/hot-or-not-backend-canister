@@ -5,7 +5,7 @@ use ic_cdk_macros::update;
 use serde::{Deserialize, Serialize};
 use shared_utils::{canister_specific::{post_cache::types::arg::PostCacheInitArgs, user_index::types::args::UserIndexInitArgs}, common::types::{known_principal::{KnownPrincipalMap, KnownPrincipalType}, wasm::WasmType}, constant::{GLOBAL_SUPER_ADMIN_USER_ID, INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT, NNS_CYCLE_MINTING_CANISTER, POST_CACHE_CANISTER_CYCLES_RECHARGE_AMOUMT, SUBNET_ORCHESTRATOR_CANISTER_INITIAL_CYCLES, YRAL_POST_CACHE_CANISTER_ID}};
 
-use crate::CANISTER_DATA;
+use crate::{guard::is_caller::is_caller_global_admin_or_controller, CANISTER_DATA};
 
 
 
@@ -40,12 +40,8 @@ struct CreateCanisterCmcArgument {
     subnet_type: Option<String>
 }
 
-#[update]
+#[update(guard = "is_caller_global_admin_or_controller")]
 pub async fn provision_subnet_orchestrator_canister(subnet: Principal) -> Result<Principal, String> {
-    
-    if !is_controller(&caller()) {
-        return Err("Unauthorized".into());
-    }
 
     let create_canister_arg = CreateCanisterCmcArgument {
         subnet_selection: Some(SubnetType::Subnet(Subnet {

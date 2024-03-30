@@ -56,6 +56,7 @@ service : (PlatformOrchestratorInitArgs) -> {
   add_principal_as_global_admin : (principal) -> ();
   deposit_cycles_to_canister : (principal, nat) -> (Result);
   get_all_available_subnet_orchestrators : () -> (vec principal) query;
+  get_all_global_admins : () -> (vec principal) query;
   get_all_subnet_orchestrators : () -> (vec principal) query;
   get_global_known_principal : (KnownPrincipalType) -> (principal) query;
   get_subnet_known_principal : (principal, KnownPrincipalType) -> (
