@@ -1,11 +1,10 @@
 use ic_cdk_macros::update;
-use shared_utils::common::utils::permissions::is_caller_controller;
 
-use crate::CANISTER_DATA;
-
+use crate::{guard::is_caller::is_caller_global_admin_or_controller, CANISTER_DATA};
 
 
-#[update(guard = "is_caller_controller")]
+
+#[update(guard = "is_caller_global_admin_or_controller")]
 async fn start_reclaiming_cycles_from_subnet_orchestrator_canister() -> String {
     CANISTER_DATA.with_borrow(|canister_data| {
         canister_data.all_subnet_orchestrator_canisters_list.iter().for_each(|subnet_orchestrator_id| {

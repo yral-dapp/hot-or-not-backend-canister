@@ -2,14 +2,11 @@ use ic_cdk::{api::is_controller, caller};
 use ic_cdk_macros::update;
 use shared_utils::common::types::wasm::{CanisterWasm, WasmType};
 
-use crate::CANISTER_DATA;
+use crate::{guard::is_caller::is_caller_global_admin_or_controller, CANISTER_DATA};
 
  
-#[update]
-pub async fn upload_wasms(wasm_type: WasmType, wasm: Vec<u8>) -> Result<String, String> {
-    if !is_controller(&caller()) {
-        return Err("Unauthorized".into())
-    }
+#[update(guard = "is_caller_global_admin_or_controller")]
+pub fn upload_wasms(wasm_type: WasmType, wasm: Vec<u8>) -> Result<String, String> {
     CANISTER_DATA.with_borrow_mut(|canister_data| {
         let canister_wasm  = CanisterWasm {
             wasm_blob: wasm,

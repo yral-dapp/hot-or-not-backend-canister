@@ -19,15 +19,12 @@ use shared_utils::{
     }
 };
 
-use crate::{data_model::{CanisterUpgradeStatus, UpgradeCanisterArg}, CANISTER_DATA};
+use crate::{data_model::{CanisterUpgradeStatus, UpgradeCanisterArg}, guard::is_caller::is_caller_global_admin_or_controller, CANISTER_DATA};
 
 
-#[update]
-pub async fn upgrade_canister(upgrade_arg: UpgradeCanisterArg) -> Result<String, String> {
+#[update(guard = "is_caller_global_admin_or_controller")]
+pub async fn upgrade_canisters_in_network(upgrade_arg: UpgradeCanisterArg) -> Result<String, String> {
     
-    if !is_controller(&caller()) {
-        return Err("Unauthorized".to_string());
-    }
     
     match upgrade_arg.canister {
         WasmType::IndividualUserWasm => {

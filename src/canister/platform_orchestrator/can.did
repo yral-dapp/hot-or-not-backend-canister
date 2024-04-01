@@ -27,6 +27,18 @@ type KnownPrincipalType = variant {
   CanisterIdSnsGovernance;
   UserIdGlobalSuperAdmin;
 };
+type PlatformOrchestratorGenericArgumentType = variant {
+  UpgradeSubnetCanisters : UpgradeCanisterArg;
+  RemoveSubnetOrchestratorFromAvailableList : principal;
+  ProvisionSubnetOrchestrator : principal;
+  UploadWasm : record { WasmType; vec nat8 };
+};
+type PlatformOrchestratorGenericResultType = variant {
+  UpgradeSubnetCanisters : Result;
+  ProvisionSubnetOrchestrator : Result_1;
+  RemoveSubnetOrchestratorFromAvailableListResult : Result;
+  UploadWasm : Result;
+};
 type PlatformOrchestratorInitArgs = record { version : text };
 type Result = variant { Ok : text; Err : text };
 type Result_1 = variant { Ok : principal; Err : text };
@@ -44,6 +56,7 @@ service : (PlatformOrchestratorInitArgs) -> {
   add_principal_as_global_admin : (principal) -> ();
   deposit_cycles_to_canister : (principal, nat) -> (Result);
   get_all_available_subnet_orchestrators : () -> (vec principal) query;
+  get_all_global_admins : () -> (vec principal) query;
   get_all_subnet_orchestrators : () -> (vec principal) query;
   get_global_known_principal : (KnownPrincipalType) -> (principal) query;
   get_subnet_known_principal : (principal, KnownPrincipalType) -> (
@@ -52,6 +65,9 @@ service : (PlatformOrchestratorInitArgs) -> {
   get_subnet_last_upgrade_status : () -> (CanisterUpgradeStatus) query;
   get_version : () -> (text) query;
   http_request : (HttpRequest) -> (HttpResponse) query;
+  platform_orchestrator_generic_function : (
+      PlatformOrchestratorGenericArgumentType,
+    ) -> (PlatformOrchestratorGenericResultType);
   populate_known_principal_for_all_subnet : () -> ();
   provision_subnet_orchestrator_canister : (principal) -> (Result_1);
   reinstall_yral_post_cache_canister : () -> ();
@@ -68,7 +84,10 @@ service : (PlatformOrchestratorInitArgs) -> {
       KnownPrincipalType,
       principal,
     ) -> (Result);
-  upgrade_canister : (UpgradeCanisterArg) -> (Result);
+  upgrade_canisters_in_network : (UpgradeCanisterArg) -> (Result);
   upgrade_specific_individual_canister : (principal) -> ();
   upload_wasms : (WasmType, vec nat8) -> (Result);
+  validate_platform_orchestrator_generic_function : (
+      PlatformOrchestratorGenericArgumentType,
+    ) -> ();
 }

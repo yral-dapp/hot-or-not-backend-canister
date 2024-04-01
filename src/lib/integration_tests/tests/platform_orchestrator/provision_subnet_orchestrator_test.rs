@@ -6,7 +6,7 @@ use pocket_ic::{PocketIc, PocketIcBuilder, WasmResult};
 use serde::{Deserialize, Serialize};
 use ic_ledger_types::{AccountIdentifier, BlockIndex, Tokens, DEFAULT_SUBACCOUNT};
 use shared_utils::{canister_specific::{individual_user_template, platform_orchestrator::{self, types::args::PlatformOrchestratorInitArgs}, post_cache::types::arg::PostCacheInitArgs}, common::{types::{known_principal::KnownPrincipalMap, wasm::WasmType}, utils::system_time}, constant::{NNS_CYCLE_MINTING_CANISTER, NNS_LEDGER_CANISTER_ID, YRAL_POST_CACHE_CANISTER_ID}};
-use test_utils::setup::test_constants::{get_global_super_admin_principal_id, v1::CANISTER_INITIAL_CYCLES_FOR_SPAWNING_CANISTERS};
+use test_utils::setup::test_constants::{get_global_super_admin_principal_id, get_mock_user_charlie_principal_id, v1::CANISTER_INITIAL_CYCLES_FOR_SPAWNING_CANISTERS};
 
 pub type CanisterId = Principal;
 
@@ -158,10 +158,21 @@ fn provision_subnet_orchestrator_canister() {
     for i in 0..50 {
         pocket_ic.tick();
     }
+    
+    let charlie_global_admin  = get_mock_user_charlie_principal_id();
+
+    pocket_ic.update_call(
+        platform_canister_id,
+        super_admin, 
+        "add_principal_as_global_admin", 
+        candid::encode_one(charlie_global_admin).unwrap()
+    )
+    .unwrap();
+
 
     let subnet_orchestrator_canister_id: Principal = pocket_ic.update_call(
         platform_canister_id,
-        super_admin,
+        charlie_global_admin,
         "provision_subnet_orchestrator_canister",
         candid::encode_one(application_subnets[1]).unwrap()
     )

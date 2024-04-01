@@ -1,12 +1,12 @@
 use ic_cdk::api::management_canister::main::{install_code, start_canister, stop_canister, CanisterIdRecord, CanisterInstallMode, InstallCodeArgument};
 use ic_cdk_macros::update;
 use candid::Principal;
-use shared_utils::{canister_specific::post_cache::types::arg::PostCacheInitArgs, common::{types::{known_principal::{KnownPrincipalMap, KnownPrincipalType}, wasm::WasmType}, utils::permissions::is_caller_controller}, constant::{GLOBAL_SUPER_ADMIN_USER_ID, YRAL_POST_CACHE_CANISTER_ID}};
+use shared_utils::{canister_specific::post_cache::types::arg::PostCacheInitArgs, common::types::{known_principal::{KnownPrincipalMap, KnownPrincipalType}, wasm::WasmType}, constant::{GLOBAL_SUPER_ADMIN_USER_ID, YRAL_POST_CACHE_CANISTER_ID}};
 
-use crate::CANISTER_DATA;
+use crate::{guard::is_caller::is_caller_global_admin_or_controller, CANISTER_DATA};
 
 
-#[update(guard = "is_caller_controller")]
+#[update(guard = "is_caller_global_admin_or_controller")]
 async fn reinstall_yral_post_cache_canister() {
     let post_cache_canister_id = Principal::from_text(YRAL_POST_CACHE_CANISTER_ID).unwrap();
     let canister_wasm = CANISTER_DATA.with_borrow_mut(|canister_data| canister_data.wasms.get(&WasmType::PostCacheWasm)).unwrap();
