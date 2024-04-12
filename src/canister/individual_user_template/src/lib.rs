@@ -36,6 +36,7 @@ use shared_utils::{
         GetUserUtilityTokenTransactionHistoryError, UpdateProfileSetUniqueUsernameError,
     },
 };
+use std::collections::BTreeMap;
 
 mod api;
 pub mod data_model;
