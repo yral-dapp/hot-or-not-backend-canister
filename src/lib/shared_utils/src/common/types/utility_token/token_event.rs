@@ -15,7 +15,16 @@ pub enum TokenEvent {
         timestamp: SystemTime,
     },
     Burn,
-    Transfer,
+    Transfer {
+        amount: u64,
+        to_account: Principal,
+        timestamp: SystemTime,
+    },
+    Receive {
+        amount: u64,
+        from_account: Principal,
+        timestamp: SystemTime,
+    },
     Stake {
         amount: u64,
         details: StakeEvent,
