@@ -44,19 +44,20 @@ jobs:
           echo "${{ secrets.HOT_OR_NOT_SNS_PROPOSAL_SUBMISSION_IDENTITY_PRIVATE_KEY }}" > actions_identity.pem
           nix-shell --run "dfx identity import --storage-mode=plaintext actions actions_identity.pem"
           nix-shell --run "dfx identity use actions"
+      - name: Build platform_orchestrator canister
+        run: |
+          nix-shell --run "dfx build platform_orchestrator --network=ic"
+          hash=$(sha256sum < .dfx/ic/canisters/platform_orchestrator/platform_orchestrator.wasm.gz)
+          echo "Module Hash: ${hash}"
       - name: Build individual_user_template canister
         run: |
           nix-shell --run "dfx build individual_user_template --network=ic"
-          gzip -f -1 ./target/wasm32-unknown-unknown/release/individual_user_template.wasm
+          hash=$(sha256sum < .dfx/ic/canisters/individual_user_template/individual_user_template.wasm.gz)
+          echo "Module Hash: ${hash}"
       - name: Build user_index canister
         run: |
           nix-shell --run "dfx build user_index --network=ic"
           hash=$(sha256sum < .dfx/ic/canisters/user_index/user_index.wasm.gz)
-          echo "Module Hash: ${hash}"
-      - name: Build configuration canister
-        run: |
-          nix-shell --run "dfx build configuration --network=ic"
-          hash=$(sha256sum < .dfx/ic/canisters/configuration/configuration.wasm.gz)
           echo "Module Hash: ${hash}"
       - name: Build post_cache canister
         run: |
@@ -65,10 +66,10 @@ jobs:
           echo "Module Hash: ${hash}"
       - name: Copy candid files for release
         run: |
+          cp .dfx/ic/canisters/platform_orchestrator/service.did platform_orchestrator.did
           cp .dfx/ic/canisters/individual_user_template/service.did individual_user_template.did
           cp .dfx/ic/canisters/user_index/service.did user_index.did
           cp .dfx/ic/canisters/post_cache/service.did post_cache.did
-          cp .dfx/ic/canisters/configuration/service.did configuration.did
       - name: 'Create Release'
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
@@ -87,9 +88,9 @@ jobs:
           curl -LJO https://github.com/dfinity/quill/releases/download/v0.4.2/quill-linux-x86_64-musl
           mv quill-linux-x86_64-musl quill
           chmod +x quill
-      - name: Submit upgrade proposal for user_index canister
+      - name: Submit upgrade proposal for platform_orchestrator canister
         run: |
-          CANISTER_NAME=user_index
+          CANISTER_NAME=platform_orchestrator
           export CANISTER_ID=$(nix-shell --run "dfx canister id ${CANISTER_NAME} --network=ic")
           mkdir -p "proposals/${CANISTER_NAME}"
           touch "proposals/${CANISTER_NAME}/upgrade.json"
@@ -103,33 +104,111 @@ jobs:
 
             ${{ steps.changelog.outputs.changes }}
             " \
-            --url 'https://hotornot.wtf' \
+            --url 'https://yral.com' \
             --target-canister-id $CANISTER_ID \
             --wasm-path .dfx/ic/canisters/${CANISTER_NAME}/${CANISTER_NAME}.wasm.gz \
             --canister-upgrade-arg "(record {version=\"${{ github.ref_name }}\"})" \
             $NEURON_ID > "proposals/${CANISTER_NAME}/upgrade.json"
           ./quill send proposals/${CANISTER_NAME}/upgrade.json --yes
-      - name: Submit upgrade proposal for post_cache canister
+      - name: Upgrade post_cache using platform_orchestrator
         run: |
           CANISTER_NAME=post_cache
-          export CANISTER_ID=$(nix-shell --run "dfx canister id ${CANISTER_NAME} --network=ic")
           mkdir -p "proposals/${CANISTER_NAME}"
           touch "proposals/${CANISTER_NAME}/upgrade.json"
+          WASM=".dfx/ic/canisters/${CANISTER_NAME}/${CANISTER_NAME}.wasm.gz"
+          CHAR=$(hexdump -ve '1/1 "%.2x"' "$WASM")
+          CHAR_ESCAPED=$(printf "%s" "$CHAR" | sed 's/../\\&/g')
+          touch argument
+          printf "(record {canister = variant {PostCacheWasm}; version = \"${{ github.ref_name }}\"; wasm_blob = blob \"%s\"})"  "$CHAR_ESCAPED" > argument
+          PAYLOAD=$(didc encode --defs ".dfx/ic/canisters/platform_orchestrator/service.did" --method platform_orchestrator_generic_function "(variant {UpgradeSubnetCanisters = $(cat argument)})" --format blob)
           ./quill sns \
+          --canister-ids-file ./sns/sns_canister_ids.json \
+          --pem-file actions_identity.pem \
+          make-proposal \
+          --proposal "(
+              record {
+                  title=\"Upgrade ${CANISTER_NAME}\";
+                  url=\"https://yral.com\";
+                  summary=\"# Upgrade ${CANISTER_NAME}
+                  ${{ steps.changelog.outputs.changes}}
+                  \";
+                  action=opt variant {
+                      ExecuteGenericNervousSystemFunction = record {
+                          function_id = 2000: nat64;
+                          payload = $PAYLOAD;
+                      }
+                  }
+              
+              }
+          )" $NEURON_ID > "proposals/${CANISTER_NAME}/upgrade.json"
+          ./quill send proposals/${CANISTER_NAME}/upgrade.json --yes
+          rm argument
+      - name: Upgrade user_index using platform_orchestrator
+        run: |
+            CANISTER_NAME=user_index
+            mkdir -p "proposals/${CANISTER_NAME}"
+            touch "proposals/${CANISTER_NAME}/upgrade.json"
+            WASM=".dfx/ic/canisters/${CANISTER_NAME}/${CANISTER_NAME}.wasm.gz"
+            CHAR=$(hexdump -ve '1/1 "%.2x"' "$WASM")
+            CHAR_ESCAPED=$(printf "%s" "$CHAR" | sed 's/../\\&/g')
+            touch argument
+            printf "(record {canister = variant {SubnetOrchestratorWasm}; version = \"${{ github.ref_name }}\"; wasm_blob = blob \"%s\"})"  "$CHAR_ESCAPED" > argument
+            PAYLOAD=$(didc encode --defs ".dfx/ic/canisters/platform_orchestrator/service.did" --method platform_orchestrator_generic_function "(variant {UpgradeSubnetCanisters = $(cat argument)})" --format blob)
+            ./quill sns \
             --canister-ids-file ./sns/sns_canister_ids.json \
             --pem-file actions_identity.pem \
-            make-upgrade-canister-proposal \
-            --title "Upgrade ${CANISTER_NAME} Canisters" \
-            --summary "
-            # Upgrade ${CANISTER_NAME}
-
-            ${{ steps.changelog.outputs.changes }}
-            " \
-            --url 'https://hotornot.wtf' \
-            --target-canister-id $CANISTER_ID \
-            --wasm-path .dfx/ic/canisters/${CANISTER_NAME}/${CANISTER_NAME}.wasm.gz \
-            --canister-upgrade-arg "(record {version=\"${{ github.ref_name }}\"})" \
-            $NEURON_ID > "proposals/${CANISTER_NAME}/upgrade.json"
-          ./quill send proposals/${CANISTER_NAME}/upgrade.json --yes
+            make-proposal \
+            --proposal "(
+                record {
+                    title=\"Upgrade ${CANISTER_NAME}\";
+                    url=\"https://yral.com\";
+                    summary=\"# Upgrade ${CANISTER_NAME}
+                    ${{ steps.changelog.outputs.changes}}
+                    \";
+                    action=opt variant {
+                        ExecuteGenericNervousSystemFunction = record {
+                            function_id = 2000: nat64;
+                            payload = $PAYLOAD;
+                        }
+                    }
+                
+                }
+            )" $NEURON_ID > "proposals/${CANISTER_NAME}/upgrade.json"
+            ./quill send proposals/${CANISTER_NAME}/upgrade.json --yes
+            rm argument
+      - name: Upgrade individual_user_template using platform_orchestrator
+        run: |
+            CANISTER_NAME=individual_user_template
+            mkdir -p "proposals/${CANISTER_NAME}"
+            touch "proposals/${CANISTER_NAME}/upgrade.json"
+            WASM=".dfx/ic/canisters/${CANISTER_NAME}/${CANISTER_NAME}.wasm.gz"
+            CHAR=$(hexdump -ve '1/1 "%.2x"' "$WASM")
+            CHAR_ESCAPED=$(printf "%s" "$CHAR" | sed 's/../\\&/g')
+            touch argument
+            printf "(record {canister = variant {IndividualUserWasm}; version = \"${{ github.ref_name }}\"; wasm_blob = blob \"%s\"})"  "$CHAR_ESCAPED" > argument
+            PAYLOAD=$(didc encode --defs ".dfx/ic/canisters/platform_orchestrator/service.did" --method platform_orchestrator_generic_function "(variant {UpgradeSubnetCanisters = $(cat argument)})" --format blob)
+            ./quill sns \
+            --canister-ids-file ./sns/sns_canister_ids.json \
+            --pem-file actions_identity.pem \
+            make-proposal \
+            --proposal "(
+                record {
+                    title=\"Upgrade ${CANISTER_NAME}\";
+                    url=\"https://yral.com\";
+                    summary=\"# Upgrade ${CANISTER_NAME}
+                    ${{ steps.changelog.outputs.changes}}
+                    \";
+                    action=opt variant {
+                        ExecuteGenericNervousSystemFunction = record {
+                            function_id = 2000: nat64;
+                            payload = $PAYLOAD;
+                        }
+                    }
+                
+                }
+            )" $NEURON_ID > "proposals/${CANISTER_NAME}/upgrade.json"
+            ./quill send proposals/${CANISTER_NAME}/upgrade.json --yes
+            rm argument
+          
       - name: Remove messages
         run: rm -r proposals
