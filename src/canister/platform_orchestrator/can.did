@@ -89,5 +89,5 @@ service : (PlatformOrchestratorInitArgs) -> {
   upload_wasms : (WasmType, vec nat8) -> (Result);
   validate_platform_orchestrator_generic_function : (
       PlatformOrchestratorGenericArgumentType,
-    ) -> ();
+    ) -> (Result);
 }
