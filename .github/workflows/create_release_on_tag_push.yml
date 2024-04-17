@@ -134,7 +134,7 @@ jobs:
                   \";
                   action=opt variant {
                       ExecuteGenericNervousSystemFunction = record {
-                          function_id = 2000: nat64;
+                          function_id = 4002: nat64;
                           payload = $PAYLOAD;
                       }
                   }
@@ -167,7 +167,7 @@ jobs:
                     \";
                     action=opt variant {
                         ExecuteGenericNervousSystemFunction = record {
-                            function_id = 2000: nat64;
+                            function_id = 4002: nat64;
                             payload = $PAYLOAD;
                         }
                     }
@@ -200,7 +200,7 @@ jobs:
                     \";
                     action=opt variant {
                         ExecuteGenericNervousSystemFunction = record {
-                            function_id = 2000: nat64;
+                            function_id = 4002: nat64;
                             payload = $PAYLOAD;
                         }
                     }
