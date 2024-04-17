@@ -120,7 +120,7 @@ jobs:
           CHAR_ESCAPED=$(printf "%s" "$CHAR" | sed 's/../\\&/g')
           touch argument
           printf "(record {canister = variant {PostCacheWasm}; version = \"${{ github.ref_name }}\"; wasm_blob = blob \"%s\"})"  "$CHAR_ESCAPED" > argument
-          PAYLOAD=$(didc encode --defs ".dfx/ic/canisters/platform_orchestrator/service.did" --method platform_orchestrator_generic_function "(variant {UpgradeSubnetCanisters = $(cat argument)})" --format blob)
+          PAYLOAD=$(nix-shell --run 'didc encode --defs ".dfx/ic/canisters/platform_orchestrator/service.did" --method platform_orchestrator_generic_function "(variant {UpgradeSubnetCanisters = $(cat argument)})" --format blob')
           ./quill sns \
           --canister-ids-file ./sns/sns_canister_ids.json \
           --pem-file actions_identity.pem \
@@ -153,7 +153,7 @@ jobs:
             CHAR_ESCAPED=$(printf "%s" "$CHAR" | sed 's/../\\&/g')
             touch argument
             printf "(record {canister = variant {SubnetOrchestratorWasm}; version = \"${{ github.ref_name }}\"; wasm_blob = blob \"%s\"})"  "$CHAR_ESCAPED" > argument
-            PAYLOAD=$(didc encode --defs ".dfx/ic/canisters/platform_orchestrator/service.did" --method platform_orchestrator_generic_function "(variant {UpgradeSubnetCanisters = $(cat argument)})" --format blob)
+            PAYLOAD=$(nix-shell --run 'didc encode --defs ".dfx/ic/canisters/platform_orchestrator/service.did" --method platform_orchestrator_generic_function "(variant {UpgradeSubnetCanisters = $(cat argument)})" --format blob')
             ./quill sns \
             --canister-ids-file ./sns/sns_canister_ids.json \
             --pem-file actions_identity.pem \
@@ -186,7 +186,7 @@ jobs:
             CHAR_ESCAPED=$(printf "%s" "$CHAR" | sed 's/../\\&/g')
             touch argument
             printf "(record {canister = variant {IndividualUserWasm}; version = \"${{ github.ref_name }}\"; wasm_blob = blob \"%s\"})"  "$CHAR_ESCAPED" > argument
-            PAYLOAD=$(didc encode --defs ".dfx/ic/canisters/platform_orchestrator/service.did" --method platform_orchestrator_generic_function "(variant {UpgradeSubnetCanisters = $(cat argument)})" --format blob)
+            PAYLOAD=$(nix-shell --run 'didc encode --defs ".dfx/ic/canisters/platform_orchestrator/service.did" --method platform_orchestrator_generic_function "(variant {UpgradeSubnetCanisters = $(cat argument)})" --format blob')
             ./quill sns \
             --canister-ids-file ./sns/sns_canister_ids.json \
             --pem-file actions_identity.pem \
