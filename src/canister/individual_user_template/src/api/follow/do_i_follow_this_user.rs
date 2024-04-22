@@ -4,11 +4,16 @@ use shared_utils::canister_specific::individual_user_template::types::{
     arg::FolloweeArg, error::FollowAnotherUserProfileError, follow::FollowEntryDetail,
 };
 
-use crate::{data_model::CanisterData, CANISTER_DATA};
+use crate::{
+    api::canister_management::update_last_access_time::update_last_canister_functionality_access_time,
+    data_model::CanisterData, CANISTER_DATA,
+};
 
 #[query]
 fn do_i_follow_this_user(arg: FolloweeArg) -> Result<bool, FollowAnotherUserProfileError> {
     let current_caller = ic_cdk::caller();
+
+    update_last_canister_functionality_access_time();
 
     CANISTER_DATA.with(|canister_data| {
         let canister_data = canister_data.borrow();

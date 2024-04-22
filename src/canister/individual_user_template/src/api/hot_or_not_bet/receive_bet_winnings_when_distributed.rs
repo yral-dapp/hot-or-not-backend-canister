@@ -11,7 +11,10 @@ use shared_utils::{
     },
 };
 
-use crate::CANISTER_DATA;
+use crate::{
+    api::canister_management::update_last_access_time::update_last_canister_functionality_access_time,
+    CANISTER_DATA,
+};
 
 #[update]
 fn receive_bet_winnings_when_distributed(post_id: PostId, outcome: BetOutcomeForBetMaker) {
@@ -38,6 +41,8 @@ fn receive_bet_winnings_when_distributed(post_id: PostId, outcome: BetOutcomeFor
     }) {
         return;
     }
+
+    update_last_canister_functionality_access_time();
 
     CANISTER_DATA.with(|canister_data_ref_cell| {
         let mut canister_data = canister_data_ref_cell.borrow_mut();

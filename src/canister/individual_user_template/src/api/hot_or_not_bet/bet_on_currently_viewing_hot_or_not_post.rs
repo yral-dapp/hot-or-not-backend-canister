@@ -12,7 +12,10 @@ use shared_utils::{
     },
 };
 
-use crate::{data_model::CanisterData, CANISTER_DATA};
+use crate::{
+    api::canister_management::update_last_access_time::update_last_canister_functionality_access_time,
+    data_model::CanisterData, CANISTER_DATA,
+};
 
 #[update]
 async fn bet_on_currently_viewing_post(
@@ -28,6 +31,8 @@ async fn bet_on_currently_viewing_post(
             &place_bet_arg,
         )
     })?;
+
+    update_last_canister_functionality_access_time();
 
     let response = ic_cdk::call::<_, (Result<BettingStatus, BetOnCurrentlyViewingPostError>,)>(
         place_bet_arg.post_canister_id,

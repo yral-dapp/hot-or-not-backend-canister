@@ -1,6 +1,9 @@
 use std::ops::Bound::Included;
 
-use crate::{data_model::CanisterData, CANISTER_DATA};
+use crate::{
+    api::canister_management::update_last_access_time::update_last_canister_functionality_access_time,
+    data_model::CanisterData, CANISTER_DATA,
+};
 
 use ic_cdk_macros::query;
 use shared_utils::canister_specific::individual_user_template::types::follow::{
@@ -13,6 +16,7 @@ pub const MAX_FOLLOW_ENTRIES_PER_PAGE: usize = 10;
 pub fn get_principals_that_follow_this_profile_paginated(
     last_index_received: Option<u64>,
 ) -> Vec<(FollowEntryId, FollowEntryDetail)> {
+    update_last_canister_functionality_access_time();
     CANISTER_DATA.with(|canister_data_ref_cell| {
         let canister_data = canister_data_ref_cell.borrow();
         get_principals_that_follow_this_profile_paginated_impl(&canister_data, last_index_received)
