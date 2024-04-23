@@ -316,6 +316,7 @@ service : (IndividualUserTemplateInitArgs) -> {
     ) query;
   get_individual_post_details_by_id : (nat64) -> (PostDetailsForFrontend) query;
   get_last_access_time : () -> (Result_4) query;
+  get_last_canister_functionality_access_time : () -> (Result_4) query;
   get_posts_of_this_user_profile_with_pagination : (nat64, nat64) -> (
       Result_5,
     ) query;
@@ -359,6 +360,7 @@ service : (IndividualUserTemplateInitArgs) -> {
   receive_principals_that_follow_me_from_data_backup_canister : (
       vec principal,
     ) -> ();
+  reset_data : () -> () query;
   return_cycles_to_user_index_canister : (opt nat) -> ();
   save_snapshot_json : () -> (nat32);
   update_last_access_time : () -> (Result_8);

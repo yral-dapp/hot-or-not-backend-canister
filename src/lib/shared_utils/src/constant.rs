@@ -118,5 +118,5 @@ pub fn get_global_super_admin_principal_id_v1(
 }
 
 // Canister Recycling Threshold
-pub const CANISTER_RECYCLING_THRESHOLD: u64 = 6_04_800; // 7 days
-pub const CANISTER_RECYCLING_FREQUENCY: u64 = 86_400; // 1 day
+pub const CANISTER_RECYCLING_THRESHOLD: u64 = 3600; // 7 days  | TODO: change to 6_04_800
+pub const CANISTER_RECYCLING_FREQUENCY: u64 = 3600; // 1 day | TODO: change to 86_400

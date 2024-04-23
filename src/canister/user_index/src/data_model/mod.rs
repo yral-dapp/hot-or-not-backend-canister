@@ -4,16 +4,15 @@ use candid::{Deserialize, Principal};
 use ic_stable_structures::storable::Blob;
 use ic_stable_structures::StableBTreeMap;
 use serde::Serialize;
+use shared_utils::canister_specific::user_index::types::RecycleStatus;
 use shared_utils::common::types::wasm::{CanisterWasm, WasmType};
 
 use self::memory::get_wasm_memory;
-use self::recycle_canister::RecycleStatus;
 use self::{canister_upgrade::UpgradeStatus, configuration::Configuration, memory::Memory};
 
 pub mod canister_upgrade;
 pub mod configuration;
 pub mod memory;
-pub mod recycle_canister;
 
 const fn _default_true() -> bool {
     return true;

@@ -2,16 +2,17 @@ use std::time::SystemTime;
 
 use candid::Principal;
 use futures::StreamExt;
-use ic_cdk::api::management_canister::main::{self, CanisterIdRecord};
+use ic_cdk::{
+    api::management_canister::main::{self, CanisterIdRecord},
+    query,
+};
 use shared_utils::{
+    canister_specific::user_index::types::RecycleStatus,
     common::types::wasm::{CanisterWasm, WasmType},
     constant::CANISTER_RECYCLING_THRESHOLD,
 };
 
-use crate::{
-    data_model::recycle_canister::RecycleStatus, util::canister_management::install_canister_wasm,
-    CANISTER_DATA,
-};
+use crate::{util::canister_management::install_canister_wasm, CANISTER_DATA};
 
 pub async fn recycle_canisters_job() {
     // 1. iterate all canisters in user_principal_id_to_canister_id_map
@@ -19,64 +20,67 @@ pub async fn recycle_canisters_job() {
     // 3. If the canister has not been accessed for more than 7 days, add it to the list of canisters to be recycled
     // 4. call reset_user_individual_canister with the list of canisters to be recycled
 
-    let canisters_list = CANISTER_DATA.with_borrow(|canister_data| {
-        canister_data
-            .user_principal_id_to_canister_id_map
-            .iter()
-            .map(|item| *item.1)
-            .collect::<Vec<Principal>>()
-    });
+    // let canisters_list = CANISTER_DATA.with_borrow(|canister_data| {
+    //     canister_data
+    //         .user_principal_id_to_canister_id_map
+    //         .iter()
+    //         .map(|item| *item.1)
+    //         .collect::<Vec<Principal>>()
+    // });
 
-    let individual_user_template_canister_wasm = CANISTER_DATA.with_borrow(|canister_data| {
-        canister_data
-            .wasms
-            .get(&WasmType::IndividualUserWasm)
-            .unwrap()
-            .clone()
-    });
+    // let individual_user_template_canister_wasm = CANISTER_DATA.with_borrow(|canister_data| {
+    //     canister_data
+    //         .wasms
+    //         .get(&WasmType::IndividualUserWasm)
+    //         .unwrap()
+    //         .clone()
+    // });
 
-    let futures = canisters_list.iter().map(|canister_id| async {
-        recycle_canister(*canister_id, individual_user_template_canister_wasm.clone()).await
-    });
+    // let futures = canisters_list.iter().map(|canister_id| async {
+    //     recycle_canister(*canister_id, individual_user_template_canister_wasm.clone()).await
+    // });
 
-    let stream = futures::stream::iter(futures).boxed().buffer_unordered(10);
+    // let stream = futures::stream::iter(futures).boxed().buffer_unordered(10);
 
-    let results = stream
-        .collect::<Vec<Result<Option<Principal>, (Principal, String)>>>()
-        .await;
+    // let results = stream
+    //     .collect::<Vec<Result<Option<Principal>, (Principal, String)>>>()
+    //     .await;
 
-    // update recycle_status
+    // // update recycle_status
 
-    let success_canisters = results
-        .iter()
-        .filter(|r| r.is_ok() && r.as_ref().unwrap().is_some())
-        .map(|r| r.as_ref().unwrap().unwrap())
-        .collect::<Vec<Principal>>();
+    // let success_canisters = results
+    //     .iter()
+    //     .filter(|r| r.is_ok() && r.as_ref().unwrap().is_some())
+    //     .map(|r| r.as_ref().unwrap().unwrap())
+    //     .collect::<Vec<Principal>>();
 
-    let num_success = success_canisters.len();
+    // let num_success = success_canisters.len();
 
-    CANISTER_DATA.with_borrow_mut(|canister_data| {
-        canister_data
-            .available_canisters
-            .extend(success_canisters.clone());
+    // CANISTER_DATA.with_borrow_mut(|canister_data| {
+    //     canister_data
+    //         .available_canisters
+    //         .extend(success_canisters.clone());
 
-        // remove the canisters that are recycled from user_principal_id_to_canister_id_map and unique_user_name_to_user_principal_id_map
-        // canister_id is the value in the map
-        for canister_id in success_canisters {
-            canister_data
-                .user_principal_id_to_canister_id_map
-                .retain(|_, v| v != &canister_id);
-            canister_data
-                .unique_user_name_to_user_principal_id_map
-                .retain(|_, v| v != &canister_id);
-        }
-    });
+    //     // remove the canisters that are recycled from user_principal_id_to_canister_id_map and unique_user_name_to_user_principal_id_map
+    //     // canister_id is the value in the map
+    //     for canister_id in success_canisters {
+    //         canister_data
+    //             .user_principal_id_to_canister_id_map
+    //             .retain(|_, v| v != &canister_id);
+    //         canister_data
+    //             .unique_user_name_to_user_principal_id_map
+    //             .retain(|_, v| v != &canister_id);
+    //     }
+    // });
 
-    let failed_list = results
-        .iter()
-        .filter(|r| r.is_err())
-        .map(|r| r.as_ref().unwrap_err().clone())
-        .collect::<Vec<(Principal, String)>>();
+    // let failed_list = results
+    //     .iter()
+    //     .filter(|r| r.is_err())
+    //     .map(|r| r.as_ref().unwrap_err().clone())
+    //     .collect::<Vec<(Principal, String)>>();
+    //
+    let num_success = 10;
+    let failed_list = vec![];
 
     CANISTER_DATA.with_borrow_mut(|canister_data| {
         canister_data.recycle_status = RecycleStatus {
@@ -130,4 +134,14 @@ pub async fn recycle_canister(
     }
 
     Ok(Some(canister_id))
+}
+
+#[query]
+pub fn get_recycle_status() -> RecycleStatus {
+    CANISTER_DATA.with_borrow(|canister_data| canister_data.recycle_status.clone())
+}
+
+#[query]
+pub fn recycle_canisters() {
+    ic_cdk::spawn(recycle_canisters_job());
 }
