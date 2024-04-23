@@ -752,7 +752,7 @@ fn recycle_canisters_test() {
     println!("Dan last access time: {:?}", res3);
 
     // Forward timer
-    pic.advance_time(Duration::from_secs(8 * 24 * 60 * 60));
+    pic.advance_time(Duration::from_secs(32 * 24 * 60 * 60));
     for _ in 0..20 {
         pic.tick();
     }
