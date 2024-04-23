@@ -1,4 +1,7 @@
-use crate::CANISTER_DATA;
+use crate::{
+    api::canister_management::update_last_access_time::update_last_canister_functionality_access_time,
+    CANISTER_DATA,
+};
 use candid::CandidType;
 use ic_cdk_macros::update;
 use shared_utils::canister_specific::individual_user_template::types::profile::{
@@ -26,6 +29,8 @@ fn update_profile_display_details(
         return Err(UpdateProfileDetailsError::NotAuthorized);
     }
 
+    update_last_canister_functionality_access_time();
+
     CANISTER_DATA.with(|canister_data_ref_cell| {
         let profile = &mut canister_data_ref_cell.borrow_mut().profile;
 
@@ -50,7 +55,7 @@ fn update_profile_display_details(
                 .len() as u64,
             following_count: canister_data_ref_cell.borrow().principals_i_follow.len() as u64,
             lifetime_earnings: *lifetime_earnings,
-            referrer_details: profile.referrer_details.clone()
+            referrer_details: profile.referrer_details.clone(),
         }
     }))
 }
