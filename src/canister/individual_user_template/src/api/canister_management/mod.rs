@@ -5,7 +5,6 @@ use crate::CANISTER_DATA;
 
 pub mod get_last_access_time;
 pub mod get_session_type;
-pub mod reset_data;
 pub mod update_last_access_time;
 pub mod update_profile_owner;
 pub mod update_session_type;
