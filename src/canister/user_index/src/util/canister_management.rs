@@ -1,21 +1,28 @@
-use candid::{Principal, CandidType};
+use candid::{CandidType, Principal};
 use ic_cdk::api::{
     self,
     call::RejectionCode,
     management_canister::{
-        main::{self, canister_info, canister_status, start_canister, stop_canister, CanisterInfoRequest, CanisterInstallMode, CreateCanisterArgument, InstallCodeArgument, WasmModule},
+        main::{
+            self, canister_info, canister_status, start_canister, stop_canister,
+            CanisterInfoRequest, CanisterInstallMode, CreateCanisterArgument, InstallCodeArgument,
+            WasmModule,
+        },
         provisional::{CanisterIdRecord, CanisterSettings},
     },
 };
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use shared_utils::{
     canister_specific::individual_user_template::types::arg::IndividualUserTemplateInitArgs,
-    constant::{INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT}, cycles::calculate_recharge_and_threshold_cycles_for_canister,
+    constant::INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT,
+    cycles::calculate_recharge_and_threshold_cycles_for_canister,
 };
 
 use crate::CANISTER_DATA;
 
-#[derive( CandidType, Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
+#[derive(
+    CandidType, Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone,
+)]
 struct CustomInstallCodeArgument {
     /// See [CanisterInstallMode].
     pub mode: CanisterInstallMode,
@@ -31,15 +38,18 @@ struct CustomInstallCodeArgument {
     pub unsafe_drop_stable_memory: Option<bool>,
 }
 
-pub async fn create_users_canister(profile_owner: Option<Principal>, version: String, individual_user_wasm: Vec<u8>) -> Principal {
+pub async fn create_users_canister(
+    profile_owner: Option<Principal>,
+    version: String,
+    individual_user_wasm: Vec<u8>,
+) -> Principal {
     let canister_id = create_empty_user_canister().await;
     install_canister_wasm(canister_id, profile_owner, version, individual_user_wasm).await;
     canister_id
 }
 
-
 pub async fn create_empty_user_canister() -> Principal {
-     // * config for provisioning canister
+    // * config for provisioning canister
     let arg = CreateCanisterArgument {
         settings: Some(CanisterSettings {
             controllers: Some(vec![
@@ -63,14 +73,23 @@ pub async fn create_empty_user_canister() -> Principal {
     canister_id
 }
 
-pub async fn install_canister_wasm(canister_id: Principal, profile_owner: Option<Principal>, version: String, wasm: Vec<u8>) -> Principal {
+pub async fn install_canister_wasm(
+    canister_id: Principal,
+    profile_owner: Option<Principal>,
+    version: String,
+    wasm: Vec<u8>,
+) -> Principal {
     let configuration = CANISTER_DATA
-    .with(|canister_data_ref_cell| canister_data_ref_cell.borrow().configuration.clone());
+        .with(|canister_data_ref_cell| canister_data_ref_cell.borrow().configuration.clone());
 
     let individual_user_tempalate_init_args = IndividualUserTemplateInitArgs {
-        profile_owner: profile_owner,
+        profile_owner,
         known_principal_ids: Some(CANISTER_DATA.with(|canister_data_ref_cell| {
-            canister_data_ref_cell.borrow().configuration.known_principal_ids.clone()
+            canister_data_ref_cell
+                .borrow()
+                .configuration
+                .known_principal_ids
+                .clone()
         })),
         upgrade_version_number: Some(0),
         version,
@@ -94,52 +113,105 @@ pub async fn install_canister_wasm(canister_id: Principal, profile_owner: Option
     canister_id
 }
 
+pub async fn reinstall_canister_wasm(
+    canister_id: Principal,
+    profile_owner: Option<Principal>,
+    version: String,
+    wasm: Vec<u8>,
+) -> Principal {
+    let configuration = CANISTER_DATA
+        .with(|canister_data_ref_cell| canister_data_ref_cell.borrow().configuration.clone());
+
+    let individual_user_tempalate_init_args = IndividualUserTemplateInitArgs {
+        profile_owner,
+        known_principal_ids: Some(CANISTER_DATA.with(|canister_data_ref_cell| {
+            canister_data_ref_cell
+                .borrow()
+                .configuration
+                .known_principal_ids
+                .clone()
+        })),
+        upgrade_version_number: Some(0),
+        version,
+        url_to_send_canister_metrics_to: Some(configuration.url_to_send_canister_metrics_to),
+    };
+
+    // * encode argument for user canister init lifecycle method
+    let arg = candid::encode_one(individual_user_tempalate_init_args)
+        .expect("Failed to serialize the install argument.");
+
+    // * install wasm to provisioned canister
+    main::install_code(InstallCodeArgument {
+        mode: CanisterInstallMode::Reinstall,
+        canister_id,
+        wasm_module: wasm,
+        arg,
+    })
+    .await
+    .unwrap();
+
+    canister_id
+}
+
 pub async fn upgrade_individual_user_canister(
     canister_id: Principal,
     install_mode: CanisterInstallMode,
     arg: IndividualUserTemplateInitArgs,
-    individual_user_wasm: Vec<u8>
+    individual_user_wasm: Vec<u8>,
 ) -> Result<(), (RejectionCode, String)> {
-    stop_canister(CanisterIdRecord {canister_id: canister_id.clone()}).await?;
+    stop_canister(CanisterIdRecord {
+        canister_id: canister_id.clone(),
+    })
+    .await?;
     let serialized_arg =
         candid::encode_args((arg,)).expect("Failed to serialize the install argument.");
 
-        main::install_code(InstallCodeArgument {
-            mode: install_mode,
-            canister_id,
-            wasm_module: individual_user_wasm,
-            arg: serialized_arg,
-        })
-        .await?;
-    start_canister(CanisterIdRecord {canister_id}).await
+    main::install_code(InstallCodeArgument {
+        mode: install_mode,
+        canister_id,
+        wasm_module: individual_user_wasm,
+        arg: serialized_arg,
+    })
+    .await?;
+    start_canister(CanisterIdRecord { canister_id }).await
 }
 
 pub async fn recharge_canister_if_below_threshold(canister_id: &Principal) -> Result<(), String> {
-
-    match canister_status(CanisterIdRecord {canister_id: *canister_id}).await {
+    match canister_status(CanisterIdRecord {
+        canister_id: *canister_id,
+    })
+    .await
+    {
         Ok((individual_canister_status,)) => {
-            let idle_cycles_burned_per_day = u128::try_from(individual_canister_status.idle_cycles_burned_per_day.0).map_err(|e| e.to_string())?;
-            let (threshold_balance, recharge_amount) = calculate_recharge_and_threshold_cycles_for_canister(idle_cycles_burned_per_day, None);
-            let individual_canister_current_balance = u128::try_from(individual_canister_status.cycles.0).map_err(|e| e.to_string())?;
+            let idle_cycles_burned_per_day =
+                u128::try_from(individual_canister_status.idle_cycles_burned_per_day.0)
+                    .map_err(|e| e.to_string())?;
+            let (threshold_balance, recharge_amount) =
+                calculate_recharge_and_threshold_cycles_for_canister(
+                    idle_cycles_burned_per_day,
+                    None,
+                );
+            let individual_canister_current_balance =
+                u128::try_from(individual_canister_status.cycles.0).map_err(|e| e.to_string())?;
             if individual_canister_current_balance < threshold_balance {
                 let mut recharge_amount = recharge_amount - individual_canister_current_balance;
                 recharge_amount = u128::min(1_000_000_000_000, recharge_amount);
                 recharge_canister(canister_id, recharge_amount).await?;
             }
-        
+
             Ok(())
-        },
+        }
         Err(e) => {
             recharge_canister(canister_id, INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT).await?;
             Ok(())
         }
     }
-   
 }
 
-
-
-pub async fn recharge_canister(canister_id: &Principal, recharge_amount: u128) -> Result<(), String> {
+pub async fn recharge_canister(
+    canister_id: &Principal,
+    recharge_amount: u128,
+) -> Result<(), String> {
     main::deposit_cycles(
         CanisterIdRecord {
             canister_id: *canister_id,

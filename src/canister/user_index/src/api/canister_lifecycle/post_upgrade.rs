@@ -23,7 +23,6 @@ use crate::{
 fn post_upgrade() {
     restore_data_from_stable_memory();
     update_version_from_args();
-    start_recycle_canisters_periodic_job();
 }
 
 fn update_version_from_args() {
@@ -54,10 +53,4 @@ fn restore_data_from_stable_memory() {
     CANISTER_DATA.with_borrow_mut(|cd| {
         *cd = canister_data;
     })
-}
-
-fn start_recycle_canisters_periodic_job() {
-    ic_cdk_timers::set_timer_interval(Duration::from_secs(CANISTER_RECYCLING_FREQUENCY), || {
-        ic_cdk::spawn(recycle_canisters_job());
-    });
 }

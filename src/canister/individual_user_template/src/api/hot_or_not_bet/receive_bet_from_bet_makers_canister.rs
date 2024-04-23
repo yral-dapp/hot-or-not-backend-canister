@@ -27,7 +27,7 @@ fn receive_bet_from_bet_makers_canister(
     bet_maker_principal_id: Principal,
 ) -> Result<BettingStatus, BetOnCurrentlyViewingPostError> {
     let bet_maker_canister_id = ic_cdk::caller();
-    // update_last_canister_functionality_access_time();
+    update_last_canister_functionality_access_time();
 
     let status = CANISTER_DATA.with(|canister_data_ref_cell| {
         receive_bet_from_bet_makers_canister_impl(

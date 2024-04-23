@@ -1,10 +1,12 @@
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     time::{Duration, SystemTime},
 };
 
-use candid::{encode_args, encode_one, Principal};
-use pocket_ic::{PocketIc, WasmResult};
+use candid::{encode_args, encode_one, CandidType, Principal};
+use ic_cdk::api::management_canister::main::{CanisterId, CanisterSettings};
+use ic_ledger_types::{AccountIdentifier, BlockIndex, Tokens, DEFAULT_SUBACCOUNT};
+use pocket_ic::{PocketIc, PocketIcBuilder, WasmResult};
 use shared_utils::{
     canister_specific::{
         individual_user_template::types::{
@@ -14,14 +16,17 @@ use shared_utils::{
             post::PostDetailsFromFrontend,
             profile::UserProfileDetailsForFrontend,
         },
+        platform_orchestrator::types::args::PlatformOrchestratorInitArgs,
         post_cache::types::arg::PostCacheInitArgs,
         user_index::types::{args::UserIndexInitArgs, RecycleStatus},
     },
-    common::types::known_principal::KnownPrincipalType,
+    common::types::{known_principal::KnownPrincipalType, wasm::WasmType},
+    constant::{NNS_CYCLE_MINTING_CANISTER, NNS_LEDGER_CANISTER_ID},
 };
 use test_utils::setup::test_constants::{
     get_mock_user_alice_principal_id, get_mock_user_bob_principal_id,
     get_mock_user_charlie_principal_id, get_mock_user_dan_principal_id,
+    v1::CANISTER_INITIAL_CYCLES_FOR_SPAWNING_CANISTERS,
 };
 
 const INDIVIDUAL_TEMPLATE_WASM_PATH: &str =
@@ -31,6 +36,8 @@ const POST_CACHE_WASM_PATH: &str =
 
 const USER_INDEX_WASM_PATH: &str =
     "../../../target/wasm32-unknown-unknown/release/user_index.wasm.gz";
+const PF_ORCH_WASM_PATH: &str =
+    "../../../target/wasm32-unknown-unknown/release/platform_orchestrator.wasm.gz";
 
 fn individual_template_canister_wasm() -> Vec<u8> {
     std::fs::read(INDIVIDUAL_TEMPLATE_WASM_PATH).unwrap()
@@ -43,14 +50,99 @@ fn user_index_canister_wasm() -> Vec<u8> {
 fn post_cache_canister_wasm() -> Vec<u8> {
     std::fs::read(POST_CACHE_WASM_PATH).unwrap()
 }
+fn pf_orch_canister_wasm() -> Vec<u8> {
+    std::fs::read(PF_ORCH_WASM_PATH).unwrap()
+}
+
+#[derive(CandidType)]
+struct CyclesMintingCanisterInitPayload {
+    ledger_canister_id: CanisterId,
+    governance_canister_id: CanisterId,
+    minting_account_id: Option<String>,
+    last_purged_notification: Option<BlockIndex>,
+}
+
+#[derive(CandidType)]
+struct AuthorizedSubnetWorks {
+    who: Option<Principal>,
+    subnets: Vec<Principal>,
+}
+
+#[derive(CandidType)]
+struct NnsLedgerCanisterInitPayload {
+    minting_account: String,
+    initial_values: HashMap<String, Tokens>,
+    send_whitelist: HashSet<CanisterId>,
+    transfer_fee: Option<Tokens>,
+}
 
 #[test]
 fn recycle_canisters_test() {
-    let pic = PocketIc::new();
+    let pic = PocketIcBuilder::new()
+        .with_nns_subnet()
+        .with_application_subnet()
+        .with_application_subnet()
+        .with_system_subnet()
+        .build();
     let admin_principal_id = get_mock_user_charlie_principal_id();
     let alice_principal_id = get_mock_user_alice_principal_id();
     let bob_principal_id = get_mock_user_bob_principal_id();
     let dan_principal_id = get_mock_user_dan_principal_id();
+
+    let application_subnets = pic.topology().get_app_subnets();
+
+    let platform_canister_id = pic.create_canister_with_settings(
+        Some(admin_principal_id),
+        Some(CanisterSettings {
+            controllers: Some(vec![admin_principal_id]),
+            compute_allocation: None,
+            memory_allocation: None,
+            freezing_threshold: None,
+        }),
+    );
+    pic.add_cycles(
+        platform_canister_id,
+        CANISTER_INITIAL_CYCLES_FOR_SPAWNING_CANISTERS,
+    );
+    let platform_orchestrator_wasm = pf_orch_canister_wasm();
+    let subnet_orchestrator_canister_wasm = user_index_canister_wasm();
+    let individual_user_template = individual_template_canister_wasm();
+    let platform_orchestrator_init_args = PlatformOrchestratorInitArgs {
+        version: "v1.0.0".into(),
+    };
+    pic.install_canister(
+        platform_canister_id,
+        platform_orchestrator_wasm.clone(),
+        candid::encode_one(platform_orchestrator_init_args).unwrap(),
+        Some(admin_principal_id),
+    );
+    for _ in 0..30 {
+        pic.tick()
+    }
+
+    pic.update_call(
+        platform_canister_id,
+        admin_principal_id,
+        "upload_wasms",
+        candid::encode_args((
+            WasmType::SubnetOrchestratorWasm,
+            subnet_orchestrator_canister_wasm.to_vec(),
+        ))
+        .unwrap(),
+    )
+    .unwrap();
+    pic.update_call(
+        platform_canister_id,
+        admin_principal_id,
+        "upload_wasms",
+        candid::encode_args((
+            WasmType::IndividualUserWasm,
+            individual_user_template.to_vec(),
+        ))
+        .unwrap(),
+    )
+    .unwrap();
+    pic.add_cycles(platform_canister_id, 10_000_000_000_000_000);
 
     let post_cache_canister_id = pic.create_canister();
     pic.add_cycles(post_cache_canister_id, 2_000_000_000_000);
@@ -80,42 +172,115 @@ fn recycle_canisters_test() {
         None,
     );
 
-    let user_index_canister_id = pic.create_canister_with_settings(Some(admin_principal_id), None);
-    pic.add_cycles(user_index_canister_id, 2_000_000_000_000_000);
-    let user_index_wasm = user_index_canister_wasm();
-    let user_index_args = UserIndexInitArgs {
-        known_principal_ids: Some(known_prinicipal_values.clone()),
-        access_control_map: None,
-        version: "1".to_string(),
+    //Ledger Canister
+    let minting_account = AccountIdentifier::new(&admin_principal_id, &DEFAULT_SUBACCOUNT);
+    let ledger_canister_wasm = include_bytes!("../ledger-canister.wasm");
+    let ledger_canister_id = pic
+        .create_canister_with_id(
+            Some(admin_principal_id),
+            None,
+            Principal::from_text(NNS_LEDGER_CANISTER_ID).unwrap(),
+        )
+        .unwrap();
+    let icp_ledger_init_args = NnsLedgerCanisterInitPayload {
+        minting_account: minting_account.to_string(),
+        initial_values: HashMap::new(),
+        send_whitelist: HashSet::new(),
+        transfer_fee: Some(Tokens::from_e8s(10_000)),
     };
-    let user_index_args_bytes = encode_one(user_index_args).unwrap();
     pic.install_canister(
-        user_index_canister_id,
-        user_index_wasm.clone(),
-        user_index_args_bytes.clone(),
+        ledger_canister_id,
+        ledger_canister_wasm.into(),
+        candid::encode_one(icp_ledger_init_args).unwrap(),
         Some(admin_principal_id),
     );
 
-    // Individual template canisters
-    let individual_template_wasm_bytes = individual_template_canister_wasm();
-
-    let res = pic
-        .update_call(
-            user_index_canister_id,
-            admin_principal_id,
-            "create_pool_of_individual_user_available_canisters",
-            encode_args(("1".to_string(), individual_template_wasm_bytes)).unwrap(),
+    //Cycle Minting Canister
+    let cycle_minting_canister_wasm = include_bytes!("../cycles-minting-canister.wasm");
+    let cycle_minting_canister_id = pic
+        .create_canister_with_id(
+            Some(admin_principal_id),
+            None,
+            Principal::from_text(NNS_CYCLE_MINTING_CANISTER).unwrap(),
         )
-        .map(|reply_payload| {
-            let result: Result<String, String> = match reply_payload {
+        .unwrap();
+    pic.add_cycles(
+        cycle_minting_canister_id,
+        CANISTER_INITIAL_CYCLES_FOR_SPAWNING_CANISTERS,
+    );
+    let cycles_minting_canister_init_args = CyclesMintingCanisterInitPayload {
+        ledger_canister_id: ledger_canister_id,
+        governance_canister_id: CanisterId::anonymous(),
+        minting_account_id: Some(minting_account.to_string()),
+        last_purged_notification: Some(0),
+    };
+
+    pic.install_canister(
+        cycle_minting_canister_id,
+        cycle_minting_canister_wasm.into(),
+        candid::encode_one(cycles_minting_canister_init_args).unwrap(),
+        Some(admin_principal_id),
+    );
+
+    let authorized_subnetwork_list_args = AuthorizedSubnetWorks {
+        who: Some(platform_canister_id),
+        subnets: application_subnets.clone(),
+    };
+    pic.update_call(
+        cycle_minting_canister_id,
+        CanisterId::anonymous(),
+        "set_authorized_subnetwork_list",
+        candid::encode_one(authorized_subnetwork_list_args).unwrap(),
+    )
+    .unwrap();
+
+    for i in 0..50 {
+        pic.tick();
+    }
+
+    let charlie_global_admin = get_mock_user_charlie_principal_id();
+
+    pic.update_call(
+        platform_canister_id,
+        admin_principal_id,
+        "add_principal_as_global_admin",
+        candid::encode_one(charlie_global_admin).unwrap(),
+    )
+    .unwrap();
+
+    let user_index_canister_id: Principal = pic
+        .update_call(
+            platform_canister_id,
+            admin_principal_id,
+            "provision_subnet_orchestrator_canister",
+            candid::encode_one(application_subnets[1]).unwrap(),
+        )
+        .map(|res| {
+            let canister_id_result: Result<Principal, String> = match res {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 create_pool_of_individual_user_available_canisters failed\n"),
+                _ => panic!("Canister call failed"),
             };
-            result
+            canister_id_result.unwrap()
         })
         .unwrap();
 
-    for _ in 0..15 {
+    for i in 0..50 {
+        pic.tick();
+    }
+
+    // upgrade pf_orch
+
+    let platform_orchestrator_init_args = PlatformOrchestratorInitArgs {
+        version: "v1.0.0".into(),
+    };
+    pic.upgrade_canister(
+        platform_canister_id,
+        platform_orchestrator_wasm,
+        candid::encode_one(platform_orchestrator_init_args).unwrap(),
+        Some(admin_principal_id),
+    )
+    .unwrap();
+    for i in 0..20 {
         pic.tick();
     }
 
@@ -491,14 +656,6 @@ fn recycle_canisters_test() {
         pic.tick();
     }
 
-    pic.upgrade_canister(
-        user_index_canister_id,
-        user_index_wasm.clone(),
-        user_index_args_bytes,
-        Some(admin_principal_id),
-    )
-    .unwrap();
-
     // User Index available details - call get_subnet_available_capacity
 
     let res = pic
@@ -536,25 +693,6 @@ fn recycle_canisters_test() {
         })
         .unwrap();
     println!("Backup capacity: {:?}", res);
-
-    // print principal strs
-    println!("Admin principal: {:?}", admin_principal_id.to_string());
-    println!(
-        "User Index principal: {:?}",
-        user_index_canister_id.to_string()
-    );
-    println!(
-        "Alice principal: {:?}",
-        alice_individual_template_canister_id.to_string()
-    );
-    println!(
-        "Bob principal: {:?}",
-        bob_individual_template_canister_id.to_string()
-    );
-    println!(
-        "Dan principal: {:?}",
-        dan_individual_template_canister_id.to_string()
-    );
 
     // call alice canister - get_last_canister_functionality_access_time
     let res1 = pic
@@ -614,10 +752,47 @@ fn recycle_canisters_test() {
     println!("Dan last access time: {:?}", res3);
 
     // Forward timer
-    pic.advance_time(Duration::from_secs(7 * 24 * 60 * 60));
-    for _ in 0..1000 {
+    pic.advance_time(Duration::from_secs(8 * 24 * 60 * 60));
+    for _ in 0..20 {
         pic.tick();
     }
+
+    // call user_index get_recycle_status
+    let res = pic
+        .query_call(
+            user_index_canister_id,
+            admin_principal_id,
+            "get_recycle_status",
+            encode_one(()).unwrap(),
+        )
+        .map(|reply_payload| {
+            let recycle_status: RecycleStatus = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 get_recycle_status failed\n"),
+            };
+            recycle_status
+        })
+        .unwrap();
+    println!("Recycle status: {:?}", res);
+
+    // print principal strs
+    println!("Admin principal: {:?}", admin_principal_id.to_string());
+    println!(
+        "User Index principal: {:?}",
+        user_index_canister_id.to_string()
+    );
+    println!(
+        "Alice principal: {:?}",
+        alice_individual_template_canister_id.to_string()
+    );
+    println!(
+        "Bob principal: {:?}",
+        bob_individual_template_canister_id.to_string()
+    );
+    println!(
+        "Dan principal: {:?}",
+        dan_individual_template_canister_id.to_string()
+    );
 
     // User Index available details - call get_subnet_available_capacity
 
@@ -657,107 +832,43 @@ fn recycle_canisters_test() {
         .unwrap();
     println!("Backup capacity: {:?}", res);
 
-    // call alice canister - get_last_canister_functionality_access_time
-    let res11 = pic
-        .query_call(
-            alice_individual_template_canister_id,
-            alice_principal_id,
-            "get_last_canister_functionality_access_time",
-            encode_one(()).unwrap(),
-        )
-        .map(|reply_payload| {
-            let last_access_time: Result<SystemTime, String> = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_last_canister_functionality_access_time failed\n"),
-            };
-            last_access_time
-        })
-        .unwrap()
-        .unwrap();
-    println!("Bob last access time: {:?}", res11);
-    // calculate and diff in time between res1 and res11
-    let diff = res11.duration_since(res1).unwrap();
-    println!("Time diff: {:?}", diff);
-
-    // call bob canister - get_last_canister_functionality_access_time
-    let res22 = pic
-        .query_call(
-            bob_individual_template_canister_id,
-            bob_principal_id,
-            "get_last_canister_functionality_access_time",
-            encode_one(()).unwrap(),
-        )
-        .map(|reply_payload| {
-            let last_access_time: Result<SystemTime, String> = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_last_canister_functionality_access_time failed\n"),
-            };
-            last_access_time
-        })
-        .unwrap()
-        .unwrap();
-    println!("Bob last access time: {:?}", res22);
-    // calculate and diff in time between res2 and res22
-    let diff = res22.duration_since(res2).unwrap();
-    println!("Time diff: {:?}", diff);
-
-    // call dan canister - get_last_canister_functionality_access_time
-    let res33 = pic
-        .query_call(
-            dan_individual_template_canister_id,
-            dan_principal_id,
-            "get_last_canister_functionality_access_time",
-            encode_one(()).unwrap(),
-        )
-        .map(|reply_payload| {
-            let last_access_time: Result<SystemTime, String> = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_last_canister_functionality_access_time failed\n"),
-            };
-            last_access_time
-        })
-        .unwrap()
-        .unwrap();
-    println!("Dan last access time: {:?}", res33);
-    // calculate and diff in time between res3 and res33
-    let diff = res33.duration_since(res3).unwrap();
-    println!("Time diff: {:?}", diff);
-
-    // call user_index get_recycle_status
+    // call user_index get_user_index_canister_count
     let res = pic
         .query_call(
             user_index_canister_id,
             admin_principal_id,
-            "get_recycle_status",
+            "get_user_index_canister_count",
             encode_one(()).unwrap(),
         )
         .map(|reply_payload| {
-            let recycle_status: RecycleStatus = match reply_payload {
+            let canister_count: usize = match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_recycle_status failed\n"),
+                _ => panic!("\n🛑 get_user_index_canister_count failed\n"),
             };
-            recycle_status
+            canister_count
         })
         .unwrap();
-    println!("Recycle status: {:?}", res);
+    println!("ind Canister count: {:?}", res);
 
     // call user_index recycle_canisters
-    let res = pic
-        .query_call(
-            user_index_canister_id,
-            admin_principal_id,
-            "recycle_canisters",
-            encode_one(()).unwrap(),
-        )
-        .map(|reply_payload| {
-            let recycle_status: () = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 recycle_canisters failed\n"),
-            };
-            recycle_status
-        });
+    // let res = pic
+    //     .update_call(
+    //         user_index_canister_id,
+    //         platform_canister_id,
+    //         "recycle_canisters",
+    //         encode_one(()).unwrap(),
+    //     )
+    //     .map(|reply_payload| {
+    //         let canister_count: () = match reply_payload {
+    //             WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+    //             _ => panic!("\n🛑 recycle_canisters failed\n"),
+    //         };
+    //         canister_count
+    //     })
+    //     .unwrap();
 
-    for _ in 0..1000 {
+    pic.advance_time(Duration::from_secs(24 * 60 * 60));
+    for _ in 0..25 {
         pic.tick();
     }
 
@@ -778,4 +889,58 @@ fn recycle_canisters_test() {
         })
         .unwrap();
     println!("Recycle status: {:?}", res);
+
+    // call bob canister - get_last_canister_functionality_access_time
+    let res22 = pic
+        .query_call(
+            bob_individual_template_canister_id,
+            bob_principal_id,
+            "get_last_canister_functionality_access_time",
+            encode_one(()).unwrap(),
+        )
+        .map(|reply_payload| {
+            let last_access_time: Result<SystemTime, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 get_last_canister_functionality_access_time failed\n"),
+            };
+            last_access_time
+        })
+        .unwrap();
+    assert!(res22.is_err());
+
+    // call dan canister - get_last_canister_functionality_access_time
+    let res33 = pic
+        .query_call(
+            dan_individual_template_canister_id,
+            dan_principal_id,
+            "get_last_canister_functionality_access_time",
+            encode_one(()).unwrap(),
+        )
+        .map(|reply_payload| {
+            let last_access_time: Result<SystemTime, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 get_last_canister_functionality_access_time failed\n"),
+            };
+            last_access_time
+        })
+        .unwrap();
+    assert!(res33.is_err());
+
+    // call alice canister - get_last_canister_functionality_access_time
+    let res11 = pic
+        .query_call(
+            alice_individual_template_canister_id,
+            alice_principal_id,
+            "get_last_canister_functionality_access_time",
+            encode_one(()).unwrap(),
+        )
+        .map(|reply_payload| {
+            let last_access_time: Result<SystemTime, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 get_last_canister_functionality_access_time failed\n"),
+            };
+            last_access_time
+        })
+        .unwrap();
+    assert!(res11.is_err());
 }
