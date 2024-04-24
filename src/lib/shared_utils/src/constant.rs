@@ -116,7 +116,3 @@ pub fn get_global_super_admin_principal_id_v1(
             .expect("USER ID for global super admin not found"),
     }
 }
-
-// Canister Recycling Threshold
-pub const CANISTER_RECYCLING_THRESHOLD: u64 = 2_678_400; // 31 days
-pub const CANISTER_RECYCLING_FREQUENCY: u64 = 86_400; // 1 day

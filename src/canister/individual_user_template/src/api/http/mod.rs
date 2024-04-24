@@ -1,51 +1,18 @@
-use std::borrow::Cow;
+use shared_utils::common::types::http::{HeaderField, HttpRequest, HttpResponse};
 
-use candid::{candid_method, types::principal, CandidType};
-use ic_cdk::api;
-use serde::Deserialize;
-use shared_utils::common::{
-    types::http::{HeaderField, HttpRequest, HttpResponse},
-    utils::{get_heap_memory_size, get_stable_memory_size},
+use super::{
+    canister_management::get_last_access_time::last_canister_access_time,
+    monitoring::metrics::metrics,
 };
 
 fn get_path(url: &str) -> Option<&str> {
     url.split('?').next()
 }
 
-fn metrics() -> String {
-    // Prometheus expects timestamps in ms. Time.now() returns ns.
-    let timestamp = api::time() / 1000000;
-    let canister_type = "platform_orchestrator";
-
-    vec![
-        format!(
-            "cycle_balance{{type=\"{}\"}} {} {}",
-            canister_type,
-            api::canister_balance128(),
-            timestamp
-        )
-        .as_str(),
-        format!(
-            "heap_size{{type=\"{}\"}} {} {}",
-            canister_type,
-            get_heap_memory_size(),
-            timestamp
-        )
-        .as_str(),
-        format!(
-            "stable_size{{type=\"{}\"}} {} {}",
-            canister_type,
-            get_stable_memory_size(),
-            timestamp
-        )
-        .as_str(),
-    ]
-    .connect("\n")
-}
-
 fn retrieve(path: &str) -> Option<Vec<u8>> {
     match path {
         "/metrics" => Some(metrics().as_bytes().to_vec()),
+        "/last_canister_access_time" => Some(last_canister_access_time().as_bytes().to_vec()),
         _ => None,
     }
 }

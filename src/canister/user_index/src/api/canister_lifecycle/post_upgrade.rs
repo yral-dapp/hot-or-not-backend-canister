@@ -1,19 +1,11 @@
-use std::time::Duration;
-
-use candid::Principal;
 use ciborium::de;
 
-use ic_cdk::call;
 use ic_cdk_macros::post_upgrade;
 use ic_stable_structures::Memory;
-use shared_utils::common::types::known_principal::KnownPrincipalType::CanisterIdPlatformOrchestrator;
-use shared_utils::constant::CANISTER_RECYCLING_FREQUENCY;
 use shared_utils::{
-    canister_specific::user_index::types::args::UserIndexInitArgs,
-    common::utils::{system_time, task::run_task_concurrently},
+    canister_specific::user_index::types::args::UserIndexInitArgs, common::utils::system_time,
 };
 
-use crate::api::canister_management::recycle_canisters::recycle_canisters_job;
 use crate::{
     data_model::{canister_upgrade::UpgradeStatus, memory},
     CANISTER_DATA,

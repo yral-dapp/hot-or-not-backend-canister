@@ -118,7 +118,7 @@ pub async fn reinstall_canister_wasm(
     profile_owner: Option<Principal>,
     version: String,
     wasm: Vec<u8>,
-) -> Principal {
+) -> Result<Principal, String> {
     let configuration = CANISTER_DATA
         .with(|canister_data_ref_cell| canister_data_ref_cell.borrow().configuration.clone());
 
@@ -137,20 +137,23 @@ pub async fn reinstall_canister_wasm(
     };
 
     // * encode argument for user canister init lifecycle method
-    let arg = candid::encode_one(individual_user_tempalate_init_args)
-        .expect("Failed to serialize the install argument.");
+    let arg = match candid::encode_one(individual_user_tempalate_init_args) {
+        Ok(arg) => arg,
+        Err(err) => return Err(err.to_string()),
+    };
 
     // * install wasm to provisioned canister
-    main::install_code(InstallCodeArgument {
+    match main::install_code(InstallCodeArgument {
         mode: CanisterInstallMode::Reinstall,
         canister_id,
         wasm_module: wasm,
         arg,
     })
     .await
-    .unwrap();
-
-    canister_id
+    {
+        Ok(_) => Ok(canister_id),
+        Err(err) => Err(err.1),
+    }
 }
 
 pub async fn upgrade_individual_user_canister(

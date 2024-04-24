@@ -2196,6 +2196,7 @@ dependencies = [
  "ic-cdk-timers",
  "ic-stable-structures",
  "serde",
+ "serde_json",
  "shared_utils",
  "test_utils",
 ]

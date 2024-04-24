@@ -46,6 +46,7 @@ type QueryStats = record {
   request_payload_bytes_total : nat;
 };
 type RecycleStatus = record {
+  last_recycled_duration : opt nat64;
   last_recycled_at : opt SystemTime;
   num_last_recycled_canisters : nat64;
   success_canisters : vec text;
@@ -124,7 +125,7 @@ service : (UserIndexInitArgs) -> {
   get_well_known_principal_value : (KnownPrincipalType) -> (
       opt principal,
     ) query;
-  http_request : (HttpRequest) -> (HttpResponse) query;
+  http_request : (HttpRequest) -> (HttpResponse);
   issue_rewards_for_referral : (principal, principal, principal) -> (Result);
   receive_data_from_backup_canister_and_restore_data_to_heap : (
       principal,
@@ -132,7 +133,6 @@ service : (UserIndexInitArgs) -> {
       text,
     ) -> ();
   reclaim_cycles_from_individual_canisters : () -> ();
-  recycle_canisters : () -> ();
   reset_user_individual_canisters : (vec principal) -> (Result);
   return_cycles_to_platform_orchestrator_canister : () -> (Result);
   set_permission_to_upgrade_individual_canisters : (bool) -> (text);

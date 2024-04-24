@@ -63,12 +63,14 @@ fn http_request(request: HttpRequest) -> HttpResponse {
                 HeaderField("Content-Type".to_string(), "text/plain".to_string()),
             ],
             body: bytes,
+            upgrade: false,
         }
     } else {
         HttpResponse {
             status_code: 404,
             headers: Vec::new(),
             body: path.as_bytes().to_vec(),
+            upgrade: false,
         }
     }
 }
