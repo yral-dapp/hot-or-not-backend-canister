@@ -25,8 +25,8 @@ pub async fn transfer_tokens_and_posts(to_account: Principal) -> Result<String, 
         return Err("Unauthorized".to_owned());
     }
 
-    // Should be in hotornot subnet
-    if check_canister_is_in_hotornot_subnet(profile_owner, true)
+    // Users on hotornot subnet are allowed to migrate, others are unauthorized
+    if check_canister_is_in_hotornot_subnet(profile_owner, false)
         .await
         .is_err()
     {
@@ -116,12 +116,12 @@ pub async fn receive_data_from_hotornot(
         return Err("Unauthorized".to_owned());
     }
 
-    // Should not be in hotornot subnet
-    if check_canister_is_in_hotornot_subnet(profile_owner, false)
+    // Users not on hotornot subnet are allowed to receive, others are unauthorized
+    if check_canister_is_in_hotornot_subnet(profile_owner, true)
         .await
         .is_err()
     {
-        return Err("Wrong canister controller".to_owned());
+        return Err("Unauthorized".to_owned());
     }
 
     let current_time = get_current_system_time_from_ic();
