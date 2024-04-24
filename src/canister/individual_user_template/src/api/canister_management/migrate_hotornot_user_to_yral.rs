@@ -6,7 +6,7 @@ use ic_cdk::{
 };
 use ic_cdk_macros::update;
 use shared_utils::{
-    canister_specific::individual_user_template::types::post::Post,
+    canister_specific::individual_user_template::types::{migration::MigrationStatus, post::Post},
     common::{
         types::utility_token::token_event::TokenEvent,
         utils::system_time::get_current_system_time_from_ic,
@@ -33,7 +33,6 @@ pub async fn transfer_tokens_and_posts(to_account: Principal) -> Result<String, 
         return Err("Unauthorized".to_owned());
     }
 
-    // Check: Is it needed?
     CANISTER_DATA.with_borrow_mut(|canister_data| {
         let result = canister_data
             .session_type
@@ -102,6 +101,14 @@ pub async fn receive_data_from_hotornot(
     from_account: Principal,
     all_created_posts: BTreeMap<u64, Post>,
 ) -> Result<String, String> {
+    if CANISTER_DATA.with_borrow(|canister_data| {
+        canister_data
+            .migration_status
+            .is_some_and(|v| v.eq(&MigrationStatus::MigratedToYral))
+    }) {
+        return Err("Already Migrated".to_owned());
+    };
+
     let profile_owner =
         CANISTER_DATA.with_borrow(|canister_data| canister_data.profile.principal_id.unwrap());
 
@@ -144,6 +151,8 @@ pub async fn receive_data_from_hotornot(
                 .all_created_posts
                 .insert(last_post_id + id, post);
         }
+
+        canister_data.migration_status = Some(MigrationStatus::MigratedToYral);
         Ok("Success".to_owned())
     })
 }
