@@ -14,7 +14,7 @@ use shared_utils::{
             AggregateStats, BetDetails, BetMaker, BetMakerPrincipal, GlobalBetId, GlobalRoomId,
             HotOrNotDetails, PlacedBetDetail, RoomDetailsV1, RoomId, SlotDetailsV1, SlotId,
             StablePrincipal,
-        }, post::{FeedScore, Post, PostViewStatistics}, profile::UserProfile, session::SessionType, token::TokenBalance
+        }, migration::MigrationStatus, post::{FeedScore, Post, PostViewStatistics}, profile::UserProfile, session::SessionType, token::TokenBalance
     },
     common::types::{
         app_primitive_type::PostId,
@@ -63,7 +63,8 @@ pub struct CanisterDataForSnapshot {
     pub profile: UserProfile,
     pub version_details: VersionDetails,
     pub session_type: Option<SessionType>,
-    pub last_access_time: Option<SystemTime>
+    pub last_access_time: Option<SystemTime>,
+    pub migration_status: Option<MigrationStatus>,
 }
 
 #[derive(CandidType, Clone, Deserialize, Debug, Serialize)]
@@ -231,7 +232,8 @@ impl From<&CanisterData> for CanisterDataForSnapshot {
             profile: canister_data.profile.clone(),
             version_details: canister_data.version_details.clone(),
             session_type: canister_data.session_type,
-            last_access_time: canister_data.last_access_time
+            last_access_time: canister_data.last_access_time,
+            migration_status: canister_data.migration_status,
         }
     }
 }
@@ -348,7 +350,8 @@ impl From<CanisterDataForSnapshot> for CanisterData {
             profile: canister_data.profile,
             version_details: canister_data.version_details,
             session_type: canister_data.session_type,
-            last_access_time: canister_data.last_access_time
+            last_access_time: canister_data.last_access_time,
+            migration_status: canister_data.migration_status,
         }
     }
 }

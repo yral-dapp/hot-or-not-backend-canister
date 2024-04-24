@@ -104,6 +104,7 @@ impl Default for CanisterData {
             version_details: VersionDetails::default(),
             session_type: None,
             last_access_time: None,
+            migration_status: Some(MigrationStatus::NotStarted)
         }
     }
 }
