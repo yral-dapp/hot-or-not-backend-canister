@@ -120,6 +120,9 @@ service : (UserIndexInitArgs) -> {
   get_user_canister_incl_avail_list : () -> (vec principal) query;
   get_user_canister_list : () -> (vec principal) query;
   get_user_canister_status : (principal) -> (Result_1);
+  get_user_id_and_canister_list : () -> (
+      vec record { principal; principal },
+    ) query;
   get_user_index_canister_count : () -> (nat64) query;
   get_user_index_canister_cycle_balance : () -> (nat) query;
   get_well_known_principal_value : (KnownPrincipalType) -> (
