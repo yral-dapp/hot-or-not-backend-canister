@@ -21,6 +21,4 @@ pub struct HttpResponse {
     pub headers: Vec<HeaderField>,
     #[serde(with = "serde_bytes")]
     pub body: Vec<u8>,
-    /// Whether the query call should be upgraded to an update call.
-    pub upgrade: bool,
 }

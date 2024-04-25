@@ -1,9 +1,6 @@
 use shared_utils::common::types::http::{HeaderField, HttpRequest, HttpResponse};
 
-use super::{
-    canister_management::get_last_access_time::last_canister_access_time,
-    monitoring::metrics::metrics,
-};
+use super::monitoring::metrics::metrics;
 
 fn get_path(url: &str) -> Option<&str> {
     url.split('?').next()
@@ -12,7 +9,6 @@ fn get_path(url: &str) -> Option<&str> {
 fn retrieve(path: &str) -> Option<Vec<u8>> {
     match path {
         "/metrics" => Some(metrics().as_bytes().to_vec()),
-        "/last_canister_access_time" => Some(last_canister_access_time().as_bytes().to_vec()),
         _ => None,
     }
 }
@@ -30,14 +26,12 @@ fn http_request(request: HttpRequest) -> HttpResponse {
                 HeaderField("Content-Type".to_string(), "text/plain".to_string()),
             ],
             body: bytes,
-            upgrade: false,
         }
     } else {
         HttpResponse {
             status_code: 404,
             headers: Vec::new(),
             body: path.as_bytes().to_vec(),
-            upgrade: false,
         }
     }
 }

@@ -7,6 +7,7 @@ use ic_cdk::{
     query, update,
 };
 use serde::Deserialize;
+use shared_utils::common::utils::permissions::is_reclaim_canister_id;
 use shared_utils::{
     canister_specific::user_index::types::RecycleStatus,
     common::{
@@ -22,21 +23,14 @@ pub fn get_recycle_status() -> RecycleStatus {
     CANISTER_DATA.with_borrow(|canister_data| canister_data.recycle_status.clone())
 }
 
-#[derive(Deserialize, Debug)]
-struct RecycleCanistersRequest {
-    canister_ids: Vec<Principal>,
-}
-
-pub fn handle_recycle_canisters(body: Vec<u8>) -> String {
-    let req: RecycleCanistersRequest = serde_json::from_slice(&body).unwrap();
-    let canister_ids = req.canister_ids;
-
-    recycle_canisters(canister_ids);
-
-    "Recycling canisters started".to_string()
-}
-
+#[update(guard = "is_reclaim_canister_id")]
 pub fn recycle_canisters(canister_ids: Vec<Principal>) {
+    // return if principal id is `rimrc-piaaa-aaaao-aaljq-cai`
+    // for a secondary measure to prevent accidental recycling of hotornot canisters
+    if ic_cdk::id() == Principal::from_text("rimrc-piaaa-aaaao-aaljq-cai").unwrap() {
+        return;
+    }
+
     ic_cdk::spawn(async move {
         let start = get_current_system_time();
 
