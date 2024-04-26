@@ -34,6 +34,7 @@ pub struct CanisterData {
     pub unique_user_name_to_user_principal_id_map: BTreeMap<String, Principal>,
     #[serde(skip, default = "_empty_wasms")]
     pub wasms: StableBTreeMap<WasmType, CanisterWasm, Memory>,
+    #[serde(default)]
     pub recycle_status: RecycleStatus,
 }
 

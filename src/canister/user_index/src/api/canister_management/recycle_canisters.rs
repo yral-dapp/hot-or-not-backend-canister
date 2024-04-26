@@ -16,7 +16,12 @@ use shared_utils::{
     },
 };
 
-use crate::{util::canister_management::reinstall_canister_wasm, CANISTER_DATA};
+use crate::{
+    util::canister_management::{self, reinstall_canister_wasm},
+    CANISTER_DATA,
+};
+
+use super::reset_canister;
 
 #[query]
 pub fn get_recycle_status() -> RecycleStatus {
@@ -43,21 +48,20 @@ pub fn recycle_canisters(canister_ids: Vec<Principal>) {
         });
 
         let futures = canister_ids.iter().map(|canister_id| {
-            recycle_canister(*canister_id, individual_user_template_canister_wasm.clone())
+            reset_canister(*canister_id, individual_user_template_canister_wasm.clone())
         });
 
-        let stream = futures::stream::iter(futures).boxed().buffer_unordered(20);
+        let stream = futures::stream::iter(futures).boxed().buffer_unordered(25);
 
         let results = stream
-            .collect::<Vec<Result<Option<Principal>, (Principal, String)>>>()
+            .collect::<Vec<Result<Principal, (Principal, String)>>>()
             .await;
 
         // update recycle_status
 
         let success_canisters = results
             .iter()
-            .filter(|r| r.is_ok() && r.as_ref().unwrap().is_some())
-            .map(|r| r.as_ref().unwrap().unwrap())
+            .filter_map(|r| r.as_ref().ok().cloned())
             .collect::<Vec<Principal>>();
 
         let num_success = success_canisters.len();
@@ -97,22 +101,4 @@ pub fn recycle_canisters(canister_ids: Vec<Principal>) {
             };
         });
     });
-}
-
-pub async fn recycle_canister(
-    canister_id: Principal,
-    individual_user_template_canister_wasm: CanisterWasm,
-) -> Result<Option<Principal>, (Principal, String)> {
-    // reinstall wasm
-    match reinstall_canister_wasm(
-        canister_id,
-        None,
-        individual_user_template_canister_wasm.version.clone(),
-        individual_user_template_canister_wasm.wasm_blob.clone(),
-    )
-    .await
-    {
-        Ok(_) => Ok(Some(canister_id)),
-        Err(e) => Err((canister_id, e)),
-    }
 }

@@ -22,7 +22,10 @@ use shared_utils::{
     },
 };
 
-use crate::{util::canister_management, CANISTER_DATA};
+use crate::{
+    util::canister_management::{self, reinstall_canister_wasm},
+    CANISTER_DATA,
+};
 
 pub mod create_pool_of_available_canisters;
 pub mod get_subnet_available_capacity;
@@ -113,56 +116,19 @@ pub async fn reset_user_individual_canisters(canisters: Vec<Principal>) -> Resul
             .map(|item| (*item.0, *item.1))
             .collect();
     });
+    let individual_user_template_canister_wasm = CANISTER_DATA.with_borrow(|canister_data| {
+        canister_data
+            .wasms
+            .get(&WasmType::IndividualUserWasm)
+            .unwrap()
+            .clone()
+    });
 
-    let canister_reinstall_futures = canisters.iter().map(|canister| async move {
-        canister_management::recharge_canister_if_below_threshold(&canister)
-            .await
-            .map_err(|e| (*canister, e))?;
-        canister_management::upgrade_individual_user_canister(
-            canister.clone(),
-            CanisterInstallMode::Reinstall,
-            IndividualUserTemplateInitArgs {
-                known_principal_ids: Some(CANISTER_DATA.with(|canister_data_ref| {
-                    canister_data_ref
-                        .borrow()
-                        .configuration
-                        .known_principal_ids
-                        .clone()
-                })),
-                profile_owner: None,
-                upgrade_version_number: Some(CANISTER_DATA.with(|canister_data_ref| {
-                    canister_data_ref
-                        .borrow()
-                        .last_run_upgrade_status
-                        .version_number
-                })),
-                url_to_send_canister_metrics_to: Some(CANISTER_DATA.with(|canister_data_ref| {
-                    canister_data_ref
-                        .borrow()
-                        .configuration
-                        .url_to_send_canister_metrics_to
-                        .clone()
-                })),
-                version: CANISTER_DATA.with(|canister_data_ref_cell| {
-                    canister_data_ref_cell
-                        .borrow()
-                        .last_run_upgrade_status
-                        .version
-                        .clone()
-                }),
-            },
-            CANISTER_DATA.with_borrow(|canister_data| {
-                canister_data
-                    .wasms
-                    .get(&WasmType::IndividualUserWasm)
-                    .unwrap()
-                    .wasm_blob
-                    .clone()
-            }),
-        )
-        .await
-        .map_err(|e| (*canister, e.1))?;
-        Ok(*canister)
+    let canister_reinstall_futures = canisters.iter().map(|canister| async {
+        match reset_canister(*canister, individual_user_template_canister_wasm.clone()).await {
+            Ok(canister_id) => Ok(canister_id),
+            Err(e) => Err(e),
+        }
     });
 
     let result_callback =
@@ -179,4 +145,26 @@ pub async fn reset_user_individual_canisters(canisters: Vec<Principal>) -> Resul
     run_task_concurrently(canister_reinstall_futures, 10, result_callback, || false).await;
 
     Ok(format!("Sucess {}", canisters[0].to_string()))
+}
+
+pub async fn reset_canister(
+    canister_id: Principal,
+    individual_user_template_canister_wasm: CanisterWasm,
+) -> Result<Principal, (Principal, String)> {
+    canister_management::recharge_canister_if_below_threshold(&canister_id)
+        .await
+        .map_err(|e| (canister_id, e))?;
+
+    // reinstall wasm
+    match reinstall_canister_wasm(
+        canister_id,
+        None,
+        individual_user_template_canister_wasm.version.clone(),
+        individual_user_template_canister_wasm.wasm_blob.clone(),
+    )
+    .await
+    {
+        Ok(_) => Ok(canister_id),
+        Err(e) => Err((canister_id, e)),
+    }
 }

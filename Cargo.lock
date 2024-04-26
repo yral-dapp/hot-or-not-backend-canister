@@ -1232,7 +1232,6 @@ dependencies = [
  "ciborium",
  "ic-cdk",
  "ic-cdk-macros",
- "ic-cdk-timers",
  "ic-stable-structures",
  "serde",
  "shared_utils",
