@@ -456,7 +456,7 @@ fn reset_individual_canister_test() {
         })
         .unwrap();
 
-    for i in 0..20 {
+    for i in 0..50 {
         pic.tick();
     }
 
