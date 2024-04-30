@@ -455,9 +455,9 @@ fn reset_individual_canister_test() {
             result
         })
         .unwrap();
+    println!("Reset canisters: {:?}", res);
 
-    pic.advance_time(Duration::from_secs(60 * 60));
-    for _ in 0..500 {
+    for _ in 0..20 {
         pic.tick();
     }
 

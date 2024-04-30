@@ -112,7 +112,7 @@ pub async fn reset_user_individual_canisters(canisters: Vec<Principal>) -> Resul
         })
         .ok_or("Governance Canister Id not found")?;
 
-    if caller_id != governance_canister_id || is_reclaim_canister_id().is_err() {
+    if caller_id != governance_canister_id && is_reclaim_canister_id().is_err() {
         return Err("This method can only be executed through DAO or reclaim canister".to_string());
     };
 
