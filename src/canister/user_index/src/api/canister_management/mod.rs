@@ -14,7 +14,9 @@ use ic_cdk::{
 use ic_cdk_macros::{query, update};
 use shared_utils::{
     canister_specific::{
-        individual_user_template::types::arg::IndividualUserTemplateInitArgs,
+        individual_user_template::types::{
+            arg::IndividualUserTemplateInitArgs, session::SessionType,
+        },
         user_index::types::RecycleStatus,
     },
     common::{
@@ -196,6 +198,22 @@ pub async fn reset_canister(
     canister_id: Principal,
     individual_user_template_canister_wasm: CanisterWasm,
 ) -> Result<Principal, (Principal, String)> {
+    // secondary check for not allowing registered canisters to be recycled
+    let (session_type_res,): (Result<SessionType, String>,) =
+        match ic_cdk::call(canister_id, "get_session_type", ()).await {
+            Ok(r) => r,
+            Err(e) => return Err((canister_id, e.1)),
+        };
+    if let Err(e) = session_type_res {
+        return Err((canister_id, e));
+    }
+    if session_type_res.unwrap() != SessionType::AnonymousSession {
+        return Err((
+            canister_id,
+            "Canister is not AnonymousSession. Can not recycle".to_string(),
+        ));
+    }
+
     canister_management::recharge_canister_if_below_threshold(&canister_id)
         .await
         .map_err(|e| (canister_id, e))?;

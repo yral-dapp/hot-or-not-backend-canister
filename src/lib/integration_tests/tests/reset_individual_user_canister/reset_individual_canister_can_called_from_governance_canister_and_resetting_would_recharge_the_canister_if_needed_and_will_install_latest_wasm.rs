@@ -3,10 +3,14 @@ use std::time::Duration;
 use candid::Principal;
 use ic_test_state_machine_client::WasmResult;
 use shared_utils::common::types::known_principal::KnownPrincipalType;
-use test_utils::setup::{test_constants::{get_global_super_admin_principal_id, get_mock_canister_id_sns}, env::v1::{get_initialized_env_with_provisioned_known_canisters, get_new_state_machine}};
+use test_utils::setup::{
+    env::v1::{get_initialized_env_with_provisioned_known_canisters, get_new_state_machine},
+    test_constants::{get_global_super_admin_principal_id, get_mock_canister_id_sns},
+};
 
 #[test]
-fn reset_individual_canister_can_called_from_governance_canister_and_resetting_would_recharge_the_canister_if_needed_and_will_install_latest_wasm() {
+fn reset_individual_canister_can_called_from_governance_canister_and_resetting_would_recharge_the_canister_if_needed_and_will_install_latest_wasm(
+) {
     let state_machine = get_new_state_machine();
     let known_principal_map = get_initialized_env_with_provisioned_known_canisters(&state_machine);
     let user_index_canister_id = known_principal_map
@@ -17,27 +21,31 @@ fn reset_individual_canister_can_called_from_governance_canister_and_resetting_w
     let alice_canister_id = state_machine.create_canister(Some(*user_index_canister_id));
 
     //cannot be called from global admin canister
-    let res = state_machine
-        .update_call(
-            *user_index_canister_id,
-            get_global_super_admin_principal_id(), 
-            "reset_user_individual_canisters", 
-            candid::encode_one(()).unwrap()
-        );
+    let res = state_machine.update_call(
+        *user_index_canister_id,
+        get_global_super_admin_principal_id(),
+        "reset_user_individual_canisters",
+        candid::encode_one(()).unwrap(),
+    );
 
     assert!(res.is_err());
 
     state_machine
         .update_call(
             *user_index_canister_id,
-            get_mock_canister_id_sns(), 
-             "reset_user_individual_canisters",
-             candid::encode_one(vec![alice_canister_id]).unwrap()
-        ).unwrap();
-
-  
+            get_mock_canister_id_sns(),
+            "reset_user_individual_canisters",
+            candid::encode_one(vec![alice_canister_id]).unwrap(),
+        )
+        .unwrap();
 
     state_machine.advance_time(Duration::from_secs(30));
+    state_machine.tick();
+    state_machine.tick();
+    state_machine.tick();
+    state_machine.tick();
+    state_machine.tick();
+    state_machine.tick();
     state_machine.tick();
 
     let alice_canister_version = state_machine
@@ -45,12 +53,12 @@ fn reset_individual_canister_can_called_from_governance_canister_and_resetting_w
             alice_canister_id,
             Principal::anonymous(),
             "get_version",
-            candid::encode_one(()).unwrap()
+            candid::encode_one(()).unwrap(),
         )
         .map(|reply_payload| {
             let response: String = match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_version failed\n")
+                _ => panic!("\n🛑 get_version failed\n"),
             };
             response
         })
@@ -62,13 +70,13 @@ fn reset_individual_canister_can_called_from_governance_canister_and_resetting_w
         .query_call(
             *user_index_canister_id,
             Principal::anonymous(),
-            "get_list_of_available_canisters", 
-            candid::encode_one(()).unwrap()
+            "get_list_of_available_canisters",
+            candid::encode_one(()).unwrap(),
         )
-        .map(|reply_payload|{
+        .map(|reply_payload| {
             let response: Vec<Principal> = match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_list_of_available_canisters failed\n")
+                _ => panic!("\n🛑 get_list_of_available_canisters failed\n"),
             };
             response
         })
@@ -91,7 +99,6 @@ fn reset_individual_canister_can_called_from_governance_canister_and_resetting_w
             response
         })
         .unwrap();
-
 
     println!(
         "🧪 alice_cycle_balance_after_user_index_upgrade: {}",
