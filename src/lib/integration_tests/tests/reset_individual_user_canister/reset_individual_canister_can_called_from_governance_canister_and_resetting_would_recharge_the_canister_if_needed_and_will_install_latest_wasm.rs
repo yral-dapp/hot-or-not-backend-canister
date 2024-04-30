@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, time::Duration};
 
 use candid::{encode_args, encode_one, Principal};
 use pocket_ic::{PocketIc, WasmResult};
@@ -456,7 +456,8 @@ fn reset_individual_canister_test() {
         })
         .unwrap();
 
-    for i in 0..50 {
+    pic.advance_time(Duration::from_secs(60 * 60));
+    for _ in 0..500 {
         pic.tick();
     }
 
