@@ -1,1 +1,2 @@
+pub mod recycle_canisters_test;
 pub mod reset_individual_canister_can_called_from_governance_canister_and_resetting_would_recharge_the_canister_if_needed_and_will_install_latest_wasm;
