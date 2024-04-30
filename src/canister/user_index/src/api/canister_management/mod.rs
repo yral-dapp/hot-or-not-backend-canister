@@ -1,4 +1,5 @@
 use candid::Principal;
+use futures::StreamExt;
 use ic_cdk::{
     api::{
         call::CallResult,
@@ -12,13 +13,19 @@ use ic_cdk::{
 };
 use ic_cdk_macros::{query, update};
 use shared_utils::{
-    canister_specific::individual_user_template::types::arg::IndividualUserTemplateInitArgs,
+    canister_specific::{
+        individual_user_template::types::arg::IndividualUserTemplateInitArgs,
+        user_index::types::RecycleStatus,
+    },
     common::{
         types::{
             known_principal::KnownPrincipalType,
             wasm::{CanisterWasm, WasmType},
         },
-        utils::task::run_task_concurrently,
+        utils::{
+            permissions::is_reclaim_canister_id, system_time::get_current_system_time,
+            task::run_task_concurrently,
+        },
     },
 };
 
@@ -103,19 +110,25 @@ pub async fn reset_user_individual_canisters(canisters: Vec<Principal>) -> Resul
         })
         .ok_or("Governance Canister Id not found")?;
 
-    if caller_id != governance_canister_id {
-        return Err("This method can only be executed through DAO".to_string());
+    if caller_id != governance_canister_id || is_reclaim_canister_id().is_err() {
+        return Err("This method can only be executed through DAO or reclaim canister".to_string());
     };
 
-    // Remove profile owner from the data
-    CANISTER_DATA.with_borrow_mut(|canister_data| {
-        canister_data.user_principal_id_to_canister_id_map = canister_data
-            .user_principal_id_to_canister_id_map
-            .iter()
-            .filter(|item| !canisters.contains(&item.1))
-            .map(|item| (*item.0, *item.1))
-            .collect();
-    });
+    // TODO: remove this after hotornot to yral migration
+    // return if principal id is `rimrc-piaaa-aaaao-aaljq-cai`
+    // for a secondary measure to prevent accidental recycling of hotornot canisters
+    if ic_cdk::id() == Principal::from_text("rimrc-piaaa-aaaao-aaljq-cai").unwrap() {
+        return Err("This method can not be executed on this subnet".to_string());
+    }
+
+    ic_cdk::spawn(reset_canisters_impl(canisters));
+
+    Ok("Started".to_string())
+}
+
+pub async fn reset_canisters_impl(canister_ids: Vec<Principal>) {
+    let start = get_current_system_time();
+
     let individual_user_template_canister_wasm = CANISTER_DATA.with_borrow(|canister_data| {
         canister_data
             .wasms
@@ -124,27 +137,59 @@ pub async fn reset_user_individual_canisters(canisters: Vec<Principal>) -> Resul
             .clone()
     });
 
-    let canister_reinstall_futures = canisters.iter().map(|canister| async {
-        match reset_canister(*canister, individual_user_template_canister_wasm.clone()).await {
-            Ok(canister_id) => Ok(canister_id),
-            Err(e) => Err(e),
+    let futures = canister_ids.iter().map(|canister_id| {
+        reset_canister(*canister_id, individual_user_template_canister_wasm.clone())
+    });
+
+    let stream = futures::stream::iter(futures).boxed().buffer_unordered(25);
+
+    let results = stream
+        .collect::<Vec<Result<Principal, (Principal, String)>>>()
+        .await;
+
+    // update recycle_status
+
+    let success_canisters = results
+        .iter()
+        .filter_map(|r| r.as_ref().ok().cloned())
+        .collect::<Vec<Principal>>();
+
+    let num_success = success_canisters.len();
+
+    CANISTER_DATA.with_borrow_mut(|canister_data| {
+        canister_data
+            .available_canisters
+            .extend(success_canisters.clone());
+
+        // remove the canisters that are recycled from user_principal_id_to_canister_id_map and unique_user_name_to_user_principal_id_map
+        // canister_id is the value in the map
+        for canister_id in success_canisters.clone() {
+            canister_data
+                .user_principal_id_to_canister_id_map
+                .retain(|_, v| *v != canister_id);
+            canister_data
+                .unique_user_name_to_user_principal_id_map
+                .retain(|_, v| *v != canister_id);
         }
     });
 
-    let result_callback =
-        |reinstall_res: Result<Principal, (Principal, String)>| match reinstall_res {
-            Ok(canister_id) => CANISTER_DATA.with(|canister_data_ref| {
-                canister_data_ref
-                    .borrow_mut()
-                    .available_canisters
-                    .insert(canister_id);
-            }),
-            Err(e) => ic_cdk::println!("Failed to reinstall canister {}", e.1),
+    let failed_list = results
+        .iter()
+        .filter(|r| r.is_err())
+        .map(|r| r.as_ref().unwrap_err().clone())
+        .collect::<Vec<(Principal, String)>>();
+
+    let end = get_current_system_time();
+
+    CANISTER_DATA.with_borrow_mut(|canister_data| {
+        canister_data.recycle_status = RecycleStatus {
+            success_canisters: success_canisters.iter().map(|c| c.to_string()).collect(),
+            last_recycled_at: Some(end),
+            last_recycled_duration: Some(end.duration_since(start).unwrap().as_secs()),
+            num_last_recycled_canisters: num_success as u64,
+            failed_recycling: failed_list,
         };
-
-    run_task_concurrently(canister_reinstall_futures, 10, result_callback, || false).await;
-
-    Ok(format!("Sucess {}", canisters[0].to_string()))
+    });
 }
 
 pub async fn reset_canister(
