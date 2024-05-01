@@ -41,6 +41,7 @@ pub mod get_subnet_available_capacity;
 pub mod get_subnet_backup_capacity;
 pub mod recycle_canisters;
 pub mod start_upgrades_for_individual_canisters;
+pub mod update_canisters_access_time;
 
 #[update]
 pub async fn get_user_canister_status(

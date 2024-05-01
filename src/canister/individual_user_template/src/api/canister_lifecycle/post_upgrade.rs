@@ -1,13 +1,9 @@
-use candid::Principal;
 use ciborium::de;
 use ic_cdk_macros::post_upgrade;
 use ic_stable_structures::Memory;
 use std::borrow::BorrowMut;
 
-use crate::{
-    api::canister_management::update_last_access_time::update_last_canister_functionality_access_time,
-    data_model::memory,
-};
+use crate::data_model::memory;
 
 use shared_utils::canister_specific::individual_user_template::types::arg::IndividualUserTemplateInitArgs;
 
@@ -21,8 +17,6 @@ fn post_upgrade() {
     restore_data_from_stable_memory();
     save_upgrade_args_to_memory();
     reenqueue_timers_for_pending_bet_outcomes();
-    // TODO: to be removed on the next updagrade
-    update_last_canister_functionality_access_time();
 }
 
 fn restore_data_from_stable_memory() {
