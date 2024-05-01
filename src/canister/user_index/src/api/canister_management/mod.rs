@@ -99,24 +99,8 @@ pub fn validate_reset_user_individual_canisters(
     Ok("Success".to_string())
 }
 
-#[update]
+#[update(guard = "is_reclaim_canister_id")]
 pub async fn reset_user_individual_canisters(canisters: Vec<Principal>) -> Result<String, String> {
-    let caller_id = caller();
-    let governance_canister_id = CANISTER_DATA
-        .with(|canister_data_ref| {
-            canister_data_ref
-                .borrow()
-                .configuration
-                .known_principal_ids
-                .get(&KnownPrincipalType::CanisterIdSnsGovernance)
-                .cloned()
-        })
-        .ok_or("Governance Canister Id not found")?;
-
-    if caller_id != governance_canister_id && is_reclaim_canister_id().is_err() {
-        return Err("This method can only be executed through DAO or reclaim canister".to_string());
-    };
-
     // TODO: remove this after hotornot to yral migration
     // return if principal id is `rimrc-piaaa-aaaao-aaljq-cai`
     // for a secondary measure to prevent accidental recycling of hotornot canisters
@@ -220,7 +204,7 @@ pub async fn reset_canister(
         .map_err(|e| (canister_id, e))?;
 
     // reinstall wasm
-    match reinstall_canister_wasm(
+    let _ = match reinstall_canister_wasm(
         canister_id,
         None,
         individual_user_template_canister_wasm.version.clone(),
@@ -228,7 +212,16 @@ pub async fn reset_canister(
     )
     .await
     {
-        Ok(_) => Ok(canister_id),
-        Err(e) => Err((canister_id, e)),
-    }
+        Ok(_) => canister_id,
+        Err(e) => return Err((canister_id, e)),
+    };
+
+    // return extra cycles
+    let (_,): ((),) =
+        match ic_cdk::call(canister_id, "return_cycles_to_user_index_canister", ()).await {
+            Ok(r) => r,
+            Err(e) => return Err((canister_id, e.1)),
+        };
+
+    Ok(canister_id)
 }
