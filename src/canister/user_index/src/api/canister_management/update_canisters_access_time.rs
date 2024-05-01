@@ -1,4 +1,4 @@
-use futures::{stream::FuturesUnordered, StreamExt};
+use futures::StreamExt;
 use ic_cdk::api::call::CallResult;
 use ic_cdk_macros::update;
 
@@ -20,17 +20,16 @@ async fn update_canisters_last_functionality_access_time_impl() {
             .collect::<Vec<_>>()
     });
 
-    let futures: FuturesUnordered<_> = canisters
-        .iter()
-        .map(|canister_id| async {
-            let _: CallResult<()> = ic_cdk::call(
-                *canister_id,
-                "update_last_canister_functionality_access_time",
-                (),
-            )
-            .await;
-        })
-        .collect();
+    let futures = canisters.iter().map(|canister_id| async {
+        let _: CallResult<()> = ic_cdk::call(
+            *canister_id,
+            "update_last_canister_functionality_access_time",
+            (),
+        )
+        .await;
+    });
 
-    let _ = futures.collect::<Vec<()>>().await;
+    let stream = futures::stream::iter(futures).boxed().buffer_unordered(25);
+
+    let _ = stream.collect::<Vec<()>>().await;
 }

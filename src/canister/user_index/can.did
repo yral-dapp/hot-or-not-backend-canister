@@ -141,6 +141,7 @@ service : (UserIndexInitArgs) -> {
   set_permission_to_upgrade_individual_canisters : (bool) -> (text);
   start_upgrades_for_individual_canisters : (text, vec nat8) -> (text);
   toggle_signups_enabled : () -> (Result_2);
+  update_canisters_last_functionality_access_time : () -> (text);
   update_index_with_unique_user_name_corresponding_to_user_principal_id : (
       text,
       principal,

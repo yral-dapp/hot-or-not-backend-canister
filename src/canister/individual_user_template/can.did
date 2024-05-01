@@ -363,6 +363,7 @@ service : (IndividualUserTemplateInitArgs) -> {
   return_cycles_to_user_index_canister : (opt nat) -> ();
   save_snapshot_json : () -> (nat32);
   update_last_access_time : () -> (Result_8);
+  update_last_canister_functionality_access_time : () -> ();
   update_post_add_view_details : (nat64, PostViewDetailsFromFrontend) -> ();
   update_post_as_ready_to_view : (nat64) -> ();
   update_post_increment_share_count : (nat64) -> (nat64);
