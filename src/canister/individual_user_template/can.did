@@ -118,6 +118,11 @@ type KnownPrincipalType = variant {
   CanisterIdSnsGovernance;
   UserIdGlobalSuperAdmin;
 };
+type MigrationInfo = variant {
+  MigratedFromHotOrNot : record { to_yral_principal_id : principal };
+  NotMigrated;
+  MigratedToYral : record { from_hotornot_principal_id : principal };
+};
 type MintEvent = variant {
   NewUserSignup : record { new_user_principal_id : principal };
   Referral : record {
@@ -297,6 +302,18 @@ type UserProfileDetailsForFrontend = record {
   followers_count : nat64;
   referrer_details : opt UserCanisterDetails;
 };
+type UserProfileDetailsForFrontendV2 = record {
+  unique_user_name : opt text;
+  lifetime_earnings : nat64;
+  migration_info : MigrationInfo;
+  following_count : nat64;
+  profile_picture_url : opt text;
+  display_name : opt text;
+  principal_id : principal;
+  profile_stats : UserProfileGlobalStats;
+  followers_count : nat64;
+  referrer_details : opt UserCanisterDetails;
+};
 type UserProfileGlobalStats = record {
   hot_bets_received : nat64;
   not_bets_received : nat64;
@@ -335,6 +352,7 @@ service : (IndividualUserTemplateInitArgs) -> {
       vec record { nat64; FollowEntryDetail },
     ) query;
   get_profile_details : () -> (UserProfileDetailsForFrontend) query;
+  get_profile_details_v2 : () -> (UserProfileDetailsForFrontendV2) query;
   get_rewarded_for_referral : (principal, principal) -> ();
   get_rewarded_for_signing_up : () -> ();
   get_session_type : () -> (Result_6) query;

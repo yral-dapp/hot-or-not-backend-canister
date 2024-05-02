@@ -14,7 +14,7 @@ mod test {
                 AggregateStats, BetDetails, BetDirection, BetOutcomeForBetMaker, BetPayout,
                 GlobalBetId, GlobalRoomId, PlacedBetDetail, RoomBetPossibleOutcomes, RoomDetailsV1,
                 SlotDetailsV1, SlotId, StablePrincipal,
-            }, migration::MigrationStatus, post::{FeedScore, PostViewStatistics}, profile::{UserProfile, UserProfileGlobalStats}, session::SessionType, token::TokenBalance
+            }, migration::MigrationInfo, post::{FeedScore, PostViewStatistics}, profile::{UserProfile, UserProfileGlobalStats}, session::SessionType, token::TokenBalance
         },
         common::types::{
             app_primitive_type::PostId,
@@ -228,7 +228,7 @@ mod test {
             },
             session_type: Some(SessionType::RegisteredSession),
             last_access_time: Some(SystemTime::now()),
-            migration_status: Some(MigrationStatus::NotStarted)
+            migration_info: MigrationInfo::NotMigrated
         };
 
         let serde_str = serde_json::to_string(&canister_data_snapshot);

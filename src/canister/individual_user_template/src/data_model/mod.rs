@@ -12,7 +12,7 @@ use shared_utils::{
             AggregateStats, BetDetails, BetMaker, BetMakerPrincipal, GlobalBetId, GlobalRoomId,
             HotOrNotDetails, PlacedBetDetail, RoomDetailsV1, RoomId, SlotDetailsV1, SlotId,
             StablePrincipal,
-        }, migration::MigrationStatus, post::{FeedScore, Post, PostViewStatistics}, profile::UserProfile, session::SessionType, token::TokenBalance
+        }, migration::{MigrationInfo}, post::{FeedScore, Post, PostViewStatistics}, profile::UserProfile, session::SessionType, token::TokenBalance
     },
     common::types::{
         app_primitive_type::PostId,
@@ -59,8 +59,7 @@ pub struct CanisterData {
     pub session_type: Option<SessionType>,
     #[serde(default)]
     pub last_access_time: Option<SystemTime>,
-    #[serde(default)]
-    pub migration_status: Option<MigrationStatus>,
+    pub migration_info: MigrationInfo,
 }
 
 pub fn _default_room_details(
@@ -104,7 +103,7 @@ impl Default for CanisterData {
             version_details: VersionDetails::default(),
             session_type: None,
             last_access_time: None,
-            migration_status: Some(MigrationStatus::NotStarted)
+            migration_info: MigrationInfo::NotMigrated
         }
     }
 }

@@ -6,15 +6,14 @@ use ic_cdk::{
 };
 use ic_cdk_macros::update;
 use shared_utils::{
-    canister_specific::individual_user_template::types::{migration::MigrationStatus, post::Post},
+    canister_specific::individual_user_template::types::{migration::MigrationInfo, post::Post},
     common::{
         types::utility_token::token_event::TokenEvent,
         utils::system_time::get_current_system_time_from_ic,
     },
+    constant::HOT_OR_NOT_CONTROLLER,
 };
 use std::collections::BTreeMap;
-
-const HOT_OR_NOT_CONTROLLER: &str = "rimrc-piaaa-aaaao-aaljq-cai";
 
 #[update]
 pub async fn transfer_tokens_and_posts(to_account: Principal) -> Result<String, String> {
@@ -22,7 +21,7 @@ pub async fn transfer_tokens_and_posts(to_account: Principal) -> Result<String, 
         CANISTER_DATA.with_borrow(|canister_data| canister_data.profile.principal_id.unwrap());
 
     if profile_owner != caller() {
-        return Err("Unauthorized".to_owned());
+        return Err("Unauthorized caller".to_owned());
     }
 
     // Users on hotornot subnet are allowed to migrate, others are unauthorized
@@ -30,13 +29,13 @@ pub async fn transfer_tokens_and_posts(to_account: Principal) -> Result<String, 
         .await
         .is_err()
     {
-        return Err("Unauthorized".to_owned());
+        return Err("Unauthorized controller".to_owned());
     }
 
     CANISTER_DATA.with_borrow_mut(|canister_data| {
         let result = canister_data
             .session_type
-            .ok_or(String::from("Canister not yet assigned"));
+            .ok_or("Canister not yet assigned".to_owned());
         canister_data.last_access_time = Some(get_current_system_time_from_ic());
         result
     })?;
@@ -62,6 +61,9 @@ pub async fn transfer_tokens_and_posts(to_account: Principal) -> Result<String, 
                     to_account,
                     timestamp: current_time,
                 });
+            canister_data.migration_info = MigrationInfo::MigratedFromHotOrNot {
+                to_yral_principal_id: to_account,
+            };
         }),
         Err(error) => {
             return Err(format!("{:?}: {}", error.0, error.1));
@@ -101,19 +103,11 @@ pub async fn receive_data_from_hotornot(
     from_account: Principal,
     all_created_posts: BTreeMap<u64, Post>,
 ) -> Result<String, String> {
-    if CANISTER_DATA.with_borrow(|canister_data| {
-        canister_data
-            .migration_status
-            .is_some_and(|v| v.eq(&MigrationStatus::MigratedToYral))
-    }) {
-        return Err("Already Migrated".to_owned());
-    };
-
     let profile_owner =
         CANISTER_DATA.with_borrow(|canister_data| canister_data.profile.principal_id.unwrap());
 
     if profile_owner != caller() {
-        return Err("Unauthorized".to_owned());
+        return Err("Unauthorized caller".to_owned());
     }
 
     // Users not on hotornot subnet are allowed to receive, others are unauthorized
@@ -121,16 +115,20 @@ pub async fn receive_data_from_hotornot(
         .await
         .is_err()
     {
-        return Err("Unauthorized".to_owned());
+        return Err("Unauthorized controller".to_owned());
     }
+    if CANISTER_DATA.with_borrow(|canister_data| {
+        matches!(
+            canister_data.migration_info,
+            MigrationInfo::MigratedToYral {
+                from_hotornot_principal_id: _
+            }
+        )
+    }) {
+        return Err("Already Migrated".to_owned());
+    };
 
     let current_time = get_current_system_time_from_ic();
-    let last_post_id = CANISTER_DATA.with_borrow_mut(|canister_data| {
-        match canister_data.all_created_posts.last_key_value() {
-            Some((id, _)) => *id,
-            None => 0,
-        }
-    });
 
     CANISTER_DATA.with_borrow_mut(|canister_data| {
         canister_data
@@ -138,6 +136,10 @@ pub async fn receive_data_from_hotornot(
             .ok_or(String::from("Canister not yet assigned"))
             .map(|_| "".to_owned())?;
 
+        let last_post_id = match canister_data.all_created_posts.last_key_value() {
+            Some((id, _)) => *id,
+            None => 0,
+        };
         canister_data
             .my_token_balance
             .handle_token_event(TokenEvent::Receive {
@@ -152,7 +154,9 @@ pub async fn receive_data_from_hotornot(
                 .insert(last_post_id + id, post);
         }
 
-        canister_data.migration_status = Some(MigrationStatus::MigratedToYral);
+        canister_data.migration_info = MigrationInfo::MigratedToYral {
+            from_hotornot_principal_id: from_account,
+        };
         Ok("Success".to_owned())
     })
 }

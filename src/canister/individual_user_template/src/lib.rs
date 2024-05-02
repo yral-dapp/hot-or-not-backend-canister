@@ -1,5 +1,5 @@
 use std::cell::RefCell;
-use std::time::SystemTime;
+use std::{collections::BTreeMap, time::SystemTime};
 
 use api::{
     follow::update_profiles_that_follow_me_toggle_list_with_specified_profile::FollowerArg,
@@ -23,7 +23,7 @@ use shared_utils::{
             Post, PostDetailsForFrontend, PostDetailsFromFrontend, PostViewDetailsFromFrontend,
         },
         profile::{
-            UserProfile, UserProfileDetailsForFrontend, UserProfileUpdateDetailsFromFrontend, UserCanisterDetails
+            UserProfile, UserProfileDetailsForFrontend, UserProfileDetailsForFrontendV2, UserProfileUpdateDetailsFromFrontend, UserCanisterDetails
         },
     },
     common::types::{
@@ -36,7 +36,6 @@ use shared_utils::{
         GetUserUtilityTokenTransactionHistoryError, UpdateProfileSetUniqueUsernameError,
     },
 };
-use std::collections::BTreeMap;
 
 mod api;
 pub mod data_model;
