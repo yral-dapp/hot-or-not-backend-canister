@@ -7,7 +7,10 @@ use shared_utils::{
     common::utils::system_time::{self},
 };
 
-use crate::{data_model::CanisterData, CANISTER_DATA};
+use crate::{
+    api::canister_management::update_last_access_time::update_last_canister_functionality_access_time,
+    data_model::CanisterData, CANISTER_DATA,
+};
 
 // #[ic_cdk::query]
 // #[candid::candid_method(query)]
@@ -40,6 +43,7 @@ use crate::{data_model::CanisterData, CANISTER_DATA};
 #[query]
 fn get_hot_or_not_bet_details_for_this_post(post_id: u64) -> BettingStatus {
     let request_maker = ic_cdk::caller();
+    update_last_canister_functionality_access_time();
 
     CANISTER_DATA.with(|canister_data_ref_cell| {
         get_hot_or_not_bet_details_for_this_post_impl(

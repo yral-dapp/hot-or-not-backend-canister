@@ -1,31 +1,11 @@
-use candid::Principal;
 use ciborium::de;
 use ic_cdk_macros::post_upgrade;
 use ic_stable_structures::Memory;
-use std::{
-    borrow::BorrowMut,
-    collections::{BTreeMap, HashSet},
-    time::Duration,
-};
+use std::borrow::BorrowMut;
 
-use crate::{
-    api::{
-        hot_or_not_bet::tabulate_hot_or_not_outcome_for_post_slot::inform_participants_of_outcome,
-        snapshot::CanisterDataForSnapshot,
-    },
-    data_model::memory,
-};
+use crate::data_model::memory;
 
-use shared_utils::{
-    canister_specific::individual_user_template::types::{
-        arg::IndividualUserTemplateInitArgs,
-        hot_or_not::{
-            BetDetails, BetDirection, BetMakerPrincipal, GlobalBetId, GlobalRoomId, RoomDetailsV1,
-            SlotDetailsV1, SlotId, StablePrincipal,
-        },
-    },
-    common::types::app_primitive_type::PostId,
-};
+use shared_utils::canister_specific::individual_user_template::types::arg::IndividualUserTemplateInitArgs;
 
 use crate::{
     api::hot_or_not_bet::reenqueue_timers_for_pending_bet_outcomes::reenqueue_timers_for_pending_bet_outcomes,

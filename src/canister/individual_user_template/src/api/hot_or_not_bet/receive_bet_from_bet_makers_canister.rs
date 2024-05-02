@@ -1,5 +1,5 @@
-use std::time::SystemTime;
 use ic_cdk_macros::update;
+use std::time::SystemTime;
 
 use candid::Principal;
 use ic_cdk::api::management_canister::provisional::CanisterId;
@@ -13,8 +13,12 @@ use shared_utils::{
 };
 
 use crate::{
-    api::post::update_scores_and_share_with_post_cache_if_difference_beyond_threshold::update_scores_and_share_with_post_cache_if_difference_beyond_threshold,
-    data_model::CanisterData, CANISTER_DATA,
+    api::{
+        canister_management::update_last_access_time::update_last_canister_functionality_access_time,
+        post::update_scores_and_share_with_post_cache_if_difference_beyond_threshold::update_scores_and_share_with_post_cache_if_difference_beyond_threshold,
+    },
+    data_model::CanisterData,
+    CANISTER_DATA,
 };
 
 #[update]
@@ -23,6 +27,7 @@ fn receive_bet_from_bet_makers_canister(
     bet_maker_principal_id: Principal,
 ) -> Result<BettingStatus, BetOnCurrentlyViewingPostError> {
     let bet_maker_canister_id = ic_cdk::caller();
+    update_last_canister_functionality_access_time();
 
     let status = CANISTER_DATA.with(|canister_data_ref_cell| {
         receive_bet_from_bet_makers_canister_impl(

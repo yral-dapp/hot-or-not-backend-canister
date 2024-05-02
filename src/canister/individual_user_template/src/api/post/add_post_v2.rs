@@ -7,8 +7,12 @@ use shared_utils::{
 };
 
 use crate::{
-    api::hot_or_not_bet::tabulate_hot_or_not_outcome_for_post_slot::tabulate_hot_or_not_outcome_for_post_slot,
-    data_model::CanisterData, CANISTER_DATA,
+    api::{
+        canister_management::update_last_access_time::update_last_canister_functionality_access_time,
+        hot_or_not_bet::tabulate_hot_or_not_outcome_for_post_slot::tabulate_hot_or_not_outcome_for_post_slot,
+    },
+    data_model::CanisterData,
+    CANISTER_DATA,
 };
 
 use super::update_scores_and_share_with_post_cache_if_difference_beyond_threshold::update_scores_and_share_with_post_cache_if_difference_beyond_threshold;
@@ -27,6 +31,8 @@ fn add_post_v2(post_details: PostDetailsFromFrontend) -> Result<u64, String> {
                 .to_string(),
         );
     };
+
+    update_last_canister_functionality_access_time();
 
     let response = CANISTER_DATA.with(|canister_data_ref_cell| {
         add_post_to_memory(

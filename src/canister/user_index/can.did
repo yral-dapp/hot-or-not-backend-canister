@@ -45,6 +45,13 @@ type QueryStats = record {
   num_calls_total : nat;
   request_payload_bytes_total : nat;
 };
+type RecycleStatus = record {
+  last_recycled_duration : opt nat64;
+  last_recycled_at : opt SystemTime;
+  num_last_recycled_canisters : nat64;
+  success_canisters : vec text;
+  failed_recycling : vec record { principal; text };
+};
 type RejectionCode = variant {
   NoError;
   CanisterError;
@@ -100,6 +107,7 @@ service : (UserIndexInitArgs) -> {
   get_index_details_is_user_name_taken : (text) -> (bool) query;
   get_index_details_last_upgrade_status : () -> (UpgradeStatus) query;
   get_list_of_available_canisters : () -> (vec principal) query;
+  get_recycle_status : () -> (RecycleStatus) query;
   get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer : () -> (
       principal,
     );
@@ -112,6 +120,9 @@ service : (UserIndexInitArgs) -> {
   get_user_canister_incl_avail_list : () -> (vec principal) query;
   get_user_canister_list : () -> (vec principal) query;
   get_user_canister_status : (principal) -> (Result_1);
+  get_user_id_and_canister_list : () -> (
+      vec record { principal; principal },
+    ) query;
   get_user_index_canister_count : () -> (nat64) query;
   get_user_index_canister_cycle_balance : () -> (nat) query;
   get_well_known_principal_value : (KnownPrincipalType) -> (
@@ -130,6 +141,7 @@ service : (UserIndexInitArgs) -> {
   set_permission_to_upgrade_individual_canisters : (bool) -> (text);
   start_upgrades_for_individual_canisters : (text, vec nat8) -> (text);
   toggle_signups_enabled : () -> (Result_2);
+  update_canisters_last_functionality_access_time : () -> (text);
   update_index_with_unique_user_name_corresponding_to_user_principal_id : (
       text,
       principal,

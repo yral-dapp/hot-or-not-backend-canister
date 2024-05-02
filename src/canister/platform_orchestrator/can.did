@@ -77,6 +77,7 @@ service : (PlatformOrchestratorInitArgs) -> {
   start_reclaiming_cycles_from_subnet_orchestrator_canister : () -> (text);
   stop_upgrades_for_individual_user_canisters : () -> (Result);
   subnet_orchestrator_maxed_out : () -> ();
+  update_canisters_last_functionality_access_time : () -> (Result);
   update_global_known_principal : (KnownPrincipalType, principal) -> (Result);
   update_profile_owner_for_individual_canisters : () -> ();
   update_subnet_known_principal : (

@@ -11,23 +11,38 @@ use shared_utils::{
     pagination::{self, PaginationError},
 };
 
-use crate::{data_model::CanisterData, CANISTER_DATA};
+use crate::{
+    api::canister_management::update_last_access_time::update_last_canister_functionality_access_time,
+    data_model::CanisterData, CANISTER_DATA,
+};
 
 #[query]
 fn get_posts_of_this_user_profile_with_pagination_cursor(
     from_inclusive_index: u64,
     limit: u64,
 ) -> Result<Vec<PostDetailsForFrontend>, GetPostsOfUserProfileError> {
+    update_last_canister_functionality_access_time();
+
     let api_caller = ic_cdk::caller();
     let current_time = system_time::get_current_system_time_from_ic();
     CANISTER_DATA.with_borrow(|canister_data| {
-        get_posts_of_this_user_profile_with_pagination_cursor_impl(from_inclusive_index, limit, canister_data, api_caller, current_time)
+        get_posts_of_this_user_profile_with_pagination_cursor_impl(
+            from_inclusive_index,
+            limit,
+            canister_data,
+            api_caller,
+            current_time,
+        )
     })
 }
 
-
-fn get_posts_of_this_user_profile_with_pagination_cursor_impl(from_inclusive_index: u64, limit: u64, canister_data: &CanisterData, api_caller: Principal, current_time: SystemTime) -> Result<Vec<PostDetailsForFrontend>, GetPostsOfUserProfileError> {
-
+fn get_posts_of_this_user_profile_with_pagination_cursor_impl(
+    from_inclusive_index: u64,
+    limit: u64,
+    canister_data: &CanisterData,
+    api_caller: Principal,
+    current_time: SystemTime,
+) -> Result<Vec<PostDetailsForFrontend>, GetPostsOfUserProfileError> {
     let (from_inclusive_index, limit) = pagination::get_pagination_bounds_cursor(
         from_inclusive_index,
         limit,
@@ -40,7 +55,6 @@ fn get_posts_of_this_user_profile_with_pagination_cursor_impl(from_inclusive_ind
             GetPostsOfUserProfileError::ExceededMaxNumberOfItemsAllowedInOneRequest
         }
     })?;
-
 
     let res_posts = canister_data
         .all_created_posts
@@ -64,7 +78,7 @@ fn get_posts_of_this_user_profile_with_pagination_cursor_impl(from_inclusive_ind
                     profile_stats: profile.profile_stats,
                     unique_user_name: profile.unique_user_name.clone(),
                     lifetime_earnings: token_balance.lifetime_earnings,
-                    referrer_details: profile.referrer_details.clone()
+                    referrer_details: profile.referrer_details.clone(),
                 },
                 api_caller,
                 &current_time,
@@ -76,38 +90,43 @@ fn get_posts_of_this_user_profile_with_pagination_cursor_impl(from_inclusive_ind
         .collect();
 
     Ok(res_posts)
-  
 }
 
-
 mod test {
-    use std::{collections::{BTreeMap, HashSet}, time::SystemTime};
+    use std::{
+        collections::{BTreeMap, HashSet},
+        time::SystemTime,
+    };
 
-    use shared_utils::{canister_specific::individual_user_template::types::post::{FeedScore, Post, PostViewStatistics}, common::types::top_posts::post_score_index_item::PostStatus};
+    use shared_utils::{
+        canister_specific::individual_user_template::types::post::{
+            FeedScore, Post, PostViewStatistics,
+        },
+        common::types::top_posts::post_score_index_item::PostStatus,
+    };
 
     use super::*;
 
     #[test]
-    fn test_get_posts_of_this_user_profile_with_pagination_cursor_impl(
-    ) {
+    fn test_get_posts_of_this_user_profile_with_pagination_cursor_impl() {
         let mut canister_data = CanisterData::default();
         canister_data.profile.principal_id = Some(Principal::anonymous());
 
         let posts = vec![
             Post {
-            id: 1,
-            description: "test post".into(),
-            hashtags: Vec::new(),
-            video_uid: String::from(""),
-            status: PostStatus::ReadyToView,
-            created_at: SystemTime::now(),
-            likes: HashSet::new(),
-            share_count: 0,
-            view_stats: PostViewStatistics::default(),
-            home_feed_score: FeedScore::default(),
-            creator_consent_for_inclusion_in_hot_or_not: true,
-            hot_or_not_details: None,
-            is_nsfw: false
+                id: 1,
+                description: "test post".into(),
+                hashtags: Vec::new(),
+                video_uid: String::from(""),
+                status: PostStatus::ReadyToView,
+                created_at: SystemTime::now(),
+                likes: HashSet::new(),
+                share_count: 0,
+                view_stats: PostViewStatistics::default(),
+                home_feed_score: FeedScore::default(),
+                creator_consent_for_inclusion_in_hot_or_not: true,
+                hot_or_not_details: None,
+                is_nsfw: false,
             },
             Post {
                 id: 2,
@@ -122,7 +141,7 @@ mod test {
                 home_feed_score: FeedScore::default(),
                 creator_consent_for_inclusion_in_hot_or_not: true,
                 hot_or_not_details: None,
-                is_nsfw: false
+                is_nsfw: false,
             },
             Post {
                 id: 3,
@@ -137,7 +156,7 @@ mod test {
                 home_feed_score: FeedScore::default(),
                 creator_consent_for_inclusion_in_hot_or_not: true,
                 hot_or_not_details: None,
-                is_nsfw: false
+                is_nsfw: false,
             },
             Post {
                 id: 4,
@@ -152,7 +171,7 @@ mod test {
                 home_feed_score: FeedScore::default(),
                 creator_consent_for_inclusion_in_hot_or_not: true,
                 hot_or_not_details: None,
-                is_nsfw: false
+                is_nsfw: false,
             },
             Post {
                 id: 5,
@@ -167,28 +186,26 @@ mod test {
                 home_feed_score: FeedScore::default(),
                 creator_consent_for_inclusion_in_hot_or_not: true,
                 hot_or_not_details: None,
-                is_nsfw: false
+                is_nsfw: false,
             },
         ];
 
-        let all_created_posts: BTreeMap<u64, Post> = posts.into_iter().map(|post| (post.id, post)).collect();
+        let all_created_posts: BTreeMap<u64, Post> =
+            posts.into_iter().map(|post| (post.id, post)).collect();
         let api_caller = Principal::anonymous();
         let current_time = SystemTime::now();
-        
+
         canister_data.all_created_posts = all_created_posts;
 
-
         // Test with NSFW filter
-        let result
-            = super::get_posts_of_this_user_profile_with_pagination_cursor_impl(
-                    0,
-                    3,
-                    &canister_data,
-                    api_caller,
-                    current_time
-                );
+        let result = super::get_posts_of_this_user_profile_with_pagination_cursor_impl(
+            0,
+            3,
+            &canister_data,
+            api_caller,
+            current_time,
+        );
 
-        
         let posts = result.unwrap();
         assert_eq!(posts.len(), 3);
         assert_eq!(posts[0].id, 5);
@@ -196,19 +213,17 @@ mod test {
         assert_eq!(posts[2].id, 3);
 
         // Test with NSFW filter
-        let result
-        = super::get_posts_of_this_user_profile_with_pagination_cursor_impl(
-                4,
-                1,
-                &canister_data,
-                api_caller,
-                current_time
-            );
+        let result = super::get_posts_of_this_user_profile_with_pagination_cursor_impl(
+            4,
+            1,
+            &canister_data,
+            api_caller,
+            current_time,
+        );
 
-    assert!(result.is_ok());
-    let posts = result.unwrap();
-    assert_eq!(posts.len(), 1);
-    assert_eq!(posts[0].id, 1);
-
+        assert!(result.is_ok());
+        let posts = result.unwrap();
+        assert_eq!(posts.len(), 1);
+        assert_eq!(posts[0].id, 1);
     }
 }

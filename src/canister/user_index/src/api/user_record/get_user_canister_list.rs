@@ -17,6 +17,18 @@ fn get_user_canister_list() -> Vec<Principal> {
 }
 
 #[query(guard = "is_reclaim_canister_id")]
+fn get_user_id_and_canister_list() -> Vec<(Principal, Principal)> {
+    CANISTER_DATA.with(|canister_data_ref_cell| {
+        canister_data_ref_cell
+            .borrow()
+            .user_principal_id_to_canister_id_map
+            .iter()
+            .map(|(principal_id, canister_id)| (*principal_id, *canister_id))
+            .collect()
+    })
+}
+
+#[query(guard = "is_reclaim_canister_id")]
 fn get_user_canister_incl_avail_list() -> Vec<Principal> {
     CANISTER_DATA.with(|canister_data_ref_cell| {
         let mut canister_list = canister_data_ref_cell
