@@ -1,4 +1,5 @@
 use candid::Principal;
+use mockall::predicate::*;
 
 use crate::common::types::known_principal::{KnownPrincipalMap, KnownPrincipalType};
 
@@ -105,7 +106,20 @@ pub const GLOBAL_SUPER_ADMIN_USER_ID: &str =
     "7gaq2-4kttl-vtbt4-oo47w-igteo-cpk2k-57h3p-yioqe-wkawi-wz45g-jae";
 pub const RECLAIM_CANISTER_PRINCIPAL_ID: &str =
     "7gaq2-4kttl-vtbt4-oo47w-igteo-cpk2k-57h3p-yioqe-wkawi-wz45g-jae";
-pub const HOT_OR_NOT_CONTROLLER: &str = "rimrc-piaaa-aaaao-aaljq-cai";
+const HOT_OR_NOT_CONTROLLER_ID: &str = "rimrc-piaaa-aaaao-aaljq-cai";
+
+#[mockall::automock]
+pub trait ConstantsWrapper {
+    fn get_hot_or_not_controller_id(&self) -> String;
+}
+
+pub struct Controller;
+
+impl ConstantsWrapper for Controller {
+    fn get_hot_or_not_controller_id(&self) -> String {
+            HOT_OR_NOT_CONTROLLER_ID.to_owned()
+    }
+}
 
 pub fn get_global_super_admin_principal_id_v1(
     well_known_canisters: KnownPrincipalMap,

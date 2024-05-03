@@ -11,7 +11,7 @@ use shared_utils::{
         types::utility_token::token_event::TokenEvent,
         utils::system_time::get_current_system_time_from_ic,
     },
-    constant::HOT_OR_NOT_CONTROLLER,
+    constant::{Controller, ConstantsWrapper},
 };
 use std::collections::BTreeMap;
 
@@ -25,11 +25,10 @@ pub async fn transfer_tokens_and_posts(to_account: Principal) -> Result<String, 
     }
 
     // Users on hotornot subnet are allowed to migrate, others are unauthorized
-    if check_canister_is_in_hotornot_subnet(profile_owner, false)
+    if let Err(error) = check_canister_subnet_type(profile_owner, SubnetType::NotHotOrNot)
         .await
-        .is_err()
     {
-        return Err("Unauthorized controller".to_owned());
+        return Err(format!("Unauthorized controller, not in hotornot subnet: {}", error));
     }
 
     CANISTER_DATA.with_borrow_mut(|canister_data| {
@@ -73,10 +72,17 @@ pub async fn transfer_tokens_and_posts(to_account: Principal) -> Result<String, 
     Ok("Success".into())
 }
 
-async fn check_canister_is_in_hotornot_subnet(
+#[derive(PartialEq, Eq)]
+enum SubnetType {
+    HotOrNot,
+    NotHotOrNot,
+}
+
+async fn check_canister_subnet_type(
     canister_id: Principal,
-    is_into_subnet: bool,
+    subnet_type: SubnetType,
 ) -> Result<bool, String> {
+    let mut list = Vec::<String>::new();
     match canister_info(CanisterInfoRequest {
         canister_id,
         num_requested_changes: None,
@@ -84,14 +90,17 @@ async fn check_canister_is_in_hotornot_subnet(
     .await
     {
         Ok(canister_response) => {
-            let mut matched = false;
+            let mut matched = SubnetType::NotHotOrNot;
+            let controller_id = Controller{}.get_hot_or_not_controller_id();
+            list.push(controller_id.to_owned());
             for controller in canister_response.0.controllers {
-                if controller.to_text().eq(HOT_OR_NOT_CONTROLLER) {
-                    matched = true;
+                list.push(controller.to_text());
+                if controller.to_text().eq(&controller_id) {
+                    matched = SubnetType::HotOrNot;
                     break;
                 }
             }
-            Ok(is_into_subnet == matched)
+            Ok(matched.eq(&subnet_type))
         }
         Err(error) => Err(format!("{:?} : {}", error.0, error.1)),
     }
@@ -111,11 +120,11 @@ pub async fn receive_data_from_hotornot(
     }
 
     // Users not on hotornot subnet are allowed to receive, others are unauthorized
-    if check_canister_is_in_hotornot_subnet(profile_owner, true)
+    if check_canister_subnet_type(profile_owner, SubnetType::HotOrNot)
         .await
         .is_err()
     {
-        return Err("Unauthorized controller".to_owned());
+        return Err("Unauthorized controller, found in hotornot subnet".to_owned());
     }
     if CANISTER_DATA.with_borrow(|canister_data| {
         matches!(
