@@ -20,7 +20,6 @@ use test_utils::setup::{
         get_mock_user_bob_principal_id, v1::CANISTER_INITIAL_CYCLES_FOR_SPAWNING_CANISTERS,
     },
 };
-use mockall::*;
 
 #[test]
 fn error_when_owner_is_not_caller() {
@@ -114,10 +113,9 @@ fn error_when_receiver_profiler_owner_is_not_receiver_caller() {
     );
 }
 
-#[cfg(test)]
 #[test]
 fn migrate_posts_and_tokens_from_hotornot_to_yral_account_successfully() {
-    use shared_utils::constant::{ConstantsWrapper, MockConstantsWrapper};
+    use shared_utils::constant::MockConstantsWrapper;
 
     let pocket_ic = PocketIcBuilder::new()
         .with_nns_subnet()
@@ -317,7 +315,9 @@ fn migrate_posts_and_tokens_from_hotornot_to_yral_account_successfully() {
 
     // update controller id
     let mut mock_controller = MockConstantsWrapper::new();
-    mock_controller.expect_get_hot_or_not_controller_id().return_const(application_subnets[0].to_text());
+    mock_controller
+        .expect_get_hot_or_not_controller_id()
+        .return_const(application_subnets[0].to_text());
 
     //update subnet known principal
     pocket_ic

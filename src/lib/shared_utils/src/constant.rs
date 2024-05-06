@@ -1,4 +1,5 @@
 use candid::Principal;
+#[cfg(test)]
 use mockall::predicate::*;
 
 use crate::common::types::known_principal::{KnownPrincipalMap, KnownPrincipalType};

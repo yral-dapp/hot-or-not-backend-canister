@@ -890,7 +890,6 @@ dependencies = [
  "ic-cdk",
  "ic-ledger-types",
  "ic-test-state-machine-client",
- "mockall",
  "pocket-ic",
  "serde",
  "shared_utils",

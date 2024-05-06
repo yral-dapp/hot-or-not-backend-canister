@@ -8,10 +8,10 @@ use ic_cdk_macros::update;
 use shared_utils::{
     canister_specific::individual_user_template::types::{migration::MigrationInfo, post::Post},
     common::{
-        types::utility_token::token_event::TokenEvent,
+        types::{known_principal::KnownPrincipalType, utility_token::token_event::TokenEvent},
         utils::system_time::get_current_system_time_from_ic,
     },
-    constant::{Controller, ConstantsWrapper},
+    constant::{ConstantsWrapper, Controller},
 };
 use std::collections::BTreeMap;
 
@@ -25,10 +25,11 @@ pub async fn transfer_tokens_and_posts(to_account: Principal) -> Result<String, 
     }
 
     // Users on hotornot subnet are allowed to migrate, others are unauthorized
-    if let Err(error) = check_canister_subnet_type(profile_owner, SubnetType::NotHotOrNot)
-        .await
-    {
-        return Err(format!("Unauthorized controller, not in hotornot subnet: {}", error));
+    if let Err(error) = check_canister_subnet_type(ic_cdk::id(), SubnetType::NotHotOrNot).await {
+        return Err(format!(
+            "Unauthorized controller, not in hotornot subnet: {}",
+            error
+        ));
     }
 
     CANISTER_DATA.with_borrow_mut(|canister_data| {
@@ -45,8 +46,35 @@ pub async fn transfer_tokens_and_posts(to_account: Principal) -> Result<String, 
     let all_created_posts =
         CANISTER_DATA.with_borrow(|canister_data| canister_data.all_created_posts.clone());
 
-    match ic_cdk::call::<(u64, Principal, BTreeMap<u64, Post>), (Result<bool, String>,)>(
+    let user_index_canister_id = CANISTER_DATA.with_borrow(|canister_data| {
+        let canister_id = canister_data
+            .known_principal_ids
+            .get(&KnownPrincipalType::CanisterIdUserIndex)
+            .unwrap();
+        *canister_id
+    });
+
+    let to_account_canister_id = match ic_cdk::call::<Principal, (Option<Principal>, )>(
+        user_index_canister,
+        "get_user_canister_id_from_user_principal_id",
         to_account,
+    )
+    .await
+    {
+        Ok(canister_id) => match canister_id.0 {
+            Some(id) => id,
+            None => return Err("user_index canister id not found".to_owned())
+        },
+        Err(error) => {
+            return Err(format!(
+                "Failed to call get_user_canister_id_from_user_principal_id: {:?}: {}",
+                error.0, error.1
+            ));
+        }
+    };
+
+    match ic_cdk::call::<(u64, Principal, BTreeMap<u64, Post>), (Result<bool, String>,)>(
+        to_account_canister_id,
         "receive_data_from_hotornot",
         (amount, profile_owner, all_created_posts),
     )
@@ -65,7 +93,10 @@ pub async fn transfer_tokens_and_posts(to_account: Principal) -> Result<String, 
             };
         }),
         Err(error) => {
-            return Err(format!("{:?}: {}", error.0, error.1));
+            return Err(format!(
+                "Failed to call receive: {:?}: {}",
+                error.0, error.1
+            ));
         }
     }
 
@@ -91,7 +122,7 @@ async fn check_canister_subnet_type(
     {
         Ok(canister_response) => {
             let mut matched = SubnetType::NotHotOrNot;
-            let controller_id = Controller{}.get_hot_or_not_controller_id();
+            let controller_id = Controller {}.get_hot_or_not_controller_id();
             list.push(controller_id.to_owned());
             for controller in canister_response.0.controllers {
                 list.push(controller.to_text());
@@ -102,7 +133,10 @@ async fn check_canister_subnet_type(
             }
             Ok(matched.eq(&subnet_type))
         }
-        Err(error) => Err(format!("{:?} : {}", error.0, error.1)),
+        Err(error) => Err(format!(
+            "canister_info rejection: {:?} : {}",
+            error.0, error.1
+        )),
     }
 }
 
@@ -120,7 +154,7 @@ pub async fn receive_data_from_hotornot(
     }
 
     // Users not on hotornot subnet are allowed to receive, others are unauthorized
-    if check_canister_subnet_type(profile_owner, SubnetType::HotOrNot)
+    if check_canister_subnet_type(ic_cdk::id(), SubnetType::HotOrNot)
         .await
         .is_err()
     {
