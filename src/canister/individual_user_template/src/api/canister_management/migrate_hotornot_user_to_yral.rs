@@ -49,21 +49,24 @@ pub async fn transfer_tokens_and_posts(to_account: Principal) -> Result<String, 
     let user_index_canister_id = CANISTER_DATA.with_borrow(|canister_data| {
         let canister_id = canister_data
             .known_principal_ids
-            .get(&KnownPrincipalType::CanisterIdUserIndex)
-            .unwrap();
-        *canister_id
+            .get(&KnownPrincipalType::CanisterIdUserIndex);
+        canister_id.copied()
     });
 
-    let to_account_canister_id = match ic_cdk::call::<Principal, (Option<Principal>, )>(
-        user_index_canister,
+    if user_index_canister_id.is_none() {
+        return Err("canister_id not found in user_index".to_owned());
+    }
+
+    let to_account_canister_id = match ic_cdk::call::<(Principal,), (Option<Principal>,)>(
+        user_index_canister_id.unwrap(),
         "get_user_canister_id_from_user_principal_id",
-        to_account,
+        (to_account,),
     )
     .await
     {
         Ok(canister_id) => match canister_id.0 {
             Some(id) => id,
-            None => return Err("user_index canister id not found".to_owned())
+            None => return Err("user_index canister id not found".to_owned()),
         },
         Err(error) => {
             return Err(format!(
