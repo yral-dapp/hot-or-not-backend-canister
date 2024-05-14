@@ -9,6 +9,7 @@ mod global_admin;
 mod known_principal;
 mod populate_known_principal_for_all_subnet;
 pub mod provision_subnet_orchestrator;
+mod recharge_subnet_orchestrator;
 mod reinstall_yral_post_cache_canister;
 pub mod remove_subnet_orchestrator_from_available_list;
 mod stop_upgrades_for_individual_user_canisters;
