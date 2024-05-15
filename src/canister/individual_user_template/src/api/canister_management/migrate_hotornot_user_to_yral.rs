@@ -8,7 +8,7 @@ use ic_cdk_macros::update;
 use shared_utils::{
     canister_specific::individual_user_template::types::{migration::MigrationInfo, post::Post},
     common::{
-        types::{known_principal::KnownPrincipalType, utility_token::token_event::TokenEvent},
+        types::utility_token::token_event::TokenEvent,
         utils::system_time::get_current_system_time_from_ic,
     },
     constant::{ConstantsWrapper, Controller},
@@ -16,7 +16,10 @@ use shared_utils::{
 use std::collections::BTreeMap;
 
 #[update]
-pub async fn transfer_tokens_and_posts(to_account: Principal) -> Result<String, String> {
+pub async fn transfer_tokens_and_posts(
+    to_account: Principal,
+    to_account_canister_id: Principal,
+) -> Result<String, String> {
     let profile_owner =
         CANISTER_DATA.with_borrow(|canister_data| canister_data.profile.principal_id.unwrap());
 
@@ -45,36 +48,6 @@ pub async fn transfer_tokens_and_posts(to_account: Principal) -> Result<String, 
         .with_borrow(|canister_data| canister_data.my_token_balance.utility_token_balance);
     let all_created_posts =
         CANISTER_DATA.with_borrow(|canister_data| canister_data.all_created_posts.clone());
-
-    let user_index_canister_id = CANISTER_DATA.with_borrow(|canister_data| {
-        let canister_id = canister_data
-            .known_principal_ids
-            .get(&KnownPrincipalType::CanisterIdUserIndex);
-        canister_id.copied()
-    });
-
-    if user_index_canister_id.is_none() {
-        return Err("canister_id not found in user_index".to_owned());
-    }
-
-    let to_account_canister_id = match ic_cdk::call::<(Principal,), (Option<Principal>,)>(
-        user_index_canister_id.unwrap(),
-        "get_user_canister_id_from_user_principal_id",
-        (to_account,),
-    )
-    .await
-    {
-        Ok(canister_id) => match canister_id.0 {
-            Some(id) => id,
-            None => return Err("user_index canister id not found".to_owned()),
-        },
-        Err(error) => {
-            return Err(format!(
-                "Failed to call get_user_canister_id_from_user_principal_id: {:?}: {}",
-                error.0, error.1
-            ));
-        }
-    };
 
     match ic_cdk::call::<(u64, Principal, BTreeMap<u64, Post>), (Result<bool, String>,)>(
         to_account_canister_id,

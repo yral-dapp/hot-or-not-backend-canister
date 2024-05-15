@@ -1,5 +1,3 @@
-use std::collections::{BTreeMap, HashMap, HashSet};
-
 use candid::{CandidType, Principal};
 use ic_cdk::api::management_canister::provisional::CanisterSettings;
 use ic_ledger_types::{AccountIdentifier, BlockIndex, Tokens, DEFAULT_SUBACCOUNT};
@@ -13,6 +11,7 @@ use shared_utils::{
     common::types::{known_principal::KnownPrincipalType, wasm::WasmType},
     constant::{NNS_CYCLE_MINTING_CANISTER, NNS_LEDGER_CANISTER_ID},
 };
+use std::collections::{BTreeMap, HashMap, HashSet};
 use test_utils::setup::{
     env::v1::{get_initialized_env_with_provisioned_known_canisters, get_new_state_machine},
     test_constants::{
@@ -303,7 +302,7 @@ fn migrate_posts_and_tokens_from_hotornot_to_yral_account_successfully() {
     .unwrap();
 
     let bob_principal_id = get_mock_user_bob_principal_id();
-    let _bob_canister_id: Principal = pocket_ic.update_call(second_subnet_orchestrator_canister_id, bob_principal_id, "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer", candid::encode_one(()).unwrap())
+    let bob_canister_id: Principal = pocket_ic.update_call(second_subnet_orchestrator_canister_id, bob_principal_id, "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer", candid::encode_one(()).unwrap())
     .map(|res| {
         let canister_id: Principal = match res {
             PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
@@ -348,7 +347,7 @@ fn migrate_posts_and_tokens_from_hotornot_to_yral_account_successfully() {
             alice_canister_id,
             alice_principal_id,
             "transfer_tokens_and_posts",
-            candid::encode_one(bob_principal_id).unwrap(),
+            candid::encode_args((bob_principal_id, bob_canister_id)).unwrap(),
         )
         .map(|reply_payload| {
             let success: Result<String, String> = match reply_payload {
