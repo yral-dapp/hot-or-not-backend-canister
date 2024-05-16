@@ -31,7 +31,8 @@ pub enum PlatformOrchestratorGenericResultType {
 
 
 #[update(guard = "is_caller_governance_canister")]
-pub fn validate_platform_orchestrator_generic_function(arg: PlatformOrchestratorGenericArgumentType) {
+pub fn validate_platform_orchestrator_generic_function(_arg: PlatformOrchestratorGenericArgumentType) -> Result <String, String> {
+    Ok("Success".into())
 }
 
 

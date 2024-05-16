@@ -345,6 +345,9 @@ service : (IndividualUserTemplateInitArgs) -> {
   get_posts_of_this_user_profile_with_pagination : (nat64, nat64) -> (
       Result_5,
     ) query;
+  get_posts_of_this_user_profile_with_pagination_cursor : (nat64, nat64) -> (
+      Result_5,
+    ) query;
   get_principals_that_follow_this_profile_paginated : (opt nat64) -> (
       vec record { nat64; FollowEntryDetail },
     ) query;
