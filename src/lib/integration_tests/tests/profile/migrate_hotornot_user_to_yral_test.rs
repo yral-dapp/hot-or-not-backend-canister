@@ -358,11 +358,11 @@ fn migrate_posts_and_tokens_from_hotornot_to_yral_account_successfully() {
         })
         .unwrap();
 
-    assert_eq!(success, Err("Success".to_owned()));
+    assert_eq!(success, Ok("Success".to_owned()));
 }
 
 // #[test]
-fn error_when_receiver_is_already_migrated() {}
+// fn error_when_receiver_is_already_migrated() {}
 
 pub type CanisterId = Principal;
 
