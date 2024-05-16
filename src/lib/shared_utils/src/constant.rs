@@ -46,57 +46,54 @@ pub const MAX_NUMBER_OF_DAYS_TO_KEEP_CANISTER_RUNNING: u128 = 3;
 pub fn get_backup_individual_user_canister_batch_size() -> u64 {
     match option_env!("DFX_NETWORK") {
         Some(val) => {
-             if val == "local" {
+            if val == "local" {
                 TEST_BACKUP_INDIVIDUAL_USER_CANISTER_BATCH_SIZE
             } else {
                 BACKUP_INDIVIDUAL_USER_CANISTER_BATCH_SIZE
             }
-        },
-        None =>  BACKUP_INDIVIDUAL_USER_CANISTER_BATCH_SIZE
+        }
+        None => BACKUP_INDIVIDUAL_USER_CANISTER_BATCH_SIZE,
     }
 }
 
 pub fn get_backup_individual_user_canister_threshold() -> u64 {
     match option_env!("DFX_NETWORK") {
         Some(val) => {
-             if val == "local" {
+            if val == "local" {
                 TEST_BACKUP_INDIVIDUAL_USER_CANISTER_THRESHOLD
             } else {
                 BACKUP_INDIVIDUAL_USER_CANISTER_THRESHOLD
             }
-        },
-        None =>  BACKUP_INDIVIDUAL_USER_CANISTER_THRESHOLD
+        }
+        None => BACKUP_INDIVIDUAL_USER_CANISTER_THRESHOLD,
     }
 }
 
 pub fn get_individual_user_canister_subnet_threshold() -> u64 {
     match option_env!("DFX_NETWORK") {
         Some(val) => {
-             if val == "local" {
+            if val == "local" {
                 TEST_INDIVIDUAL_USER_CANISTER_SUBNET_THRESHOLD
             } else {
                 INDIVIDUAL_USER_CANISTER_SUBNET_THRESHOLD
             }
-        },
-        None =>  INDIVIDUAL_USER_CANISTER_SUBNET_THRESHOLD
+        }
+        None => INDIVIDUAL_USER_CANISTER_SUBNET_THRESHOLD,
     }
 }
-
 
 pub fn get_individual_user_canister_subnet_batch_size() -> u64 {
     match option_env!("DFX_NETWORK") {
         Some(val) => {
-             if val == "local" {
+            if val == "local" {
                 TEST_INDIVIDUAL_USER_CANISTER_SUBNET_BATCH_SIZE
             } else {
                 INDIVIDUAL_USER_CANISTER_SUBNET_BATCH_SIZE
             }
-        },
-        None =>  INDIVIDUAL_USER_CANISTER_SUBNET_BATCH_SIZE
+        }
+        None => INDIVIDUAL_USER_CANISTER_SUBNET_BATCH_SIZE,
     }
 }
-
-
 
 // * Important Principal IDs
 pub const YRAL_POST_CACHE_CANISTER_ID: &str = "zyajx-3yaaa-aaaag-acoga-cai";

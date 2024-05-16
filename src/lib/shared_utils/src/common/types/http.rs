@@ -1,3 +1,5 @@
+use std::default;
+
 use candid::CandidType;
 use serde::Deserialize;
 

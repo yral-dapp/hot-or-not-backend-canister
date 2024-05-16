@@ -14,8 +14,8 @@ candid = { workspace = true }
 ic-cdk = { workspace = true }
 serde = { workspace = true }
 ic-cdk-macros = { workspace = true }
-ic-stable-structures = {workspace = true}
-ciborium = {workspace = true}
+ic-stable-structures = { workspace = true }
+ciborium = { workspace = true }
 shared_utils = { workspace = true }
 
 [dev-dependencies]
