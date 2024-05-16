@@ -48,7 +48,7 @@ fn error_when_owner_is_not_caller() {
             alice_canister_id,
             anonymous_principal_id,
             "transfer_tokens_and_posts",
-            candid::encode_one(alice_principal_id).unwrap(),
+            candid::encode_args((alice_principal_id, alice_canister_id)).unwrap(),
         )
         .map(|reply_payload| {
             let error_owner_is_not_caller: Result<String, String> = match reply_payload {
