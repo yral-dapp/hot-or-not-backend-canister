@@ -1,9 +1,11 @@
 #!/usr/bin/ic-repl -o
+identity actions "../actions_identity.pem";
+
 import platform_orchestrator_canister = "74zq4-iqaaa-aaaam-ab53a-cai";
 import governance_canister="6wcax-haaaa-aaaaq-aaava-cai";
 
 function generate_payload() {
-    let canister_type = variant {IndividualUserWasm};
+    let canister_type = variant {Nothing};
 
     if eq("${CANISTER_NAME}", "post_cache") {
         let canister_type = variant {PostCacheWasm};
@@ -17,13 +19,12 @@ function generate_payload() {
     if eq("${CANISTER_NAME}", "individual_user_template") {
         let canister_type = variant {IndividualUserWasm};
     } else {
-        
     };
 
     encode platform_orchestrator_canister.platform_orchestrator_generic_function(
-            variant {
+              variant {
                 UpgradeSubnetCanisters = record {
-                    version = "v1.0.0"; 
+                    version = "${VERSION}"; 
                     canister = canister_type; 
                     wasm_blob = file("../.dfx/ic/canisters/${CANISTER_NAME}/${CANISTER_NAME}.wasm.gz");
                 }
@@ -33,14 +34,15 @@ function generate_payload() {
 };
 
 
-let summary = "${SUMMARY}";
-let res = encode governance_canister.manage_neuron(
+encode governance_canister.manage_neuron(
     record {
-        subaccount = ("a990d55e65186d5b4f38912c9a10748bf2e6626fb582a2b1d6442e087db56b10": blob);
+        subaccount = blob "\4d\e6\73\e9\cd\7a\13\39\af\ea\65\23\a5\f2\27\d2\5e\9d\73\9f\f5\26\35\ac\86\db\db\04\47\ae\10\6a";
         command = opt variant {MakeProposal = record {
-            title = "upgrade canister";
-            url = "yral.com";
-            summary = summary;
+            title = "Upgrade Canister ${CANISTER_NAME}";
+            url = "https://yral.com";
+            summary = "# Upgrade ${CANISTER_NAME}
+                ${CHANGE_SUMMARY}
+            ";
             action = opt variant {ExecuteGenericNervousSystemFunction = record {
                 function_id = 4002;
                 payload = generate_payload();
