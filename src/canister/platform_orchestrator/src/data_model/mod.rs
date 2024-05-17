@@ -1,16 +1,26 @@
-use std::{borrow::Cow, collections::HashSet, time::{SystemTime, UNIX_EPOCH}};
-use ic_stable_structures::{StableBTreeMap, StableLog, Storable, storable::Bound};
 use ciborium::de;
-
+use ic_stable_structures::{storable::Bound, StableBTreeMap, StableLog, Storable};
+use std::{
+    borrow::Cow,
+    collections::HashSet,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 use candid::{CandidType, Principal};
-use serde::{Serialize, Deserialize};
-use shared_utils::{canister_specific::platform_orchestrator::types::well_known_principal::PlatformOrchestratorKnownPrincipal, common::types::wasm::{CanisterWasm, WasmType}};
+use serde::{Deserialize, Serialize};
+use shared_utils::{
+    canister_specific::platform_orchestrator::types::{
+        args::UpgradeCanisterArg, well_known_principal::PlatformOrchestratorKnownPrincipal,
+    },
+    common::types::wasm::{CanisterWasm, WasmType},
+};
 
-use self::memory::{get_canister_upgrade_log_index_memory, get_canister_upgrade_log_memory, get_subnet_orchestrator_wasm_memory, Memory};
+use self::memory::{
+    get_canister_upgrade_log_index_memory, get_canister_upgrade_log_memory,
+    get_subnet_orchestrator_wasm_memory, Memory,
+};
 
 pub mod memory;
-
 
 #[derive(Serialize, Deserialize)]
 pub struct CanisterData {
@@ -29,30 +39,33 @@ pub struct CanisterData {
     pub known_principals: PlatformOrchestratorKnownPrincipal,
 }
 
-fn _default_wasms() -> StableBTreeMap<WasmType, CanisterWasm, Memory> { 
+fn _default_wasms() -> StableBTreeMap<WasmType, CanisterWasm, Memory> {
     StableBTreeMap::init(get_subnet_orchestrator_wasm_memory())
 }
 
-
 fn _default_canister_upgrade_log() -> StableLog<CanisterUpgradeStatus, Memory, Memory> {
-    StableLog::init(get_canister_upgrade_log_index_memory(), get_canister_upgrade_log_memory()).unwrap()
+    StableLog::init(
+        get_canister_upgrade_log_index_memory(),
+        get_canister_upgrade_log_memory(),
+    )
+    .unwrap()
 }
 
 impl Default for CanisterData {
     fn default() -> Self {
-        Self { 
-            all_subnet_orchestrator_canisters_list: Default::default(), 
-            all_post_cache_orchestrator_list: Default::default(),  
-            subet_orchestrator_with_capacity_left: Default::default(), 
-            version_detail: Default::default(), wasms: _default_wasms(), 
-            subnet_canister_upgrade_log: _default_canister_upgrade_log(), 
+        Self {
+            all_subnet_orchestrator_canisters_list: Default::default(),
+            all_post_cache_orchestrator_list: Default::default(),
+            subet_orchestrator_with_capacity_left: Default::default(),
+            version_detail: Default::default(),
+            wasms: _default_wasms(),
+            subnet_canister_upgrade_log: _default_canister_upgrade_log(),
             last_subnet_canister_upgrade_status: Default::default(),
             known_principals: Default::default(),
             platform_global_admins: Default::default(),
         }
     }
 }
-
 
 #[derive(Serialize, Deserialize, CandidType, Clone)]
 pub struct VersionDetails {
@@ -62,11 +75,12 @@ pub struct VersionDetails {
 
 impl Default for VersionDetails {
     fn default() -> Self {
-        Self { version: Default::default(), last_update_on: UNIX_EPOCH }
+        Self {
+            version: Default::default(),
+            last_update_on: UNIX_EPOCH,
+        }
     }
 }
-
-
 
 // To store the upgrade arguments and the failed canisters list.
 
@@ -74,7 +88,7 @@ impl Default for VersionDetails {
 pub struct CanisterUpgradeStatus {
     pub upgrade_arg: UpgradeCanisterArg,
     pub count: u64,
-    pub failures: Vec<(Principal, String)>
+    pub failures: Vec<(Principal, String)>,
 }
 
 impl Storable for CanisterUpgradeStatus {
@@ -94,21 +108,14 @@ impl Storable for CanisterUpgradeStatus {
 
 impl Default for CanisterUpgradeStatus {
     fn default() -> Self {
-        Self { 
+        Self {
             upgrade_arg: UpgradeCanisterArg {
-                canister: WasmType::IndividualUserWasm, 
-                version: String::from(""), wasm_blob: vec![]
-            }, 
-            count: Default::default(), 
-            failures: Default::default() 
+                canister: WasmType::IndividualUserWasm,
+                version: String::from(""),
+                wasm_blob: vec![],
+            },
+            count: Default::default(),
+            failures: Default::default(),
         }
     }
-}
-
-
-#[derive(CandidType, Deserialize, Serialize , Clone)]
-pub struct UpgradeCanisterArg {
-    pub canister: WasmType,
-    pub version: String,
-    pub wasm_blob: Vec<u8>
 }
