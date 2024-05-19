@@ -19,6 +19,7 @@ use shared_utils::{
 mod api;
 mod data_model;
 mod guard;
+mod utils;
 
 thread_local! {
     pub static CANISTER_DATA: RefCell<CanisterData> = RefCell::default();
