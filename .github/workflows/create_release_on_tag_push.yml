@@ -112,103 +112,26 @@ jobs:
           ./quill send proposals/${CANISTER_NAME}/upgrade.json --yes
       - name: Upgrade post_cache using platform_orchestrator
         run: |
-          CANISTER_NAME=post_cache
-          mkdir -p "proposals/${CANISTER_NAME}"
-          touch "proposals/${CANISTER_NAME}/upgrade.json"
-          WASM=".dfx/ic/canisters/${CANISTER_NAME}/${CANISTER_NAME}.wasm.gz"
-          CHAR=$(hexdump -ve '1/1 "%.2x"' "$WASM")
-          CHAR_ESCAPED=$(printf "%s" "$CHAR" | sed 's/../\\&/g')
-          touch argument
-          printf "(record {canister = variant {PostCacheWasm}; version = \"${{ github.ref_name }}\"; wasm_blob = blob \"%s\"})"  "$CHAR_ESCAPED" > argument
-          PAYLOAD=$(nix-shell --run 'didc encode --defs ".dfx/ic/canisters/platform_orchestrator/service.did" --method platform_orchestrator_generic_function "(variant {UpgradeSubnetCanisters = $(cat argument)})" --format blob')
-          ./quill sns \
-          --canister-ids-file ./sns/sns_canister_ids.json \
-          --pem-file actions_identity.pem \
-          make-proposal \
-          --proposal "(
-              record {
-                  title=\"Upgrade ${CANISTER_NAME}\";
-                  url=\"https://yral.com\";
-                  summary=\"# Upgrade ${CANISTER_NAME}
-                  ${{ steps.changelog.outputs.changes}}
-                  \";
-                  action=opt variant {
-                      ExecuteGenericNervousSystemFunction = record {
-                          function_id = 4002: nat64;
-                          payload = $PAYLOAD;
-                      }
-                  }
-              
-              }
-          )" $NEURON_ID > "proposals/${CANISTER_NAME}/upgrade.json"
-          ./quill send proposals/${CANISTER_NAME}/upgrade.json --yes
-          rm argument
-      - name: Upgrade user_index using platform_orchestrator
+          ./ic-repl-linux64 ic-repl-upgrades-proposal/upgrade_ic_repl.sh -r ic
+        env:
+          CANISTER_NAME: post_cache
+          CHANGE_SUMMARY: ${{ steps.changelog.outputs.changes}}
+          VERSION: ${{ github.ref_name }}
+      - name: Upgrade subnet_orchestrator using platform_orchestrator
         run: |
-            CANISTER_NAME=user_index
-            mkdir -p "proposals/${CANISTER_NAME}"
-            touch "proposals/${CANISTER_NAME}/upgrade.json"
-            WASM=".dfx/ic/canisters/${CANISTER_NAME}/${CANISTER_NAME}.wasm.gz"
-            CHAR=$(hexdump -ve '1/1 "%.2x"' "$WASM")
-            CHAR_ESCAPED=$(printf "%s" "$CHAR" | sed 's/../\\&/g')
-            touch argument
-            printf "(record {canister = variant {SubnetOrchestratorWasm}; version = \"${{ github.ref_name }}\"; wasm_blob = blob \"%s\"})"  "$CHAR_ESCAPED" > argument
-            PAYLOAD=$(nix-shell --run 'didc encode --defs ".dfx/ic/canisters/platform_orchestrator/service.did" --method platform_orchestrator_generic_function "(variant {UpgradeSubnetCanisters = $(cat argument)})" --format blob')
-            ./quill sns \
-            --canister-ids-file ./sns/sns_canister_ids.json \
-            --pem-file actions_identity.pem \
-            make-proposal \
-            --proposal "(
-                record {
-                    title=\"Upgrade ${CANISTER_NAME}\";
-                    url=\"https://yral.com\";
-                    summary=\"# Upgrade ${CANISTER_NAME}
-                    ${{ steps.changelog.outputs.changes}}
-                    \";
-                    action=opt variant {
-                        ExecuteGenericNervousSystemFunction = record {
-                            function_id = 4002: nat64;
-                            payload = $PAYLOAD;
-                        }
-                    }
-                
-                }
-            )" $NEURON_ID > "proposals/${CANISTER_NAME}/upgrade.json"
-            ./quill send proposals/${CANISTER_NAME}/upgrade.json --yes
-            rm argument
+          ./ic-repl-linux64 ic-repl-upgrades-proposal/upgrade_ic_repl.sh -r ic
+        env:
+          CANISTER_NAME: user_index
+          CHANGE_SUMMARY: ${{ steps.changelog.outputs.changes}}
+          VERSION: ${{ github.ref_name }} 
       - name: Upgrade individual_user_template using platform_orchestrator
         run: |
-            CANISTER_NAME=individual_user_template
-            mkdir -p "proposals/${CANISTER_NAME}"
-            touch "proposals/${CANISTER_NAME}/upgrade.json"
-            WASM=".dfx/ic/canisters/${CANISTER_NAME}/${CANISTER_NAME}.wasm.gz"
-            CHAR=$(hexdump -ve '1/1 "%.2x"' "$WASM")
-            CHAR_ESCAPED=$(printf "%s" "$CHAR" | sed 's/../\\&/g')
-            touch argument
-            printf "(record {canister = variant {IndividualUserWasm}; version = \"${{ github.ref_name }}\"; wasm_blob = blob \"%s\"})"  "$CHAR_ESCAPED" > argument
-            PAYLOAD=$(nix-shell --run 'didc encode --defs ".dfx/ic/canisters/platform_orchestrator/service.did" --method platform_orchestrator_generic_function "(variant {UpgradeSubnetCanisters = $(cat argument)})" --format blob')
-            ./quill sns \
-            --canister-ids-file ./sns/sns_canister_ids.json \
-            --pem-file actions_identity.pem \
-            make-proposal \
-            --proposal "(
-                record {
-                    title=\"Upgrade ${CANISTER_NAME}\";
-                    url=\"https://yral.com\";
-                    summary=\"# Upgrade ${CANISTER_NAME}
-                    ${{ steps.changelog.outputs.changes}}
-                    \";
-                    action=opt variant {
-                        ExecuteGenericNervousSystemFunction = record {
-                            function_id = 4002: nat64;
-                            payload = $PAYLOAD;
-                        }
-                    }
-                
-                }
-            )" $NEURON_ID > "proposals/${CANISTER_NAME}/upgrade.json"
-            ./quill send proposals/${CANISTER_NAME}/upgrade.json --yes
-            rm argument
+          ./ic-repl-linux64 ic-repl-upgrades-proposal/upgrade_ic_repl.sh -r ic
+        env:
+          CANISTER_NAME: individual_user_template
+          CHANGE_SUMMARY: ${{ steps.changelog.outputs.changes}}
+          VERSION: ${{ github.ref_name }} 
+      
           
       - name: Remove messages
         run: rm -r proposals
