@@ -1,20 +1,29 @@
 use candid::{CandidType, Principal};
-use ic_cdk::api::{
-    self,
-    call::RejectionCode,
-    management_canister::{
-        main::{
-            self, canister_info, canister_status, start_canister, stop_canister,
-            CanisterInfoRequest, CanisterInstallMode, CreateCanisterArgument, InstallCodeArgument,
-            WasmModule,
+use ic_cdk::{
+    api::{
+        self,
+        call::RejectionCode,
+        canister_balance128,
+        management_canister::{
+            main::{
+                self, canister_info, canister_status, start_canister, stop_canister,
+                CanisterInfoRequest, CanisterInstallMode, CreateCanisterArgument,
+                InstallCodeArgument, WasmModule,
+            },
+            provisional::{CanisterIdRecord, CanisterSettings},
         },
-        provisional::{CanisterIdRecord, CanisterSettings},
     },
+    call,
 };
 use serde::{Deserialize, Serialize};
 use shared_utils::{
-    canister_specific::individual_user_template::types::arg::IndividualUserTemplateInitArgs,
-    constant::INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT,
+    canister_specific::{
+        individual_user_template::types::arg::IndividualUserTemplateInitArgs, platform_orchestrator,
+    },
+    common::types::known_principal::KnownPrincipalType,
+    constant::{
+        INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT, SUBNET_ORCHESTRATOR_CANISTER_CYCLES_THRESHOLD,
+    },
     cycles::calculate_recharge_and_threshold_cycles_for_canister,
 };
 
@@ -199,6 +208,7 @@ pub async fn recharge_canister_if_below_threshold(canister_id: &Principal) -> Re
             if individual_canister_current_balance < threshold_balance {
                 let mut recharge_amount = recharge_amount - individual_canister_current_balance;
                 recharge_amount = u128::min(1_000_000_000_000, recharge_amount);
+                check_and_request_cycles_from_platform_orchestrator().await?;
                 recharge_canister(canister_id, recharge_amount).await?;
             }
 
@@ -209,6 +219,35 @@ pub async fn recharge_canister_if_below_threshold(canister_id: &Principal) -> Re
             Ok(())
         }
     }
+}
+
+pub async fn check_and_request_cycles_from_platform_orchestrator() -> Result<(), String> {
+    let current_cycle_balance = canister_balance128();
+
+    if current_cycle_balance < SUBNET_ORCHESTRATOR_CANISTER_CYCLES_THRESHOLD {
+        let platform_orchestrator = CANISTER_DATA.with_borrow(|canister_data| {
+            canister_data
+                .configuration
+                .known_principal_ids
+                .get(&KnownPrincipalType::CanisterIdPlatformOrchestrator)
+                .cloned()
+        });
+
+        let platform_orchestrator_canister_id = platform_orchestrator
+            .ok_or(String::from("Platform orchestrator canister id not found"))?;
+
+        let (res,): (Result<(), String>,) = call(
+            platform_orchestrator_canister_id,
+            "recharge_subnet_orchestrator",
+            (),
+        )
+        .await
+        .map_err(|err| err.1)?;
+
+        return res;
+    }
+
+    Ok(())
 }
 
 pub async fn recharge_canister(
