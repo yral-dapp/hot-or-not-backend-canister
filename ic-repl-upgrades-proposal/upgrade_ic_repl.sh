@@ -34,7 +34,7 @@ function generate_payload() {
 };
 
 
-encode governance_canister.manage_neuron(
+call governance_canister.manage_neuron(
     record {
         subaccount = blob "\4d\e6\73\e9\cd\7a\13\39\af\ea\65\23\a5\f2\27\d2\5e\9d\73\9f\f5\26\35\ac\86\db\db\04\47\ae\10\6a";
         command = opt variant {MakeProposal = record {
