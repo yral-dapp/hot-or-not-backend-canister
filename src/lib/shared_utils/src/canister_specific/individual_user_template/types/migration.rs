@@ -6,9 +6,9 @@ pub enum MigrationInfo {
     #[default]
     NotMigrated,
     MigratedFromHotOrNot {
-        to_yral_principal_id: Principal,
+        account_principal: Principal,
     },
     MigratedToYral {
-        from_hotornot_principal_id: Principal,
+        account_principal: Principal,
     },
 }

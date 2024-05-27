@@ -11,7 +11,6 @@ use ic_cdk::api::management_canister::provisional::CanisterId;
 use ic_cdk_macros::export_candid;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
-        session::SessionType,
         arg::{FolloweeArg, IndividualUserTemplateInitArgs, PlaceBetArg},
         error::{
             BetOnCurrentlyViewingPostError, FollowAnotherUserProfileError,
@@ -23,8 +22,10 @@ use shared_utils::{
             Post, PostDetailsForFrontend, PostDetailsFromFrontend, PostViewDetailsFromFrontend,
         },
         profile::{
-            UserProfile, UserProfileDetailsForFrontend, UserProfileDetailsForFrontendV2, UserProfileUpdateDetailsFromFrontend, UserCanisterDetails
+            UserCanisterDetails, UserProfile, UserProfileDetailsForFrontend,
+            UserProfileDetailsForFrontendV2, UserProfileUpdateDetailsFromFrontend,
         },
+        session::SessionType,
     },
     common::types::{
         app_primitive_type::PostId,
@@ -36,6 +37,7 @@ use shared_utils::{
         GetUserUtilityTokenTransactionHistoryError, UpdateProfileSetUniqueUsernameError,
     },
 };
+use util::migration::MigrationErrors;
 
 mod api;
 pub mod data_model;
