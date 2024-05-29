@@ -25,52 +25,8 @@ use test_utils::setup::{
 };
 
 #[test]
-fn error_when_owner_is_not_caller() {
-    let state_machine = get_new_state_machine();
-    let known_principal_map = get_initialized_env_with_provisioned_known_canisters(&state_machine);
-    let user_index_canister_id = known_principal_map
-        .get(&KnownPrincipalType::CanisterIdUserIndex)
-        .unwrap();
-    let anonymous_principal_id = Principal::anonymous();
-    let alice_hot_or_not_principal_id = get_mock_user_alice_principal_id();
-
-    let alice_canister_id = state_machine.update_call(
-        *user_index_canister_id,
-        alice_hot_or_not_principal_id,
-        "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer",
-        candid::encode_one(()).unwrap(),
-    ).map(|reply_payload| {
-        let alice_canister_id: Principal = match reply_payload {
-            StateMachineWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-            _ => panic!("\n🛑 get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer failed\n"),
-        };
-        alice_canister_id
-    }).unwrap();
-
-    let error_owner_is_not_caller = state_machine
-        .update_call(
-            alice_canister_id,
-            anonymous_principal_id,
-            "transfer_tokens_and_posts",
-            candid::encode_args((alice_hot_or_not_principal_id, alice_canister_id)).unwrap(),
-        )
-        .map(|reply_payload| {
-            let error_owner_is_not_caller: Result<(), MigrationErrors> = match reply_payload {
-                StateMachineWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 transfer_tokens_and_posts failed\n"),
-            };
-            error_owner_is_not_caller
-        })
-        .unwrap();
-
-    assert_eq!(
-        error_owner_is_not_caller,
-        Err(MigrationErrors::Unauthorized)
-    );
-}
-
-#[test]
-fn migrate_posts_and_tokens_from_hotornot_to_yral_account_successfully() {
+fn test_transfer_token_can_heppen_only_once_from_hot_or_not_canister_to_yral_canister_triggered_by_profile_owner(
+) {
     let (pocket_ic, known_principal) = get_new_pocket_ic_env();
     let platform_canister_id = known_principal
         .get(&KnownPrincipalType::CanisterIdPlatformOrchestrator)
@@ -210,6 +166,25 @@ fn migrate_posts_and_tokens_from_hotornot_to_yral_account_successfully() {
     for _ in 0..30 {
         pocket_ic.tick()
     }
+
+    //charlie tries to transfer alice canister
+    let success = pocket_ic
+        .update_call(
+            alice_hot_or_not_canister_id,
+            charlie_hot_or_not_principal_id,
+            "transfer_tokens_and_posts",
+            candid::encode_args((charlie_yral_principal_id, charlie_yral_canister_id)).unwrap(),
+        )
+        .map(|reply_payload| {
+            let success: Result<(), MigrationErrors> = match reply_payload {
+                PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 transfer_tokens_and_posts failed\n"),
+            };
+            success
+        })
+        .unwrap();
+
+    assert_eq!(success, Err(MigrationErrors::Unauthorized));
 
     //Transfer token from yral to yral account
     let success = pocket_ic
