@@ -157,28 +157,35 @@ pub fn get_initialized_env_with_provisioned_known_canisters(
         .unwrap(),
     );
 
-    let user_index_canister_id = known_principal_map_with_all_canisters.get(&KnownPrincipalType::CanisterIdUserIndex).unwrap();
+    let user_index_canister_id = known_principal_map_with_all_canisters
+        .get(&KnownPrincipalType::CanisterIdUserIndex)
+        .unwrap();
 
     provision_individual_user_canisters(state_machine, user_index_canister_id);
 
     known_principal_map_with_all_canisters
 }
 
-pub fn provision_individual_user_canisters(state_machine: &StateMachine, user_index_canister_id: &Principal) {
+pub fn provision_individual_user_canisters(
+    state_machine: &StateMachine,
+    user_index_canister_id: &Principal,
+) {
     state_machine.add_cycles(*user_index_canister_id, 10_000_000_000_000_000);
-    let individual_user_template_wasm = include_bytes!("../../../../../../target/wasm32-unknown-unknown/release/individual_user_template.wasm.gz");
-    state_machine.update_call(
-        *user_index_canister_id, 
-        get_global_super_admin_principal_id(), 
-        "create_pool_of_individual_user_available_canisters",
-        candid::encode_args(("v1.0.0", individual_user_template_wasm.to_vec())).unwrap()
-    )
-    .unwrap();
-    
+    let individual_user_template_wasm = include_bytes!(
+        "../../../../../../target/wasm32-unknown-unknown/release/individual_user_template.wasm.gz"
+    );
+    state_machine
+        .update_call(
+            *user_index_canister_id,
+            get_global_super_admin_principal_id(),
+            "create_pool_of_individual_user_available_canisters",
+            candid::encode_args(("v1.0.0", individual_user_template_wasm.to_vec())).unwrap(),
+        )
+        .unwrap();
+
     for _ in 0..100 {
         state_machine.tick();
     }
-
 }
 
 pub fn get_canister_id_of_specific_type_from_principal_id_map(

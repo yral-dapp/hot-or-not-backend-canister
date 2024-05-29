@@ -1,9 +1,7 @@
-use candid::Principal;
-#[cfg(test)]
-use mockall::predicate::*;
+use std::cell::RefCell;
 
 use crate::common::types::known_principal::{KnownPrincipalMap, KnownPrincipalType};
-
+use candid::Principal;
 pub const INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT: u128 = 200_000_000_000; // 0.2T Cycles
 pub const CYCLES_THRESHOLD_TO_INITIATE_RECHARGE: u128 = 100_000_000_000; // 0.1T Cycles
 
@@ -104,14 +102,6 @@ pub const GLOBAL_SUPER_ADMIN_USER_ID: &str =
     "7gaq2-4kttl-vtbt4-oo47w-igteo-cpk2k-57h3p-yioqe-wkawi-wz45g-jae";
 pub const RECLAIM_CANISTER_PRINCIPAL_ID: &str =
     "7gaq2-4kttl-vtbt4-oo47w-igteo-cpk2k-57h3p-yioqe-wkawi-wz45g-jae";
-pub const HOT_OR_NOT_SUBNET_ORCHESTRATOR_CANISTER_ID: &str = "rimrc-piaaa-aaaao-aaljq-cai";
-
-#[mockall::automock]
-pub trait ConstantsWrapper {
-    fn get_hot_or_not_controller_id(&self) -> String;
-}
-
-pub struct Controller;
 
 pub fn get_global_super_admin_principal_id_v1(
     well_known_canisters: KnownPrincipalMap,

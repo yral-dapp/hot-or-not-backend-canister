@@ -18,6 +18,7 @@ type KnownPrincipalType = variant {
   CanisterIdUserIndex;
   CanisterIdPlatformOrchestrator;
   CanisterIdConfiguration;
+  CanisterIdHotOrNotSubnetOrchestrator;
   CanisterIdProjectMemberIndex;
   CanisterIdTopicCacheIndex;
   CanisterIdRootCanister;

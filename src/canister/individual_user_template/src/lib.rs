@@ -18,6 +18,7 @@ use shared_utils::{
         },
         follow::{FollowEntryDetail, FollowEntryId},
         hot_or_not::{BetOutcomeForBetMaker, BettingStatus, PlacedBetDetail},
+        migration::MigrationErrors,
         post::{
             Post, PostDetailsForFrontend, PostDetailsFromFrontend, PostViewDetailsFromFrontend,
         },
@@ -37,7 +38,6 @@ use shared_utils::{
         GetUserUtilityTokenTransactionHistoryError, UpdateProfileSetUniqueUsernameError,
     },
 };
-use util::migration::MigrationErrors;
 
 mod api;
 pub mod data_model;

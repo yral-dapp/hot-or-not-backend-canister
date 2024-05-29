@@ -10,12 +10,14 @@ use ic_cdk::{
 };
 use serde::{Deserialize, Serialize};
 use shared_utils::{
-    canister_specific::individual_user_template::types::{migration::MigrationInfo, post::Post},
+    canister_specific::individual_user_template::types::{
+        migration::{MigrationErrors, MigrationInfo},
+        post::Post,
+    },
     common::{
-        types::utility_token::token_event::TokenEvent,
+        types::{known_principal::KnownPrincipalType, utility_token::token_event::TokenEvent},
         utils::system_time::{get_current_system_time, get_current_system_time_from_ic},
     },
-    constant::HOT_OR_NOT_SUBNET_ORCHESTRATOR_CANISTER_ID,
 };
 
 use crate::{data_model::CanisterData, CANISTER_DATA};
@@ -29,6 +31,7 @@ pub enum SubnetType {
 pub trait Migration {
     async fn transfer_tokens_and_posts(
         &self,
+        caller: Principal,
         to_individual_user: IndividualUser,
     ) -> Result<(), MigrationErrors>;
 
@@ -38,23 +41,6 @@ pub trait Migration {
         token_amount: u64,
         posts: BTreeMap<u64, Post>,
     ) -> Result<(), MigrationErrors>;
-}
-
-#[derive(Serialize, Deserialize, Debug, CandidType)]
-pub enum MigrationErrors {
-    InvalidToCanister,
-    InvalidFromCanister,
-    MigrationInfoNotFound,
-    AlreadyMigrated,
-    TransferToCanisterCallFailed,
-    CanisterInfoFailed,
-    UserNotRegistered,
-    Unauthorized,
-}
-
-pub struct MigrateCanister {
-    profile_principal: Principal,
-    canister_id: Principal,
 }
 
 pub struct IndividualUser {
@@ -88,9 +74,18 @@ impl IndividualUser {
         .await
         .map_err(|_e| MigrationErrors::CanisterInfoFailed)?;
 
+        let hot_or_not_subnet_orchestrator_canister_id =
+            CANISTER_DATA.with_borrow(|canister_data| {
+                canister_data
+                    .known_principal_ids
+                    .get(&KnownPrincipalType::CanisterIdHotOrNotSubnetOrchestrator)
+                    .map(|id| *id)
+                    .ok_or(MigrationErrors::HotOrNotSubnetCanisterIdNotFound)
+            })?;
+
         let subnet_type = if canister_info
             .controllers
-            .contains(&Principal::from_text(HOT_OR_NOT_SUBNET_ORCHESTRATOR_CANISTER_ID).unwrap())
+            .contains(&hot_or_not_subnet_orchestrator_canister_id)
         {
             SubnetType::HotorNot
         } else {
@@ -109,9 +104,10 @@ impl IndividualUser {
 impl Migration for IndividualUser {
     async fn transfer_tokens_and_posts(
         &self,
+        caller: Principal,
         to_individual_user: IndividualUser,
     ) -> Result<(), MigrationErrors> {
-        if self.profile_principal != caller() {
+        if self.profile_principal != caller {
             return Err(MigrationErrors::Unauthorized);
         }
 
@@ -152,7 +148,7 @@ impl Migration for IndividualUser {
                     .handle_token_event(TokenEvent::Transfer {
                         amount: token.utility_token_balance,
                         to_account: to_individual_user.profile_principal,
-                        timestamp: get_current_system_time_from_ic(),
+                        timestamp: get_current_system_time(),
                     });
 
                 canister_data.migration_info = MigrationInfo::MigratedToYral {

@@ -12,3 +12,16 @@ pub enum MigrationInfo {
         account_principal: Principal,
     },
 }
+
+#[derive(Serialize, Deserialize, Debug, CandidType, PartialEq)]
+pub enum MigrationErrors {
+    InvalidToCanister,
+    InvalidFromCanister,
+    MigrationInfoNotFound,
+    AlreadyMigrated,
+    TransferToCanisterCallFailed,
+    CanisterInfoFailed,
+    UserNotRegistered,
+    Unauthorized,
+    HotOrNotSubnetCanisterIdNotFound,
+}

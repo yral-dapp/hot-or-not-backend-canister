@@ -5,7 +5,7 @@ use ic_test_state_machine_client::WasmResult as StateMachineWasmResult;
 use pocket_ic::{PocketIcBuilder, WasmResult as PocketICWasmResult};
 use shared_utils::{
     canister_specific::{
-        individual_user_template::types::post::Post,
+        individual_user_template::types::{migration::MigrationErrors, post::Post},
         platform_orchestrator::types::args::PlatformOrchestratorInitArgs,
     },
     common::types::{known_principal::KnownPrincipalType, wasm::WasmType},
@@ -13,7 +13,10 @@ use shared_utils::{
 };
 use std::collections::{BTreeMap, HashMap, HashSet};
 use test_utils::setup::{
-    env::v1::{get_initialized_env_with_provisioned_known_canisters, get_new_state_machine},
+    env::{
+        pocket_ic_env::get_new_pocket_ic_env,
+        v1::{get_initialized_env_with_provisioned_known_canisters, get_new_state_machine},
+    },
     test_constants::{
         get_global_super_admin_principal_id, get_mock_user_alice_principal_id,
         get_mock_user_bob_principal_id, v1::CANISTER_INITIAL_CYCLES_FOR_SPAWNING_CANISTERS,
@@ -51,7 +54,7 @@ fn error_when_owner_is_not_caller() {
             candid::encode_args((alice_principal_id, alice_canister_id)).unwrap(),
         )
         .map(|reply_payload| {
-            let error_owner_is_not_caller: Result<String, String> = match reply_payload {
+            let error_owner_is_not_caller: Result<(), MigrationErrors> = match reply_payload {
                 StateMachineWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
                 _ => panic!("\n🛑 transfer_tokens_and_posts failed\n"),
             };
@@ -61,7 +64,7 @@ fn error_when_owner_is_not_caller() {
 
     assert_eq!(
         error_owner_is_not_caller,
-        Err("Unauthorized caller".to_owned())
+        Err(MigrationErrors::Unauthorized)
     );
 }
 
@@ -114,145 +117,20 @@ fn error_when_receiver_profiler_owner_is_not_receiver_caller() {
 
 #[test]
 fn migrate_posts_and_tokens_from_hotornot_to_yral_account_successfully() {
-    use shared_utils::constant::MockConstantsWrapper;
+    let (pocket_ic, known_principal) = get_new_pocket_ic_env();
+    let platform_canister_id = known_principal
+        .get(&KnownPrincipalType::CanisterIdPlatformOrchestrator)
+        .cloned()
+        .unwrap();
 
-    let pocket_ic = PocketIcBuilder::new()
-        .with_nns_subnet()
-        .with_application_subnet()
-        .with_application_subnet()
-        .with_system_subnet()
-        .build();
-
-    let super_admin = get_global_super_admin_principal_id();
+    let super_admin = known_principal
+        .get(&KnownPrincipalType::UserIdGlobalSuperAdmin)
+        .cloned()
+        .unwrap();
 
     let application_subnets = pocket_ic.topology().get_app_subnets();
-    for (i, aps) in application_subnets.iter().enumerate() {
-        println!("subnet[{}] {}", i, aps.to_text());
-    }
 
-    let platform_canister_id = pocket_ic.create_canister_with_settings(
-        Some(super_admin),
-        Some(CanisterSettings {
-            controllers: Some(vec![super_admin]),
-            compute_allocation: None,
-            memory_allocation: None,
-            freezing_threshold: None,
-        }),
-    );
-    pocket_ic.add_cycles(
-        platform_canister_id,
-        CANISTER_INITIAL_CYCLES_FOR_SPAWNING_CANISTERS,
-    );
-    let platform_orchestrator_wasm = include_bytes!(
-        "../../../../../target/wasm32-unknown-unknown/release/platform_orchestrator.wasm.gz"
-    );
-    let individual_user_template = include_bytes!(
-        "../../../../../target/wasm32-unknown-unknown/release/individual_user_template.wasm.gz"
-    );
-    let subnet_orchestrator_canister_wasm =
-        include_bytes!("../../../../../target/wasm32-unknown-unknown/release/user_index.wasm.gz");
-    let platform_orchestrator_init_args = PlatformOrchestratorInitArgs {
-        version: "v1.0.0".into(),
-    };
-    pocket_ic.install_canister(
-        platform_canister_id,
-        platform_orchestrator_wasm.into(),
-        candid::encode_one(platform_orchestrator_init_args).unwrap(),
-        Some(super_admin),
-    );
-    for _ in 0..30 {
-        pocket_ic.tick()
-    }
-    pocket_ic
-        .update_call(
-            platform_canister_id,
-            super_admin,
-            "upload_wasms",
-            candid::encode_args((
-                WasmType::SubnetOrchestratorWasm,
-                subnet_orchestrator_canister_wasm.to_vec(),
-            ))
-            .unwrap(),
-        )
-        .unwrap();
-    pocket_ic
-        .update_call(
-            platform_canister_id,
-            super_admin,
-            "upload_wasms",
-            candid::encode_args((
-                WasmType::IndividualUserWasm,
-                individual_user_template.to_vec(),
-            ))
-            .unwrap(),
-        )
-        .unwrap();
-    pocket_ic.add_cycles(platform_canister_id, 10_000_000_000_000_000);
-
-    //Ledger Canister
-    let minting_account = AccountIdentifier::new(&super_admin, &DEFAULT_SUBACCOUNT);
-    let ledger_canister_wasm = include_bytes!("../../ledger-canister.wasm");
-    let ledger_canister_id = pocket_ic
-        .create_canister_with_id(
-            Some(super_admin),
-            None,
-            Principal::from_text(NNS_LEDGER_CANISTER_ID).unwrap(),
-        )
-        .unwrap();
-    let icp_ledger_init_args = NnsLedgerCanisterInitPayload {
-        minting_account: minting_account.to_string(),
-        initial_values: HashMap::new(),
-        send_whitelist: HashSet::new(),
-        transfer_fee: Some(Tokens::from_e8s(10_000)),
-    };
-    pocket_ic.install_canister(
-        ledger_canister_id,
-        ledger_canister_wasm.into(),
-        candid::encode_one(icp_ledger_init_args).unwrap(),
-        Some(super_admin),
-    );
-
-    //Cycle Minting Canister
-    let cycle_minting_canister_wasm = include_bytes!("../../cycles-minting-canister.wasm");
-    let cycle_minting_canister_id = pocket_ic
-        .create_canister_with_id(
-            Some(super_admin),
-            None,
-            Principal::from_text(NNS_CYCLE_MINTING_CANISTER).unwrap(),
-        )
-        .unwrap();
-    pocket_ic.add_cycles(
-        cycle_minting_canister_id,
-        CANISTER_INITIAL_CYCLES_FOR_SPAWNING_CANISTERS,
-    );
-    let cycles_minting_canister_init_args = CyclesMintingCanisterInitPayload {
-        ledger_canister_id,
-        governance_canister_id: CanisterId::anonymous(),
-        minting_account_id: Some(minting_account.to_string()),
-        last_purged_notification: Some(0),
-    };
-
-    pocket_ic.install_canister(
-        cycle_minting_canister_id,
-        cycle_minting_canister_wasm.into(),
-        candid::encode_one(cycles_minting_canister_init_args).unwrap(),
-        Some(super_admin),
-    );
-
-    let authorized_subnetwork_list_args = AuthorizedSubnetWorks {
-        who: Some(platform_canister_id),
-        subnets: application_subnets.clone(),
-    };
-    pocket_ic
-        .update_call(
-            cycle_minting_canister_id,
-            CanisterId::anonymous(),
-            "set_authorized_subnetwork_list",
-            candid::encode_one(authorized_subnetwork_list_args).unwrap(),
-        )
-        .unwrap();
-
-    let first_subnet_orchestrator_canister_id: Principal = pocket_ic
+    let hot_or_not_subnet_orchestrator_canister_id: Principal = pocket_ic
         .update_call(
             platform_canister_id,
             super_admin,
@@ -267,7 +145,8 @@ fn migrate_posts_and_tokens_from_hotornot_to_yral_account_successfully() {
             canister_id_result.unwrap()
         })
         .unwrap();
-    let second_subnet_orchestrator_canister_id: Principal = pocket_ic
+
+    let yral_subnet_orchestrator_canister_id: Principal = pocket_ic
         .update_call(
             platform_canister_id,
             super_admin,
@@ -289,9 +168,26 @@ fn migrate_posts_and_tokens_from_hotornot_to_yral_account_successfully() {
 
     let post_cache_canister_id = Principal::anonymous();
 
+    pocket_ic
+        .update_call(
+            platform_canister_id,
+            super_admin,
+            "update_global_known_principal",
+            candid::encode_args((
+                KnownPrincipalType::CanisterIdHotOrNotSubnetOrchestrator,
+                hot_or_not_subnet_orchestrator_canister_id,
+            ))
+            .unwrap(),
+        )
+        .unwrap();
+
+    for _ in 0..30 {
+        pocket_ic.tick();
+    }
+
     //get alice canister-id
     let alice_principal_id = get_mock_user_alice_principal_id();
-    let alice_canister_id: Principal = pocket_ic.update_call(first_subnet_orchestrator_canister_id, alice_principal_id, "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer", candid::encode_one(()).unwrap())
+    let alice_canister_id: Principal = pocket_ic.update_call(hot_or_not_subnet_orchestrator_canister_id, alice_principal_id, "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer", candid::encode_one(()).unwrap())
     .map(|res| {
         let canister_id: Principal = match res {
             PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
@@ -302,7 +198,7 @@ fn migrate_posts_and_tokens_from_hotornot_to_yral_account_successfully() {
     .unwrap();
 
     let bob_principal_id = get_mock_user_bob_principal_id();
-    let bob_canister_id: Principal = pocket_ic.update_call(second_subnet_orchestrator_canister_id, bob_principal_id, "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer", candid::encode_one(()).unwrap())
+    let bob_canister_id: Principal = pocket_ic.update_call(yral_subnet_orchestrator_canister_id, bob_principal_id, "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer", candid::encode_one(()).unwrap())
     .map(|res| {
         let canister_id: Principal = match res {
             PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
@@ -312,12 +208,6 @@ fn migrate_posts_and_tokens_from_hotornot_to_yral_account_successfully() {
     })
     .unwrap();
 
-    // update controller id
-    let mut mock_controller = MockConstantsWrapper::new();
-    mock_controller
-        .expect_get_hot_or_not_controller_id()
-        .return_const(application_subnets[0].to_text());
-
     //update subnet known principal
     pocket_ic
         .update_call(
@@ -325,7 +215,7 @@ fn migrate_posts_and_tokens_from_hotornot_to_yral_account_successfully() {
             super_admin,
             "update_subnet_known_principal",
             candid::encode_args((
-                first_subnet_orchestrator_canister_id,
+                hot_or_not_subnet_orchestrator_canister_id,
                 KnownPrincipalType::CanisterIdPostCache,
                 post_cache_canister_id,
             ))
@@ -341,6 +231,10 @@ fn migrate_posts_and_tokens_from_hotornot_to_yral_account_successfully() {
         .unwrap()
         .unwrap();
 
+    for _ in 0..30 {
+        pocket_ic.tick()
+    }
+
     // transfer token
     let success = pocket_ic
         .update_call(
@@ -350,7 +244,7 @@ fn migrate_posts_and_tokens_from_hotornot_to_yral_account_successfully() {
             candid::encode_args((bob_principal_id, bob_canister_id)).unwrap(),
         )
         .map(|reply_payload| {
-            let success: Result<String, String> = match reply_payload {
+            let success: Result<(), MigrationErrors> = match reply_payload {
                 PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
                 _ => panic!("\n🛑 transfer_tokens_and_posts failed\n"),
             };
@@ -358,7 +252,29 @@ fn migrate_posts_and_tokens_from_hotornot_to_yral_account_successfully() {
         })
         .unwrap();
 
-    assert_eq!(success, Ok("Success".to_owned()));
+    assert_eq!(success, Ok(()));
+
+    for _ in 0..10 {
+        pocket_ic.tick();
+    }
+
+    let bob_utility_balance = pocket_ic
+        .query_call(
+            bob_canister_id,
+            Principal::anonymous(),
+            "get_utility_token_balance",
+            candid::encode_one(()).unwrap(),
+        )
+        .map(|reply_payload| {
+            let balance: u64 = match reply_payload {
+                PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 transfer_tokens_and_posts failed\n"),
+            };
+            balance
+        })
+        .unwrap();
+
+    assert_eq!(bob_utility_balance, 2000);
 }
 
 // #[test]

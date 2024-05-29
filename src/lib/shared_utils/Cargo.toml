@@ -10,7 +10,6 @@ candid = { workspace = true }
 ic-cdk = { workspace = true }
 ic-cdk-timers = { workspace = true }
 ic-stable-structures = { workspace = true }
-mockall ={ workspace = true }
 rmp-serde = { workspace = true }
 futures = { workspace = true }
 serde = { workspace = true }
