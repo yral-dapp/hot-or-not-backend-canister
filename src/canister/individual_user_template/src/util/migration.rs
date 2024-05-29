@@ -168,6 +168,10 @@ impl Migration for IndividualUser {
         posts: BTreeMap<u64, Post>,
     ) -> Result<(), MigrationErrors> {
         CANISTER_DATA.with_borrow_mut(|canister_data| {
+            if canister_data.migration_info != MigrationInfo::NotMigrated {
+                return Err(MigrationErrors::AlreadyUsedForMigration);
+            }
+
             canister_data.all_created_posts.extend(posts.into_iter());
             canister_data
                 .my_token_balance
@@ -179,9 +183,8 @@ impl Migration for IndividualUser {
 
             canister_data.migration_info = MigrationInfo::MigratedFromHotOrNot {
                 account_principal: from_individual_user.profile_principal,
-            }
-        });
-
-        Ok(())
+            };
+            Ok(())
+        })
     }
 }

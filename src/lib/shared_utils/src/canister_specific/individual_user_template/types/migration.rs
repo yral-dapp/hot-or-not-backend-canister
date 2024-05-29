@@ -19,6 +19,7 @@ pub enum MigrationErrors {
     InvalidFromCanister,
     MigrationInfoNotFound,
     AlreadyMigrated,
+    AlreadyUsedForMigration,
     TransferToCanisterCallFailed,
     CanisterInfoFailed,
     UserNotRegistered,

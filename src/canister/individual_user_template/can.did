@@ -127,6 +127,7 @@ type MigrationErrors = variant {
   Unauthorized;
   TransferToCanisterCallFailed;
   HotOrNotSubnetCanisterIdNotFound;
+  AlreadyUsedForMigration;
   CanisterInfoFailed;
   AlreadyMigrated;
 };

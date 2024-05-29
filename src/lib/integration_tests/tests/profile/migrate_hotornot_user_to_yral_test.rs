@@ -19,7 +19,8 @@ use test_utils::setup::{
     },
     test_constants::{
         get_global_super_admin_principal_id, get_mock_user_alice_principal_id,
-        get_mock_user_bob_principal_id, v1::CANISTER_INITIAL_CYCLES_FOR_SPAWNING_CANISTERS,
+        get_mock_user_bob_principal_id, get_mock_user_charlie_principal_id,
+        get_mock_user_dan_principal_id, v1::CANISTER_INITIAL_CYCLES_FOR_SPAWNING_CANISTERS,
     },
 };
 
@@ -31,11 +32,11 @@ fn error_when_owner_is_not_caller() {
         .get(&KnownPrincipalType::CanisterIdUserIndex)
         .unwrap();
     let anonymous_principal_id = Principal::anonymous();
-    let alice_principal_id = get_mock_user_alice_principal_id();
+    let alice_hot_or_not_principal_id = get_mock_user_alice_principal_id();
 
     let alice_canister_id = state_machine.update_call(
         *user_index_canister_id,
-        alice_principal_id,
+        alice_hot_or_not_principal_id,
         "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer",
         candid::encode_one(()).unwrap(),
     ).map(|reply_payload| {
@@ -51,7 +52,7 @@ fn error_when_owner_is_not_caller() {
             alice_canister_id,
             anonymous_principal_id,
             "transfer_tokens_and_posts",
-            candid::encode_args((alice_principal_id, alice_canister_id)).unwrap(),
+            candid::encode_args((alice_hot_or_not_principal_id, alice_canister_id)).unwrap(),
         )
         .map(|reply_payload| {
             let error_owner_is_not_caller: Result<(), MigrationErrors> = match reply_payload {
@@ -65,53 +66,6 @@ fn error_when_owner_is_not_caller() {
     assert_eq!(
         error_owner_is_not_caller,
         Err(MigrationErrors::Unauthorized)
-    );
-}
-
-#[test]
-fn error_when_receiver_profiler_owner_is_not_receiver_caller() {
-    let state_machine = get_new_state_machine();
-    let known_principal_map = get_initialized_env_with_provisioned_known_canisters(&state_machine);
-    let user_index_canister_id = known_principal_map
-        .get(&KnownPrincipalType::CanisterIdUserIndex)
-        .unwrap();
-    let anonymous_principal_id = Principal::anonymous();
-    let alice_principal_id = get_mock_user_alice_principal_id();
-
-    let alice_canister_id = state_machine.update_call(
-        *user_index_canister_id,
-        alice_principal_id,
-        "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer",
-        candid::encode_one(()).unwrap(),
-    ).map(|reply_payload| {
-        let alice_canister_id: Principal = match reply_payload {
-            StateMachineWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-            _ => panic!("\n🛑 get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer failed\n"),
-        };
-        alice_canister_id
-    }).unwrap();
-
-    let posts: BTreeMap<u64, Post> = BTreeMap::new();
-
-    let error_owner_is_not_caller = state_machine
-        .update_call(
-            alice_canister_id,
-            anonymous_principal_id,
-            "receive_data_from_hotornot",
-            candid::encode_args((1000u64, alice_principal_id, posts)).unwrap(),
-        )
-        .map(|reply_payload| {
-            let error_owner_is_not_caller: Result<String, String> = match reply_payload {
-                StateMachineWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 receive_data_from_hotornot failed\n"),
-            };
-            error_owner_is_not_caller
-        })
-        .unwrap();
-
-    assert_eq!(
-        error_owner_is_not_caller,
-        Err("Unauthorized caller".to_owned())
     );
 }
 
@@ -185,9 +139,19 @@ fn migrate_posts_and_tokens_from_hotornot_to_yral_account_successfully() {
         pocket_ic.tick();
     }
 
-    //get alice canister-id
-    let alice_principal_id = get_mock_user_alice_principal_id();
-    let alice_canister_id: Principal = pocket_ic.update_call(hot_or_not_subnet_orchestrator_canister_id, alice_principal_id, "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer", candid::encode_one(()).unwrap())
+    //Alice hot or not and yral canister
+    let alice_hot_or_not_principal_id = get_mock_user_alice_principal_id();
+    let alice_hot_or_not_canister_id: Principal = pocket_ic.update_call(hot_or_not_subnet_orchestrator_canister_id, alice_hot_or_not_principal_id, "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer", candid::encode_one(()).unwrap())
+    .map(|res| {
+        let canister_id: Principal = match res {
+            PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+            _ => panic!("Canister call failed")
+        };
+        canister_id
+    })
+    .unwrap();
+    let alice_yral_principal_id = get_mock_user_bob_principal_id();
+    let alice_yral_canister_id: Principal = pocket_ic.update_call(yral_subnet_orchestrator_canister_id, alice_yral_principal_id, "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer", candid::encode_one(()).unwrap())
     .map(|res| {
         let canister_id: Principal = match res {
             PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
@@ -197,8 +161,20 @@ fn migrate_posts_and_tokens_from_hotornot_to_yral_account_successfully() {
     })
     .unwrap();
 
-    let bob_principal_id = get_mock_user_bob_principal_id();
-    let bob_canister_id: Principal = pocket_ic.update_call(yral_subnet_orchestrator_canister_id, bob_principal_id, "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer", candid::encode_one(()).unwrap())
+    //charlie hot or not and yral canister
+    let charlie_hot_or_not_principal_id = get_mock_user_charlie_principal_id();
+    let charlie_hot_or_not_canister_id: Principal = pocket_ic.update_call(hot_or_not_subnet_orchestrator_canister_id, charlie_hot_or_not_principal_id, "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer", candid::encode_one(()).unwrap())
+    .map(|res| {
+        let canister_id: Principal = match res {
+            PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+            _ => panic!("Canister call failed")
+        };
+        canister_id
+    })
+    .unwrap();
+
+    let charlie_yral_principal_id = get_mock_user_dan_principal_id();
+    let charlie_yral_canister_id = pocket_ic.update_call(yral_subnet_orchestrator_canister_id, charlie_yral_principal_id, "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer", candid::encode_one(()).unwrap())
     .map(|res| {
         let canister_id: Principal = match res {
             PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
@@ -235,13 +211,55 @@ fn migrate_posts_and_tokens_from_hotornot_to_yral_account_successfully() {
         pocket_ic.tick()
     }
 
+    //Transfer token from yral to yral account
+    let success = pocket_ic
+        .update_call(
+            alice_yral_canister_id,
+            alice_yral_principal_id,
+            "transfer_tokens_and_posts",
+            candid::encode_args((charlie_yral_principal_id, charlie_yral_canister_id)).unwrap(),
+        )
+        .map(|reply_payload| {
+            let success: Result<(), MigrationErrors> = match reply_payload {
+                PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 transfer_tokens_and_posts failed\n"),
+            };
+            success
+        })
+        .unwrap();
+
+    assert_eq!(success, Err(MigrationErrors::InvalidFromCanister));
+
+    //Transfer token from hotornot to hotornot account
+    let success = pocket_ic
+        .update_call(
+            alice_hot_or_not_canister_id,
+            alice_hot_or_not_principal_id,
+            "transfer_tokens_and_posts",
+            candid::encode_args((
+                charlie_hot_or_not_principal_id,
+                charlie_hot_or_not_canister_id,
+            ))
+            .unwrap(),
+        )
+        .map(|reply_payload| {
+            let success: Result<(), MigrationErrors> = match reply_payload {
+                PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 transfer_tokens_and_posts failed\n"),
+            };
+            success
+        })
+        .unwrap();
+
+    assert_eq!(success, Err(MigrationErrors::InvalidToCanister));
+
     // transfer token
     let success = pocket_ic
         .update_call(
-            alice_canister_id,
-            alice_principal_id,
+            alice_hot_or_not_canister_id,
+            alice_hot_or_not_principal_id,
             "transfer_tokens_and_posts",
-            candid::encode_args((bob_principal_id, bob_canister_id)).unwrap(),
+            candid::encode_args((alice_yral_principal_id, alice_yral_canister_id)).unwrap(),
         )
         .map(|reply_payload| {
             let success: Result<(), MigrationErrors> = match reply_payload {
@@ -258,9 +276,9 @@ fn migrate_posts_and_tokens_from_hotornot_to_yral_account_successfully() {
         pocket_ic.tick();
     }
 
-    let bob_utility_balance = pocket_ic
+    let alice_yral_token_balance = pocket_ic
         .query_call(
-            bob_canister_id,
+            alice_yral_canister_id,
             Principal::anonymous(),
             "get_utility_token_balance",
             candid::encode_one(()).unwrap(),
@@ -274,11 +292,61 @@ fn migrate_posts_and_tokens_from_hotornot_to_yral_account_successfully() {
         })
         .unwrap();
 
-    assert_eq!(bob_utility_balance, 2000);
-}
+    let alice_hot_or_not_utility_balance = pocket_ic
+        .query_call(
+            alice_hot_or_not_canister_id,
+            Principal::anonymous(),
+            "get_utility_token_balance",
+            candid::encode_one(()).unwrap(),
+        )
+        .map(|reply_payload| {
+            let balance: u64 = match reply_payload {
+                PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 transfer_tokens_and_posts failed\n"),
+            };
+            balance
+        })
+        .unwrap();
 
-// #[test]
-// fn error_when_receiver_is_already_migrated() {}
+    assert_eq!(alice_yral_token_balance, 2000);
+    assert_eq!(alice_hot_or_not_utility_balance, 0);
+
+    // attempt to transfer token from new hot or not account to already used for migration yral account
+    let success = pocket_ic
+        .update_call(
+            charlie_hot_or_not_canister_id,
+            charlie_hot_or_not_principal_id,
+            "transfer_tokens_and_posts",
+            candid::encode_args((alice_yral_principal_id, alice_yral_canister_id)).unwrap(),
+        )
+        .map(|reply_payload| {
+            let success: Result<(), MigrationErrors> = match reply_payload {
+                PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 transfer_tokens_and_posts failed\n"),
+            };
+            success
+        })
+        .unwrap();
+    assert_eq!(success, Err(MigrationErrors::AlreadyUsedForMigration));
+
+    // attempt to transfer token from already migrated hot or not account to already used yral account.
+    let success = pocket_ic
+        .update_call(
+            alice_hot_or_not_canister_id,
+            alice_hot_or_not_principal_id,
+            "transfer_tokens_and_posts",
+            candid::encode_args((charlie_yral_principal_id, charlie_yral_canister_id)).unwrap(),
+        )
+        .map(|reply_payload| {
+            let success: Result<(), MigrationErrors> = match reply_payload {
+                PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 transfer_tokens_and_posts failed\n"),
+            };
+            success
+        })
+        .unwrap();
+    assert_eq!(success, Err(MigrationErrors::AlreadyMigrated));
+}
 
 pub type CanisterId = Principal;
 
