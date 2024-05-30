@@ -67,6 +67,7 @@ pub struct CanisterData {
     pub last_access_time: Option<SystemTime>,
     #[serde(default)]
     pub last_canister_functionality_access_time: Option<SystemTime>,
+    #[serde(default)]
     pub migration_info: MigrationInfo,
 }
 
