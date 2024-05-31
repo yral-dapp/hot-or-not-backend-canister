@@ -100,6 +100,19 @@ pub struct PostDetailsFromFrontend {
     pub is_nsfw: bool,
 }
 
+impl From<Post> for PostDetailsFromFrontend {
+    fn from(value: Post) -> Self {
+        PostDetailsFromFrontend {
+            description: value.description,
+            hashtags: value.hashtags,
+            video_uid: value.video_uid,
+            creator_consent_for_inclusion_in_hot_or_not: value
+                .creator_consent_for_inclusion_in_hot_or_not,
+            is_nsfw: value.is_nsfw,
+        }
+    }
+}
+
 impl Post {
     pub fn add_view_details(&mut self, details: &PostViewDetailsFromFrontend) {
         match details {

@@ -1,23 +1,20 @@
 use std::{
-    alloc::System,
-    borrow::Borrow,
-    collections::{BTreeMap, BTreeSet, HashSet},
+    collections::{BTreeMap, BTreeSet},
     time::SystemTime,
 };
 
-use candid::{CandidType, Deserialize, Principal};
+use candid::{Deserialize, Principal};
 use ic_cdk::api::management_canister::provisional::CanisterId;
 use serde::Serialize;
-use serde_json_any_key::*;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
         configuration::IndividualUserConfiguration,
         follow::FollowData,
         hot_or_not::{
-            AggregateStats, BetDetails, BetMaker, BetMakerPrincipal, GlobalBetId, GlobalRoomId,
-            HotOrNotDetails, PlacedBetDetail, RoomDetailsV1, RoomId, SlotDetailsV1, SlotId,
-            StablePrincipal,
+            BetDetails, GlobalBetId, GlobalRoomId, PlacedBetDetail, RoomDetailsV1, RoomId,
+            SlotDetailsV1, SlotId, StablePrincipal,
         },
+        migration::MigrationInfo,
         post::{FeedScore, Post, PostViewStatistics},
         profile::UserProfile,
         session::SessionType,
@@ -70,6 +67,8 @@ pub struct CanisterData {
     pub last_access_time: Option<SystemTime>,
     #[serde(default)]
     pub last_canister_functionality_access_time: Option<SystemTime>,
+    #[serde(default)]
+    pub migration_info: MigrationInfo,
 }
 
 pub fn _default_room_details(
@@ -114,6 +113,7 @@ impl Default for CanisterData {
             session_type: None,
             last_access_time: None,
             last_canister_functionality_access_time: None,
+            migration_info: MigrationInfo::NotMigrated,
         }
     }
 }

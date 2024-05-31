@@ -40,9 +40,8 @@ call governance_canister.manage_neuron(
         command = opt variant {MakeProposal = record {
             title = "Upgrade Canister ${CANISTER_NAME}";
             url = "https://yral.com";
-            summary = "# Upgrade ${CANISTER_NAME}
-                ${CHANGE_SUMMARY}
-            ";
+            summary = "# Upgrade ${CANISTER_NAME} 
+${CHANGE_SUMMARY}";
             action = opt variant {ExecuteGenericNervousSystemFunction = record {
                 function_id = 4002;
                 payload = generate_payload();

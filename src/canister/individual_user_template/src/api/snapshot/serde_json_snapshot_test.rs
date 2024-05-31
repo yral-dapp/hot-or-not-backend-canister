@@ -17,6 +17,7 @@ mod test {
                 GlobalBetId, GlobalRoomId, PlacedBetDetail, RoomBetPossibleOutcomes, RoomDetailsV1,
                 SlotDetailsV1, SlotId, StablePrincipal,
             },
+            migration::MigrationInfo,
             post::{FeedScore, PostViewStatistics},
             profile::{UserProfile, UserProfileGlobalStats},
             session::SessionType,
@@ -235,6 +236,7 @@ mod test {
             session_type: Some(SessionType::RegisteredSession),
             last_access_time: Some(SystemTime::now()),
             last_canister_functionality_access_time: Some(SystemTime::now()),
+            migration_info: MigrationInfo::NotMigrated
         };
 
         let serde_str = serde_json::to_string(&canister_data_snapshot);

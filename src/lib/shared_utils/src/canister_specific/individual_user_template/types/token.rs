@@ -38,7 +38,12 @@ impl TokenBalance {
                 }
             },
             TokenEvent::Burn => {}
-            TokenEvent::Transfer => {}
+            TokenEvent::Transfer {amount, ..} => {
+                    self.utility_token_balance -= amount;
+            }
+            TokenEvent::Receive { amount, .. } => {
+                    self.utility_token_balance += amount;
+            }
             TokenEvent::Stake { details, .. } => match details {
                 StakeEvent::BetOnHotOrNotPost { bet_amount, .. } => {
                     self.utility_token_balance -= bet_amount;

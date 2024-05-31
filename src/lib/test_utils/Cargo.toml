@@ -10,5 +10,6 @@ candid = { workspace = true }
 ic-cdk = { workspace = true }
 ic-test-state-machine-client = { workspace = true }
 shared_utils = { workspace = true }
-
+pocket-ic = { workspace = true }
+ic-ledger-types = { workpace = true }
 [dev-dependencies]

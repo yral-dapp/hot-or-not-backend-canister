@@ -42,11 +42,9 @@ fn add_post_v2(post_details: PostDetailsFromFrontend) -> Result<u64, String> {
         )
     });
 
-    let post_id = response.clone().unwrap();
+    let post_id = response;
 
-    if response.is_ok() {
-        update_scores_and_share_with_post_cache_if_difference_beyond_threshold(&post_id);
-    }
+    update_scores_and_share_with_post_cache_if_difference_beyond_threshold(&post_id);
 
     if post_details.creator_consent_for_inclusion_in_hot_or_not {
         // * schedule hot_or_not outcome tabulation for the 48 hours after the post is created
@@ -69,11 +67,11 @@ fn add_post_v2(post_details: PostDetailsFromFrontend) -> Result<u64, String> {
     Ok(post_id)
 }
 
-fn add_post_to_memory(
+pub fn add_post_to_memory(
     canister_data: &mut CanisterData,
     post_details: &PostDetailsFromFrontend,
     current_system_time: &SystemTime,
-) -> Result<u64, String> {
+) -> u64 {
     let new_post = Post::new(
         canister_data.all_created_posts.len() as u64,
         post_details,
@@ -83,5 +81,6 @@ fn add_post_to_memory(
     canister_data
         .all_created_posts
         .insert(new_post.id, new_post);
-    Ok(new_post_id)
+
+    new_post_id
 }

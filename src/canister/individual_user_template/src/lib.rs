@@ -1,5 +1,5 @@
 use std::cell::RefCell;
-use std::time::SystemTime;
+use std::{collections::BTreeMap, time::SystemTime};
 
 use api::{
     follow::update_profiles_that_follow_me_toggle_list_with_specified_profile::FollowerArg,
@@ -11,7 +11,6 @@ use ic_cdk::api::management_canister::provisional::CanisterId;
 use ic_cdk_macros::export_candid;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
-        session::SessionType,
         arg::{FolloweeArg, IndividualUserTemplateInitArgs, PlaceBetArg},
         error::{
             BetOnCurrentlyViewingPostError, FollowAnotherUserProfileError,
@@ -19,12 +18,15 @@ use shared_utils::{
         },
         follow::{FollowEntryDetail, FollowEntryId},
         hot_or_not::{BetOutcomeForBetMaker, BettingStatus, PlacedBetDetail},
+        migration::MigrationErrors,
         post::{
             Post, PostDetailsForFrontend, PostDetailsFromFrontend, PostViewDetailsFromFrontend,
         },
         profile::{
-            UserProfile, UserProfileDetailsForFrontend, UserProfileUpdateDetailsFromFrontend, UserCanisterDetails
+            UserCanisterDetails, UserProfile, UserProfileDetailsForFrontend,
+            UserProfileDetailsForFrontendV2, UserProfileUpdateDetailsFromFrontend,
         },
+        session::SessionType,
     },
     common::types::{
         app_primitive_type::PostId,

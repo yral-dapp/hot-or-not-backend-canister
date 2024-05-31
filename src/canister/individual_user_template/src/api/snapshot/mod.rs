@@ -17,6 +17,7 @@ use shared_utils::{
             HotOrNotDetails, PlacedBetDetail, RoomDetailsV1, RoomId, SlotDetailsV1, SlotId,
             StablePrincipal,
         },
+        migration::{MigrationInfo}, 
         post::{FeedScore, Post, PostViewStatistics},
         profile::UserProfile,
         session::SessionType,
@@ -71,6 +72,7 @@ pub struct CanisterDataForSnapshot {
     pub session_type: Option<SessionType>,
     pub last_access_time: Option<SystemTime>,
     pub last_canister_functionality_access_time: Option<SystemTime>,
+    pub migration_info: MigrationInfo,
 }
 
 #[derive(CandidType, Clone, Deserialize, Debug, Serialize)]
@@ -241,6 +243,7 @@ impl From<&CanisterData> for CanisterDataForSnapshot {
             last_access_time: canister_data.last_access_time,
             last_canister_functionality_access_time: canister_data
                 .last_canister_functionality_access_time,
+            migration_info: canister_data.migration_info,
         }
     }
 }
@@ -360,6 +363,7 @@ impl From<CanisterDataForSnapshot> for CanisterData {
             last_access_time: canister_data.last_access_time,
             last_canister_functionality_access_time: canister_data
                 .last_canister_functionality_access_time,
+            migration_info: canister_data.migration_info,
         }
     }
 }

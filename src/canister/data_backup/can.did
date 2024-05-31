@@ -137,10 +137,19 @@ type TokenEvent = variant {
   };
   Burn;
   Mint : record { timestamp : SystemTime; details : MintEvent; amount : nat64 };
-  Transfer;
+  Transfer : record {
+    to_account : principal;
+    timestamp : SystemTime;
+    amount : nat64;
+  };
   HotOrNotOutcomePayout : record {
     timestamp : SystemTime;
     details : HotOrNotOutcomePayoutEvent;
+    amount : nat64;
+  };
+  Receive : record {
+    from_account : principal;
+    timestamp : SystemTime;
     amount : nat64;
   };
 };
@@ -157,12 +166,17 @@ type UserOwnedCanisterData = record {
   profile : UserProfile;
   principals_that_follow_me : vec principal;
 };
+type UserCanisterDetails = record {
+  user_canister_id : principal;
+  profile_owner : principal;
+};
 type UserProfile = record {
   unique_user_name : opt text;
   profile_picture_url : opt text;
   display_name : opt text;
   principal_id : opt principal;
   profile_stats : UserProfileGlobalStats;
+  referrer_details : opt UserCanisterDetails;
 };
 type UserProfileGlobalStats = record {
   hot_bets_received : nat64;

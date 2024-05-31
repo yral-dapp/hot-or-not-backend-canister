@@ -8,6 +8,7 @@ pub mod get_session_type;
 pub mod update_last_access_time;
 pub mod update_profile_owner;
 pub mod update_session_type;
+pub mod migrate_hotornot_user_to_yral;
 
 #[query]
 pub fn get_stable_memory_size() -> u32 {
