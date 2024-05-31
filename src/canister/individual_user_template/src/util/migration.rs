@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 use shared_utils::{
     canister_specific::individual_user_template::types::{
         migration::{MigrationErrors, MigrationInfo},
-        post::Post,
+        post::{Post, PostDetailsFromFrontend},
     },
     common::{
         types::{known_principal::KnownPrincipalType, utility_token::token_event::TokenEvent},
@@ -20,7 +20,11 @@ use shared_utils::{
     },
 };
 
-use crate::{data_model::CanisterData, CANISTER_DATA};
+use crate::{
+    api::post::add_post_v2::{self, add_post_to_memory},
+    data_model::CanisterData,
+    CANISTER_DATA,
+};
 
 #[derive(PartialEq)]
 pub enum SubnetType {
@@ -79,7 +83,7 @@ impl IndividualUser {
                 canister_data
                     .known_principal_ids
                     .get(&KnownPrincipalType::CanisterIdHotOrNotSubnetOrchestrator)
-                    .map(|id| *id)
+                    .copied()
                     .ok_or(MigrationErrors::HotOrNotSubnetCanisterIdNotFound)
             })?;
 
@@ -172,7 +176,16 @@ impl Migration for IndividualUser {
                 return Err(MigrationErrors::AlreadyUsedForMigration);
             }
 
-            canister_data.all_created_posts.extend(posts.into_iter());
+            let transfer_posts: Vec<PostDetailsFromFrontend> = posts
+                .into_values()
+                .map(PostDetailsFromFrontend::from)
+                .collect();
+
+            let current_system_time = get_current_system_time();
+            transfer_posts.iter().for_each(|post| {
+                add_post_to_memory(canister_data, post, &current_system_time);
+            });
+
             canister_data
                 .my_token_balance
                 .handle_token_event(TokenEvent::Receive {

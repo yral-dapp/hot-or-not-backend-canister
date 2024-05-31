@@ -5,7 +5,11 @@ use ic_test_state_machine_client::WasmResult as StateMachineWasmResult;
 use pocket_ic::{PocketIcBuilder, WasmResult as PocketICWasmResult};
 use shared_utils::{
     canister_specific::{
-        individual_user_template::types::{migration::MigrationErrors, post::Post},
+        individual_user_template::types::{
+            error::GetPostsOfUserProfileError,
+            migration::MigrationErrors,
+            post::{Post, PostDetailsForFrontend, PostDetailsFromFrontend},
+        },
         platform_orchestrator::types::args::PlatformOrchestratorInitArgs,
     },
     common::types::{known_principal::KnownPrincipalType, wasm::WasmType},
@@ -106,6 +110,30 @@ fn test_transfer_token_can_heppen_only_once_from_hot_or_not_canister_to_yral_can
         canister_id
     })
     .unwrap();
+
+    let alice_post_id = pocket_ic
+        .update_call(
+            alice_hot_or_not_canister_id,
+            alice_hot_or_not_principal_id,
+            "add_post_v2",
+            candid::encode_args((PostDetailsFromFrontend {
+                is_nsfw: false,
+                description: "This is a fun video to watch".to_string(),
+                hashtags: vec!["fun".to_string(), "video".to_string()],
+                video_uid: "abcd#1234".to_string(),
+                creator_consent_for_inclusion_in_hot_or_not: true,
+            },))
+            .unwrap(),
+        )
+        .map(|reply_payload| {
+            let newly_created_post_id_result: Result<u64, String> = match reply_payload {
+                PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 add_post failed\n"),
+            };
+            newly_created_post_id_result.unwrap()
+        })
+        .unwrap();
+
     let alice_yral_principal_id = get_mock_user_bob_principal_id();
     let alice_yral_canister_id: Principal = pocket_ic.update_call(yral_subnet_orchestrator_canister_id, alice_yral_principal_id, "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer", candid::encode_one(()).unwrap())
     .map(|res| {
@@ -116,6 +144,28 @@ fn test_transfer_token_can_heppen_only_once_from_hot_or_not_canister_to_yral_can
         canister_id
     })
     .unwrap();
+    pocket_ic
+        .update_call(
+            alice_yral_canister_id,
+            alice_yral_principal_id,
+            "add_post_v2",
+            candid::encode_args((PostDetailsFromFrontend {
+                is_nsfw: false,
+                description: "This is a yral fun video to watch".to_string(),
+                hashtags: vec!["fun".to_string(), "video".to_string()],
+                video_uid: "abcd#1234".to_string(),
+                creator_consent_for_inclusion_in_hot_or_not: true,
+            },))
+            .unwrap(),
+        )
+        .map(|reply_payload| {
+            let newly_created_post_id_result: Result<u64, String> = match reply_payload {
+                PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 add_post failed\n"),
+            };
+            newly_created_post_id_result.unwrap()
+        })
+        .unwrap();
 
     //charlie hot or not and yral canister
     let charlie_hot_or_not_principal_id = get_mock_user_charlie_principal_id();
@@ -285,6 +335,26 @@ fn test_transfer_token_can_heppen_only_once_from_hot_or_not_canister_to_yral_can
 
     assert_eq!(alice_yral_token_balance, 2000);
     assert_eq!(alice_hot_or_not_utility_balance, 0);
+
+    let posts_response = pocket_ic
+        .query_call(
+            alice_yral_canister_id,
+            Principal::anonymous(),
+            "get_posts_of_this_user_profile_with_pagination_cursor",
+            candid::encode_args((0_u64, 10_u64)).unwrap(),
+        )
+        .map(|reply_payload| {
+            let posts_response: Result<Vec<PostDetailsForFrontend>, GetPostsOfUserProfileError> =
+                match reply_payload {
+                    PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                    _ => panic!("\n🛑 get_posts_of_this_user_profile_with_pagination failed\n"),
+                };
+            posts_response
+        })
+        .unwrap()
+        .unwrap();
+
+    assert_eq!(posts_response.len(), 2);
 
     // attempt to transfer token from new hot or not account to already used for migration yral account
     let success = pocket_ic
