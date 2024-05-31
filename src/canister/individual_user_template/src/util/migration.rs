@@ -171,6 +171,9 @@ impl Migration for IndividualUser {
         token_amout: u64,
         posts: BTreeMap<u64, Post>,
     ) -> Result<(), MigrationErrors> {
+        if from_individual_user.subnet_type != SubnetType::HotorNot {
+            return Err(MigrationErrors::Unauthorized);
+        }
         CANISTER_DATA.with_borrow_mut(|canister_data| {
             if canister_data.migration_info != MigrationInfo::NotMigrated {
                 return Err(MigrationErrors::AlreadyUsedForMigration);

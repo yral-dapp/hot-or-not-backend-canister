@@ -1,30 +1,20 @@
 use candid::{CandidType, Principal};
-use ic_cdk::api::management_canister::provisional::CanisterSettings;
-use ic_ledger_types::{AccountIdentifier, BlockIndex, Tokens, DEFAULT_SUBACCOUNT};
-use ic_test_state_machine_client::WasmResult as StateMachineWasmResult;
-use pocket_ic::{PocketIcBuilder, WasmResult as PocketICWasmResult};
+use ic_ledger_types::{BlockIndex, Tokens};
+use pocket_ic::WasmResult as PocketICWasmResult;
 use shared_utils::{
-    canister_specific::{
-        individual_user_template::types::{
-            error::GetPostsOfUserProfileError,
-            migration::MigrationErrors,
-            post::{Post, PostDetailsForFrontend, PostDetailsFromFrontend},
-        },
-        platform_orchestrator::types::args::PlatformOrchestratorInitArgs,
+    canister_specific::individual_user_template::types::{
+        error::GetPostsOfUserProfileError,
+        migration::MigrationErrors,
+        post::{Post, PostDetailsForFrontend, PostDetailsFromFrontend},
     },
-    common::types::{known_principal::KnownPrincipalType, wasm::WasmType},
-    constant::{NNS_CYCLE_MINTING_CANISTER, NNS_LEDGER_CANISTER_ID},
+    common::types::known_principal::KnownPrincipalType,
 };
 use std::collections::{BTreeMap, HashMap, HashSet};
 use test_utils::setup::{
-    env::{
-        pocket_ic_env::get_new_pocket_ic_env,
-        v1::{get_initialized_env_with_provisioned_known_canisters, get_new_state_machine},
-    },
+    env::pocket_ic_env::get_new_pocket_ic_env,
     test_constants::{
-        get_global_super_admin_principal_id, get_mock_user_alice_principal_id,
-        get_mock_user_bob_principal_id, get_mock_user_charlie_principal_id,
-        get_mock_user_dan_principal_id, v1::CANISTER_INITIAL_CYCLES_FOR_SPAWNING_CANISTERS,
+        get_mock_user_alice_principal_id, get_mock_user_bob_principal_id,
+        get_mock_user_charlie_principal_id, get_mock_user_dan_principal_id,
     },
 };
 
@@ -393,6 +383,130 @@ fn test_transfer_token_can_heppen_only_once_from_hot_or_not_canister_to_yral_can
     assert_eq!(success, Err(MigrationErrors::AlreadyMigrated));
 }
 
+#[test]
+fn test_when_user_tries_to_misuse_to_recieve_tokens_and_posts() {
+    let (pocket_ic, known_principal) = get_new_pocket_ic_env();
+    let platform_canister_id = known_principal
+        .get(&KnownPrincipalType::CanisterIdPlatformOrchestrator)
+        .cloned()
+        .unwrap();
+
+    let super_admin = known_principal
+        .get(&KnownPrincipalType::UserIdGlobalSuperAdmin)
+        .cloned()
+        .unwrap();
+
+    let application_subnets = pocket_ic.topology().get_app_subnets();
+
+    let hot_or_not_subnet_orchestrator_canister_id: Principal = pocket_ic
+        .update_call(
+            platform_canister_id,
+            super_admin,
+            "provision_subnet_orchestrator_canister",
+            candid::encode_one(application_subnets[0]).unwrap(),
+        )
+        .map(|res| {
+            let canister_id_result: Result<Principal, String> = match res {
+                PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("Canister call failed"),
+            };
+            canister_id_result.unwrap()
+        })
+        .unwrap();
+
+    let yral_subnet_orchestrator_canister_id: Principal = pocket_ic
+        .update_call(
+            platform_canister_id,
+            super_admin,
+            "provision_subnet_orchestrator_canister",
+            candid::encode_one(application_subnets[1]).unwrap(),
+        )
+        .map(|res| {
+            let canister_id_result: Result<Principal, String> = match res {
+                PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("Canister call failed"),
+            };
+            canister_id_result.unwrap()
+        })
+        .unwrap();
+
+    for _ in 0..30 {
+        pocket_ic.tick();
+    }
+
+    let post_cache_canister_id = Principal::anonymous();
+
+    pocket_ic
+        .update_call(
+            platform_canister_id,
+            super_admin,
+            "update_global_known_principal",
+            candid::encode_args((
+                KnownPrincipalType::CanisterIdHotOrNotSubnetOrchestrator,
+                hot_or_not_subnet_orchestrator_canister_id,
+            ))
+            .unwrap(),
+        )
+        .unwrap();
+
+    for _ in 0..30 {
+        pocket_ic.tick();
+    }
+
+    let alice_yral_principal_id = get_mock_user_alice_principal_id();
+    let alice_yral_canister_id = pocket_ic.update_call(yral_subnet_orchestrator_canister_id, alice_yral_principal_id, "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer", candid::encode_one(()).unwrap())
+    .map(|res| {
+        let canister_id: Principal = match res {
+            PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+            _ => panic!("Canister call failed")
+        };
+        canister_id
+    })
+    .unwrap();
+
+    let alice_dummy_canister = pocket_ic.create_canister();
+    //Transfer token from yral to yral account
+    let res = pocket_ic
+        .update_call(
+            alice_yral_canister_id,
+            alice_dummy_canister,
+            "receive_data_from_hotornot",
+            candid::encode_args((
+                alice_yral_principal_id,
+                10000 as u64,
+                BTreeMap::<u64, Post>::new(),
+            ))
+            .unwrap(),
+        )
+        .map(|reply_payload| {
+            let success: Result<(), MigrationErrors> = match reply_payload {
+                PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 transfer_tokens_and_posts failed\n"),
+            };
+            success
+        })
+        .unwrap();
+
+    let alice_yral_token_balance = pocket_ic
+        .query_call(
+            alice_yral_canister_id,
+            Principal::anonymous(),
+            "get_utility_token_balance",
+            candid::encode_one(()).unwrap(),
+        )
+        .map(|reply_payload| {
+            let balance: u64 = match reply_payload {
+                PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 transfer_tokens_and_posts failed\n"),
+            };
+            balance
+        })
+        .unwrap();
+
+    assert_eq!(alice_yral_token_balance, 1000);
+
+    assert_eq!(res, Err(MigrationErrors::Unauthorized));
+}
 pub type CanisterId = Principal;
 
 #[derive(CandidType)]
