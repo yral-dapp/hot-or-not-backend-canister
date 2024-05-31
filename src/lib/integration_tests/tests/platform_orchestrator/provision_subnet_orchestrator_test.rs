@@ -11,7 +11,10 @@ use serde::{Deserialize, Serialize};
 use shared_utils::{
     canister_specific::{
         individual_user_template,
-        platform_orchestrator::{self, types::args::PlatformOrchestratorInitArgs},
+        platform_orchestrator::{
+            self,
+            types::args::{PlatformOrchestratorInitArgs, UpgradeCanisterArg},
+        },
         post_cache::types::arg::PostCacheInitArgs,
     },
     common::{
@@ -118,4 +121,55 @@ fn provision_subnet_orchestrator_canister() {
         .unwrap();
 
     assert!(subnet_available_canister_cnt > 0);
+
+    let individual_user_template_wasm = include_bytes!(
+        "../../../../../target/wasm32-unknown-unknown/release/individual_user_template.wasm.gz"
+    );
+
+    //check if upgrades for individual_canisters_work_fine
+    let result = pocket_ic
+        .update_call(
+            platform_canister_id,
+            super_admin,
+            "upgrade_canisters_in_network",
+            candid::encode_one(UpgradeCanisterArg {
+                canister: WasmType::IndividualUserWasm,
+                version: "v1.0.1".to_string(),
+                wasm_blob: individual_user_template_wasm.to_vec(),
+            })
+            .unwrap(),
+        )
+        .map(|res| {
+            let res: Result<String, String> = match res {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("get subnet available capacity call failed"),
+            };
+            res
+        })
+        .unwrap()
+        .unwrap();
+
+    for i in 0..50 {
+        pocket_ic.tick();
+    }
+
+    //Check version Installed
+    let last_upgrade_status: UpgradeStatus = pocket_ic
+        .query_call(
+            subnet_orchestrator_canister_id,
+            Principal::anonymous(),
+            "get_index_details_last_upgrade_status",
+            candid::encode_one(()).unwrap(),
+        )
+        .map(|res| {
+            let upgrade_status: UpgradeStatus = match res {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("Canister call failed"),
+            };
+            upgrade_status
+        })
+        .unwrap();
+
+    assert!(last_upgrade_status.version.eq("v1.0.1"));
+    assert!(last_upgrade_status.successful_upgrade_count > 0);
 }

@@ -43,6 +43,7 @@ type PlatformOrchestratorGenericResultType = variant {
 type PlatformOrchestratorInitArgs = record { version : text };
 type Result = variant { Ok : text; Err : text };
 type Result_1 = variant { Ok : principal; Err : text };
+type Result_2 = variant { Ok; Err : text };
 type UpgradeCanisterArg = record {
   version : text;
   canister : WasmType;
@@ -71,6 +72,7 @@ service : (PlatformOrchestratorInitArgs) -> {
     ) -> (PlatformOrchestratorGenericResultType);
   populate_known_principal_for_all_subnet : () -> ();
   provision_subnet_orchestrator_canister : (principal) -> (Result_1);
+  recharge_subnet_orchestrator : () -> (Result_2);
   reinstall_yral_post_cache_canister : () -> ();
   remove_principal_from_global_admins : (principal) -> ();
   remove_subnet_orchestrators_from_available_list : (principal) -> (Result);
