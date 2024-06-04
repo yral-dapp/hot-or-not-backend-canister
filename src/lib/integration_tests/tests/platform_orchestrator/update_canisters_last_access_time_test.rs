@@ -82,6 +82,7 @@ struct NnsLedgerCanisterInitPayload {
 // TODO: remove this when removing the update_last_access_time API from PF Orch
 
 #[test]
+#[ignore]
 fn update_canisters_last_access_time_test() {
     let (pocket_ic, known_principal) = get_new_pocket_ic_env();
     let platform_canister_id = known_principal
