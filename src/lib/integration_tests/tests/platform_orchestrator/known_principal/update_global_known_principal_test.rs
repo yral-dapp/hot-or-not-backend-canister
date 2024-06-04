@@ -1,4 +1,4 @@
-use candid::{CandidType, Principal};
+use candid::{encode_one, CandidType, Principal};
 use ic_cdk::api::{management_canister::provisional::CanisterSettings, time};
 use ic_ledger_types::{AccountIdentifier, BlockIndex, Tokens, DEFAULT_SUBACCOUNT};
 use pocket_ic::{PocketIc, PocketIcBuilder, WasmResult};
@@ -8,6 +8,7 @@ use shared_utils::{
         individual_user_template,
         platform_orchestrator::{self, types::args::PlatformOrchestratorInitArgs},
         post_cache::types::arg::PostCacheInitArgs,
+        user_index::types::BroadcastCallStatus,
     },
     common::{
         types::{
@@ -246,6 +247,30 @@ fn when_global_known_principal_is_updated_it_is_reflected_in_all_canisters() {
         governance_canister_id_from_second_subnet,
         Some(governance_canister_id)
     );
+
+    let broadcast_call_res = pocket_ic
+        .query_call(
+            first_subnet_orchestrator_canister_id,
+            Principal::anonymous(),
+            "get_last_broadcast_call_status",
+            encode_one(()).unwrap(),
+        )
+        .map(|res| {
+            let res: BroadcastCallStatus = match res {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("get_last_broadcast_call_status failed"),
+            };
+            res
+        })
+        .unwrap();
+
+    assert!(broadcast_call_res
+        .method_name
+        .eq("update_well_known_principal"));
+
+    assert!(broadcast_call_res.total_canisters > 0);
+    assert!(broadcast_call_res.failed_canisters_count == 0);
+    assert!(broadcast_call_res.successful_canisters_count > 0);
 
     let governance_canister_id_from_alice = pocket_ic
         .query_call(

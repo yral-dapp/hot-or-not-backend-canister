@@ -8,7 +8,9 @@ use ic_cdk::api::{
 };
 use ic_cdk_macros::export_candid;
 use shared_utils::{
-    canister_specific::user_index::types::{args::UserIndexInitArgs, RecycleStatus},
+    canister_specific::user_index::types::{
+        args::UserIndexInitArgs, BroadcastCallStatus, RecycleStatus,
+    },
     common::types::http::{HttpRequest, HttpResponse},
     common::types::known_principal::KnownPrincipalType,
     types::canister_specific::user_index::error_types::SetUniqueUsernameError,

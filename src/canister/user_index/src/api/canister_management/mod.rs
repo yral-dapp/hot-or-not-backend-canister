@@ -37,6 +37,7 @@ use crate::{
 };
 
 pub mod create_pool_of_available_canisters;
+pub mod get_last_broadcast_call_status;
 pub mod get_subnet_available_capacity;
 pub mod get_subnet_backup_capacity;
 pub mod recycle_canisters;

@@ -4,7 +4,7 @@ use candid::{Deserialize, Principal};
 use ic_stable_structures::storable::Blob;
 use ic_stable_structures::StableBTreeMap;
 use serde::Serialize;
-use shared_utils::canister_specific::user_index::types::RecycleStatus;
+use shared_utils::canister_specific::user_index::types::{BroadcastCallStatus, RecycleStatus};
 use shared_utils::common::types::wasm::{CanisterWasm, WasmType};
 
 use self::memory::get_wasm_memory;
@@ -36,6 +36,8 @@ pub struct CanisterData {
     pub wasms: StableBTreeMap<WasmType, CanisterWasm, Memory>,
     #[serde(default)]
     pub recycle_status: RecycleStatus,
+    #[serde(default)]
+    pub last_broadcast_call_status: BroadcastCallStatus,
 }
 
 impl Default for CanisterData {
@@ -50,6 +52,7 @@ impl Default for CanisterData {
             wasms: _empty_wasms(),
             backup_canister_pool: Default::default(),
             recycle_status: Default::default(),
+            last_broadcast_call_status: Default::default(),
         }
     }
 }
