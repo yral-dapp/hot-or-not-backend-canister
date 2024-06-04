@@ -59,7 +59,7 @@ fn get_posts_of_this_user_profile_with_pagination_cursor_impl(
     let res_posts = canister_data
         .all_created_posts
         .iter()
-        .filter(|(_, post)| post.status == PostStatus::ReadyToView)
+        .filter(|(_, post)| post.status != PostStatus::BannedDueToUserReporting)
         .rev()
         .skip(from_inclusive_index as usize)
         .take(limit as usize)

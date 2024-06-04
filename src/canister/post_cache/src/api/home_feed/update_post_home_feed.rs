@@ -26,14 +26,14 @@ fn update_post_home_feed_impl(post: PostScoreIndexItemV1, canister_data: &mut Ca
 
     let global_id = (post.publisher_canister_id, post.post_id);
     if let Some(_) = item_prescence_index.get(&global_id) {
-        if post.status == PostStatus::ReadyToView {
-            canister_data
-                .posts_index_sorted_by_home_feed_score_v1
-                .replace(&post);
-        } else {
+        if post.status == PostStatus::BannedDueToUserReporting {
             canister_data
                 .posts_index_sorted_by_home_feed_score_v1
                 .remove(&post);
+        } else {
+            canister_data
+                .posts_index_sorted_by_home_feed_score_v1
+                .replace(&post);
         }
     }
 }
