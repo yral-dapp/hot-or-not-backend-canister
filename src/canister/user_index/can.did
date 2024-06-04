@@ -1,3 +1,12 @@
+type BroadcastCallStatus = record {
+  successful_canister_ids : vec principal;
+  failed_canisters_count : nat64;
+  successful_canisters_count : nat64;
+  method_name : text;
+  failed_canister_ids : vec record { principal; text };
+  timestamp : SystemTime;
+  total_canisters : nat64;
+};
 type CanisterInstallMode = variant { reinstall; upgrade; install };
 type CanisterStatusResponse = record {
   status : CanisterStatusType;
@@ -107,6 +116,7 @@ service : (UserIndexInitArgs) -> {
     ) query;
   get_index_details_is_user_name_taken : (text) -> (bool) query;
   get_index_details_last_upgrade_status : () -> (UpgradeStatus) query;
+  get_last_broadcast_call_status : () -> (BroadcastCallStatus) query;
   get_list_of_available_canisters : () -> (vec principal) query;
   get_recycle_status : () -> (RecycleStatus) query;
   get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer : () -> (
