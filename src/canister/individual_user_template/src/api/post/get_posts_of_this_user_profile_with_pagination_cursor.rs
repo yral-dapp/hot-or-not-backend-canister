@@ -7,7 +7,7 @@ use shared_utils::{
         error::GetPostsOfUserProfileError, post::PostDetailsForFrontend,
         profile::UserProfileDetailsForFrontend,
     },
-    common::utils::system_time,
+    common::{types::top_posts::post_score_index_item::PostStatus, utils::system_time},
     pagination::{self, PaginationError},
 };
 
@@ -59,6 +59,7 @@ fn get_posts_of_this_user_profile_with_pagination_cursor_impl(
     let res_posts = canister_data
         .all_created_posts
         .iter()
+        .filter(|(_, post)| post.status != PostStatus::BannedDueToUserReporting)
         .rev()
         .skip(from_inclusive_index as usize)
         .take(limit as usize)
@@ -178,6 +179,21 @@ mod test {
                 description: "test post".into(),
                 hashtags: Vec::new(),
                 video_uid: String::from(""),
+                status: PostStatus::BannedDueToUserReporting,
+                created_at: SystemTime::now(),
+                likes: HashSet::new(),
+                share_count: 0,
+                view_stats: PostViewStatistics::default(),
+                home_feed_score: FeedScore::default(),
+                creator_consent_for_inclusion_in_hot_or_not: true,
+                hot_or_not_details: None,
+                is_nsfw: false,
+            },
+            Post {
+                id: 6,
+                description: "test post".into(),
+                hashtags: Vec::new(),
+                video_uid: String::from(""),
                 status: PostStatus::ReadyToView,
                 created_at: SystemTime::now(),
                 likes: HashSet::new(),
@@ -208,7 +224,7 @@ mod test {
 
         let posts = result.unwrap();
         assert_eq!(posts.len(), 3);
-        assert_eq!(posts[0].id, 5);
+        assert_eq!(posts[0].id, 6);
         assert_eq!(posts[1].id, 4);
         assert_eq!(posts[2].id, 3);
 
