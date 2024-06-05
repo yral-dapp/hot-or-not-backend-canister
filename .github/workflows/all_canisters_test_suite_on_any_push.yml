@@ -79,7 +79,7 @@ jobs:
         env:
           POCKET_IC_BIN: ${{ github.workspace }}/pocket-ic-x86_64-linux
         run: nix-shell --run "cargo test --package integration_tests --test profile -- when_setting_unique_username_then_new_username_persisted_in_personal_canister_and_updated_in_user_index --nocapture"
-      # - name: Run canister test suite
-      #   env:
-      #     POCKET_IC_BIN: ${{ github.workspace }}/pocket-ic-x86_64-linux
-      #   run: nix-shell --run "cargo test"
+      - name: Run canister test suite
+        env:
+          POCKET_IC_BIN: ${{ github.workspace }}/pocket-ic-x86_64-linux
+        run: nix-shell --run "cargo test"
