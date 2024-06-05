@@ -90,7 +90,7 @@ mod tests {
             score: 10,
             publisher_canister_id: Principal::from_text("aaaaa-aa").unwrap(),
             is_nsfw: true,
-            status: PostStatus::BannedDueToUserReporting,
+            status: PostStatus::ReadyToView,
             created_at: Some(created_at_ealier),
         };
 

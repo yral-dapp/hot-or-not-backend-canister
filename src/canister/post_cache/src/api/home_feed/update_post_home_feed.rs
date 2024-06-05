@@ -69,7 +69,7 @@ mod tests {
             score: 10,
             publisher_canister_id: Principal::from_text("aaaaa-aa").unwrap(),
             is_nsfw: true,
-            status: PostStatus::BannedDueToUserReporting,
+            status: PostStatus::ReadyToView,
             created_at: Some(created_at_now),
         };
 
@@ -88,7 +88,7 @@ mod tests {
             Principal::from_text("aaaaa-aa").unwrap()
         );
         assert_eq!(iter_posts[0].is_nsfw, true);
-        assert_eq!(iter_posts[0].status, PostStatus::BannedDueToUserReporting);
+        assert_eq!(iter_posts[0].status, PostStatus::ReadyToView);
         assert_eq!(iter_posts[0].created_at, Some(created_at_now));
     }
 
