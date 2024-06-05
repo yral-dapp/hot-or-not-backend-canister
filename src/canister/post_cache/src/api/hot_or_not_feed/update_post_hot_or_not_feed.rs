@@ -1,5 +1,7 @@
 use ic_cdk_macros::update;
-use shared_utils::common::types::top_posts::post_score_index_item::PostScoreIndexItemV1;
+use shared_utils::common::types::top_posts::post_score_index_item::{
+    PostScoreIndexItemV1, PostStatus,
+};
 
 use crate::{data_model::CanisterData, CANISTER_DATA};
 
@@ -24,9 +26,15 @@ fn update_post_hot_or_not_feed_impl(post: PostScoreIndexItemV1, canister_data: &
 
     let global_id = (post.publisher_canister_id, post.post_id);
     if let Some(_) = item_prescence_index.get(&global_id) {
-        canister_data
-            .posts_index_sorted_by_hot_or_not_feed_score_v1
-            .replace(&post);
+        if post.status == PostStatus::BannedDueToUserReporting {
+            canister_data
+                .posts_index_sorted_by_hot_or_not_feed_score_v1
+                .remove(&post);
+        } else {
+            canister_data
+                .posts_index_sorted_by_hot_or_not_feed_score_v1
+                .replace(&post);
+        }
     }
 }
 
