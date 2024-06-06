@@ -125,7 +125,7 @@ type MigrationErrors = variant {
   MigrationInfoNotFound;
   UserNotRegistered;
   Unauthorized;
-  TransferToCanisterCallFailed;
+  TransferToCanisterCallFailed : text;
   HotOrNotSubnetCanisterIdNotFound;
   AlreadyUsedForMigration;
   CanisterInfoFailed;
