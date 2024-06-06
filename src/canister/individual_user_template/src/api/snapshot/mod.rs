@@ -17,7 +17,7 @@ use shared_utils::{
             HotOrNotDetails, PlacedBetDetail, RoomDetailsV1, RoomId, SlotDetailsV1, SlotId,
             StablePrincipal,
         },
-        migration::{MigrationInfo}, 
+        migration::MigrationInfo,
         post::{FeedScore, Post, PostViewStatistics},
         profile::UserProfile,
         session::SessionType,
@@ -364,6 +364,7 @@ impl From<CanisterDataForSnapshot> for CanisterData {
             last_canister_functionality_access_time: canister_data
                 .last_canister_functionality_access_time,
             migration_info: canister_data.migration_info,
+            ..Default::default()
         }
     }
 }

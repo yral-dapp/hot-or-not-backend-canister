@@ -1,14 +1,10 @@
 use std::{borrow::BorrowMut, collections::BTreeMap, error::Error};
 
-use candid::{CandidType, Principal};
+use candid::Principal;
 use ic_cdk::{
-    api::{
-        call, canister_balance128,
-        management_canister::main::{canister_info, CanisterInfoRequest},
-    },
+    api::management_canister::main::{canister_info, CanisterInfoRequest},
     call, caller, id,
 };
-use serde::{Deserialize, Serialize};
 use shared_utils::{
     canister_specific::individual_user_template::types::{
         migration::{MigrationErrors, MigrationInfo},
@@ -22,7 +18,6 @@ use shared_utils::{
 
 use crate::{
     api::post::add_post_v2::{self, add_post_to_memory},
-    data_model::CanisterData,
     CANISTER_DATA,
 };
 

@@ -5,6 +5,7 @@ pub mod cycle_management;
 pub mod follow;
 pub mod hot_or_not_bet;
 pub mod http;
+pub mod kv_storage;
 pub mod monitoring;
 pub mod post;
 pub mod profile;

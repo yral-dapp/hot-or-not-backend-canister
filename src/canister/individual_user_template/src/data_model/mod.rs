@@ -33,6 +33,9 @@ use self::memory::{
     get_slot_details_memory, Memory,
 };
 
+use kv_storage::AppStorage;
+
+pub mod kv_storage;
 pub mod memory;
 
 #[derive(Deserialize, Serialize)]
@@ -69,6 +72,8 @@ pub struct CanisterData {
     pub last_canister_functionality_access_time: Option<SystemTime>,
     #[serde(default)]
     pub migration_info: MigrationInfo,
+    #[serde(default)]
+    pub app_storage: AppStorage,
 }
 
 pub fn _default_room_details(
@@ -114,6 +119,7 @@ impl Default for CanisterData {
             last_access_time: None,
             last_canister_functionality_access_time: None,
             migration_info: MigrationInfo::NotMigrated,
+            app_storage: AppStorage::default(),
         }
     }
 }
