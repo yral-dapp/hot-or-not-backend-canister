@@ -13,6 +13,7 @@ use shared_utils::{
     canister_specific::individual_user_template::types::{
         migration::{MigrationErrors, MigrationInfo},
         post::{Post, PostDetailsFromFrontend},
+        session::SessionType,
     },
     common::{
         types::{known_principal::KnownPrincipalType, utility_token::token_event::TokenEvent},
@@ -60,6 +61,9 @@ impl IndividualUser {
             let Some(profile_principal) = canister_data.profile.principal_id else {
                 return Err(MigrationErrors::UserNotRegistered);
             };
+            if canister_data.session_type != Some(SessionType::RegisteredSession) {
+                return Err(MigrationErrors::UserNotRegistered);
+            }
             Ok((profile_principal, canister_data.migration_info))
         })?;
 
@@ -143,7 +147,7 @@ impl Migration for IndividualUser {
             (self.profile_principal, token.utility_token_balance, posts),
         )
         .await
-        .map_err(|_e| MigrationErrors::TransferToCanisterCallFailed)?;
+        .map_err(|e| MigrationErrors::TransferToCanisterCallFailed(e.1))?;
 
         match transfer_res {
             Ok(()) => CANISTER_DATA.with_borrow_mut(|canister_data| {
