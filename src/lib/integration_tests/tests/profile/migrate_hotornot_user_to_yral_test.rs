@@ -572,6 +572,24 @@ fn test_when_user_tries_to_misuse_to_recieve_tokens_and_posts() {
     })
     .unwrap();
 
+    //mark alice yral canister as registered
+    pocket_ic
+        .update_call(
+            alice_yral_canister_id,
+            yral_subnet_orchestrator_canister_id,
+            "update_session_type",
+            candid::encode_one(SessionType::RegisteredSession).unwrap(),
+        )
+        .map(|reply_payload| {
+            let res: Result<String, String> = match reply_payload {
+                PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 add_post failed\n"),
+            };
+            res
+        })
+        .unwrap()
+        .unwrap();
+
     let alice_dummy_canister = pocket_ic.create_canister();
     //Transfer token from yral to yral account
     let res = pocket_ic
