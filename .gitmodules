@@ -1,3 +1,0 @@
-[submodule "sns"]
-	path = sns
-	url = https://github.com/go-bazzinga/sns.git
