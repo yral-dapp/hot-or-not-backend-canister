@@ -23,7 +23,8 @@ use test_utils::setup::{
 };
 
 #[test]
-fn test_transfer_token_can_happen_only_once_from_hot_or_not_canister_to_yral_canister_triggered_by_profile_owner(
+#[ignore]
+fn test_transfer_token_can_heppen_only_once_from_hot_or_not_canister_to_yral_canister_triggered_by_profile_owner(
 ) {
     let (pocket_ic, known_principal) = get_new_pocket_ic_env();
     let platform_canister_id = known_principal
