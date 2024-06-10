@@ -124,6 +124,8 @@ type MigrationErrors = variant {
   InvalidFromCanister;
   MigrationInfoNotFound;
   UserNotRegistered;
+  RequestCycleFromUserIndexFailed : text;
+  UserIndexCanisterIdNotFound;
   Unauthorized;
   TransferToCanisterCallFailed : text;
   HotOrNotSubnetCanisterIdNotFound;
@@ -391,11 +393,7 @@ service : (IndividualUserTemplateInitArgs) -> {
   receive_and_save_snaphot : (nat64, vec nat8) -> ();
   receive_bet_from_bet_makers_canister : (PlaceBetArg, principal) -> (Result_1);
   receive_bet_winnings_when_distributed : (nat64, BetOutcomeForBetMaker) -> ();
-  receive_data_from_hotornot : (
-      principal,
-      nat64,
-      vec record { nat64; Post },
-    ) -> (Result_8);
+  receive_data_from_hotornot : (principal, nat64, vec Post) -> (Result_8);
   receive_my_created_posts_from_data_backup_canister : (vec Post) -> ();
   receive_my_profile_from_data_backup_canister : (UserProfile) -> ();
   receive_my_utility_token_balance_from_data_backup_canister : (nat64) -> ();

@@ -25,4 +25,6 @@ pub enum MigrationErrors {
     UserNotRegistered,
     Unauthorized,
     HotOrNotSubnetCanisterIdNotFound,
+    UserIndexCanisterIdNotFound,
+    RequestCycleFromUserIndexFailed(String),
 }

@@ -147,6 +147,7 @@ service : (UserIndexInitArgs) -> {
       text,
     ) -> ();
   reclaim_cycles_from_individual_canisters : () -> ();
+  request_cycles : (nat) -> (Result_2);
   reset_user_individual_canisters : (vec principal) -> (Result);
   return_cycles_to_platform_orchestrator_canister : () -> (Result);
   set_permission_to_upgrade_individual_canisters : (bool) -> (text);
