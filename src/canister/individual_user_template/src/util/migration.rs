@@ -27,7 +27,7 @@ use crate::{
     CANISTER_DATA,
 };
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone, Copy)]
 pub enum SubnetType {
     HotorNot,
     Yral,
@@ -40,14 +40,15 @@ pub trait Migration {
         to_individual_user: IndividualUser,
     ) -> Result<(), MigrationErrors>;
 
-    fn recieve_tokens_and_posts(
+    async fn recieve_tokens_and_posts(
         &self,
         from_individual_user: IndividualUser,
         token_amount: u64,
-        posts: BTreeMap<u64, Post>,
+        posts: Vec<Post>,
     ) -> Result<(), MigrationErrors>;
 }
 
+#[derive(Copy, Clone)]
 pub struct IndividualUser {
     pub canister_id: Principal,
     pub profile_principal: Principal,
@@ -107,10 +108,27 @@ impl IndividualUser {
             migration_status: migration_info,
         })
     }
-}
 
-impl Migration for IndividualUser {
-    async fn transfer_tokens_and_posts(
+    async fn request_cycles_for_migration(&self) -> Result<(), MigrationErrors> {
+        let cycles_amount = 500_000_000_u128; //0.5 Billion
+
+        let subnet_orchestrator = CANISTER_DATA.with_borrow(|canister_data| {
+            canister_data
+                .known_principal_ids
+                .get(&KnownPrincipalType::CanisterIdUserIndex)
+                .cloned()
+                .ok_or(MigrationErrors::UserIndexCanisterIdNotFound)
+        })?;
+
+        let (res,): (Result<(), String>,) =
+            call(subnet_orchestrator, "request_cycles", (cycles_amount,))
+                .await
+                .map_err(|e| MigrationErrors::RequestCycleFromUserIndexFailed(e.1))?;
+
+        res.map_err(MigrationErrors::RequestCycleFromUserIndexFailed)
+    }
+
+    fn transfer_checks(
         &self,
         caller: Principal,
         to_individual_user: IndividualUser,
@@ -134,17 +152,25 @@ impl Migration for IndividualUser {
             return Err(MigrationErrors::AlreadyMigrated);
         }
 
-        let (posts, token) = CANISTER_DATA.with_borrow(|canister_data| {
-            (
-                canister_data.all_created_posts.clone(),
-                canister_data.my_token_balance.clone(),
-            )
-        });
+        Ok(())
+    }
+
+    async fn transfer_tokens(
+        &self,
+        caller: Principal,
+        to_individual_user: IndividualUser,
+    ) -> Result<(), MigrationErrors> {
+        let token =
+            CANISTER_DATA.with_borrow(|canister_data| canister_data.my_token_balance.clone());
 
         let (transfer_res,): (Result<(), MigrationErrors>,) = call(
             to_individual_user.canister_id,
             "receive_data_from_hotornot",
-            (self.profile_principal, token.utility_token_balance, posts),
+            (
+                self.profile_principal,
+                token.utility_token_balance,
+                Vec::<Post>::new(),
+            ),
         )
         .await
         .map_err(|e| MigrationErrors::TransferToCanisterCallFailed(e.1))?;
@@ -168,23 +194,19 @@ impl Migration for IndividualUser {
             Err(e) => Err(e),
         }
     }
+    fn transfer_posts(&self, to_individual_user: IndividualUser) -> Result<(), MigrationErrors> {
+        ic_cdk::spawn(transfer_posts_task(
+            self.profile_principal,
+            to_individual_user,
+        ));
 
-    fn recieve_tokens_and_posts(
-        &self,
-        from_individual_user: IndividualUser,
-        token_amout: u64,
-        posts: BTreeMap<u64, Post>,
-    ) -> Result<(), MigrationErrors> {
-        if from_individual_user.subnet_type != SubnetType::HotorNot {
-            return Err(MigrationErrors::Unauthorized);
-        }
+        Ok(())
+    }
+
+    fn receive_posts(&self, posts: Vec<Post>) {
         CANISTER_DATA.with_borrow_mut(|canister_data| {
-            if canister_data.migration_info != MigrationInfo::NotMigrated {
-                return Err(MigrationErrors::AlreadyUsedForMigration);
-            }
-
             let transfer_posts: Vec<PostDetailsFromFrontend> = posts
-                .into_values()
+                .into_iter()
                 .map(PostDetailsFromFrontend::from)
                 .collect();
 
@@ -192,11 +214,23 @@ impl Migration for IndividualUser {
             transfer_posts.iter().for_each(|post| {
                 add_post_to_memory(canister_data, post, &current_system_time);
             });
+        })
+    }
+
+    fn receive_tokens(
+        &self,
+        from_individual_user: IndividualUser,
+        token_amount: u64,
+    ) -> Result<(), MigrationErrors> {
+        CANISTER_DATA.with_borrow_mut(|canister_data| {
+            if token_amount > 0 && canister_data.migration_info != MigrationInfo::NotMigrated {
+                return Err(MigrationErrors::AlreadyUsedForMigration);
+            }
 
             canister_data
                 .my_token_balance
                 .handle_token_event(TokenEvent::Receive {
-                    amount: token_amout,
+                    amount: token_amount,
                     from_account: from_individual_user.profile_principal,
                     timestamp: get_current_system_time_from_ic(),
                 });
@@ -206,5 +240,66 @@ impl Migration for IndividualUser {
             };
             Ok(())
         })
+    }
+}
+
+async fn transfer_posts_task(profile_principal: Principal, to_individual_user: IndividualUser) {
+    let posts: Vec<Post> = CANISTER_DATA
+        .with_borrow(|canister_data| canister_data.all_created_posts.clone())
+        .into_iter()
+        .map(|v| v.1)
+        .collect();
+
+    let post_chunks = posts.chunks(10);
+
+    for posts in post_chunks {
+        let transfer_res: Result<(Result<(), MigrationErrors>,), MigrationErrors> = call(
+            to_individual_user.canister_id,
+            "receive_data_from_hotornot",
+            (profile_principal, 0_u64, posts.to_vec()),
+        )
+        .await
+        .map_err(|e| MigrationErrors::TransferToCanisterCallFailed(e.1));
+    }
+}
+
+impl Migration for IndividualUser {
+    async fn transfer_tokens_and_posts(
+        &self,
+        caller: Principal,
+        to_individual_user: IndividualUser,
+    ) -> Result<(), MigrationErrors> {
+        self.transfer_checks(caller, to_individual_user)?;
+
+        let res = self.transfer_tokens(caller, to_individual_user).await;
+
+        match res {
+            Ok(()) => {
+                self.request_cycles_for_migration().await?;
+                let _ = self.transfer_posts(to_individual_user);
+                Ok(())
+            }
+            Err(e) => Err(e),
+        }
+    }
+
+    async fn recieve_tokens_and_posts(
+        &self,
+        from_individual_user: IndividualUser,
+        token_amount: u64,
+        posts: Vec<Post>,
+    ) -> Result<(), MigrationErrors> {
+        if from_individual_user.subnet_type != SubnetType::HotorNot {
+            return Err(MigrationErrors::Unauthorized);
+        }
+
+        if token_amount > 0 {
+            self.receive_tokens(from_individual_user, token_amount)?;
+            self.request_cycles_for_migration().await?;
+        }
+
+        self.receive_posts(posts);
+
+        Ok(())
     }
 }

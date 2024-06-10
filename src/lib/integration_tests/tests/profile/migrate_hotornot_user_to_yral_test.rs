@@ -10,7 +10,10 @@ use shared_utils::{
     },
     common::types::known_principal::KnownPrincipalType,
 };
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::{
+    collections::{BTreeMap, HashMap, HashSet},
+    time::Duration,
+};
 use test_utils::setup::{
     env::pocket_ic_env::get_new_pocket_ic_env,
     test_constants::{
@@ -102,28 +105,30 @@ fn test_transfer_token_can_happen_only_once_from_hot_or_not_canister_to_yral_can
     })
     .unwrap();
 
-    let alice_post_id = pocket_ic
-        .update_call(
-            alice_hot_or_not_canister_id,
-            alice_hot_or_not_principal_id,
-            "add_post_v2",
-            candid::encode_args((PostDetailsFromFrontend {
-                is_nsfw: false,
-                description: "This is a fun video to watch".to_string(),
-                hashtags: vec!["fun".to_string(), "video".to_string()],
-                video_uid: "abcd#1234".to_string(),
-                creator_consent_for_inclusion_in_hot_or_not: true,
-            },))
-            .unwrap(),
-        )
-        .map(|reply_payload| {
-            let newly_created_post_id_result: Result<u64, String> = match reply_payload {
-                PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 add_post failed\n"),
-            };
-            newly_created_post_id_result.unwrap()
-        })
-        .unwrap();
+    for _ in 0..52 {
+        let _alice_post_id = pocket_ic
+            .update_call(
+                alice_hot_or_not_canister_id,
+                alice_hot_or_not_principal_id,
+                "add_post_v2",
+                candid::encode_args((PostDetailsFromFrontend {
+                    is_nsfw: false,
+                    description: "This is a fun video to watch".to_string(),
+                    hashtags: vec!["fun".to_string(), "video".to_string()],
+                    video_uid: "abcd#1234".to_string(),
+                    creator_consent_for_inclusion_in_hot_or_not: true,
+                },))
+                .unwrap(),
+            )
+            .map(|reply_payload| {
+                let newly_created_post_id_result: Result<u64, String> = match reply_payload {
+                    PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                    _ => panic!("\n🛑 add_post failed\n"),
+                };
+                newly_created_post_id_result.unwrap()
+            })
+            .unwrap();
+    }
 
     pocket_ic
         .update_call(
@@ -323,7 +328,9 @@ fn test_transfer_token_can_happen_only_once_from_hot_or_not_canister_to_yral_can
 
     assert_eq!(success, Ok(()));
 
-    for _ in 0..10 {
+    pocket_ic.advance_time(Duration::from_secs(1000));
+
+    for _ in 0..25 {
         pocket_ic.tick();
     }
 
@@ -367,7 +374,7 @@ fn test_transfer_token_can_happen_only_once_from_hot_or_not_canister_to_yral_can
             alice_yral_canister_id,
             Principal::anonymous(),
             "get_posts_of_this_user_profile_with_pagination_cursor",
-            candid::encode_args((0_u64, 10_u64)).unwrap(),
+            candid::encode_args((0_u64, 100_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let posts_response: Result<Vec<PostDetailsForFrontend>, GetPostsOfUserProfileError> =
@@ -380,7 +387,7 @@ fn test_transfer_token_can_happen_only_once_from_hot_or_not_canister_to_yral_can
         .unwrap()
         .unwrap();
 
-    assert_eq!(posts_response.len(), 2);
+    assert_eq!(posts_response.len(), 53);
 
     //mark charile hot or not as registered
     pocket_ic
