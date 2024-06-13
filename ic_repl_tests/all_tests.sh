@@ -1,4 +1,5 @@
 # individual_user_template
+# all ic repl tests
 ## post
 ic-repl ic_repl_tests/individual_user_template/post/post_toggle_like_check_liked_by_me.test.sh
 ic-repl ic_repl_tests/individual_user_template/post/post.test.sh
