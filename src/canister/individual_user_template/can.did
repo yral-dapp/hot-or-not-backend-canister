@@ -449,6 +449,7 @@ service : (IndividualUserTemplateInitArgs) -> {
   update_referrer_details : (UserCanisterDetails) -> (Result_13);
   update_session_type : (SessionType) -> (Result_13);
   update_well_known_principal : (KnownPrincipalType, principal) -> ();
+  write_key_value_pair : (nat64, text, text) -> (Result_3);
   write_multiple_key_value_pairs : (nat64, vec record { text; text }) -> (
       Result_4,
     );

@@ -9,9 +9,14 @@ use candid::{CandidType, Decode, Encode, Principal};
 use ic_cdk::api::time;
 use ic_stable_structures::{storable::Bound, StableBTreeMap, Storable};
 use serde::{Deserialize, Serialize};
-use shared_utils::canister_specific::individual_user_template::types::kv_storage::{
-    NamespaceErrors, NamespaceForFrontend,
+use shared_utils::{
+    canister_specific::individual_user_template::types::kv_storage::{
+        NamespaceErrors, NamespaceForFrontend,
+    },
+    common::types::app_primitive_type::PostId,
 };
+
+type NamespaceId = u64;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Namespace {
@@ -42,38 +47,47 @@ impl Storable for Namespace {
         namespace
     }
 
-    const BOUND: ic_stable_structures::storable::Bound = Bound::Bounded {
-        max_size: 100,
-        is_fixed_size: false,
-    };
+    const BOUND: ic_stable_structures::storable::Bound = Bound::Unbounded;
 }
 
 impl Namespace {
     pub fn write_key_value_pair(&self, key: String, value: String) -> Option<String> {
+        let namespace_key = NameSpaceKey {
+            key,
+            namespace_id: self.id,
+        };
         CANISTER_DATA.with_borrow_mut(|canister_data| {
             canister_data
                 .app_storage
                 .namespace_key_value
-                .insert((self.id, key), value)
+                .insert(namespace_key, value)
         })
     }
 
     pub fn delete_key_value_pair(&self, key: String) -> Option<String> {
+        let namespace_key = NameSpaceKey {
+            key,
+            namespace_id: self.id,
+        };
         CANISTER_DATA.with_borrow_mut(|canister_data| {
             canister_data
                 .app_storage
                 .namespace_key_value
-                .remove(&(self.id, key))
+                .remove(&namespace_key)
         })
     }
 
     pub fn write_multiple_key_value_pairs(&self, pairs: BTreeMap<String, String>) {
         CANISTER_DATA.with_borrow_mut(|canister_data| {
             pairs.into_iter().for_each(|pair| {
+                let namespace_key = NameSpaceKey {
+                    key: pair.0,
+                    namespace_id: self.id,
+                };
                 canister_data
                     .app_storage
                     .namespace_key_value
-                    .insert((self.id, pair.0), pair.1);
+                    .insert(namespace_key, pair.1);
             })
         })
     }
@@ -81,10 +95,14 @@ impl Namespace {
     pub fn delete_multiple_keys(&self, keys: Vec<String>) {
         CANISTER_DATA.with_borrow_mut(|canister_data| {
             keys.into_iter().for_each(|key| {
+                let namespace_key = NameSpaceKey {
+                    key,
+                    namespace_id: self.id,
+                };
                 canister_data
                     .app_storage
                     .namespace_key_value
-                    .remove(&(self.id, key));
+                    .remove(&namespace_key);
             })
         })
     }
@@ -95,17 +113,21 @@ impl Namespace {
                 .app_storage
                 .namespace_key_value
                 .iter()
-                .map(|(key, _)| key.1)
+                .map(|(key, _)| key.key)
                 .collect()
         })
     }
 
     pub fn read_key_value_pair(&self, key: String) -> Option<String> {
+        let namespace_key = NameSpaceKey {
+            key,
+            namespace_id: self.id,
+        };
         CANISTER_DATA.with_borrow(|canister_data| {
             canister_data
                 .app_storage
                 .namespace_key_value
-                .get(&(self.id, key))
+                .get(&namespace_key)
         })
     }
 
@@ -114,7 +136,8 @@ impl Namespace {
             return Err(NamespaceErrors::Unauthorized);
         }
 
-        let new_namespace_id = time();
+        let new_namespace_id = CANISTER_DATA
+            .with_borrow(|canister_data| canister_data.app_storage.namespace_list.len());
 
         let new_namespace = Namespace {
             id: new_namespace_id,
@@ -126,12 +149,36 @@ impl Namespace {
     }
 }
 
+#[derive(Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+struct NameSpaceKey {
+    namespace_id: u64,
+    key: String,
+}
+
+impl Storable for NameSpaceKey {
+    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
+        let mut bytes = vec![];
+        ciborium::ser::into_writer(self, &mut bytes).unwrap();
+        Cow::Owned(bytes)
+    }
+
+    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
+        let namespace: Self = ciborium::de::from_reader(bytes.as_ref()).unwrap();
+        namespace
+    }
+
+    const BOUND: Bound = Bound::Bounded {
+        max_size: 100,
+        is_fixed_size: false,
+    };
+}
+
 #[derive(Serialize, Deserialize)]
 pub struct AppStorage {
     #[serde(skip, default = "_default_namespace_list")]
     namespace_list: StableBTreeMap<u64, Namespace, Memory>,
     #[serde(skip, default = "_default_namespace_key_value")]
-    namespace_key_value: StableBTreeMap<(u64, String), String, Memory>,
+    namespace_key_value: StableBTreeMap<NameSpaceKey, String, Memory>,
 }
 
 impl Default for AppStorage {
@@ -198,6 +245,6 @@ pub fn _default_namespace_list() -> StableBTreeMap<u64, Namespace, Memory> {
     ic_stable_structures::StableBTreeMap::init(get_kv_storage_namespace_memory())
 }
 
-pub fn _default_namespace_key_value() -> StableBTreeMap<(u64, String), String, Memory> {
+pub fn _default_namespace_key_value() -> StableBTreeMap<NameSpaceKey, String, Memory> {
     ic_stable_structures::StableBTreeMap::init(get_kv_storage_namespace_key_value_memory())
 }

@@ -27,6 +27,17 @@ fn write_multiple_key_value_pairs(
     Ok(())
 }
 
+#[update]
+fn write_key_value_pair(
+    namespace_id: u64,
+    key: String,
+    value: String,
+) -> Result<Option<String>, NamespaceErrors> {
+    let namespace = AppStorage::get_a_namespace(caller(), namespace_id)?;
+    let prev_value = namespace.write_key_value_pair(key, value);
+    Ok(prev_value)
+}
+
 #[query]
 fn list_namespace_keys(namespace_id: u64) -> Result<Vec<String>, NamespaceErrors> {
     let namespace = AppStorage::get_a_namespace(caller(), namespace_id)?;
