@@ -76,6 +76,6 @@ jobs:
           nix-shell --run "dfx build post_cache"
           gzip -f -1 ./target/wasm32-unknown-unknown/release/post_cache.wasm
       - name: Run canister test suite
-        env: 
+        env:
           POCKET_IC_BIN: ${{ github.workspace }}/pocket-ic-x86_64-linux
         run: nix-shell --run "cargo test"

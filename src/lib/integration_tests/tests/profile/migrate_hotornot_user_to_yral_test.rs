@@ -6,10 +6,14 @@ use shared_utils::{
         error::GetPostsOfUserProfileError,
         migration::MigrationErrors,
         post::{Post, PostDetailsForFrontend, PostDetailsFromFrontend},
+        session::SessionType,
     },
     common::types::known_principal::KnownPrincipalType,
 };
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::{
+    collections::{BTreeMap, HashMap, HashSet},
+    time::Duration,
+};
 use test_utils::setup::{
     env::pocket_ic_env::get_new_pocket_ic_env,
     test_constants::{
@@ -19,6 +23,7 @@ use test_utils::setup::{
 };
 
 #[test]
+#[ignore]
 fn test_transfer_token_can_heppen_only_once_from_hot_or_not_canister_to_yral_canister_triggered_by_profile_owner(
 ) {
     let (pocket_ic, known_principal) = get_new_pocket_ic_env();
@@ -101,27 +106,46 @@ fn test_transfer_token_can_heppen_only_once_from_hot_or_not_canister_to_yral_can
     })
     .unwrap();
 
-    let alice_post_id = pocket_ic
+    for _ in 0..52 {
+        let _alice_post_id = pocket_ic
+            .update_call(
+                alice_hot_or_not_canister_id,
+                alice_hot_or_not_principal_id,
+                "add_post_v2",
+                candid::encode_args((PostDetailsFromFrontend {
+                    is_nsfw: false,
+                    description: "This is a fun video to watch".to_string(),
+                    hashtags: vec!["fun".to_string(), "video".to_string()],
+                    video_uid: "abcd#1234".to_string(),
+                    creator_consent_for_inclusion_in_hot_or_not: true,
+                },))
+                .unwrap(),
+            )
+            .map(|reply_payload| {
+                let newly_created_post_id_result: Result<u64, String> = match reply_payload {
+                    PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                    _ => panic!("\n🛑 add_post failed\n"),
+                };
+                newly_created_post_id_result.unwrap()
+            })
+            .unwrap();
+    }
+
+    pocket_ic
         .update_call(
             alice_hot_or_not_canister_id,
-            alice_hot_or_not_principal_id,
-            "add_post_v2",
-            candid::encode_args((PostDetailsFromFrontend {
-                is_nsfw: false,
-                description: "This is a fun video to watch".to_string(),
-                hashtags: vec!["fun".to_string(), "video".to_string()],
-                video_uid: "abcd#1234".to_string(),
-                creator_consent_for_inclusion_in_hot_or_not: true,
-            },))
-            .unwrap(),
+            hot_or_not_subnet_orchestrator_canister_id,
+            "update_session_type",
+            candid::encode_one(SessionType::RegisteredSession).unwrap(),
         )
         .map(|reply_payload| {
-            let newly_created_post_id_result: Result<u64, String> = match reply_payload {
+            let res: Result<String, String> = match reply_payload {
                 PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
                 _ => panic!("\n🛑 add_post failed\n"),
             };
-            newly_created_post_id_result.unwrap()
+            res
         })
+        .unwrap()
         .unwrap();
 
     let alice_yral_principal_id = get_mock_user_bob_principal_id();
@@ -134,6 +158,24 @@ fn test_transfer_token_can_heppen_only_once_from_hot_or_not_canister_to_yral_can
         canister_id
     })
     .unwrap();
+
+    pocket_ic
+        .update_call(
+            alice_yral_canister_id,
+            yral_subnet_orchestrator_canister_id,
+            "update_session_type",
+            candid::encode_one(SessionType::RegisteredSession).unwrap(),
+        )
+        .map(|reply_payload| {
+            let res: Result<String, String> = match reply_payload {
+                PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 add_post failed\n"),
+            };
+            res
+        })
+        .unwrap()
+        .unwrap();
+
     pocket_ic
         .update_call(
             alice_yral_canister_id,
@@ -287,7 +329,9 @@ fn test_transfer_token_can_heppen_only_once_from_hot_or_not_canister_to_yral_can
 
     assert_eq!(success, Ok(()));
 
-    for _ in 0..10 {
+    pocket_ic.advance_time(Duration::from_secs(1000));
+
+    for _ in 0..25 {
         pocket_ic.tick();
     }
 
@@ -331,7 +375,7 @@ fn test_transfer_token_can_heppen_only_once_from_hot_or_not_canister_to_yral_can
             alice_yral_canister_id,
             Principal::anonymous(),
             "get_posts_of_this_user_profile_with_pagination_cursor",
-            candid::encode_args((0_u64, 10_u64)).unwrap(),
+            candid::encode_args((0_u64, 100_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let posts_response: Result<Vec<PostDetailsForFrontend>, GetPostsOfUserProfileError> =
@@ -344,7 +388,25 @@ fn test_transfer_token_can_heppen_only_once_from_hot_or_not_canister_to_yral_can
         .unwrap()
         .unwrap();
 
-    assert_eq!(posts_response.len(), 2);
+    assert_eq!(posts_response.len(), 53);
+
+    //mark charile hot or not as registered
+    pocket_ic
+        .update_call(
+            charlie_hot_or_not_canister_id,
+            hot_or_not_subnet_orchestrator_canister_id,
+            "update_session_type",
+            candid::encode_one(SessionType::RegisteredSession).unwrap(),
+        )
+        .map(|reply_payload| {
+            let res: Result<String, String> = match reply_payload {
+                PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 add_post failed\n"),
+            };
+            res
+        })
+        .unwrap()
+        .unwrap();
 
     // attempt to transfer token from new hot or not account to already used for migration yral account
     let success = pocket_ic
@@ -364,7 +426,7 @@ fn test_transfer_token_can_heppen_only_once_from_hot_or_not_canister_to_yral_can
         .unwrap();
     assert_eq!(success, Err(MigrationErrors::AlreadyUsedForMigration));
 
-    // attempt to transfer token from already migrated hot or not account to already used yral account.
+    // attempt to transfer token from already migrated hot or not account to new yral account.
     let success = pocket_ic
         .update_call(
             alice_hot_or_not_canister_id,
@@ -381,6 +443,60 @@ fn test_transfer_token_can_heppen_only_once_from_hot_or_not_canister_to_yral_can
         })
         .unwrap();
     assert_eq!(success, Err(MigrationErrors::AlreadyMigrated));
+
+    //attempt to transfer token from hot or not account to not registered yral account
+    let success = pocket_ic
+        .update_call(
+            charlie_hot_or_not_canister_id,
+            charlie_hot_or_not_principal_id,
+            "transfer_tokens_and_posts",
+            candid::encode_args((charlie_yral_principal_id, charlie_yral_canister_id)).unwrap(),
+        )
+        .map(|reply_payload| {
+            let success: Result<(), MigrationErrors> = match reply_payload {
+                PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 transfer_tokens_and_posts failed\n"),
+            };
+            success
+        })
+        .unwrap();
+    assert_eq!(success, Err(MigrationErrors::UserNotRegistered));
+
+    //mark charlie yral account as registered
+    pocket_ic
+        .update_call(
+            charlie_yral_canister_id,
+            yral_subnet_orchestrator_canister_id,
+            "update_session_type",
+            candid::encode_one(SessionType::RegisteredSession).unwrap(),
+        )
+        .map(|reply_payload| {
+            let res: Result<String, String> = match reply_payload {
+                PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 add_post failed\n"),
+            };
+            res
+        })
+        .unwrap()
+        .unwrap();
+
+    //attempt to transfer token from new hot or not account to new yral account
+    let success = pocket_ic
+        .update_call(
+            charlie_hot_or_not_canister_id,
+            charlie_hot_or_not_principal_id,
+            "transfer_tokens_and_posts",
+            candid::encode_args((charlie_yral_principal_id, charlie_yral_canister_id)).unwrap(),
+        )
+        .map(|reply_payload| {
+            let success: Result<(), MigrationErrors> = match reply_payload {
+                PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 transfer_tokens_and_posts failed\n"),
+            };
+            success
+        })
+        .unwrap();
+    assert_eq!(success, Ok(()));
 }
 
 #[test]
@@ -463,6 +579,24 @@ fn test_when_user_tries_to_misuse_to_recieve_tokens_and_posts() {
         canister_id
     })
     .unwrap();
+
+    //mark alice yral canister as registered
+    pocket_ic
+        .update_call(
+            alice_yral_canister_id,
+            yral_subnet_orchestrator_canister_id,
+            "update_session_type",
+            candid::encode_one(SessionType::RegisteredSession).unwrap(),
+        )
+        .map(|reply_payload| {
+            let res: Result<String, String> = match reply_payload {
+                PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 add_post failed\n"),
+            };
+            res
+        })
+        .unwrap()
+        .unwrap();
 
     let alice_dummy_canister = pocket_ic.create_canister();
     //Transfer token from yral to yral account

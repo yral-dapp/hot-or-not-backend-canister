@@ -20,9 +20,11 @@ pub enum MigrationErrors {
     MigrationInfoNotFound,
     AlreadyMigrated,
     AlreadyUsedForMigration,
-    TransferToCanisterCallFailed,
+    TransferToCanisterCallFailed(String),
     CanisterInfoFailed,
     UserNotRegistered,
     Unauthorized,
     HotOrNotSubnetCanisterIdNotFound,
+    UserIndexCanisterIdNotFound,
+    RequestCycleFromUserIndexFailed(String),
 }

@@ -124,8 +124,10 @@ type MigrationErrors = variant {
   InvalidFromCanister;
   MigrationInfoNotFound;
   UserNotRegistered;
+  RequestCycleFromUserIndexFailed : text;
+  UserIndexCanisterIdNotFound;
   Unauthorized;
-  TransferToCanisterCallFailed;
+  TransferToCanisterCallFailed : text;
   HotOrNotSubnetCanisterIdNotFound;
   AlreadyUsedForMigration;
   CanisterInfoFailed;
@@ -411,11 +413,7 @@ service : (IndividualUserTemplateInitArgs) -> {
   receive_and_save_snaphot : (nat64, vec nat8) -> ();
   receive_bet_from_bet_makers_canister : (PlaceBetArg, principal) -> (Result_1);
   receive_bet_winnings_when_distributed : (nat64, BetOutcomeForBetMaker) -> ();
-  receive_data_from_hotornot : (
-      principal,
-      nat64,
-      vec record { nat64; Post },
-    ) -> (Result_12);
+  receive_data_from_hotornot : (principal, nat64, vec Post) -> (Result_12);
   receive_my_created_posts_from_data_backup_canister : (vec Post) -> ();
   receive_my_profile_from_data_backup_canister : (UserProfile) -> ();
   receive_my_utility_token_balance_from_data_backup_canister : (nat64) -> ();
@@ -434,6 +432,7 @@ service : (IndividualUserTemplateInitArgs) -> {
   update_post_add_view_details : (nat64, PostViewDetailsFromFrontend) -> ();
   update_post_as_ready_to_view : (nat64) -> ();
   update_post_increment_share_count : (nat64) -> (nat64);
+  update_post_status : (nat64, PostStatus) -> ();
   update_post_toggle_like_status_by_caller : (nat64) -> (bool);
   update_profile_display_details : (UserProfileUpdateDetailsFromFrontend) -> (
       Result_14,
