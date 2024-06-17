@@ -248,7 +248,7 @@ name = "configuration"
 version = "0.1.0"
 dependencies = [
  "candid",
- "ic-cdk 0.12.0",
+ "ic-cdk",
  "serde",
  "shared_utils",
  "test_utils",
@@ -340,7 +340,7 @@ version = "0.1.0"
 dependencies = [
  "candid",
  "ciborium",
- "ic-cdk 0.12.0",
+ "ic-cdk",
  "ic-cdk-timers",
  "ic-stable-structures",
  "serde",
@@ -699,21 +699,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e4ec8231f413b8a4d74b99d7df26d6e917d6528a6245abde27f251210dcf9b72"
 dependencies = [
  "candid",
- "ic-cdk-macros 0.8.4",
- "ic0 0.21.1",
- "serde",
- "serde_bytes",
-]
-
-[[package]]
-name = "ic-cdk"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ff384f182459bec490a7f50a58bbdf8f7a6934de4dcc259e30c70641bcbcb917"
-dependencies = [
- "candid",
- "ic-cdk-macros 0.14.0",
- "ic0 0.23.0",
+ "ic-cdk-macros",
+ "ic0",
  "serde",
  "serde_bytes",
 ]
@@ -728,22 +715,8 @@ dependencies = [
  "proc-macro2",
  "quote",
  "serde",
- "serde_tokenstream 0.1.7",
+ "serde_tokenstream",
  "syn 1.0.109",
-]
-
-[[package]]
-name = "ic-cdk-macros"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "01dc6bc425ec048d6ac4137c7c0f2cfbd6f8b0be8efc568feae2b265f566117c"
-dependencies = [
- "candid",
- "proc-macro2",
- "quote",
- "serde",
- "serde_tokenstream 0.2.1",
- "syn 2.0.66",
 ]
 
 [[package]]
@@ -753,8 +726,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8c43b9706fef3ad10c4192a14801d16bd9539068239f0f06f257857441364329"
 dependencies = [
  "futures",
- "ic-cdk 0.12.0",
- "ic0 0.21.1",
+ "ic-cdk",
+ "ic0",
  "serde",
  "serde_bytes",
  "slotmap",
@@ -769,22 +742,7 @@ dependencies = [
  "candid",
  "crc32fast",
  "hex",
- "ic-cdk 0.12.0",
- "serde",
- "serde_bytes",
- "sha2",
-]
-
-[[package]]
-name = "ic-ledger-types"
-version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7ff0912dee73950385bb95f083b6f0cd6d87bac6be52b7aecce7ea5d2c043f49"
-dependencies = [
- "candid",
- "crc32fast",
- "hex",
- "ic-cdk 0.14.0",
+ "ic-cdk",
  "serde",
  "serde_bytes",
  "sha2",
@@ -816,12 +774,6 @@ name = "ic0"
 version = "0.21.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a54b5297861c651551676e8c43df805dad175cc33bc97dbd992edbbb85dcbcdf"
-
-[[package]]
-name = "ic0"
-version = "0.23.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8de254dd67bbd58073e23dc1c8553ba12fa1dc610a19de94ad2bbcd0460c067f"
 
 [[package]]
 name = "ic_principal"
@@ -982,8 +934,8 @@ version = "0.1.0"
 dependencies = [
  "candid",
  "ciborium",
- "ic-cdk 0.12.0",
- "ic-cdk-macros 0.8.4",
+ "ic-cdk",
+ "ic-cdk-macros",
  "ic-cdk-timers",
  "ic-stable-structures",
  "serde",
@@ -1017,8 +969,8 @@ name = "integration_tests"
 version = "0.1.0"
 dependencies = [
  "candid",
- "ic-cdk 0.12.0",
- "ic-ledger-types 0.11.0",
+ "ic-cdk",
+ "ic-ledger-types",
  "ic-test-state-machine-client",
  "pocket-ic",
  "serde",
@@ -1304,8 +1256,8 @@ version = "0.1.0"
 dependencies = [
  "candid",
  "ciborium",
- "ic-cdk 0.12.0",
- "ic-cdk-macros 0.8.4",
+ "ic-cdk",
+ "ic-cdk-macros",
  "ic-stable-structures",
  "serde",
  "shared_utils",
@@ -1322,7 +1274,7 @@ dependencies = [
  "base64 0.13.1",
  "candid",
  "hex",
- "ic-cdk 0.12.0",
+ "ic-cdk",
  "reqwest",
  "schemars",
  "serde",
@@ -1338,8 +1290,8 @@ name = "post_cache"
 version = "0.1.0"
 dependencies = [
  "candid",
- "ic-cdk 0.12.0",
- "ic-cdk-macros 0.8.4",
+ "ic-cdk",
+ "ic-cdk-macros",
  "ic-cdk-timers",
  "serde",
  "shared_utils",
@@ -1738,18 +1690,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "serde_tokenstream"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8790a7c3fe883e443eaa2af6f705952bc5d6e8671a220b9335c8cae92c037e74"
-dependencies = [
- "proc-macro2",
- "quote",
- "serde",
- "syn 2.0.66",
-]
-
-[[package]]
 name = "serde_urlencoded"
 version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1788,7 +1728,7 @@ dependencies = [
  "candid",
  "ciborium",
  "futures",
- "ic-cdk 0.12.0",
+ "ic-cdk",
  "ic-cdk-timers",
  "ic-stable-structures",
  "pprof",
@@ -1964,8 +1904,8 @@ name = "test_utils"
 version = "0.1.0"
 dependencies = [
  "candid",
- "ic-cdk 0.12.0",
- "ic-ledger-types 0.9.0",
+ "ic-cdk",
+ "ic-ledger-types",
  "ic-test-state-machine-client",
  "pocket-ic",
  "shared_utils",
@@ -2235,8 +2175,8 @@ dependencies = [
  "candid",
  "ciborium",
  "futures",
- "ic-cdk 0.12.0",
- "ic-cdk-macros 0.8.4",
+ "ic-cdk",
+ "ic-cdk-macros",
  "ic-cdk-timers",
  "ic-stable-structures",
  "serde",
