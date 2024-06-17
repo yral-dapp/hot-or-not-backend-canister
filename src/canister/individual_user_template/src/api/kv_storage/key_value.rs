@@ -23,8 +23,7 @@ fn write_multiple_key_value_pairs(
     pairs: BTreeMap<String, String>,
 ) -> Result<(), NamespaceErrors> {
     let namespace = AppStorage::get_a_namespace(caller(), namespace_id)?;
-    namespace.write_multiple_key_value_pairs(pairs);
-    Ok(())
+    namespace.write_multiple_key_value_pairs(pairs)
 }
 
 #[update]
@@ -34,7 +33,7 @@ fn write_key_value_pair(
     value: String,
 ) -> Result<Option<String>, NamespaceErrors> {
     let namespace = AppStorage::get_a_namespace(caller(), namespace_id)?;
-    let prev_value = namespace.write_key_value_pair(key, value);
+    let prev_value = namespace.write_key_value_pair(key, value)?;
     Ok(prev_value)
 }
 

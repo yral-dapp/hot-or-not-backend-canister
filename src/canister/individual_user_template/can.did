@@ -147,6 +147,7 @@ type MintEvent = variant {
 };
 type NamespaceErrors = variant {
   UserNotSignedUp;
+  ValueTooBig;
   NamespaceNotFound;
   Unauthorized;
 };

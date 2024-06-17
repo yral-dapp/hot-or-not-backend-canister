@@ -47,21 +47,38 @@ impl Storable for Namespace {
         namespace
     }
 
-    const BOUND: ic_stable_structures::storable::Bound = Bound::Unbounded;
+    const BOUND: ic_stable_structures::storable::Bound = Bound::Bounded {
+        max_size: 100,
+        is_fixed_size: false,
+    };
 }
 
 impl Namespace {
-    pub fn write_key_value_pair(&self, key: String, value: String) -> Option<String> {
+    pub fn is_value_above_the_size_limit(&self, value: &str) -> bool {
+        value.len() > 400
+    }
+
+    pub fn write_key_value_pair(
+        &self,
+        key: String,
+        value: String,
+    ) -> Result<Option<String>, NamespaceErrors> {
         let namespace_key = NameSpaceKey {
             key,
             namespace_id: self.id,
         };
-        CANISTER_DATA.with_borrow_mut(|canister_data| {
+        if self.is_value_above_the_size_limit(&value) {
+            return Err(NamespaceErrors::ValueTooBig);
+        }
+
+        let prev_value = CANISTER_DATA.with_borrow_mut(|canister_data| {
             canister_data
                 .app_storage
                 .namespace_key_value
                 .insert(namespace_key, value)
-        })
+        });
+
+        Ok(prev_value)
     }
 
     pub fn delete_key_value_pair(&self, key: String) -> Option<String> {
@@ -77,19 +94,33 @@ impl Namespace {
         })
     }
 
-    pub fn write_multiple_key_value_pairs(&self, pairs: BTreeMap<String, String>) {
+    pub fn write_multiple_key_value_pairs(
+        &self,
+        pairs: BTreeMap<String, String>,
+    ) -> Result<(), NamespaceErrors> {
+        let invalid_pair = pairs
+            .iter()
+            .any(|(_, val)| self.is_value_above_the_size_limit(val));
+
+        if invalid_pair {
+            return Err(NamespaceErrors::ValueTooBig);
+        }
+
         CANISTER_DATA.with_borrow_mut(|canister_data| {
             pairs.into_iter().for_each(|pair| {
                 let namespace_key = NameSpaceKey {
                     key: pair.0,
                     namespace_id: self.id,
                 };
+
                 canister_data
                     .app_storage
                     .namespace_key_value
                     .insert(namespace_key, pair.1);
-            })
-        })
+            });
+        });
+
+        Ok(())
     }
 
     pub fn delete_multiple_keys(&self, keys: Vec<String>) {
@@ -150,9 +181,9 @@ impl Namespace {
 }
 
 #[derive(Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
-struct NameSpaceKey {
-    namespace_id: u64,
-    key: String,
+pub struct NameSpaceKey {
+    pub namespace_id: u64,
+    pub key: String,
 }
 
 impl Storable for NameSpaceKey {

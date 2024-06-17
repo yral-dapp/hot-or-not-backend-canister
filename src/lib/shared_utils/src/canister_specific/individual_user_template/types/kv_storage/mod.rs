@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(CandidType, Copy, Clone, Serialize, Deserialize, Debug)]
 pub enum NamespaceErrors {
+    ValueTooBig,
     Unauthorized,
     NamespaceNotFound,
     UserNotSignedUp,
