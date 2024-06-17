@@ -50,7 +50,7 @@ fn delete_key_value_pair(
     Ok(namespace.delete_key_value_pair(key))
 }
 
-#[update]
+#[query]
 fn read_key_value_pair(namespace_id: u64, key: String) -> Result<Option<String>, NamespaceErrors> {
     let namespace = AppStorage::get_a_namespace(caller(), namespace_id)?;
     Ok(namespace.read_key_value_pair(key))

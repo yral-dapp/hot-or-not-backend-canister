@@ -90,11 +90,11 @@ type HotOrNotOutcomePayoutEvent = variant {
 type HttpRequest = record {
   url : text;
   method : text;
-  body : vec nat8;
+  body : blob;
   headers : vec record { text; text };
 };
 type HttpResponse = record {
-  body : vec nat8;
+  body : blob;
   headers : vec record { text; text };
   status_code : nat16;
 };
@@ -365,7 +365,7 @@ service : (IndividualUserTemplateInitArgs) -> {
   delete_key_value_pair : (nat64, text) -> (Result_3);
   delete_multiple_key_value_pairs : (nat64, vec text) -> (Result_4);
   do_i_follow_this_user : (FolloweeArg) -> (Result_5) query;
-  download_snapshot : (nat64, nat64) -> (vec nat8) query;
+  download_snapshot : (nat64, nat64) -> (blob) query;
   get_entire_individual_post_detail_by_id : (nat64) -> (Result_6) query;
   get_hot_or_not_bet_details_for_this_post : (nat64) -> (BettingStatus) query;
   get_hot_or_not_bets_placed_by_this_profile_with_pagination : (nat64) -> (
@@ -410,8 +410,8 @@ service : (IndividualUserTemplateInitArgs) -> {
   list_namespace_keys : (nat64) -> (Result_11) query;
   list_namespaces : (nat64, nat64) -> (vec NamespaceForFrontend) query;
   load_snapshot : (nat64) -> ();
-  read_key_value_pair : (nat64, text) -> (Result_3);
-  receive_and_save_snaphot : (nat64, vec nat8) -> ();
+  read_key_value_pair : (nat64, text) -> (Result_3) query;
+  receive_and_save_snaphot : (nat64, blob) -> ();
   receive_bet_from_bet_makers_canister : (PlaceBetArg, principal) -> (Result_1);
   receive_bet_winnings_when_distributed : (nat64, BetOutcomeForBetMaker) -> ();
   receive_data_from_hotornot : (principal, nat64, vec Post) -> (Result_12);
