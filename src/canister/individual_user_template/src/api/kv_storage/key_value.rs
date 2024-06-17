@@ -5,8 +5,6 @@ use std::collections::BTreeMap;
 
 use crate::data_model::kv_storage::AppStorage;
 
-use super::namespace;
-
 #[update]
 fn delete_multiple_key_value_pairs(
     namespace_id: u64,

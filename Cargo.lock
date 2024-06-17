@@ -762,6 +762,21 @@ dependencies = [
 
 [[package]]
 name = "ic-ledger-types"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1fea91d351eca80ffa8427e77df3210e37d292c6c75afbe1ca5e6437418e022"
+dependencies = [
+ "candid",
+ "crc32fast",
+ "hex",
+ "ic-cdk 0.12.0",
+ "serde",
+ "serde_bytes",
+ "sha2",
+]
+
+[[package]]
+name = "ic-ledger-types"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7ff0912dee73950385bb95f083b6f0cd6d87bac6be52b7aecce7ea5d2c043f49"
@@ -1003,7 +1018,7 @@ version = "0.1.0"
 dependencies = [
  "candid",
  "ic-cdk 0.12.0",
- "ic-ledger-types",
+ "ic-ledger-types 0.11.0",
  "ic-test-state-machine-client",
  "pocket-ic",
  "serde",
@@ -1950,7 +1965,7 @@ version = "0.1.0"
 dependencies = [
  "candid",
  "ic-cdk 0.12.0",
- "ic-ledger-types",
+ "ic-ledger-types 0.9.0",
  "ic-test-state-machine-client",
  "pocket-ic",
  "shared_utils",
