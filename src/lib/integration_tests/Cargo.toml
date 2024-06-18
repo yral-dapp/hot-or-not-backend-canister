@@ -11,11 +11,10 @@ ic-cdk = { workspace = true }
 pocket-ic = { workspace = true }
 shared_utils = { workspace = true }
 serde = { workspace = true }
-ic-ledger-types = { workpace = true }
+ic-ledger-types = { workspace = true }
 
 [dev-dependencies]
 ic-test-state-machine-client = { workspace = true }
-serde.workspace = true
 test_utils = { workspace = true }
 
 

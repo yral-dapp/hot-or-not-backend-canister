@@ -14,6 +14,8 @@ const ROOM_DETAILS_MEMORY: MemoryId = MemoryId::new(1);
 const BET_DETAILS_MEMORY: MemoryId = MemoryId::new(2);
 const POST_PRINCIPAL_MEMORY: MemoryId = MemoryId::new(3);
 const SLOT_DETAILS_MEMORY: MemoryId = MemoryId::new(4);
+const KV_STORAGE_NAMESPACE_MEMORY: MemoryId = MemoryId::new(5);
+const KV_STORAGE_NAMESPACE_KEY_VALUE_MEMORY: MemoryId = MemoryId::new(6);
 
 pub type Memory = VirtualMemory<DefaultMemoryImpl>;
 
@@ -42,6 +44,14 @@ pub fn get_post_principal_memory() -> Memory {
 
 pub fn get_slot_details_memory() -> Memory {
     MEMORY_MANAGER.with(|m| m.borrow_mut().get(SLOT_DETAILS_MEMORY))
+}
+
+pub fn get_kv_storage_namespace_memory() -> Memory {
+    MEMORY_MANAGER.with(|m| m.borrow_mut().get(KV_STORAGE_NAMESPACE_MEMORY))
+}
+
+pub fn get_kv_storage_namespace_key_value_memory() -> Memory {
+    MEMORY_MANAGER.with(|m| m.borrow_mut().get(KV_STORAGE_NAMESPACE_KEY_VALUE_MEMORY))
 }
 
 pub fn init_memory_manager() {

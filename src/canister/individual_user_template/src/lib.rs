@@ -18,6 +18,7 @@ use shared_utils::{
         },
         follow::{FollowEntryDetail, FollowEntryId},
         hot_or_not::{BetOutcomeForBetMaker, BettingStatus, PlacedBetDetail},
+        kv_storage::{NamespaceErrors, NamespaceForFrontend},
         migration::MigrationErrors,
         post::{
             Post, PostDetailsForFrontend, PostDetailsFromFrontend, PostViewDetailsFromFrontend,
