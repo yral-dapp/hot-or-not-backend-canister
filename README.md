@@ -1,6 +1,59 @@
 # HotOrNot Backend Canisters
 
-# Verifying builds
+## Deploying Canisters locally
+
+To deploy canisters locally using dfx follow these steps.
+
+### Step 1
+Start dfx server 
+```sh 
+dfx start --background
+```
+
+### Step 2
+Run the install script to build and deploy canisters. you can skip the test run by passing `-s` flag
+```sh 
+scripts/canisters/local_deploy/install_all_canisters.sh [-s]
+```
+
+**NOTE: This will only deploy one subnet-orchestrator (also called user-index in codebase) and will not deploy platform-orchsetrator. Platform-orchestrator needs to be deployed and tested separetly** 
+
+## Upgrading locally deployed canisters
+To upgrade locally deployed canisters. Run the following commands
+
+### Step 1
+Run the candid generator script to auto generate the candid files for the canisters.
+```sh
+scripts/candid_generator.sh
+```
+
+### Step 2
+Build and upgrade the canisters deployed. You can pass `-s` flag to skip the tests
+```sh
+scripts/canisters/local_deploy/upgrade_all_canisters.sh [-s]
+```
+
+## Mainnet Deployment
+
+### Mainnet Deployment Checks
+These checks are important and should be strictly performed before raising any Pull request and ensure everything passes.
+
+- checkout to the latest tag before the current build.
+- deploy the canisters locally.
+- Run the ic repl tests: `ic_repl_tests/all_tests.sh` (this would create some users locally and will add some posts for testing.)
+- checkout to your branch
+- run the upgrade process described above without skipping the tests.
+- check if all the user canisters upgrade successfully and the posts are retained which were added by repl tests.
+
+
+### Mainnet Deployment
+
+The process of deploying to the mainnet is as follows:
+- merge the Pull requests to the main branch
+- create a semver tag for the release and push it.
+- A github action would be triggered and raise the necessary proposals to upgrade the canisters
+
+## Verifying builds
 
 To get the hash for canisters:
 
