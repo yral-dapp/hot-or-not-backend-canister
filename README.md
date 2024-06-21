@@ -16,6 +16,8 @@ Run the install script to build and deploy canisters. you can skip the test run 
 scripts/canisters/local_deploy/install_all_canisters.sh [-s]
 ```
 
+**NOTE: This will only deploy one subnet-orchestrator (also called user-index in codebase) and will not deploy platform-orchsetrator. Platform-orchestrator needs to be deployed and tested separetly** 
+
 ## Upgrading locally deployed canisters
 To upgrade locally deployed canisters. Run the following commands
 
