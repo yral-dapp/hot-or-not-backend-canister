@@ -97,10 +97,14 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
 
     println!("🧪 alice_canister_id: {:?}", alice_canister_id.to_text());
 
-    let post_creation_time = SystemTime::UNIX_EPOCH
+    let current_time = SystemTime::UNIX_EPOCH
         .checked_add(Duration::from_secs(1_678_438_993))
         .unwrap();
-    state_machine.set_time(post_creation_time);
+    state_machine.set_time(current_time);
+
+    let post_creation_time = SystemTime::UNIX_EPOCH
+        .checked_add(Duration::new(1_678_438_993, 1))
+        .unwrap();
 
     // * Post is created by Alice
     let newly_created_post_id = state_machine

@@ -565,7 +565,7 @@ fn test_when_user_tries_to_misuse_to_recieve_tokens_and_posts() {
         )
         .unwrap();
 
-    for _ in 0..30 {
+    for _ in 0..10 {
         pocket_ic.tick();
     }
 
@@ -607,7 +607,7 @@ fn test_when_user_tries_to_misuse_to_recieve_tokens_and_posts() {
             "receive_data_from_hotornot",
             candid::encode_args((
                 alice_yral_principal_id,
-                10000 as u64,
+                10000_u64,
                 BTreeMap::<u64, Post>::new(),
             ))
             .unwrap(),
