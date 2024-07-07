@@ -14,7 +14,7 @@ use shared_utils::{
         arg::{FolloweeArg, IndividualUserTemplateInitArgs, PlaceBetArg},
         error::{
             BetOnCurrentlyViewingPostError, FollowAnotherUserProfileError,
-            GetPostsOfUserProfileError,
+            GetPostsOfUserProfileError, CdaoDeployError,
         },
         follow::{FollowEntryDetail, FollowEntryId},
         hot_or_not::{BetOutcomeForBetMaker, BettingStatus, PlacedBetDetail},
@@ -28,6 +28,7 @@ use shared_utils::{
             UserCanisterDetails, UserProfile, UserProfileDetailsForFrontend,
             UserProfileDetailsForFrontendV2, UserProfileUpdateDetailsFromFrontend,
         },
+        cdao::DeployedCdaoCanisters,
         session::SessionType,
     },
     common::types::{
@@ -41,6 +42,7 @@ use shared_utils::{
         GetUserUtilityTokenTransactionHistoryError, UpdateProfileSetUniqueUsernameError,
     },
 };
+use ic_sns_init::pb::v1::SnsInitPayload;
 
 mod api;
 pub mod data_model;

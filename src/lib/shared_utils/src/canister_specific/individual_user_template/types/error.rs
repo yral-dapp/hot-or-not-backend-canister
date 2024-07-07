@@ -1,4 +1,5 @@
 use candid::{CandidType, Deserialize};
+use ic_cdk::api::call::RejectionCode;
 
 #[derive(CandidType, Deserialize, PartialEq, Eq, Debug)]
 pub enum GetPostsOfUserProfileError {
@@ -38,4 +39,17 @@ pub enum FollowAnotherUserProfileError {
     UsersICanFollowListIsFull,
     UserITriedToFollowCrossCanisterCallFailed,
     UserITriedToFollowHasTheirFollowersListFull,
+}
+
+#[derive(CandidType, Deserialize, PartialEq, Eq, Debug)]
+pub enum CdaoDeployError {
+    AlreadyDeployed,
+    CallError(RejectionCode, String),
+    InvalidInitPayload(String),
+}
+
+impl From<(RejectionCode, String)> for CdaoDeployError {
+    fn from((rejection_code, error_message): (RejectionCode, String)) -> Self {
+        CdaoDeployError::CallError(rejection_code, error_message)
+    }
 }

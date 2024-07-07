@@ -9,9 +9,7 @@ use memory::{get_success_history_memory, get_watch_history_memory};
 use serde::Serialize;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
-        configuration::IndividualUserConfiguration,
-        follow::FollowData,
-        hot_or_not::{
+        cdao::DeployedCdaoCanisters, configuration::IndividualUserConfiguration, follow::FollowData, hot_or_not::{
             BetDetails, GlobalBetId, GlobalRoomId, PlacedBetDetail, RoomDetailsV1, RoomId,
             SlotDetailsV1, SlotId, StablePrincipal,
         },
@@ -80,6 +78,8 @@ pub struct CanisterData {
     pub watch_history: ic_stable_structures::btreemap::BTreeMap<WatchHistoryItem, (), Memory>,
     #[serde(skip, default = "_default_success_history")]
     pub success_history: ic_stable_structures::btreemap::BTreeMap<SuccessHistoryItem, (), Memory>,
+    #[serde(default)]
+    pub cdao_canisters: Option<DeployedCdaoCanisters>,
 }
 
 pub fn _default_room_details(
@@ -138,6 +138,7 @@ impl Default for CanisterData {
             app_storage: AppStorage::default(),
             watch_history: _default_watch_history(),
             success_history: _default_success_history(),
+            cdao_canisters: None,
         }
     }
 }
