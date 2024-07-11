@@ -5,6 +5,7 @@ use std::{
 
 use candid::{Deserialize, Principal};
 use ic_cdk::api::management_canister::provisional::CanisterId;
+// use ic_cdk_timers::TimerId;
 use serde::Serialize;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
@@ -29,8 +30,14 @@ use shared_utils::{
 };
 
 use self::memory::{
-    get_bet_details_memory, get_post_principal_memory, get_room_details_memory,
-    get_slot_details_memory, Memory,
+    get_bet_details_memory,
+    // get_global_bet_timer_memory,
+    get_bet_timer_first_bet_at_memory,
+    get_bet_timer_memory,
+    get_post_principal_memory,
+    get_room_details_memory,
+    get_slot_details_memory,
+    Memory,
 };
 
 use kv_storage::AppStorage;
@@ -74,6 +81,17 @@ pub struct CanisterData {
     pub migration_info: MigrationInfo,
     #[serde(default)]
     pub app_storage: AppStorage,
+    // u64 is post_id, SystemTime refers to time when first_bet is placed
+    #[serde(skip, default = "_default_bet_timer_vec")]
+    pub bet_timer_posts: ic_stable_structures::vec::Vec<PostId, Memory>,
+    // this keeps track of when the first bet was placed.
+    #[serde(skip, default = "_default_bet_timer_first_bet_placed_at_map")]
+    // pub first_bet_placed_at_hashmap: BTreeMap<PostId, SystemTime>,
+    pub first_bet_placed_at_hashmap:
+        ic_stable_structures::btreemap::BTreeMap<PostId, SystemTime, Memory>,
+    // #{serde(skip, default = "_default_global_bet_timer")}
+    // there is one global timer for processing bets
+    // pub global_bet_timer: Option<TimerId>,
 }
 
 pub fn _default_room_details(
@@ -95,6 +113,25 @@ pub fn _default_slot_details_map(
 ) -> ic_stable_structures::btreemap::BTreeMap<(PostId, SlotId), SlotDetailsV1, Memory> {
     ic_stable_structures::btreemap::BTreeMap::init(get_slot_details_memory())
 }
+
+pub fn _default_bet_timer_first_bet_placed_at_map(
+) -> ic_stable_structures::btreemap::BTreeMap<PostId, SystemTime, Memory> {
+    ic_stable_structures::btreemap::BTreeMap::init(get_bet_timer_first_bet_at_memory())
+}
+
+pub fn _default_bet_timer_vec() -> ic_stable_structures::vec::Vec<PostId, Memory> {
+    match ic_stable_structures::vec::Vec::init(get_bet_timer_memory()) {
+        Ok(vec) => vec,
+        Err(err) => panic!("Failed to initialize bet timer vec: {}", err),
+    }
+}
+
+// pub fn _default_global_bet_timer() -> ic_stable_structures::vec::Vec<PostId, Memory> {
+//     match ic_stable_structures::vec::Vec::init(get_global_bet_timer_memory()) {
+//         Ok(vec) => vec,
+//         Err(err) => panic!("Failed to initialize bet timer vec: {}", err),
+//     }
+// }
 
 impl Default for CanisterData {
     fn default() -> Self {
@@ -120,6 +157,9 @@ impl Default for CanisterData {
             last_canister_functionality_access_time: None,
             migration_info: MigrationInfo::NotMigrated,
             app_storage: AppStorage::default(),
+            // these two fields together help with infinite slots in yral game
+            first_bet_placed_at_hashmap: _default_bet_timer_first_bet_placed_at_map(),
+            bet_timer_posts: _default_bet_timer_vec(),
         }
     }
 }
