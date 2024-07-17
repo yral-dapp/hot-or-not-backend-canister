@@ -126,7 +126,6 @@ impl Storable for SystemTimeInMs {
 #[derive(
     Clone, Copy, Default, CandidType, Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Ord,
 )]
-// #[serde(from = "u8")]
 pub struct NewSlotType(pub u64);
 
 impl NewSlotType {
@@ -187,24 +186,3 @@ pub enum HotOrNotOutcomePayoutEvent {
 
 pub const HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE: u64 = 10;
 pub const HOT_OR_NOT_BET_WINNINGS_MULTIPLIER: u64 = 2;
-
-mod module {
-    use super::*;
-    use serde::{self, Deserialize, Deserializer, Serializer};
-
-    pub fn serialize<S>(value: &NewSlotType, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        serializer.serialize_u64(value.0)
-    }
-
-
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<NewSlotType, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let u8_value = u8::deserialize(deserializer)?;
-        Ok(NewSlotType(u64::from(u8_value)))
-    }
-}
