@@ -1,10 +1,15 @@
 use std::{
     collections::{BTreeMap, BTreeSet},
-    time::SystemTime,
+    time::SystemTime,time::UNIX_EPOCH
 };
 
 use candid::{Deserialize, Principal};
 use ic_cdk::api::management_canister::provisional::CanisterId;
+use ic_stable_structures::Storable;
+
+use std::borrow::Cow;
+use ic_stable_structures::storable::Bound;
+
 // use ic_cdk_timers::TimerId;
 use serde::Serialize;
 use shared_utils::{
@@ -13,7 +18,7 @@ use shared_utils::{
         follow::FollowData,
         hot_or_not::{
             BetDetails, GlobalBetId, GlobalRoomId, PlacedBetDetail, RoomDetailsV1, RoomId,
-            SlotDetailsV1, SlotId, StablePrincipal,
+            SlotDetailsV1,  StablePrincipal,
         },
         migration::MigrationInfo,
         post::{FeedScore, Post, PostViewStatistics},
@@ -22,10 +27,7 @@ use shared_utils::{
         token::TokenBalance,
     },
     common::types::{
-        app_primitive_type::PostId,
-        known_principal::KnownPrincipalMap,
-        top_posts::{post_score_index::PostScoreIndex, post_score_index_item::PostStatus},
-        version_details::VersionDetails,
+        app_primitive_type::PostId, known_principal::KnownPrincipalMap, top_posts::{post_score_index::PostScoreIndex, post_score_index_item::PostStatus}, utility_token::token_event::{NewSlotType, SystemTimeInMs}, version_details::VersionDetails
     },
 };
 
@@ -59,7 +61,7 @@ pub struct CanisterData {
         ic_stable_structures::btreemap::BTreeMap<(PostId, StablePrincipal), (), Memory>,
     #[serde(skip, default = "_default_slot_details_map")]
     pub slot_details_map:
-        ic_stable_structures::btreemap::BTreeMap<(PostId, SlotId), SlotDetailsV1, Memory>,
+        ic_stable_structures::btreemap::BTreeMap<(PostId, NewSlotType), SlotDetailsV1, Memory>,
     pub all_hot_or_not_bets_placed: BTreeMap<(CanisterId, PostId), PlacedBetDetail>,
     pub configuration: IndividualUserConfiguration,
     pub follow_data: FollowData,
@@ -88,7 +90,7 @@ pub struct CanisterData {
     #[serde(skip, default = "_default_bet_timer_first_bet_placed_at_map")]
     // pub first_bet_placed_at_hashmap: BTreeMap<PostId, SystemTime>,
     pub first_bet_placed_at_hashmap:
-        ic_stable_structures::btreemap::BTreeMap<PostId, SystemTime, Memory>,
+        ic_stable_structures::btreemap::BTreeMap<PostId, SystemTimeInMs, Memory>,
     // #{serde(skip, default = "_default_global_bet_timer")}
     // there is one global timer for processing bets
     // pub global_bet_timer: Option<TimerId>,
@@ -110,12 +112,12 @@ pub fn _default_post_principal_map(
 }
 
 pub fn _default_slot_details_map(
-) -> ic_stable_structures::btreemap::BTreeMap<(PostId, SlotId), SlotDetailsV1, Memory> {
+) -> ic_stable_structures::btreemap::BTreeMap<(PostId, NewSlotType), SlotDetailsV1, Memory> {
     ic_stable_structures::btreemap::BTreeMap::init(get_slot_details_memory())
 }
 
 pub fn _default_bet_timer_first_bet_placed_at_map(
-) -> ic_stable_structures::btreemap::BTreeMap<PostId, SystemTime, Memory> {
+) -> ic_stable_structures::btreemap::BTreeMap<PostId, SystemTimeInMs, Memory> {
     ic_stable_structures::btreemap::BTreeMap::init(get_bet_timer_first_bet_at_memory())
 }
 
@@ -163,3 +165,27 @@ impl Default for CanisterData {
         }
     }
 }
+
+
+// impl Storable for SystemTime {
+//     fn to_bytes(&self) -> Cow<[u8]> {
+//         let duration_since_epoch = self.duration_since(UNIX_EPOCH).expect("Time went backwards");
+//         let secs = duration_since_epoch.as_secs();
+//         let nanos = duration_since_epoch.subsec_nanos();
+//         let mut bytes = Vec::with_capacity(12);
+//         bytes.extend(&secs.to_le_bytes());
+//         bytes.extend(&nanos.to_le_bytes());
+//         Cow::Owned(bytes)
+//     }
+
+//     fn from_bytes(bytes: Cow<[u8]>) -> Self {
+//         let secs = u64::from_le_bytes(bytes[0..8].try_into().expect("slice with incorrect length"));
+//         let nanos = u32::from_le_bytes(bytes[8..12].try_into().expect("slice with incorrect length"));
+//         UNIX_EPOCH + std::time::Duration::new(secs, nanos)
+//     }
+
+//     const BOUND: Bound = Bound::Bounded {
+//         max_size: 12,
+//         is_fixed_size: true,
+//     };
+// }

@@ -23,7 +23,7 @@ pub struct CanisterData {
     #[serde(default)]
     pub posts_index_sorted_by_hot_or_not_feed_score_v1: PostScoreHotOrNotIndex,
     #[serde(default)]
-    pub posts_index_sorted_by_yral_feed_score_v1: PostScoreHomeIndex,
+    pub posts_index_sorted_by_yral_feed_score_v1: PostScoreHotOrNotIndex,
     #[serde(default)]
     pub metadata: Metadata,
     #[serde(default)]

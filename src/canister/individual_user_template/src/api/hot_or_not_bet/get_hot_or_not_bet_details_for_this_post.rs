@@ -63,7 +63,7 @@ fn get_hot_or_not_bet_details_for_this_post_impl(
 ) -> BettingStatus {
     let post = canister_data.all_created_posts.get(&post_id).unwrap();
 
-    post.get_hot_or_not_betting_status_for_this_post_v1(
+    post.get_hot_or_not_betting_status_for_this_post_v2(
         current_time,
         request_maker,
         &canister_data.room_details_map,

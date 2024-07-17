@@ -30,7 +30,7 @@ type BettingStatus = variant {
   BettingOpen : record {
     number_of_participants : nat8;
     ongoing_room : nat64;
-    ongoing_slot : nat8;
+    ongoing_slot : nat64;
     has_this_user_participated_in_this_post : opt bool;
     started_at : SystemTime;
   };
@@ -68,11 +68,11 @@ type GetPostsOfUserProfileError = variant {
 type HotOrNotDetails = record {
   hot_or_not_feed_score : FeedScore;
   aggregate_stats : AggregateStats;
-  slot_history : vec record { nat8; SlotDetails };
+  slot_history : vec record { nat64; SlotDetails };
 };
 type HotOrNotOutcomePayoutEvent = variant {
   WinningsEarnedFromBet : record {
-    slot_id : nat8;
+    slot_id : nat64;
     post_id : nat64;
     room_id : nat64;
     post_canister_id : principal;
@@ -80,7 +80,7 @@ type HotOrNotOutcomePayoutEvent = variant {
     event_outcome : BetOutcomeForBetMaker;
   };
   CommissionFromHotOrNotBet : record {
-    slot_id : nat8;
+    slot_id : nat64;
     post_id : nat64;
     room_pot_total_amount : nat64;
     room_id : nat64;
@@ -164,7 +164,7 @@ type PlaceBetArg = record {
 };
 type PlacedBetDetail = record {
   outcome_received : BetOutcomeForBetMaker;
-  slot_id : nat8;
+  slot_id : nat64;
   post_id : nat64;
   room_id : nat64;
   canister_id : principal;

@@ -14,7 +14,7 @@ use shared_utils::{
         follow::{FollowData, FollowEntryDetail, FollowEntryId, FollowList},
         hot_or_not::{
             AggregateStats, BetDetails, BetMaker, BetMakerPrincipal, GlobalBetId, GlobalRoomId,
-            HotOrNotDetails, PlacedBetDetail, RoomDetailsV1, RoomId, SlotDetailsV1, SlotId,
+            HotOrNotDetails, PlacedBetDetail, RoomDetailsV1, RoomId, SlotDetailsV1,
             StablePrincipal,
         },
         migration::MigrationInfo,
@@ -31,7 +31,7 @@ use shared_utils::{
             post_score_index_item::{PostScoreIndexItem, PostStatus},
             PublisherCanisterId, Score,
         },
-        utility_token::token_event::TokenEvent,
+        utility_token::token_event::{NewSlotType, TokenEvent},
         version_details::VersionDetails,
     },
 };
@@ -55,7 +55,7 @@ pub struct CanisterDataForSnapshot {
     #[serde(with = "any_key_map")]
     pub post_principal_map: BTreeMap<(PostId, StablePrincipal), ()>,
     #[serde(with = "any_key_map")]
-    pub slot_details_map: BTreeMap<(PostId, SlotId), SlotDetailsV1>,
+    pub slot_details_map: BTreeMap<(PostId, NewSlotType), SlotDetailsV1>,
     #[serde(with = "any_key_map")]
     pub all_hot_or_not_bets_placed: BTreeMap<(CanisterId, PostId), PlacedBetDetail>,
     pub configuration: IndividualUserConfiguration,
@@ -104,6 +104,8 @@ pub struct TokenBalanceForSnapshot {
     pub utility_token_balance: u64,
     #[serde(with = "any_key_map")]
     pub utility_token_transaction_history: BTreeMap<u64, TokenEvent>,
+    // #[serde(with = "any_key_map", alias = "utility_token_transaction_history")]
+    // pub utility_token_transaction_history_v1: BTreeMap<u64, TokenEventV1>,
     pub lifetime_earnings: u64,
 }
 
@@ -175,7 +177,7 @@ impl From<&CanisterData> for CanisterDataForSnapshot {
             post_principal_map.insert(k, v.clone());
         });
 
-        let mut slot_details_map: BTreeMap<(PostId, SlotId), SlotDetailsV1> = BTreeMap::new();
+        let mut slot_details_map: BTreeMap<(PostId, NewSlotType), SlotDetailsV1> = BTreeMap::new();
         canister_data.slot_details_map.iter().for_each(|(k, v)| {
             slot_details_map.insert(k, v.clone());
         });

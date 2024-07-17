@@ -8,7 +8,7 @@ use shared_utils::{
         },
         post::Post,
     },
-    common::utils::system_time,
+    common::{types::utility_token::token_event::NewSlotType, utils::system_time},
 };
 
 use crate::data_model::CanisterData;
@@ -16,7 +16,7 @@ use crate::data_model::CanisterData;
 pub fn tabulate_hot_or_not_outcome_for_post_slot(
     canister_data: &mut CanisterData,
     post_id: u64,
-    slot_id: u8,
+    slot_id: NewSlotType,
 ) {
     let current_time = system_time::get_current_system_time_from_ic();
     let this_canister_id = ic_cdk::id();
@@ -43,7 +43,7 @@ pub fn tabulate_hot_or_not_outcome_for_post_slot(
 
 pub fn inform_participants_of_outcome(
     post: &Post,
-    slot_id: &u8,
+    slot_id_type: &NewSlotType,
     room_details_map: &ic_stable_structures::btreemap::BTreeMap<
         GlobalRoomId,
         RoomDetailsV1,
@@ -55,14 +55,16 @@ pub fn inform_participants_of_outcome(
         VirtualMemory<DefaultMemoryImpl>,
     >,
 ) {
+    let slot_id_owned = slot_id_type.clone();
+
     let hot_or_not_details = post.hot_or_not_details.as_ref();
 
     if hot_or_not_details.is_none() {
         return;
     }
 
-    let start_global_room_id = GlobalRoomId(post.id, *slot_id, 1);
-    let end_global_room_id = GlobalRoomId(post.id, *slot_id + 1, 1);
+    let start_global_room_id = GlobalRoomId(post.id, slot_id_owned, 1);
+    let end_global_room_id = GlobalRoomId(post.id, slot_id_owned.increment_by(1), 1);
 
     let room_details = room_details_map
         .range(start_global_room_id..end_global_room_id)

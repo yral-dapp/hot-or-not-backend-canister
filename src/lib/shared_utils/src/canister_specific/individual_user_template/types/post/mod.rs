@@ -8,12 +8,12 @@ use std::{
 
 use crate::{
     canister_specific::individual_user_template::types::profile::UserProfileDetailsForFrontend,
-    common::types::{app_primitive_type::PostId, top_posts::post_score_index_item::PostStatus},
+    common::types::{app_primitive_type::PostId, top_posts::post_score_index_item::PostStatus, utility_token::token_event::NewSlotType},
 };
 
 use super::hot_or_not::{
     BetDetails, BettingStatus, GlobalBetId, GlobalRoomId, HotOrNotDetails, RoomDetailsV1,
-    SlotDetailsV1, SlotId, StablePrincipal,
+    SlotDetailsV1, StablePrincipal,
 };
 
 #[derive(CandidType, Clone, Deserialize, Debug, Serialize)]
@@ -157,7 +157,7 @@ impl Post {
             VirtualMemory<DefaultMemoryImpl>,
         >,
         slot_details_map: &ic_stable_structures::btreemap::BTreeMap<
-            (PostId, SlotId),
+            (PostId, NewSlotType),
             SlotDetailsV1,
             VirtualMemory<DefaultMemoryImpl>,
         >,
@@ -190,7 +190,7 @@ impl Post {
                 None
             },
             hot_or_not_betting_status: if self.creator_consent_for_inclusion_in_hot_or_not {
-                Some(self.get_hot_or_not_betting_status_for_this_post_v1(
+                Some(self.get_hot_or_not_betting_status_for_this_post_v2(
                     current_time,
                     &caller,
                     room_details_map,
@@ -330,7 +330,7 @@ impl Post {
     }
 
     pub fn recalculate_hot_or_not_feed_score(&mut self, current_time: &SystemTime) {
-        if self.hot_or_not_details.is_some() {
+        // if self.hot_or_not_details.is_some() {
             let likes_component = match self.view_stats.total_view_count {
                 0 => 0,
                 _ => (1000 * 10 * self.likes.len() as u64) / self.view_stats.total_view_count,
@@ -396,6 +396,7 @@ impl Post {
             //     hot_or_not_score_component
             // );
 
+        if self.hot_or_not_details.is_some() {
             self.hot_or_not_details
                 .as_mut()
                 .unwrap()
@@ -505,7 +506,7 @@ mod test {
         post.view_stats.average_watch_percentage = 59;
 
         (0..80).for_each(|number| {
-            let result = post.place_hot_or_not_bet_v1(
+            let result = post.place_hot_or_not_bet_v2(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
@@ -528,7 +529,7 @@ mod test {
         );
 
         (80..145).for_each(|number| {
-            let result = post.place_hot_or_not_bet_v1(
+            let result = post.place_hot_or_not_bet_v2(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
@@ -596,7 +597,7 @@ mod test {
         post.view_stats.average_watch_percentage = 47;
 
         (0..216).for_each(|number| {
-            let result = post.place_hot_or_not_bet_v1(
+            let result = post.place_hot_or_not_bet_v2(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
@@ -619,7 +620,7 @@ mod test {
         );
 
         (216..360).for_each(|number| {
-            let result = post.place_hot_or_not_bet_v1(
+            let result = post.place_hot_or_not_bet_v2(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
@@ -687,7 +688,7 @@ mod test {
         post.view_stats.average_watch_percentage = 54;
 
         (0..1_078).for_each(|number| {
-            let result = post.place_hot_or_not_bet_v1(
+            let result = post.place_hot_or_not_bet_v2(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
@@ -713,7 +714,7 @@ mod test {
         );
 
         (1_078..2_695).for_each(|number| {
-            let result = post.place_hot_or_not_bet_v1(
+            let result = post.place_hot_or_not_bet_v2(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
@@ -783,7 +784,7 @@ mod test {
         post.view_stats.average_watch_percentage = 58;
 
         (0..4_725).for_each(|number| {
-            let result = post.place_hot_or_not_bet_v1(
+            let result = post.place_hot_or_not_bet_v2(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
@@ -809,7 +810,7 @@ mod test {
         );
 
         (4_725..10_500).for_each(|number| {
-            let result = post.place_hot_or_not_bet_v1(
+            let result = post.place_hot_or_not_bet_v2(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
@@ -879,7 +880,7 @@ mod test {
         post.view_stats.average_watch_percentage = 59;
 
         (0..26_827).for_each(|number| {
-            let result = post.place_hot_or_not_bet_v1(
+            let result = post.place_hot_or_not_bet_v2(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
@@ -905,7 +906,7 @@ mod test {
         );
 
         (26_827..54_750).for_each(|number| {
-            let result = post.place_hot_or_not_bet_v1(
+            let result = post.place_hot_or_not_bet_v2(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
@@ -975,7 +976,7 @@ mod test {
         post.view_stats.average_watch_percentage = 30;
 
         (0..18).for_each(|number| {
-            let result = post.place_hot_or_not_bet_v1(
+            let result = post.place_hot_or_not_bet_v2(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
@@ -1001,7 +1002,7 @@ mod test {
         );
 
         (18..45).for_each(|number| {
-            let result = post.place_hot_or_not_bet_v1(
+            let result = post.place_hot_or_not_bet_v2(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
@@ -1071,7 +1072,7 @@ mod test {
         post.view_stats.average_watch_percentage = 24;
 
         (0..40).for_each(|number| {
-            let result = post.place_hot_or_not_bet_v1(
+            let result = post.place_hot_or_not_bet_v2(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
@@ -1097,7 +1098,7 @@ mod test {
         );
 
         (40..68).for_each(|number| {
-            let result = post.place_hot_or_not_bet_v1(
+            let result = post.place_hot_or_not_bet_v2(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
@@ -1167,7 +1168,7 @@ mod test {
         post.view_stats.average_watch_percentage = 18;
 
         (0..466).for_each(|number| {
-            let result = post.place_hot_or_not_bet_v1(
+            let result = post.place_hot_or_not_bet_v2(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
@@ -1193,7 +1194,7 @@ mod test {
         );
 
         (466..805).for_each(|number| {
-            let result = post.place_hot_or_not_bet_v1(
+            let result = post.place_hot_or_not_bet_v2(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
@@ -1263,7 +1264,7 @@ mod test {
         post.view_stats.average_watch_percentage = 50;
 
         (0..1_320).for_each(|number| {
-            let result = post.place_hot_or_not_bet_v1(
+            let result = post.place_hot_or_not_bet_v2(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
@@ -1289,7 +1290,7 @@ mod test {
         );
 
         (1_320..2_400).for_each(|number| {
-            let result = post.place_hot_or_not_bet_v1(
+            let result = post.place_hot_or_not_bet_v2(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
@@ -1359,7 +1360,7 @@ mod test {
         post.view_stats.average_watch_percentage = 67;
 
         (0..6_270).for_each(|number| {
-            let result = post.place_hot_or_not_bet_v1(
+            let result = post.place_hot_or_not_bet_v2(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
@@ -1385,7 +1386,7 @@ mod test {
         );
 
         (6_270..14_250).for_each(|number| {
-            let result = post.place_hot_or_not_bet_v1(
+            let result = post.place_hot_or_not_bet_v2(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
@@ -1453,7 +1454,7 @@ mod test {
         post.view_stats.average_watch_percentage = 59;
 
         (0..80).for_each(|number| {
-            let result = post.place_hot_or_not_bet_v1(
+            let result = post.place_hot_or_not_bet_v2(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
@@ -1476,7 +1477,7 @@ mod test {
         );
 
         (80..145).for_each(|number| {
-            let result = post.place_hot_or_not_bet_v1(
+            let result = post.place_hot_or_not_bet_v2(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
@@ -1558,7 +1559,7 @@ mod test {
         post.view_stats.average_watch_percentage = 47;
 
         (0..216).for_each(|number| {
-            let result = post.place_hot_or_not_bet_v1(
+            let result = post.place_hot_or_not_bet_v2(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
@@ -1581,7 +1582,7 @@ mod test {
         );
 
         (216..360).for_each(|number| {
-            let result = post.place_hot_or_not_bet_v1(
+            let result = post.place_hot_or_not_bet_v2(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
@@ -1663,7 +1664,7 @@ mod test {
         post.view_stats.average_watch_percentage = 54;
 
         (0..1_078).for_each(|number| {
-            let result = post.place_hot_or_not_bet_v1(
+            let result = post.place_hot_or_not_bet_v2(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
@@ -1689,7 +1690,7 @@ mod test {
         );
 
         (1_078..2_695).for_each(|number| {
-            let result = post.place_hot_or_not_bet_v1(
+            let result = post.place_hot_or_not_bet_v2(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
@@ -1773,7 +1774,7 @@ mod test {
         post.view_stats.average_watch_percentage = 58;
 
         (0..4_725).for_each(|number| {
-            let result = post.place_hot_or_not_bet_v1(
+            let result = post.place_hot_or_not_bet_v2(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
@@ -1799,7 +1800,7 @@ mod test {
         );
 
         (4_725..10_500).for_each(|number| {
-            let result = post.place_hot_or_not_bet_v1(
+            let result = post.place_hot_or_not_bet_v2(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
@@ -1883,7 +1884,7 @@ mod test {
         post.view_stats.average_watch_percentage = 59;
 
         (0..26_827).for_each(|number| {
-            let result = post.place_hot_or_not_bet_v1(
+            let result = post.place_hot_or_not_bet_v2(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
@@ -1909,7 +1910,7 @@ mod test {
         );
 
         (26_827..54_750).for_each(|number| {
-            let result = post.place_hot_or_not_bet_v1(
+            let result = post.place_hot_or_not_bet_v2(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
@@ -1993,7 +1994,7 @@ mod test {
         post.view_stats.average_watch_percentage = 30;
 
         (0..18).for_each(|number| {
-            let result = post.place_hot_or_not_bet_v1(
+            let result = post.place_hot_or_not_bet_v2(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
@@ -2019,7 +2020,7 @@ mod test {
         );
 
         (18..45).for_each(|number| {
-            let result = post.place_hot_or_not_bet_v1(
+            let result = post.place_hot_or_not_bet_v2(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
@@ -2103,7 +2104,7 @@ mod test {
         post.view_stats.average_watch_percentage = 24;
 
         (0..40).for_each(|number| {
-            let result = post.place_hot_or_not_bet_v1(
+            let result = post.place_hot_or_not_bet_v2(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
@@ -2129,7 +2130,7 @@ mod test {
         );
 
         (40..68).for_each(|number| {
-            let result = post.place_hot_or_not_bet_v1(
+            let result = post.place_hot_or_not_bet_v2(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
@@ -2213,7 +2214,7 @@ mod test {
         post.view_stats.average_watch_percentage = 18;
 
         (0..466).for_each(|number| {
-            let result = post.place_hot_or_not_bet_v1(
+            let result = post.place_hot_or_not_bet_v2(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
@@ -2239,7 +2240,7 @@ mod test {
         );
 
         (466..805).for_each(|number| {
-            let result = post.place_hot_or_not_bet_v1(
+            let result = post.place_hot_or_not_bet_v2(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
@@ -2323,7 +2324,7 @@ mod test {
         post.view_stats.average_watch_percentage = 50;
 
         (0..1_320).for_each(|number| {
-            let result = post.place_hot_or_not_bet_v1(
+            let result = post.place_hot_or_not_bet_v2(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
@@ -2349,7 +2350,7 @@ mod test {
         );
 
         (1_320..2_400).for_each(|number| {
-            let result = post.place_hot_or_not_bet_v1(
+            let result = post.place_hot_or_not_bet_v2(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
@@ -2438,7 +2439,7 @@ mod test {
         post.view_stats.average_watch_percentage = 67;
 
         (0..6_270).for_each(|number| {
-            let result = post.place_hot_or_not_bet_v1(
+            let result = post.place_hot_or_not_bet_v2(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,
@@ -2464,7 +2465,7 @@ mod test {
         );
 
         (6_270..14_250).for_each(|number| {
-            let result = post.place_hot_or_not_bet_v1(
+            let result = post.place_hot_or_not_bet_v2(
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 &Principal::self_authenticating((number as usize).to_ne_bytes()),
                 100,

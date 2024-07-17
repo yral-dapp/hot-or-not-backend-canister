@@ -90,12 +90,42 @@ async fn bet_on_currently_viewing_post(
                         outcome_received: BetOutcomeForBetMaker::default(),
                     },
                 );
+
+                // insert only the first bet in first_bet_placed_at_hashmap
+                // if !canister_data
+                //     .first_bet_placed_at_hashmap
+                //     .contains_key(&place_bet_arg.post_id)
+                // {
+                //     canister_data
+                //         .first_bet_placed_at_hashmap
+                //         .insert(place_bet_arg.post_id, current_time);
+                //     // also push it to the array
+                //     canister_data.bet_timer_posts.push(&place_bet_arg.post_id);
+                // }
+
+                // maybe_launch_next_timer(canister_data);
             });
         }
     }
 
     Ok(response)
 }
+
+// fn maybe_launch_next_timer(canister_data: &CanisterData){
+//     if !canister_data.bet_timer_posts.is_empty() {
+//         let post_id = canister_data.bet_timer_posts.pop().unwrap();
+//         // also remove the post from hashmap
+//         let post_hashmap = canister_data
+//             .first_bet_placed_at_hashmap
+//             .remove(&post_id)
+//             .unwrap();
+        
+//         let current_time = system_time::get_current_system_time_from_ic();
+//         let interval = post_time.to_system_time().unwrap().duration_since(current_time).unwrap();
+        
+//         // let _ = ic_cdk_timers::set_timer(interval, "process_bets_for_post");
+//     }
+// }
 
 fn validate_incoming_bet(
     canister_data: &CanisterData,
@@ -135,7 +165,7 @@ fn validate_incoming_bet(
 mod test {
     use std::time::SystemTime;
 
-    use shared_utils::canister_specific::individual_user_template::types::hot_or_not::BetDirection;
+    use shared_utils::{canister_specific::individual_user_template::types::hot_or_not::BetDirection, common::types::utility_token::token_event::NewSlotType};
     use test_utils::setup::test_constants::{
         get_mock_user_alice_canister_id, get_mock_user_alice_principal_id,
         get_mock_user_bob_principal_id,
@@ -211,7 +241,7 @@ mod test {
             PlacedBetDetail {
                 canister_id: get_mock_user_alice_canister_id(),
                 post_id: 0,
-                slot_id: 1,
+                slot_id: NewSlotType(1),
                 room_id: 1,
                 amount_bet: 100,
                 bet_direction: BetDirection::Hot,

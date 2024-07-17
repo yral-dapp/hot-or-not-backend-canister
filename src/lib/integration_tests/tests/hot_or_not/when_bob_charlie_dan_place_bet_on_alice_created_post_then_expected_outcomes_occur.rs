@@ -15,13 +15,14 @@ use shared_utils::{
     common::types::{
         known_principal::KnownPrincipalType,
         top_posts::post_score_index_item::PostScoreIndexItem,
-        utility_token::token_event::{HotOrNotOutcomePayoutEvent, StakeEvent, TokenEvent},
+        utility_token::token_event::{HotOrNotOutcomePayoutEvent, StakeEvent, TokenEvent,NewSlotType},
     },
     types::canister_specific::{
         individual_user_template::error_types::GetUserUtilityTokenTransactionHistoryError,
         post_cache::error_types::TopPostsFetchError,
     },
 };
+
 use test_utils::setup::{
     env::v1::{get_initialized_env_with_provisioned_known_canisters, get_new_state_machine},
     test_constants::{
@@ -191,7 +192,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
         BettingStatus::BettingOpen {
             started_at: post_creation_time,
             number_of_participants: 1,
-            ongoing_slot: 1,
+            ongoing_slot: NewSlotType(1),
             ongoing_room: 1,
             has_this_user_participated_in_this_post: Some(true),
         }
@@ -227,7 +228,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
         BettingStatus::BettingOpen {
             started_at: post_creation_time,
             number_of_participants: 2,
-            ongoing_slot: 1,
+            ongoing_slot: NewSlotType(1),
             ongoing_room: 1,
             has_this_user_participated_in_this_post: Some(true),
         }
@@ -263,7 +264,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
         BettingStatus::BettingOpen {
             started_at: post_creation_time,
             number_of_participants: 3,
-            ongoing_slot: 1,
+            ongoing_slot: NewSlotType(1),
             ongoing_room: 1,
             has_this_user_participated_in_this_post: Some(true),
         }
@@ -338,7 +339,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
             details: HotOrNotOutcomePayoutEvent::CommissionFromHotOrNotBet {
                 post_canister_id: returned_post.publisher_canister_id,
                 post_id: 0,
-                slot_id: 1,
+                slot_id: NewSlotType(1),
                 room_id: 1,
                 room_pot_total_amount: 160
             },
@@ -407,7 +408,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
             details: HotOrNotOutcomePayoutEvent::WinningsEarnedFromBet {
                 post_canister_id: alice_canister_id,
                 post_id: 0,
-                slot_id: 1,
+                slot_id: NewSlotType(1),
                 room_id: 1,
                 event_outcome: BetOutcomeForBetMaker::Won(90),
                 winnings_amount: 90
@@ -496,7 +497,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
             details: HotOrNotOutcomePayoutEvent::WinningsEarnedFromBet {
                 post_canister_id: alice_canister_id,
                 post_id: 0,
-                slot_id: 1,
+                slot_id: NewSlotType(1),
                 room_id: 1,
                 event_outcome: BetOutcomeForBetMaker::Lost,
                 winnings_amount: 0
@@ -585,7 +586,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
             details: HotOrNotOutcomePayoutEvent::WinningsEarnedFromBet {
                 post_canister_id: alice_canister_id,
                 post_id: 0,
-                slot_id: 1,
+                slot_id: NewSlotType(1),
                 room_id: 1,
                 event_outcome: BetOutcomeForBetMaker::Won(18),
                 winnings_amount: 18

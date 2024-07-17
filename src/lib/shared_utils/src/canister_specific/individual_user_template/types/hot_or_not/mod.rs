@@ -10,8 +10,8 @@ use serde::Serialize;
 use crate::common::types::{
     app_primitive_type::PostId,
     utility_token::token_event::{
-        HotOrNotOutcomePayoutEvent, TokenEvent, HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE,
-        HOT_OR_NOT_BET_WINNINGS_MULTIPLIER,
+        HotOrNotOutcomePayoutEvent, NewSlotType, TokenEvent,
+        HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE, HOT_OR_NOT_BET_WINNINGS_MULTIPLIER,
     },
 };
 
@@ -26,7 +26,7 @@ pub enum BettingStatus {
     BettingOpen {
         started_at: SystemTime,
         number_of_participants: u8,
-        ongoing_slot: u8,
+        ongoing_slot: NewSlotType,
         ongoing_room: u64,
         has_this_user_participated_in_this_post: Option<bool>,
     },
@@ -75,7 +75,7 @@ pub struct HotOrNotBetId {
 pub struct HotOrNotDetails {
     pub hot_or_not_feed_score: FeedScore,
     pub aggregate_stats: AggregateStats,
-    pub slot_history: BTreeMap<SlotId, SlotDetails>,
+    pub slot_history: BTreeMap<NewSlotType, SlotDetails>,
 }
 
 #[derive(CandidType, Clone, Deserialize, Debug, Serialize, Default)]
@@ -85,7 +85,7 @@ pub struct AggregateStats {
     pub total_amount_bet: u64,
 }
 
-pub type SlotId = u8;
+// pub type SlotId = u8;
 
 #[derive(CandidType, Clone, Deserialize, Default, Debug, Serialize)]
 pub struct SlotDetails {
@@ -223,19 +223,21 @@ pub type BetMakerPrincipal = StablePrincipal;
     Copy,
     Hash,
 )]
-pub struct GlobalRoomId(pub PostId, pub SlotId, pub RoomId);
+pub struct GlobalRoomId(pub PostId, pub NewSlotType, pub RoomId);
 
 impl Storable for GlobalRoomId {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
+        dbg!("{}", "ENCODE GlobalRoomId \n\n ".repeat(10));
         Cow::Owned(Encode!(self).unwrap())
     }
 
     fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
+        dbg!(&bytes, "\nDECODE GlobalRoomId \n\n ", "--".repeat(10));
         Decode!(bytes.as_ref(), Self).unwrap()
     }
 
     const BOUND: Bound = Bound::Bounded {
-        max_size: 50,
+        max_size: 300,
         is_fixed_size: false,
     };
 }
@@ -280,7 +282,7 @@ pub enum RoomBetPossibleOutcomes {
 pub struct PlacedBetDetail {
     pub canister_id: CanisterId,
     pub post_id: PostId,
-    pub slot_id: SlotId,
+    pub slot_id: NewSlotType,
     pub room_id: RoomId,
     pub amount_bet: u64,
     pub bet_direction: BetDirection,
@@ -359,7 +361,85 @@ impl Post {
     //     betting_status
     // }
 
-    pub fn get_hot_or_not_betting_status_for_this_post_v1(
+    // pub fn get_hot_or_not_betting_status_for_this_post_v1(
+    //     &self,
+    //     current_time_when_request_being_made: &SystemTime,
+    //     bet_maker_principal_id: &Principal,
+    //     room_details_map: &ic_stable_structures::btreemap::BTreeMap<
+    //         GlobalRoomId,
+    //         RoomDetailsV1,
+    //         VirtualMemory<DefaultMemoryImpl>,
+    //     >,
+    //     post_principal_map: &ic_stable_structures::btreemap::BTreeMap<
+    //         (PostId, StablePrincipal),
+    //         (),
+    //         VirtualMemory<DefaultMemoryImpl>,
+    //     >,
+    //     slot_details_map: &ic_stable_structures::btreemap::BTreeMap<
+    //         (PostId, NewSlotType),
+    //         SlotDetailsV1,
+    //         VirtualMemory<DefaultMemoryImpl>,
+    //     >,
+    // ) -> BettingStatus {
+    //     let betting_status =
+    //     // match current_time_when_request_being_made
+    //     //     .duration_since(self.created_at)
+    //     //     .unwrap()
+    //     //     .as_secs()
+    //     // {
+    //         // * contest is still ongoing
+    //         // 0..=TOTAL_DURATION_OF_ALL_SLOTS_IN_SECONDS => {
+    //             {
+    //                 let started_at = self.created_at;
+    //             let numerator = current_time_when_request_being_made
+    //                 .duration_since(started_at)
+    //                 .unwrap()
+    //                 .as_secs();
+
+    //             let denominator = DURATION_OF_EACH_SLOT_IN_SECONDS;
+    //             let currently_ongoing_slot = NewSlotType(((numerator / denominator) + 1) as u64);
+
+    //             let temp_room_details_default = RoomDetailsV1::default();
+
+    //             // get currently active room
+    //             let active_room_id = slot_details_map
+    //                 .get(&(self.id, currently_ongoing_slot))
+    //                 .unwrap_or(SlotDetailsV1::default())
+    //                 .active_room_id;
+    //             let global_room_id = GlobalRoomId(self.id, currently_ongoing_slot, active_room_id);
+
+    //             let room_details = room_details_map
+    //                 .get(&global_room_id)
+    //                 .unwrap_or(temp_room_details_default);
+
+    //             let number_of_participants =
+    //                 (room_details.total_hot_bets + room_details.total_not_bets) as u8;
+
+    //             BettingStatus::BettingOpen {
+    //                 started_at,
+    //                 number_of_participants,
+    //                 ongoing_slot: currently_ongoing_slot,
+    //                 ongoing_room: active_room_id,
+    //                 has_this_user_participated_in_this_post: if *bet_maker_principal_id
+    //                     == Principal::anonymous()
+    //                 {
+    //                     None
+    //                 } else {
+    //                     Some(self.has_this_principal_already_bet_on_this_post_v1(
+    //                         bet_maker_principal_id,
+    //                         post_principal_map,
+    //                     ))
+    //                 },
+    //             }
+    //         };
+    //         // * contest is over
+    //         // _ => BettingStatus::BettingClosed,
+    //     // };
+
+    //     betting_status
+    // }
+
+    pub fn get_hot_or_not_betting_status_for_this_post_v2(
         &self,
         current_time_when_request_being_made: &SystemTime,
         bet_maker_principal_id: &Principal,
@@ -374,65 +454,69 @@ impl Post {
             VirtualMemory<DefaultMemoryImpl>,
         >,
         slot_details_map: &ic_stable_structures::btreemap::BTreeMap<
-            (PostId, SlotId),
+            (PostId, NewSlotType),
             SlotDetailsV1,
             VirtualMemory<DefaultMemoryImpl>,
         >,
     ) -> BettingStatus {
-        let betting_status = match current_time_when_request_being_made
-            .duration_since(self.created_at)
+        // let betting_status
+        // = match current_time_when_request_being_made
+        //     .duration_since(self.created_at)
+        //     .unwrap()
+        //     .as_secs()
+        // {
+        // * contest is still ongoing
+        // 0..=TOTAL_DURATION_OF_ALL_SLOTS_IN_SECONDS => {
+        let started_at = self.created_at;
+        let numerator = current_time_when_request_being_made
+            .duration_since(started_at)
             .unwrap()
-            .as_secs()
-        {
-            // * contest is still ongoing
-            0..=TOTAL_DURATION_OF_ALL_SLOTS_IN_SECONDS => {
-                let started_at = self.created_at;
-                let numerator = current_time_when_request_being_made
-                    .duration_since(started_at)
-                    .unwrap()
-                    .as_secs();
+            .as_secs();
 
-                let denominator = DURATION_OF_EACH_SLOT_IN_SECONDS;
-                let currently_ongoing_slot = ((numerator / denominator) + 1) as u8;
+        let denominator = DURATION_OF_EACH_SLOT_IN_SECONDS;
+        // Since slots are tied to rooms, it is ok to keep a slot number.
+        // Since there are infinite slots, slot number's absolute value is irrelevant.
+        let currently_ongoing_slot = NewSlotType(((numerator / denominator) + 1) as u64);
 
-                let temp_room_details_default = RoomDetailsV1::default();
+        let temp_room_details_default = RoomDetailsV1::default();
 
-                // get currently active room
-                let active_room_id = slot_details_map
-                    .get(&(self.id, currently_ongoing_slot))
-                    .unwrap_or(SlotDetailsV1::default())
-                    .active_room_id;
-                let global_room_id = GlobalRoomId(self.id, currently_ongoing_slot, active_room_id);
+        // get currently active room
+        let active_room_id = slot_details_map
+            .get(&(self.id, currently_ongoing_slot))
+            .unwrap_or(SlotDetailsV1::default())
+            .active_room_id;
 
-                let room_details = room_details_map
-                    .get(&global_room_id)
-                    .unwrap_or(temp_room_details_default);
+        let global_room_id = GlobalRoomId(self.id, currently_ongoing_slot, active_room_id);
 
-                let number_of_participants =
-                    (room_details.total_hot_bets + room_details.total_not_bets) as u8;
+        let room_details = room_details_map
+            .get(&global_room_id)
+            .unwrap_or(temp_room_details_default);
 
-                BettingStatus::BettingOpen {
-                    started_at,
-                    number_of_participants,
-                    ongoing_slot: currently_ongoing_slot,
-                    ongoing_room: active_room_id,
-                    has_this_user_participated_in_this_post: if *bet_maker_principal_id
-                        == Principal::anonymous()
-                    {
-                        None
-                    } else {
-                        Some(self.has_this_principal_already_bet_on_this_post_v1(
-                            bet_maker_principal_id,
-                            post_principal_map,
-                        ))
-                    },
-                }
-            }
-            // * contest is over
-            _ => BettingStatus::BettingClosed,
-        };
+        let number_of_participants =
+            (room_details.total_hot_bets + room_details.total_not_bets) as u8;
 
-        betting_status
+        BettingStatus::BettingOpen {
+            started_at,
+            number_of_participants,
+            ongoing_slot: currently_ongoing_slot,
+            ongoing_room: active_room_id,
+            has_this_user_participated_in_this_post: if *bet_maker_principal_id
+                == Principal::anonymous()
+            {
+                None
+            } else {
+                Some(self.has_this_principal_already_bet_on_this_post_v1(
+                    bet_maker_principal_id,
+                    post_principal_map,
+                ))
+            },
+        }
+        // }
+        // // * contest is over
+        // _ => BettingStatus::BettingClosed,
+        // };
+
+        // betting_status
     }
 
     // pub fn has_this_principal_already_bet_on_this_post(
@@ -583,7 +667,136 @@ impl Post {
     //     }
     // }
 
-    pub fn place_hot_or_not_bet_v1(
+    // pub fn place_hot_or_not_bet_v1(
+    //     &mut self,
+    //     bet_maker_principal_id: &Principal,
+    //     bet_maker_canister_id: &CanisterId,
+    //     bet_amount: u64,
+    //     bet_direction: &BetDirection,
+    //     current_time_when_request_being_made: &SystemTime,
+    //     room_details_map: &mut ic_stable_structures::btreemap::BTreeMap<
+    //         GlobalRoomId,
+    //         RoomDetailsV1,
+    //         VirtualMemory<DefaultMemoryImpl>,
+    //     >,
+    //     bet_details_map: &mut ic_stable_structures::btreemap::BTreeMap<
+    //         GlobalBetId,
+    //         BetDetails,
+    //         VirtualMemory<DefaultMemoryImpl>,
+    //     >,
+    //     post_principal_map: &mut ic_stable_structures::btreemap::BTreeMap<
+    //         (PostId, StablePrincipal),
+    //         (),
+    //         VirtualMemory<DefaultMemoryImpl>,
+    //     >,
+    //     slot_details_map: &mut ic_stable_structures::btreemap::BTreeMap<
+    //         (PostId, SlotId),
+    //         SlotDetailsV1,
+    //         VirtualMemory<DefaultMemoryImpl>,
+    //     >,
+    // ) -> Result<BettingStatus, BetOnCurrentlyViewingPostError> {
+    //     if *bet_maker_principal_id == Principal::anonymous() {
+    //         return Err(BetOnCurrentlyViewingPostError::UserNotLoggedIn);
+    //     }
+
+    //     let betting_status = self.get_hot_or_not_betting_status_for_this_post_v1(
+    //         current_time_when_request_being_made,
+    //         bet_maker_principal_id,
+    //         room_details_map,
+    //         post_principal_map,
+    //         slot_details_map,
+    //     );
+
+    //     match betting_status {
+    //         BettingStatus::BettingClosed => Err(BetOnCurrentlyViewingPostError::BettingClosed),
+    //         BettingStatus::BettingOpen {
+    //             ongoing_slot,
+    //             ongoing_room,
+    //             has_this_user_participated_in_this_post,
+    //             ..
+    //         } => {
+    //             if has_this_user_participated_in_this_post.unwrap() {
+    //                 return Err(BetOnCurrentlyViewingPostError::UserAlreadyParticipatedInThisPost);
+    //             }
+
+    //             let mut hot_or_not_details = self
+    //                 .hot_or_not_details
+    //                 .take()
+    //                 .unwrap_or(HotOrNotDetails::default());
+    //             let mut global_room_id = GlobalRoomId(self.id, ongoing_slot, ongoing_room);
+    //             let mut global_bet_id =
+    //                 GlobalBetId(global_room_id, StablePrincipal(*bet_maker_principal_id));
+
+    //             let mut room_detail = room_details_map.get(&global_room_id).unwrap_or_default();
+    //             let num_bets_made = room_detail.total_hot_bets + room_detail.total_not_bets;
+
+    //             if num_bets_made < 100 {
+    //                 room_detail.room_bets_total_pot += bet_amount;
+    //             } else {
+    //                 let new_room_number = ongoing_room + 1;
+    //                 global_room_id = GlobalRoomId(self.id, ongoing_slot, new_room_number);
+    //                 global_bet_id =
+    //                     GlobalBetId(global_room_id, StablePrincipal(*bet_maker_principal_id));
+    //                 room_detail = RoomDetailsV1 {
+    //                     room_bets_total_pot: bet_amount,
+    //                     ..Default::default()
+    //                 };
+    //             }
+
+    //             bet_details_map.insert(
+    //                 global_bet_id,
+    //                 BetDetails {
+    //                     amount: bet_amount,
+    //                     bet_direction: bet_direction.clone(),
+    //                     payout: BetPayout::default(),
+    //                     bet_maker_canister_id: *bet_maker_canister_id,
+    //                 },
+    //             );
+
+    //             // * Update aggregate stats
+    //             hot_or_not_details.aggregate_stats.total_amount_bet += bet_amount;
+    //             match bet_direction {
+    //                 BetDirection::Hot => {
+    //                     hot_or_not_details.aggregate_stats.total_number_of_hot_bets += 1;
+    //                     room_detail.total_hot_bets += 1;
+    //                 }
+    //                 BetDirection::Not => {
+    //                     hot_or_not_details.aggregate_stats.total_number_of_not_bets += 1;
+    //                     room_detail.total_not_bets += 1;
+    //                 }
+    //             }
+
+    //             room_details_map.insert(global_room_id, room_detail);
+    //             if global_room_id.2 != ongoing_room {
+    //                 slot_details_map.insert(
+    //                     (self.id, ongoing_slot),
+    //                     SlotDetailsV1 {
+    //                         active_room_id: global_room_id.2,
+    //                     },
+    //                 );
+    //             }
+
+    //             self.hot_or_not_details = Some(hot_or_not_details);
+
+    //             let started_at = self.created_at;
+    //             let number_of_participants = (num_bets_made + 1) as u8;
+    //             let ongoing_slot = global_room_id.1;
+    //             let ongoing_room = global_room_id.2;
+
+    //             post_principal_map.insert((self.id, StablePrincipal(*bet_maker_principal_id)), ());
+
+    //             Ok(BettingStatus::BettingOpen {
+    //                 started_at,
+    //                 number_of_participants,
+    //                 ongoing_slot,
+    //                 ongoing_room,
+    //                 has_this_user_participated_in_this_post: Some(true),
+    //             })
+    //         }
+    //     }
+    // }
+
+    pub fn place_hot_or_not_bet_v2(
         &mut self,
         bet_maker_principal_id: &Principal,
         bet_maker_canister_id: &CanisterId,
@@ -606,7 +819,7 @@ impl Post {
             VirtualMemory<DefaultMemoryImpl>,
         >,
         slot_details_map: &mut ic_stable_structures::btreemap::BTreeMap<
-            (PostId, SlotId),
+            (PostId, NewSlotType),
             SlotDetailsV1,
             VirtualMemory<DefaultMemoryImpl>,
         >,
@@ -615,7 +828,7 @@ impl Post {
             return Err(BetOnCurrentlyViewingPostError::UserNotLoggedIn);
         }
 
-        let betting_status = self.get_hot_or_not_betting_status_for_this_post_v1(
+        let betting_status = self.get_hot_or_not_betting_status_for_this_post_v2(
             current_time_when_request_being_made,
             bet_maker_principal_id,
             room_details_map,
@@ -624,6 +837,7 @@ impl Post {
         );
 
         match betting_status {
+            // this arm will never match since the betting status is always open
             BettingStatus::BettingClosed => Err(BetOnCurrentlyViewingPostError::BettingClosed),
             BettingStatus::BettingOpen {
                 ongoing_slot,
@@ -635,7 +849,7 @@ impl Post {
                     return Err(BetOnCurrentlyViewingPostError::UserAlreadyParticipatedInThisPost);
                 }
 
-                let mut hot_or_not_details = self
+                let mut hot_or_not_details: HotOrNotDetails = self
                     .hot_or_not_details
                     .take()
                     .unwrap_or(HotOrNotDetails::default());
@@ -812,7 +1026,7 @@ impl Post {
     pub fn tabulate_hot_or_not_outcome_for_slot_v1(
         &mut self,
         post_canister_id: &CanisterId,
-        slot_id: &u8,
+        slot_id_type: &NewSlotType,
         token_balance: &mut TokenBalance,
         current_time: &SystemTime,
         room_details_map: &mut ic_stable_structures::btreemap::BTreeMap<
@@ -826,14 +1040,16 @@ impl Post {
             VirtualMemory<DefaultMemoryImpl>,
         >,
     ) {
+        let slot_id_owned = slot_id_type.clone();
+
         let hot_or_not_details = self.hot_or_not_details.as_mut();
 
         if hot_or_not_details.is_none() {
             return;
         }
 
-        let start_global_room_id = GlobalRoomId(self.id, *slot_id, 1);
-        let end_global_room_id = GlobalRoomId(self.id, *slot_id + 1, 1);
+        let start_global_room_id = GlobalRoomId(self.id, slot_id_owned, 1);
+        let end_global_room_id = GlobalRoomId(self.id, slot_id_owned.increment_by(1), 1);
 
         let room_details = room_details_map
             .range(start_global_room_id..end_global_room_id)
@@ -862,7 +1078,7 @@ impl Post {
                     details: HotOrNotOutcomePayoutEvent::CommissionFromHotOrNotBet {
                         post_canister_id: *post_canister_id,
                         post_id: self.id,
-                        slot_id: *slot_id,
+                        slot_id: slot_id_owned,
                         room_id,
                         room_pot_total_amount: room_detail.room_bets_total_pot,
                     },
@@ -2045,7 +2261,7 @@ pub mod test_hot_or_not {
         ic_stable_structures::btreemap::BTreeMap<GlobalRoomId, RoomDetailsV1, Memory>,
         ic_stable_structures::btreemap::BTreeMap<GlobalBetId, BetDetails, Memory>,
         ic_stable_structures::btreemap::BTreeMap<(PostId, StablePrincipal), (), Memory>,
-        ic_stable_structures::btreemap::BTreeMap<(PostId, SlotId), SlotDetailsV1, Memory>,
+        ic_stable_structures::btreemap::BTreeMap<(PostId, NewSlotType), SlotDetailsV1, Memory>,
     ) {
         const ROOM_DETAILS_MEMORY: MemoryId = MemoryId::new(0);
         const BET_DETAILS_MEMORY: MemoryId = MemoryId::new(1);
@@ -2087,7 +2303,7 @@ pub mod test_hot_or_not {
             ic_stable_structures::btreemap::BTreeMap::init(get_post_principal_memory())
         }
         fn _default_slot_details_map(
-        ) -> ic_stable_structures::btreemap::BTreeMap<(PostId, SlotId), SlotDetailsV1, Memory>
+        ) -> ic_stable_structures::btreemap::BTreeMap<(PostId, NewSlotType), SlotDetailsV1, Memory>
         {
             ic_stable_structures::btreemap::BTreeMap::init(get_slot_details_memory())
         }
@@ -2105,8 +2321,276 @@ pub mod test_hot_or_not {
         )
     }
 
+    // #[test]
+    // fn test_get_hot_or_not_betting_status_for_this_post_v1() {
+    //     // A memory for the StableBTreeMap we're using. A new memory should be created for
+    //     // every additional stable structure.
+
+    //     let (
+    //         mut room_details_map,
+    //         mut bet_details_map,
+    //         mut post_principal_map,
+    //         mut slot_details_map,
+    //     ) = setup_room_and_bet_details_map();
+    //     let mut post = Post::new(
+    //         0,
+    //         &PostDetailsFromFrontend {
+    //             is_nsfw: false,
+    //             description: "Doggos and puppers".into(),
+    //             hashtags: vec!["doggo".into(), "pupper".into()],
+    //             video_uid: "abcd#1234".into(),
+    //             creator_consent_for_inclusion_in_hot_or_not: true,
+    //         },
+    //         &SystemTime::now(),
+    //     );
+
+    //     let result = post.get_hot_or_not_betting_status_for_this_post_v1(
+    //         &SystemTime::now()
+    //             .checked_add(Duration::from_secs(
+    //                 TOTAL_DURATION_OF_ALL_SLOTS_IN_SECONDS + 1,
+    //             ))
+    //             .unwrap(),
+    //         &Principal::anonymous(),
+    //         &room_details_map,
+    //         &post_principal_map,
+    //         &slot_details_map,
+    //     );
+
+    //     assert_eq!(result, BettingStatus::BettingClosed);
+    //     let current_time = SystemTime::now();
+
+    //     let result = post.get_hot_or_not_betting_status_for_this_post_v1(
+    //         &current_time,
+    //         &Principal::anonymous(),
+    //         &room_details_map,
+    //         &post_principal_map,
+    //         &slot_details_map,
+    //     );
+
+    //     assert_eq!(
+    //         result,
+    //         BettingStatus::BettingOpen {
+    //             started_at: post.created_at,
+    //             number_of_participants: 0,
+    //             ongoing_slot: NewSlotType(1),
+    //             ongoing_room: 1,
+    //             has_this_user_participated_in_this_post: None,
+    //         }
+    //     );
+
+    //     let result = post.get_hot_or_not_betting_status_for_this_post_v1(
+    //         &current_time
+    //             .checked_add(Duration::from_secs(
+    //                 DURATION_OF_EACH_SLOT_IN_SECONDS * 2 + 1,
+    //             ))
+    //             .unwrap(),
+    //         &Principal::anonymous(),
+    //         &room_details_map,
+    //         &post_principal_map,
+    //         &slot_details_map,
+    //     );
+
+    //     assert_eq!(
+    //         result,
+    //         BettingStatus::BettingOpen {
+    //             started_at: post.created_at,
+    //             number_of_participants: 0,
+    //             ongoing_slot:  NewSlotType(3),
+    //             ongoing_room: 1,
+    //             has_this_user_participated_in_this_post: None,
+    //         }
+    //     );
+
+    //     let result = post.place_hot_or_not_bet_v2(
+    //         &get_mock_user_alice_principal_id(),
+    //         &get_mock_user_alice_canister_id(),
+    //         100,
+    //         &BetDirection::Hot,
+    //         &current_time
+    //             .checked_add(Duration::from_secs(
+    //                 DURATION_OF_EACH_SLOT_IN_SECONDS * 2 + 1,
+    //             ))
+    //             .unwrap(),
+    //         &mut room_details_map,
+    //         &mut bet_details_map,
+    //         &mut post_principal_map,
+    //         &mut slot_details_map,
+    //     );
+
+    //     assert!(result.is_ok());
+
+    //     let result = post.get_hot_or_not_betting_status_for_this_post_v1(
+    //         &current_time
+    //             .checked_add(Duration::from_secs(
+    //                 DURATION_OF_EACH_SLOT_IN_SECONDS * 2 + 1,
+    //             ))
+    //             .unwrap(),
+    //         &get_mock_user_alice_principal_id(),
+    //         &room_details_map,
+    //         &post_principal_map,
+    //         &slot_details_map,
+    //     );
+
+    //     assert_eq!(
+    //         result,
+    //         BettingStatus::BettingOpen {
+    //             started_at: post.created_at,
+    //             number_of_participants: 1,
+    //             ongoing_slot: NewSlotType(3),
+    //             ongoing_room: 1,
+    //             has_this_user_participated_in_this_post: Some(true),
+    //         }
+    //     );
+
+    //     (100..200).for_each(|num| {
+    //         let result = post.place_hot_or_not_bet_v2(
+    //             &Principal::from_slice(&[num]),
+    //             &Principal::from_slice(&[num]),
+    //             100,
+    //             &BetDirection::Hot,
+    //             &current_time
+    //                 .checked_add(Duration::from_secs(
+    //                     DURATION_OF_EACH_SLOT_IN_SECONDS * 2 + 1,
+    //                 ))
+    //                 .unwrap(),
+    //             &mut room_details_map,
+    //             &mut bet_details_map,
+    //             &mut post_principal_map,
+    //             &mut slot_details_map,
+    //         );
+
+    //         if result.is_err() {
+    //             println!("Error: {:?}", result);
+    //         }
+    //         assert!(result.is_ok());
+    //     });
+
+    //     let result = post.place_hot_or_not_bet_v2(
+    //         &Principal::from_slice(&[200]),
+    //         &Principal::from_slice(&[200]),
+    //         100,
+    //         &BetDirection::Hot,
+    //         &current_time
+    //             .checked_add(Duration::from_secs(
+    //                 DURATION_OF_EACH_SLOT_IN_SECONDS * 2 + 1,
+    //             ))
+    //             .unwrap(),
+    //         &mut room_details_map,
+    //         &mut bet_details_map,
+    //         &mut post_principal_map,
+    //         &mut slot_details_map,
+    //     );
+
+    //     assert!(result.is_ok());
+
+    //     let result = post.get_hot_or_not_betting_status_for_this_post_v1(
+    //         &current_time
+    //             .checked_add(Duration::from_secs(
+    //                 DURATION_OF_EACH_SLOT_IN_SECONDS * 2 + 1,
+    //             ))
+    //             .unwrap(),
+    //         &Principal::from_slice(&[100]),
+    //         &room_details_map,
+    //         &post_principal_map,
+    //         &slot_details_map,
+    //     );
+
+    //     assert_eq!(
+    //         result,
+    //         BettingStatus::BettingOpen {
+    //             started_at: post.created_at,
+    //             number_of_participants: 2,
+    //             ongoing_slot:  NewSlotType(3),
+    //             ongoing_room: 2,
+    //             has_this_user_participated_in_this_post: Some(true),
+    //         }
+    //     );
+
+    //     let result = post.place_hot_or_not_bet_v2(
+    //         &get_mock_user_alice_principal_id(),
+    //         &get_mock_user_alice_canister_id(),
+    //         100,
+    //         &BetDirection::Hot,
+    //         &current_time
+    //             .checked_add(Duration::from_secs(
+    //                 DURATION_OF_EACH_SLOT_IN_SECONDS * 2 + 1,
+    //             ))
+    //             .unwrap(),
+    //         &mut room_details_map,
+    //         &mut bet_details_map,
+    //         &mut post_principal_map,
+    //         &mut slot_details_map,
+    //     );
+
+    //     assert!(result.is_err());
+
+    //     let result = post.get_hot_or_not_betting_status_for_this_post_v1(
+    //         &current_time
+    //             .checked_add(Duration::from_secs(
+    //                 DURATION_OF_EACH_SLOT_IN_SECONDS * 2 + 1,
+    //             ))
+    //             .unwrap(),
+    //         &get_mock_user_alice_principal_id(),
+    //         &room_details_map,
+    //         &post_principal_map,
+    //         &slot_details_map,
+    //     );
+
+    //     assert_eq!(
+    //         result,
+    //         BettingStatus::BettingOpen {
+    //             started_at: post.created_at,
+    //             number_of_participants: 2,
+    //             ongoing_slot: NewSlotType(3),
+    //             ongoing_room: 2,
+    //             has_this_user_participated_in_this_post: Some(true),
+    //         }
+    //     );
+
+    //     let result = post.place_hot_or_not_bet_v2(
+    //         &get_mock_user_alice_principal_id(),
+    //         &get_mock_user_alice_canister_id(),
+    //         100,
+    //         &BetDirection::Hot,
+    //         &current_time
+    //             .checked_add(Duration::from_secs(
+    //                 DURATION_OF_EACH_SLOT_IN_SECONDS * 4 + 1,
+    //             ))
+    //             .unwrap(),
+    //         &mut room_details_map,
+    //         &mut bet_details_map,
+    //         &mut post_principal_map,
+    //         &mut slot_details_map,
+    //     );
+
+    //     assert!(result.is_err());
+
+    //     let result = post.get_hot_or_not_betting_status_for_this_post_v1(
+    //         &current_time
+    //             .checked_add(Duration::from_secs(
+    //                 DURATION_OF_EACH_SLOT_IN_SECONDS * 4 + 1,
+    //             ))
+    //             .unwrap(),
+    //         &get_mock_user_alice_principal_id(),
+    //         &room_details_map,
+    //         &post_principal_map,
+    //         &slot_details_map,
+    //     );
+
+    //     assert_eq!(
+    //         result,
+    //         BettingStatus::BettingOpen {
+    //             started_at: post.created_at,
+    //             number_of_participants: 0,
+    //             ongoing_slot: NewSlotType(5),
+    //             ongoing_room: 1,
+    //             has_this_user_participated_in_this_post: Some(true),
+    //         }
+    //     );
+    // }
+
     #[test]
-    fn test_get_hot_or_not_betting_status_for_this_post_v1() {
+    fn test_get_hot_or_not_betting_status_for_this_post_v2() {
         // A memory for the StableBTreeMap we're using. A new memory should be created for
         // every additional stable structure.
 
@@ -2128,22 +2612,22 @@ pub mod test_hot_or_not {
             &SystemTime::now(),
         );
 
-        let result = post.get_hot_or_not_betting_status_for_this_post_v1(
-            &SystemTime::now()
-                .checked_add(Duration::from_secs(
-                    TOTAL_DURATION_OF_ALL_SLOTS_IN_SECONDS + 1,
-                ))
-                .unwrap(),
-            &Principal::anonymous(),
-            &room_details_map,
-            &post_principal_map,
-            &slot_details_map,
-        );
+        // let result = post.get_hot_or_not_betting_status_for_this_post_v2(
+        //     &SystemTime::now()
+        //         .checked_add(Duration::from_secs(
+        //             TOTAL_DURATION_OF_ALL_SLOTS_IN_SECONDS + 1,
+        //         ))
+        //         .unwrap(),
+        //     &Principal::anonymous(),
+        //     &room_details_map,
+        //     &post_principal_map,
+        //     &slot_details_map,
+        // );
 
-        assert_eq!(result, BettingStatus::BettingClosed);
+        // assert_eq!(result, BettingStatus::BettingClosed);
         let current_time = SystemTime::now();
 
-        let result = post.get_hot_or_not_betting_status_for_this_post_v1(
+        let result = post.get_hot_or_not_betting_status_for_this_post_v2(
             &current_time,
             &Principal::anonymous(),
             &room_details_map,
@@ -2156,13 +2640,13 @@ pub mod test_hot_or_not {
             BettingStatus::BettingOpen {
                 started_at: post.created_at,
                 number_of_participants: 0,
-                ongoing_slot: 1,
+                ongoing_slot: NewSlotType(1),
                 ongoing_room: 1,
                 has_this_user_participated_in_this_post: None,
             }
         );
 
-        let result = post.get_hot_or_not_betting_status_for_this_post_v1(
+        let result = post.get_hot_or_not_betting_status_for_this_post_v2(
             &current_time
                 .checked_add(Duration::from_secs(
                     DURATION_OF_EACH_SLOT_IN_SECONDS * 2 + 1,
@@ -2179,13 +2663,13 @@ pub mod test_hot_or_not {
             BettingStatus::BettingOpen {
                 started_at: post.created_at,
                 number_of_participants: 0,
-                ongoing_slot: 3,
+                ongoing_slot: NewSlotType(3),
                 ongoing_room: 1,
                 has_this_user_participated_in_this_post: None,
             }
         );
 
-        let result = post.place_hot_or_not_bet_v1(
+        let result = post.place_hot_or_not_bet_v2(
             &get_mock_user_alice_principal_id(),
             &get_mock_user_alice_canister_id(),
             100,
@@ -2203,7 +2687,7 @@ pub mod test_hot_or_not {
 
         assert!(result.is_ok());
 
-        let result = post.get_hot_or_not_betting_status_for_this_post_v1(
+        let result = post.get_hot_or_not_betting_status_for_this_post_v2(
             &current_time
                 .checked_add(Duration::from_secs(
                     DURATION_OF_EACH_SLOT_IN_SECONDS * 2 + 1,
@@ -2220,14 +2704,14 @@ pub mod test_hot_or_not {
             BettingStatus::BettingOpen {
                 started_at: post.created_at,
                 number_of_participants: 1,
-                ongoing_slot: 3,
+                ongoing_slot: NewSlotType(3),
                 ongoing_room: 1,
                 has_this_user_participated_in_this_post: Some(true),
             }
         );
 
         (100..200).for_each(|num| {
-            let result = post.place_hot_or_not_bet_v1(
+            let result = post.place_hot_or_not_bet_v2(
                 &Principal::from_slice(&[num]),
                 &Principal::from_slice(&[num]),
                 100,
@@ -2249,7 +2733,7 @@ pub mod test_hot_or_not {
             assert!(result.is_ok());
         });
 
-        let result = post.place_hot_or_not_bet_v1(
+        let result = post.place_hot_or_not_bet_v2(
             &Principal::from_slice(&[200]),
             &Principal::from_slice(&[200]),
             100,
@@ -2267,7 +2751,7 @@ pub mod test_hot_or_not {
 
         assert!(result.is_ok());
 
-        let result = post.get_hot_or_not_betting_status_for_this_post_v1(
+        let result = post.get_hot_or_not_betting_status_for_this_post_v2(
             &current_time
                 .checked_add(Duration::from_secs(
                     DURATION_OF_EACH_SLOT_IN_SECONDS * 2 + 1,
@@ -2284,13 +2768,13 @@ pub mod test_hot_or_not {
             BettingStatus::BettingOpen {
                 started_at: post.created_at,
                 number_of_participants: 2,
-                ongoing_slot: 3,
+                ongoing_slot: NewSlotType(3),
                 ongoing_room: 2,
                 has_this_user_participated_in_this_post: Some(true),
             }
         );
 
-        let result = post.place_hot_or_not_bet_v1(
+        let result = post.place_hot_or_not_bet_v2(
             &get_mock_user_alice_principal_id(),
             &get_mock_user_alice_canister_id(),
             100,
@@ -2308,7 +2792,7 @@ pub mod test_hot_or_not {
 
         assert!(result.is_err());
 
-        let result = post.get_hot_or_not_betting_status_for_this_post_v1(
+        let result = post.get_hot_or_not_betting_status_for_this_post_v2(
             &current_time
                 .checked_add(Duration::from_secs(
                     DURATION_OF_EACH_SLOT_IN_SECONDS * 2 + 1,
@@ -2325,13 +2809,13 @@ pub mod test_hot_or_not {
             BettingStatus::BettingOpen {
                 started_at: post.created_at,
                 number_of_participants: 2,
-                ongoing_slot: 3,
+                ongoing_slot: NewSlotType(3),
                 ongoing_room: 2,
                 has_this_user_participated_in_this_post: Some(true),
             }
         );
 
-        let result = post.place_hot_or_not_bet_v1(
+        let result = post.place_hot_or_not_bet_v2(
             &get_mock_user_alice_principal_id(),
             &get_mock_user_alice_canister_id(),
             100,
@@ -2349,7 +2833,7 @@ pub mod test_hot_or_not {
 
         assert!(result.is_err());
 
-        let result = post.get_hot_or_not_betting_status_for_this_post_v1(
+        let result = post.get_hot_or_not_betting_status_for_this_post_v2(
             &current_time
                 .checked_add(Duration::from_secs(
                     DURATION_OF_EACH_SLOT_IN_SECONDS * 4 + 1,
@@ -2366,7 +2850,7 @@ pub mod test_hot_or_not {
             BettingStatus::BettingOpen {
                 started_at: post.created_at,
                 number_of_participants: 0,
-                ongoing_slot: 5,
+                ongoing_slot: NewSlotType(5),
                 ongoing_room: 1,
                 has_this_user_participated_in_this_post: Some(true),
             }
@@ -2401,7 +2885,7 @@ pub mod test_hot_or_not {
 
         assert!(!result);
 
-        post.place_hot_or_not_bet_v1(
+        post.place_hot_or_not_bet_v2(
             &get_mock_user_alice_principal_id(),
             &get_mock_user_alice_canister_id(),
             100,
@@ -2422,7 +2906,7 @@ pub mod test_hot_or_not {
     }
 
     #[test]
-    fn test_place_hot_or_not_bet_v1() {
+    fn test_place_hot_or_not_bet_v2() {
         let (
             mut room_details_map,
             mut bet_details_map,
@@ -2444,7 +2928,7 @@ pub mod test_hot_or_not {
 
         assert!(post.hot_or_not_details.is_some());
 
-        let result = post.place_hot_or_not_bet_v1(
+        let result = post.place_hot_or_not_bet_v2(
             &get_mock_user_alice_principal_id(),
             &get_mock_user_alice_canister_id(),
             100,
@@ -2462,7 +2946,7 @@ pub mod test_hot_or_not {
 
         assert_eq!(result, Err(BetOnCurrentlyViewingPostError::BettingClosed));
 
-        let result = post.place_hot_or_not_bet_v1(
+        let result = post.place_hot_or_not_bet_v2(
             &get_mock_user_alice_principal_id(),
             &get_mock_user_alice_canister_id(),
             100,
@@ -2479,15 +2963,15 @@ pub mod test_hot_or_not {
             Ok(BettingStatus::BettingOpen {
                 started_at: post.created_at,
                 number_of_participants: 1,
-                ongoing_slot: 1,
+                ongoing_slot: NewSlotType(1),
                 ongoing_room: 1,
                 has_this_user_participated_in_this_post: Some(true)
             })
         );
         let hot_or_not_details = post.hot_or_not_details.clone().unwrap();
 
-        let start_global_room_id = GlobalRoomId(0, 1, 1);
-        let end_global_room_id = GlobalRoomId(0, 2, 1);
+        let start_global_room_id = GlobalRoomId(0, NewSlotType(1), 1);
+        let end_global_room_id = GlobalRoomId(0, NewSlotType(2), 1);
         let start_global_bet_id = GlobalBetId(
             start_global_room_id,
             StablePrincipal(Principal::from_slice(&[1])),
@@ -2523,7 +3007,7 @@ pub mod test_hot_or_not {
             0
         );
 
-        let result = post.place_hot_or_not_bet_v1(
+        let result = post.place_hot_or_not_bet_v2(
             &get_mock_user_alice_principal_id(),
             &get_mock_user_alice_canister_id(),
             100,
@@ -2536,6 +3020,122 @@ pub mod test_hot_or_not {
         );
         assert!(result.is_err());
     }
+
+    // #[test]
+    // fn test_place_hot_or_not_bet_v1() {
+    //     let (
+    //         mut room_details_map,
+    //         mut bet_details_map,
+    //         mut post_principal_map,
+    //         mut slot_details_map,
+    //     ) = setup_room_and_bet_details_map();
+
+    //     let mut post = Post::new(
+    //         0,
+    //         &PostDetailsFromFrontend {
+    //             is_nsfw: false,
+    //             description: "Doggos and puppers".into(),
+    //             hashtags: vec!["doggo".into(), "pupper".into()],
+    //             video_uid: "abcd#1234".into(),
+    //             creator_consent_for_inclusion_in_hot_or_not: true,
+    //         },
+    //         &SystemTime::now(),
+    //     );
+
+    //     assert!(post.hot_or_not_details.is_some());
+
+    //     let result = post.place_hot_or_not_bet_v1(
+    //         &get_mock_user_alice_principal_id(),
+    //         &get_mock_user_alice_canister_id(),
+    //         100,
+    //         &BetDirection::Hot,
+    //         &SystemTime::now()
+    //             .checked_add(Duration::from_secs(
+    //                 TOTAL_DURATION_OF_ALL_SLOTS_IN_SECONDS + 1,
+    //             ))
+    //             .unwrap(),
+    //         &mut room_details_map,
+    //         &mut bet_details_map,
+    //         &mut post_principal_map,
+    //         &mut slot_details_map,
+    //     );
+
+    //     assert_eq!(result, Err(BetOnCurrentlyViewingPostError::BettingClosed));
+
+    //     let result = post.place_hot_or_not_bet_v1(
+    //         &get_mock_user_alice_principal_id(),
+    //         &get_mock_user_alice_canister_id(),
+    //         100,
+    //         &BetDirection::Hot,
+    //         &SystemTime::now(),
+    //         &mut room_details_map,
+    //         &mut bet_details_map,
+    //         &mut post_principal_map,
+    //         &mut slot_details_map,
+    //     );
+
+    //     assert_eq!(
+    //         result,
+    //         Ok(BettingStatus::BettingOpen {
+    //             started_at: post.created_at,
+    //             number_of_participants: 1,
+    //             NewSlotType(1)
+    //             ongoing_room: 1,
+    //             has_this_user_participated_in_this_post: Some(true)
+    //         })
+    //     );
+    //     let hot_or_not_details = post.hot_or_not_details.clone().unwrap();
+
+    //     let start_global_room_id = GlobalRoomId(0, 1, 1);
+    //     let end_global_room_id = GlobalRoomId(0, 2, 1);
+    //     let start_global_bet_id = GlobalBetId(
+    //         start_global_room_id,
+    //         StablePrincipal(Principal::from_slice(&[1])),
+    //     );
+    //     let end_global_bet_id = GlobalBetId(
+    //         end_global_room_id,
+    //         StablePrincipal(Principal::from_slice(&[1])),
+    //     );
+    //     let rooms = room_details_map
+    //         .range(start_global_room_id..end_global_room_id)
+    //         .collect::<Vec<_>>();
+    //     assert_eq!(rooms.len(), 1);
+    //     let room_details = &rooms[0].1;
+
+    //     let bets = bet_details_map
+    //         .range(start_global_bet_id..end_global_bet_id)
+    //         .collect::<Vec<_>>();
+    //     assert_eq!(bets.len(), 1);
+    //     let bet_details = &bets[0].1;
+    //     assert_eq!(bet_details.amount, 100);
+    //     assert_eq!(bet_details.bet_direction, BetDirection::Hot);
+
+    //     assert_eq!(room_details.room_bets_total_pot, 100);
+    //     assert_eq!(room_details.total_hot_bets, 1);
+    //     assert_eq!(room_details.total_not_bets, 0);
+    //     assert_eq!(hot_or_not_details.aggregate_stats.total_amount_bet, 100);
+    //     assert_eq!(
+    //         hot_or_not_details.aggregate_stats.total_number_of_hot_bets,
+    //         1
+    //     );
+    //     assert_eq!(
+    //         hot_or_not_details.aggregate_stats.total_number_of_not_bets,
+    //         0
+    //     );
+
+    //     let result = post.place_hot_or_not_bet_v1(
+    //         &get_mock_user_alice_principal_id(),
+    //         &get_mock_user_alice_canister_id(),
+    //         100,
+    //         &BetDirection::Hot,
+    //         &SystemTime::now(),
+    //         &mut room_details_map,
+    //         &mut bet_details_map,
+    //         &mut post_principal_map,
+    //         &mut slot_details_map,
+    //     );
+    //     assert!(result.is_err());
+    // }
 
     #[test]
     fn test_tabulate_hot_or_not_outcome_for_slot_case_1_v1() {
@@ -2644,7 +3244,7 @@ pub mod test_hot_or_not {
         data_set
             .iter()
             .for_each(|(user_id, bet_direction, bet_amount, _)| {
-                let result = post.place_hot_or_not_bet_v1(
+                let result = post.place_hot_or_not_bet_v2(
                     &Principal::self_authenticating(user_id.to_ne_bytes()),
                     &Principal::self_authenticating(user_id.to_ne_bytes()),
                     *bet_amount,
@@ -2664,7 +3264,7 @@ pub mod test_hot_or_not {
 
         post.tabulate_hot_or_not_outcome_for_slot_v1(
             &tabulation_canister_id,
-            &1,
+            &NewSlotType(1),
             &mut token_balance,
             &score_tabulation_time,
             &mut room_details_map,
@@ -2674,7 +3274,7 @@ pub mod test_hot_or_not {
         assert_eq!(token_balance.utility_token_transaction_history.len(), 1);
         assert_eq!(token_balance.utility_token_balance, 355);
 
-        let global_room_id = GlobalRoomId(0, 1, 1);
+        let global_room_id = GlobalRoomId(0, NewSlotType(1), 1);
         let room_detail = room_details_map.get(&global_room_id).unwrap();
 
         assert_eq!(room_detail.bet_outcome, RoomBetPossibleOutcomes::NotWon);
@@ -2793,7 +3393,7 @@ pub mod test_hot_or_not {
         data_set
             .iter()
             .for_each(|(user_id, bet_direction, bet_amount, _)| {
-                let result = post.place_hot_or_not_bet_v1(
+                let result = post.place_hot_or_not_bet_v2(
                     &Principal::self_authenticating((user_id + 75).to_ne_bytes()),
                     &Principal::self_authenticating((user_id + 75).to_ne_bytes()),
                     *bet_amount,
@@ -2813,7 +3413,7 @@ pub mod test_hot_or_not {
 
         post.tabulate_hot_or_not_outcome_for_slot_v1(
             &get_mock_user_alice_canister_id(),
-            &2,
+            &NewSlotType(2),
             &mut token_balance,
             &score_tabulation_time,
             &mut room_details_map,
@@ -2823,7 +3423,7 @@ pub mod test_hot_or_not {
         assert_eq!(token_balance.utility_token_transaction_history.len(), 2);
         assert_eq!(token_balance.utility_token_balance, 355 + 458);
 
-        let global_room_id = GlobalRoomId(0, 2, 1);
+        let global_room_id = GlobalRoomId(0, NewSlotType(2), 1);
         let room_detail = room_details_map.get(&global_room_id).unwrap();
 
         assert_eq!(room_detail.bet_outcome, RoomBetPossibleOutcomes::HotWon);
@@ -3038,7 +3638,7 @@ pub mod test_hot_or_not {
         data_set
             .iter()
             .for_each(|(user_id, bet_direction, bet_amount, _)| {
-                let result = post.place_hot_or_not_bet_v1(
+                let result = post.place_hot_or_not_bet_v2(
                     &Principal::self_authenticating(user_id.to_ne_bytes()),
                     &Principal::self_authenticating(user_id.to_ne_bytes()),
                     *bet_amount,
@@ -3058,7 +3658,7 @@ pub mod test_hot_or_not {
 
         post.tabulate_hot_or_not_outcome_for_slot_v1(
             &get_mock_user_alice_canister_id(),
-            &1,
+            &NewSlotType(1),
             &mut token_balance,
             &score_tabulation_time,
             &mut room_details_map,
@@ -3069,7 +3669,7 @@ pub mod test_hot_or_not {
         assert_eq!(token_balance.utility_token_balance, 487 + 321);
 
         // * Room 1
-        let global_room_id = GlobalRoomId(0, 1, 1);
+        let global_room_id = GlobalRoomId(0, NewSlotType(1), 1);
         let room_detail = room_details_map.get(&global_room_id).unwrap();
 
         assert_eq!(room_detail.bet_outcome, RoomBetPossibleOutcomes::NotWon);
@@ -3102,7 +3702,7 @@ pub mod test_hot_or_not {
             });
 
         // * Room 2
-        let global_room_id = GlobalRoomId(0, 1, 2);
+        let global_room_id = GlobalRoomId(0, NewSlotType(1), 2);
         let room_detail = room_details_map.get(&global_room_id).unwrap();
 
         assert_eq!(room_detail.bet_outcome, RoomBetPossibleOutcomes::NotWon);
@@ -3246,7 +3846,7 @@ pub mod test_hot_or_not {
         data_set
             .iter()
             .for_each(|(user_id, bet_direction, bet_amount, _)| {
-                let result = post.place_hot_or_not_bet_v1(
+                let result = post.place_hot_or_not_bet_v2(
                     &Principal::self_authenticating(user_id.to_ne_bytes()),
                     &Principal::self_authenticating(user_id.to_ne_bytes()),
                     *bet_amount,
@@ -3266,7 +3866,7 @@ pub mod test_hot_or_not {
 
         post.tabulate_hot_or_not_outcome_for_slot_v1(
             &get_mock_user_alice_canister_id(),
-            &1,
+            &NewSlotType(1),
             &mut token_balance,
             &score_tabulation_time,
             &mut room_details_map,
@@ -3276,7 +3876,7 @@ pub mod test_hot_or_not {
         assert_eq!(token_balance.utility_token_transaction_history.len(), 1);
         assert_eq!(token_balance.utility_token_balance, 390);
 
-        let global_room_id = GlobalRoomId(0, 1, 1);
+        let global_room_id = GlobalRoomId(0, NewSlotType(1), 1);
         let room_detail = room_details_map.get(&global_room_id).unwrap();
 
         assert_eq!(room_detail.bet_outcome, RoomBetPossibleOutcomes::Draw);

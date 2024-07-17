@@ -15,7 +15,7 @@ mod test {
             hot_or_not::{
                 AggregateStats, BetDetails, BetDirection, BetOutcomeForBetMaker, BetPayout,
                 GlobalBetId, GlobalRoomId, PlacedBetDetail, RoomBetPossibleOutcomes, RoomDetailsV1,
-                SlotDetailsV1, SlotId, StablePrincipal,
+                SlotDetailsV1, StablePrincipal,
             },
             migration::MigrationInfo,
             post::{FeedScore, PostViewStatistics},
@@ -30,7 +30,7 @@ mod test {
                 post_score_index::PostScoreIndex,
                 post_score_index_item::{PostScoreIndexItem, PostStatus},
             },
-            utility_token::token_event::{MintEvent, TokenEvent},
+            utility_token::token_event::{MintEvent, NewSlotType, TokenEvent},
             version_details::VersionDetails,
         },
     };
@@ -89,7 +89,7 @@ mod test {
         created_posts.insert(1, post1);
 
         let mut room_details_map: BTreeMap<GlobalRoomId, RoomDetailsV1> = BTreeMap::new();
-        let global_room_id = GlobalRoomId(1, 1, 1);
+        let global_room_id = GlobalRoomId(1, NewSlotType(1), 1);
         room_details_map.insert(
             global_room_id,
             RoomDetailsV1 {
@@ -115,8 +115,8 @@ mod test {
         let mut post_principal_map: BTreeMap<(PostId, StablePrincipal), ()> = BTreeMap::new();
         post_principal_map.insert((1, StablePrincipal(temp_principal)), ());
 
-        let mut slot_details_map: BTreeMap<(PostId, SlotId), SlotDetailsV1> = BTreeMap::new();
-        slot_details_map.insert((1, 1), SlotDetailsV1 { active_room_id: 2 });
+        let mut slot_details_map: BTreeMap<(PostId, NewSlotType), SlotDetailsV1> = BTreeMap::new();
+        slot_details_map.insert((1, NewSlotType(1)), SlotDetailsV1 { active_room_id: 2 });
 
         let mut all_hot_or_not_bets_placed: BTreeMap<(CanisterId, PostId), PlacedBetDetail> =
             BTreeMap::new();
@@ -125,7 +125,7 @@ mod test {
             PlacedBetDetail {
                 canister_id: temp_principal,
                 post_id: 1,
-                slot_id: 1,
+                slot_id: NewSlotType(1),
                 room_id: 1,
                 amount_bet: 100,
                 bet_direction: BetDirection::Hot,
@@ -184,11 +184,11 @@ mod test {
 
         let canister_data_snapshot = CanisterDataForSnapshot {
             all_created_posts: created_posts,
-            room_details_map: room_details_map,
-            bet_details_map: bet_details_map,
-            post_principal_map: post_principal_map,
-            slot_details_map: slot_details_map,
-            all_hot_or_not_bets_placed: all_hot_or_not_bets_placed,
+             room_details_map,
+             bet_details_map,
+             post_principal_map,
+             slot_details_map,
+             all_hot_or_not_bets_placed,
             configuration: IndividualUserConfiguration {
                 url_to_send_canister_metrics_to: Some("dsfsd".to_string()),
             },
@@ -202,7 +202,7 @@ mod test {
                     members: follow_members,
                 },
             },
-            known_principal_ids: known_principal_ids,
+             known_principal_ids,
             my_token_balance: TokenBalanceForSnapshot {
                 utility_token_balance: 100,
                 utility_token_transaction_history: utility_history,
@@ -240,7 +240,7 @@ mod test {
         };
 
         let serde_str = serde_json::to_string(&canister_data_snapshot);
-        assert_eq!(serde_str.is_ok(), true);
+        assert!(serde_str.is_ok());
 
         let canister_data_snapshot: CanisterDataForSnapshot =
             serde_json::from_str(serde_str.unwrap().as_str()).unwrap();

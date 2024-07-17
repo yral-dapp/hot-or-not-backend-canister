@@ -16,6 +16,9 @@ const POST_PRINCIPAL_MEMORY: MemoryId = MemoryId::new(3);
 const SLOT_DETAILS_MEMORY: MemoryId = MemoryId::new(4);
 const KV_STORAGE_NAMESPACE_MEMORY: MemoryId = MemoryId::new(5);
 const KV_STORAGE_NAMESPACE_KEY_VALUE_MEMORY: MemoryId = MemoryId::new(6);
+const BET_TIMER_MEMORY: MemoryId = MemoryId::new(7);
+const BET_FIRST_AT_TIMER_MEMORY: MemoryId = MemoryId::new(8);
+// const GLOBAL_BET_TIMER_MEMORY: MemoryId = MemoryId::new(9);
 
 pub type Memory = VirtualMemory<DefaultMemoryImpl>;
 
@@ -38,6 +41,17 @@ pub fn get_bet_details_memory() -> Memory {
     MEMORY_MANAGER.with(|m| m.borrow_mut().get(BET_DETAILS_MEMORY))
 }
 
+pub fn get_bet_timer_memory() -> Memory {
+    MEMORY_MANAGER.with(|m| m.borrow_mut().get(BET_TIMER_MEMORY))
+}
+
+pub fn get_bet_timer_first_bet_at_memory() -> Memory {
+    MEMORY_MANAGER.with(|m| m.borrow_mut().get(BET_FIRST_AT_TIMER_MEMORY))
+}
+
+// pub fn get_global_bet_timer_memory() -> Memory {
+//     MEMORY_MANAGER.with(|m| m.borrow_mut().get(GLOBAL_BET_TIMER_MEMORY))
+// }
 pub fn get_post_principal_memory() -> Memory {
     MEMORY_MANAGER.with(|m| m.borrow_mut().get(POST_PRINCIPAL_MEMORY))
 }
