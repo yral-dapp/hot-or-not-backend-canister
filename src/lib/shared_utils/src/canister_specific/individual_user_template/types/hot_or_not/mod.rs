@@ -227,12 +227,12 @@ pub struct GlobalRoomId(pub PostId, pub NewSlotType, pub RoomId);
 
 impl Storable for GlobalRoomId {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
-        dbg!("{}", "ENCODE GlobalRoomId \n\n ".repeat(10));
+        dbg!("ENCODE GlobalRoomId \n\n ", "##".repeat(400));
         Cow::Owned(Encode!(self).unwrap())
     }
 
     fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
-        dbg!(&bytes, "\nDECODE GlobalRoomId \n\n ", "--".repeat(10));
+        dbg!(&bytes, "\nDECODE GlobalRoomId \n\n ", "--".repeat(400));
         Decode!(bytes.as_ref(), Self).unwrap()
     }
 

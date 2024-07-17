@@ -126,7 +126,7 @@ impl Storable for SystemTimeInMs {
 #[derive(
     Clone, Copy, Default, CandidType, Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Ord,
 )]
-#[serde(from = "u8")]
+// #[serde(from = "u8")]
 pub struct NewSlotType(pub u64);
 
 impl NewSlotType {
@@ -141,23 +141,24 @@ impl From<u8> for NewSlotType {
     }
 }
 
-// impl Storable for NewSlotType {
-//     fn to_bytes(&self) -> Cow<[u8]> {
-//         dbg!("  ENCODE NewSlotType {} \n\n", "-".repeat(400));
-//         Cow::Owned(Encode!(&self).unwrap())
-//         // Cow::Owned(Encode!(&self.0).unwrap())
-//     }
+impl Storable for NewSlotType {
+    fn to_bytes(&self) -> Cow<[u8]> {
+        dbg!("  ENCODE NewSlotType {} \n\n", "//".repeat(400));
+        Cow::Owned(Encode!(&self.0).unwrap())
+        // Cow::Owned(Encode!(&self.0).unwrap())
+    }
 
-//     fn from_bytes(bytes: Cow<[u8]>) -> Self {
-//         dbg!("{}", "DECODE NewSlotType \n\n ".repeat(10));
-//         Decode!(&bytes, Self).unwrap()
-//     }
+    fn from_bytes(from_u64_bytes: Cow<[u8]>) -> Self {
+        dbg!("DECODE NewSlotType \n\n ", "\\".repeat(10));
+        let inner_u64 = Decode!(&from_u64_bytes, u64).unwrap();
+        Self(inner_u64)
+    }
 
-//     const BOUND: Bound = Bound::Bounded {
-//         max_size: 150,
-//         is_fixed_size: true,
-//     };
-// }
+    const BOUND: Bound = Bound::Bounded {
+        max_size: 150,
+        is_fixed_size: true,
+    };
+}
 
 impl Hash for NewSlotType {
     fn hash<H: Hasher>(&self, state: &mut H) {
@@ -186,3 +187,24 @@ pub enum HotOrNotOutcomePayoutEvent {
 
 pub const HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE: u64 = 10;
 pub const HOT_OR_NOT_BET_WINNINGS_MULTIPLIER: u64 = 2;
+
+mod module {
+    use super::*;
+    use serde::{self, Deserialize, Deserializer, Serializer};
+
+    pub fn serialize<S>(value: &NewSlotType, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_u64(value.0)
+    }
+
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<NewSlotType, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let u8_value = u8::deserialize(deserializer)?;
+        Ok(NewSlotType(u64::from(u8_value)))
+    }
+}
