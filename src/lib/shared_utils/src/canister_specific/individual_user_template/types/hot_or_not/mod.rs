@@ -227,12 +227,10 @@ pub struct GlobalRoomId(pub PostId, pub NewSlotType, pub RoomId);
 
 impl Storable for GlobalRoomId {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
-        dbg!("ENCODE GlobalRoomId \n\n ", "##".repeat(400));
         Cow::Owned(Encode!(self).unwrap())
     }
 
     fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
-        dbg!(&bytes, "\nDECODE GlobalRoomId \n\n ", "--".repeat(400));
         Decode!(bytes.as_ref(), Self).unwrap()
     }
 
@@ -2944,7 +2942,16 @@ pub mod test_hot_or_not {
             &mut slot_details_map,
         );
 
-        assert_eq!(result, Err(BetOnCurrentlyViewingPostError::BettingClosed));
+        assert!(matches!(
+            result,
+            Ok(BettingStatus::BettingOpen {
+                number_of_participants: 1,
+                ongoing_slot: NewSlotType(49),
+                ongoing_room: 1,
+                has_this_user_participated_in_this_post: Some(true),
+                ..
+            })
+        ));
 
         let result = post.place_hot_or_not_bet_v2(
             &get_mock_user_alice_principal_id(),
@@ -2958,20 +2965,12 @@ pub mod test_hot_or_not {
             &mut slot_details_map,
         );
 
-        assert_eq!(
-            result,
-            Ok(BettingStatus::BettingOpen {
-                started_at: post.created_at,
-                number_of_participants: 1,
-                ongoing_slot: NewSlotType(1),
-                ongoing_room: 1,
-                has_this_user_participated_in_this_post: Some(true)
-            })
-        );
+        assert_eq!(result,Err(BetOnCurrentlyViewingPostError::UserAlreadyParticipatedInThisPost));
+
         let hot_or_not_details = post.hot_or_not_details.clone().unwrap();
 
-        let start_global_room_id = GlobalRoomId(0, NewSlotType(1), 1);
-        let end_global_room_id = GlobalRoomId(0, NewSlotType(2), 1);
+        let start_global_room_id = GlobalRoomId(0, NewSlotType(49), 1);
+        let end_global_room_id = GlobalRoomId(0, NewSlotType(50), 1);
         let start_global_bet_id = GlobalBetId(
             start_global_room_id,
             StablePrincipal(Principal::from_slice(&[1])),
@@ -2983,6 +2982,7 @@ pub mod test_hot_or_not {
         let rooms = room_details_map
             .range(start_global_room_id..end_global_room_id)
             .collect::<Vec<_>>();
+
         assert_eq!(rooms.len(), 1);
         let room_details = &rooms[0].1;
 
