@@ -96,10 +96,13 @@ fn update_profile_stats_with_bet_placed(
 
 #[cfg(test)]
 mod test {
-    use shared_utils::{canister_specific::individual_user_template::types::{
-        hot_or_not::{BetDirection, GlobalBetId, GlobalRoomId, StablePrincipal},
-        post::{Post, PostDetailsFromFrontend},
-    }, common::types::utility_token::token_event::NewSlotType};
+    use shared_utils::{
+        canister_specific::individual_user_template::types::{
+            hot_or_not::{BetDirection, GlobalBetId, GlobalRoomId, StablePrincipal},
+            post::{Post, PostDetailsFromFrontend},
+        },
+        common::types::utility_token::token_event::NewSlotType,
+    };
     use test_utils::setup::test_constants::{
         get_mock_user_alice_canister_id, get_mock_user_alice_principal_id,
     };
@@ -144,29 +147,24 @@ mod test {
             StablePrincipal(get_mock_user_alice_principal_id()),
         );
 
-        dbg!(&global_room_id);
-        dbg!(&global_bet_id);
-
-        let maybe_room_details = canister_data.room_details_map.get(&global_room_id);
-        dbg!(&maybe_room_details);
+        let room_details = canister_data.room_details_map.get(&global_room_id).unwrap();
 
         let bet_details = canister_data.bet_details_map.get(&global_bet_id).unwrap();
 
+        assert_eq!(
+            result,
+            Ok(BettingStatus::BettingOpen {
+                started_at: post.created_at,
+                number_of_participants: 1,
+                ongoing_slot: NewSlotType(1),
+                ongoing_room: 1,
+                has_this_user_participated_in_this_post: Some(true)
+            })
+        );
 
-        // assert_eq!(
-        //     result,
-        //     Ok(BettingStatus::BettingOpen {
-        //         started_at: post.created_at,
-        //         number_of_participants: 1,
-        //         ongoing_slot: NewSlotType(1),
-        //         ongoing_room: 1,
-        //         has_this_user_participated_in_this_post: Some(true)
-        //     })
-        // );
-
-        // assert_eq!(room_details.room_bets_total_pot, 100);
-        // assert_eq!(room_details.total_hot_bets, 1);
-        // assert_eq!(room_details.total_not_bets, 0);
+        assert_eq!(room_details.room_bets_total_pot, 100);
+        assert_eq!(room_details.total_hot_bets, 1);
+        assert_eq!(room_details.total_not_bets, 0);
 
         assert_eq!(bet_details.amount, 100);
         assert_eq!(bet_details.bet_direction, BetDirection::Hot);
