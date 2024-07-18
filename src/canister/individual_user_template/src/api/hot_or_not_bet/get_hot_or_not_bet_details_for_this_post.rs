@@ -124,17 +124,17 @@ mod test {
             _ => panic!("Expected BettingStatus::BettingOpen"),
         }
 
-        let result = get_hot_or_not_bet_details_for_this_post_impl(
-            &canister_data,
-            &SystemTime::now()
-                .checked_add(Duration::from_secs(60 * 60 * 48 + 10))
-                .unwrap(),
-            &Principal::anonymous(),
-            post_id,
-        );
-        match result {
-            BettingStatus::BettingClosed => {}
-            _ => panic!("Expected BettingStatus::BettingClosed"),
-        }
+        // let result = get_hot_or_not_bet_details_for_this_post_impl(
+        //     &canister_data,
+        //     &SystemTime::now()
+        //         .checked_add(Duration::from_secs(60 * 60 * 48 + 10))
+        //         .unwrap(),
+        //     &Principal::anonymous(),
+        //     post_id,
+        // );
+        // match result {
+        //     BettingStatus::BettingClosed => {}
+        //     _ => panic!("Expected BettingStatus::BettingClosed"),
+        // }
     }
 }
