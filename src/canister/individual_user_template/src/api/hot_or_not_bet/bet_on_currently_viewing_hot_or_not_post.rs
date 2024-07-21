@@ -7,7 +7,8 @@ use shared_utils::{
         hot_or_not::{BetOutcomeForBetMaker, BettingStatus, PlacedBetDetail},
     },
     common::{
-        types::utility_token::token_event::{StakeEvent, TokenEvent},
+        types::app_primitive_type::PostId,
+        types::utility_token::token_event::{StakeEvent, SystemTimeInMs, TokenEvent},
         utils::system_time,
     },
 };
@@ -16,6 +17,11 @@ use crate::{
     api::canister_management::update_last_access_time::update_last_canister_functionality_access_time,
     data_model::CanisterData, CANISTER_DATA,
 };
+use crate::api::hot_or_not_bet::tabulate_hot_or_not_outcome_for_post_slot::tabulate_hot_or_not_outcome_for_post_slot;
+
+use std::time::{Duration, SystemTime};
+
+const TIMER_DURATION: Duration = Duration::from_secs(60 * 60); // 60 minutes
 
 #[update]
 async fn bet_on_currently_viewing_post(
@@ -53,6 +59,7 @@ async fn bet_on_currently_viewing_post(
     .0?;
 
     match response {
+        // this case should never match in yral game implementation
         BettingStatus::BettingClosed => {
             return Err(BetOnCurrentlyViewingPostError::BettingClosed);
         }
@@ -92,18 +99,29 @@ async fn bet_on_currently_viewing_post(
                 );
 
                 // insert only the first bet in first_bet_placed_at_hashmap
-                // if !canister_data
-                //     .first_bet_placed_at_hashmap
-                //     .contains_key(&place_bet_arg.post_id)
-                // {
-                //     canister_data
-                //         .first_bet_placed_at_hashmap
-                //         .insert(place_bet_arg.post_id, current_time);
-                //     // also push it to the array
-                //     canister_data.bet_timer_posts.push(&place_bet_arg.post_id);
-                // }
+                if !canister_data
+                    .first_bet_placed_at_hashmap
+                    .contains_key(&place_bet_arg.post_id)
+                {
+                    canister_data.first_bet_placed_at_hashmap.insert(
+                        place_bet_arg.post_id,
+                        (SystemTimeInMs::from_system_time(current_time), ongoing_slot),
+                    );
+                    // also push the post_id to the array
+                    let bet_timer_posts = &mut canister_data.bet_timer_posts;
+                    if bet_timer_posts.is_empty() {
+                        let to_print = match bet_timer_posts.push(&place_bet_arg.post_id) {
+                            Ok(timer) => format!("Timer pushed to empty array: {:?}", timer),
+                            Err(_) => "Failed to push timer to empty array".to_string(),
+                        };
 
-                // maybe_launch_next_timer(canister_data);
+                        ic_cdk::println!("{}", to_print);
+                    } else {
+                        bet_timer_posts.set(0, &place_bet_arg.post_id);
+                    };
+
+                    maybe_enqueue_timer();
+                }
             });
         }
     }
@@ -111,21 +129,71 @@ async fn bet_on_currently_viewing_post(
     Ok(response)
 }
 
-// fn maybe_launch_next_timer(canister_data: &CanisterData){
-//     if !canister_data.bet_timer_posts.is_empty() {
-//         let post_id = canister_data.bet_timer_posts.pop().unwrap();
-//         // also remove the post from hashmap
-//         let post_hashmap = canister_data
-//             .first_bet_placed_at_hashmap
-//             .remove(&post_id)
-//             .unwrap();
-        
-//         let current_time = system_time::get_current_system_time_from_ic();
-//         let interval = post_time.to_system_time().unwrap().duration_since(current_time).unwrap();
-        
-//         // let _ = ic_cdk_timers::set_timer(interval, "process_bets_for_post");
-//     }
-// }
+fn maybe_enqueue_timer() {
+    CANISTER_DATA.with(|canister_data_ref_cell| {
+        let canister_data = &mut canister_data_ref_cell.borrow_mut();
+
+        match canister_data.is_timer_running {
+            None => {
+                if !canister_data.first_bet_placed_at_hashmap.is_empty() {
+                    start_timer(canister_data);
+                }
+            }
+            Some(post_id) => {
+                if timer_expired(post_id, &canister_data) {
+                    if let Some((_bet_placed_time, ongoing_slot_for_post)) = canister_data.first_bet_placed_at_hashmap.get(&post_id){ 
+                    tabulate_hot_or_not_outcome_for_post_slot(canister_data, post_id, ongoing_slot_for_post);
+                    start_timer(canister_data);
+                }
+            };
+            }
+        }
+    });
+}
+fn start_timer(canister_data: &mut CanisterData) {
+    if !canister_data.first_bet_placed_at_hashmap.is_empty() {
+        // bet_timer_posts is a queue with head at the last element of array
+        // and tail at the first element of array.
+        // this is because `pop` removes the last entry from the vec in ic_stable_structures
+        let post_id = canister_data.bet_timer_posts.pop().unwrap();
+
+        if let Some((bet_placed_time, _ongoing_slot_for_post)) = canister_data.first_bet_placed_at_hashmap.get(&post_id) { 
+            let current_time = SystemTime::now();
+            let interval = current_time
+                .duration_since(bet_placed_time.to_system_time().unwrap())
+                .unwrap_or(Duration::ZERO);
+
+            canister_data.is_timer_running = Some(post_id);
+
+            ic_cdk_timers::set_timer(interval, move || {
+                maybe_enqueue_timer();
+            });
+        }
+    }
+}
+
+fn timer_expired(post_id: PostId, canister_data: &CanisterData) -> bool {
+    if !canister_data.first_bet_placed_at_hashmap.is_empty() {
+        let last_post_index = canister_data.bet_timer_posts.len() - 1;
+        let last_post_id = canister_data.bet_timer_posts.get(last_post_index).unwrap();
+        // if post_id == last_post_id {
+        ic_cdk::println!(
+            "post_id == last_post_id : {}, {}, {}",
+            post_id,
+            last_post_id,
+            post_id == last_post_id
+        );
+        if let Some((bet_placed_time, _ongoing_slot_for_post)) = canister_data.first_bet_placed_at_hashmap.get(&post_id) { 
+            let current_time = SystemTime::now();
+            let interval = current_time
+                .duration_since(bet_placed_time.to_system_time().unwrap())
+                .unwrap_or(Duration::ZERO);
+            return interval > TIMER_DURATION;
+        }
+        // }
+    }
+    false
+}
 
 fn validate_incoming_bet(
     canister_data: &CanisterData,
@@ -165,7 +233,10 @@ fn validate_incoming_bet(
 mod test {
     use std::time::SystemTime;
 
-    use shared_utils::{canister_specific::individual_user_template::types::hot_or_not::BetDirection, common::types::utility_token::token_event::NewSlotType};
+    use shared_utils::{
+        canister_specific::individual_user_template::types::hot_or_not::BetDirection,
+        common::types::utility_token::token_event::NewSlotType,
+    };
     use test_utils::setup::test_constants::{
         get_mock_user_alice_canister_id, get_mock_user_alice_principal_id,
         get_mock_user_bob_principal_id,
