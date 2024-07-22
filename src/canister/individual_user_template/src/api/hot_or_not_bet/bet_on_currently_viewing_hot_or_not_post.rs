@@ -13,11 +13,11 @@ use shared_utils::{
     },
 };
 
+use crate::api::hot_or_not_bet::tabulate_hot_or_not_outcome_for_post_slot::tabulate_hot_or_not_outcome_for_post_slot;
 use crate::{
     api::canister_management::update_last_access_time::update_last_canister_functionality_access_time,
     data_model::CanisterData, CANISTER_DATA,
 };
-use crate::api::hot_or_not_bet::tabulate_hot_or_not_outcome_for_post_slot::tabulate_hot_or_not_outcome_for_post_slot;
 
 use std::time::{Duration, SystemTime};
 
@@ -40,6 +40,8 @@ async fn bet_on_currently_viewing_post(
 
     update_last_canister_functionality_access_time();
 
+    ic_cdk::println!("{:?}", "calling response receive_bet_from_bet_makers_canister");
+
     let response = ic_cdk::call::<_, (Result<BettingStatus, BetOnCurrentlyViewingPostError>,)>(
         place_bet_arg.post_canister_id,
         "receive_bet_from_bet_makers_canister",
@@ -57,6 +59,9 @@ async fn bet_on_currently_viewing_post(
     .await
     .map_err(|_| BetOnCurrentlyViewingPostError::PostCreatorCanisterCallFailed)?
     .0?;
+
+    ic_cdk::println!("{:?}", &response);
+
 
     match response {
         // this case should never match in yral game implementation
@@ -120,7 +125,7 @@ async fn bet_on_currently_viewing_post(
                         bet_timer_posts.set(0, &place_bet_arg.post_id);
                     };
 
-                    maybe_enqueue_timer();
+                    maybe_enqueue_timer(canister_data);
                 }
             });
         }
@@ -129,26 +134,32 @@ async fn bet_on_currently_viewing_post(
     Ok(response)
 }
 
-fn maybe_enqueue_timer() {
-    CANISTER_DATA.with(|canister_data_ref_cell| {
-        let canister_data = &mut canister_data_ref_cell.borrow_mut();
+fn maybe_enqueue_timer(canister_data: &mut CanisterData) {
+    // CANISTER_DATA.with(|canister_data_ref_cell| {
+    // let canister_data = &mut canister_data_ref_cell.borrow_mut();
 
-        match canister_data.is_timer_running {
-            None => {
-                if !canister_data.first_bet_placed_at_hashmap.is_empty() {
-                    start_timer(canister_data);
-                }
+    match canister_data.is_timer_running {
+        None => {
+            if !canister_data.first_bet_placed_at_hashmap.is_empty() {
+                start_timer(canister_data);
             }
-            Some(post_id) => {
-                if timer_expired(post_id, &canister_data) {
-                    if let Some((_bet_placed_time, ongoing_slot_for_post)) = canister_data.first_bet_placed_at_hashmap.get(&post_id){ 
-                    tabulate_hot_or_not_outcome_for_post_slot(canister_data, post_id, ongoing_slot_for_post);
+        }
+        Some(post_id) => {
+            if timer_expired(post_id, &canister_data) {
+                if let Some((_bet_placed_time, ongoing_slot_for_post)) =
+                    canister_data.first_bet_placed_at_hashmap.get(&post_id)
+                {
+                    tabulate_hot_or_not_outcome_for_post_slot(
+                        canister_data,
+                        post_id,
+                        ongoing_slot_for_post,
+                    );
                     start_timer(canister_data);
                 }
             };
-            }
         }
-    });
+    }
+    // });
 }
 fn start_timer(canister_data: &mut CanisterData) {
     if !canister_data.first_bet_placed_at_hashmap.is_empty() {
@@ -157,7 +168,9 @@ fn start_timer(canister_data: &mut CanisterData) {
         // this is because `pop` removes the last entry from the vec in ic_stable_structures
         let post_id = canister_data.bet_timer_posts.pop().unwrap();
 
-        if let Some((bet_placed_time, _ongoing_slot_for_post)) = canister_data.first_bet_placed_at_hashmap.get(&post_id) { 
+        if let Some((bet_placed_time, _ongoing_slot_for_post)) =
+            canister_data.first_bet_placed_at_hashmap.get(&post_id)
+        {
             let current_time = SystemTime::now();
             let interval = current_time
                 .duration_since(bet_placed_time.to_system_time().unwrap())
@@ -166,7 +179,10 @@ fn start_timer(canister_data: &mut CanisterData) {
             canister_data.is_timer_running = Some(post_id);
 
             ic_cdk_timers::set_timer(interval, move || {
-                maybe_enqueue_timer();
+                CANISTER_DATA.with(|canister_data_ref_cell| {
+                    let canister_data = &mut canister_data_ref_cell.borrow_mut();
+                    maybe_enqueue_timer(canister_data);
+                });
             });
         }
     }
@@ -183,7 +199,9 @@ fn timer_expired(post_id: PostId, canister_data: &CanisterData) -> bool {
             last_post_id,
             post_id == last_post_id
         );
-        if let Some((bet_placed_time, _ongoing_slot_for_post)) = canister_data.first_bet_placed_at_hashmap.get(&post_id) { 
+        if let Some((bet_placed_time, _ongoing_slot_for_post)) =
+            canister_data.first_bet_placed_at_hashmap.get(&post_id)
+        {
             let current_time = SystemTime::now();
             let interval = current_time
                 .duration_since(bet_placed_time.to_system_time().unwrap())

@@ -2,7 +2,7 @@ use ic_cdk_macros::update;
 use std::time::SystemTime;
 
 use candid::Principal;
-use ic_cdk::api::management_canister::provisional::CanisterId;
+use ic_cdk::{api::management_canister::provisional::CanisterId, println};
 use shared_utils::{
     canister_specific::individual_user_template::types::{
         arg::PlaceBetArg,
@@ -28,6 +28,10 @@ fn receive_bet_from_bet_makers_canister(
 ) -> Result<BettingStatus, BetOnCurrentlyViewingPostError> {
     let bet_maker_canister_id = ic_cdk::caller();
     update_last_canister_functionality_access_time();
+
+    dbg!(&place_bet_arg);
+    dbg!(&bet_maker_principal_id);
+    dbg!(&bet_maker_canister_id);
 
     let status = CANISTER_DATA.with(|canister_data_ref_cell| {
         receive_bet_from_bet_makers_canister_impl(
@@ -66,6 +70,8 @@ fn receive_bet_from_bet_makers_canister_impl(
     } = place_bet_arg;
 
     let post = canister_data.all_created_posts.get_mut(&post_id).unwrap();
+
+    ic_cdk::println!("{:?}",&post);
 
     post.place_hot_or_not_bet_v2(
         bet_maker_principal_id,

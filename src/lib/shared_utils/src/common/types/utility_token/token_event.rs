@@ -93,6 +93,15 @@ impl SystemTimeInMs {
     //         Duration::from_millis(0)
     //     }
     // }
+
+    pub fn from_system_time(system_time: SystemTime) -> Self {
+        let duration = system_time
+            .duration_since(UNIX_EPOCH)
+            .expect("Time went backwards");
+
+        SystemTimeInMs(duration.as_millis())
+    }
+
     pub fn to_system_time(&self) -> Option<SystemTime> {
         let duration = Duration::from_millis(self.0 as u64);
         UNIX_EPOCH.checked_add(duration)
@@ -108,12 +117,26 @@ impl Default for SystemTimeInMs {
 impl Storable for SystemTimeInMs {
     fn to_bytes(&self) -> Cow<[u8]> {
         // Encode the u128 value to bytes
-        Cow::Owned(Encode!(&self.0).unwrap())
+        let value = Cow::Owned(Encode!(&self.0).unwrap());
+        dbg!("  ENCODE SystemTimeInMs {} \n\n", "//".repeat(400));
+        dbg!(&value);
+        value
     }
 
     fn from_bytes(bytes: Cow<[u8]>) -> Self {
         // Decode the bytes back into a u128 value
+        let print_val = if bytes.len() != 16 {
+            format!("Expected 16 bytes for u128, got {}", bytes.len())
+        } else {
+            format!("16 bytes length {} ", bytes.len())
+        };
+
+        ic_cdk::println!("print_val: {:?}", print_val);
+        ic_cdk::println!("bytes: {:?}", bytes);
         let value: u128 = Decode!(&bytes, u128).unwrap();
+        // let (value, two) = Decode!(&bytes,  u128, String).unwrap();
+        // ic_cdk::println!("two: {:?}", two);
+
         SystemTimeInMs(value)
     }
 

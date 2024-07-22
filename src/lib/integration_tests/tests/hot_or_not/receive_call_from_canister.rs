@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use candid::{encode_args, encode_one, Principal};
-use ic_cdk::println;
 use pocket_ic::{PocketIc, WasmResult};
 use shared_utils::{
     canister_specific::{
@@ -264,8 +263,6 @@ fn test_receive_call_from_another_canister() {
         })
         .unwrap();
 
-    println!("{:?}", &bet_status);
-
     assert!(matches!(
         bet_status,
         BettingStatus::BettingOpen {
@@ -276,6 +273,4 @@ fn test_receive_call_from_another_canister() {
             ..
         }
     ));
-
-    // todo assert that timer is set here.
 }

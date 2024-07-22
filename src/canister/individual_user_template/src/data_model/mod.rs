@@ -90,10 +90,10 @@ pub struct CanisterData {
     #[serde(skip, default = "_default_bet_timer_first_bet_placed_at_map")]
     // pub first_bet_placed_at_hashmap: BTreeMap<PostId, SystemTime>,
     pub first_bet_placed_at_hashmap:
-        ic_stable_structures::btreemap::BTreeMap<PostId, SystemTimeInMs, Memory>,
+        ic_stable_structures::btreemap::BTreeMap<PostId, (SystemTimeInMs, NewSlotType), Memory>, 
     // #{serde(skip, default = "_default_global_bet_timer")}
     // there is one global timer for processing bets
-    // pub global_bet_timer: Option<TimerId>,
+    pub is_timer_running: Option<PostId>,
 }
 
 pub fn _default_room_details(
@@ -117,7 +117,7 @@ pub fn _default_slot_details_map(
 }
 
 pub fn _default_bet_timer_first_bet_placed_at_map(
-) -> ic_stable_structures::btreemap::BTreeMap<PostId, SystemTimeInMs, Memory> {
+) -> ic_stable_structures::btreemap::BTreeMap<PostId, (SystemTimeInMs, NewSlotType), Memory> {
     ic_stable_structures::btreemap::BTreeMap::init(get_bet_timer_first_bet_at_memory())
 }
 
@@ -162,6 +162,7 @@ impl Default for CanisterData {
             // these two fields together help with infinite slots in yral game
             first_bet_placed_at_hashmap: _default_bet_timer_first_bet_placed_at_map(),
             bet_timer_posts: _default_bet_timer_vec(),
+            is_timer_running: None,
         }
     }
 }
