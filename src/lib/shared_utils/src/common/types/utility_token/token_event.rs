@@ -72,38 +72,46 @@ pub enum StakeEvent {
     },
 }
 
+/// `u64` = number of milliseconds that have elapsed since UNIX_EPOCH
+/// # Note
+///
+/// The maximum value of `u64` allows this struct to represent dates up to the year 292277026596.
+/// However, be cautious when performing operations that might exceed this range.
 #[derive(
     Clone, Copy, CandidType, Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Ord,
 )]
-pub struct SystemTimeInMs(u128);
+pub struct SystemTimeInMs(u64);
 
 impl SystemTimeInMs {
     pub fn now() -> Self {
-        let duration = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .expect("Time went backwards");
-
-        SystemTimeInMs(duration.as_millis())
+        let time = ic_cdk::api::time() / 1_000_000;
+        SystemTimeInMs(time)
     }
 
-    // pub fn duration_since(&self, earlier: &SystemTimeInMs) -> Duration {
-    //     if self.0 >= earlier.0 {
-    //         Duration::from_millis((self.0 - earlier.0) as u64)
-    //     } else {
-    //         Duration::from_millis(0)
-    //     }
-    // }
+    pub fn duration_since(&self, earlier: &SystemTimeInMs) -> Duration {
+        if self.0 >= earlier.0 {
+            Duration::from_millis(self.0 - earlier.0)
+        } else {
+            Duration::from_millis(0)
+        }
+    }
 
     pub fn from_system_time(system_time: SystemTime) -> Self {
         let duration = system_time
             .duration_since(UNIX_EPOCH)
-            .expect("Time went backwards");
+            .expect("SystemTime before UNIX EPOCH!");
 
-        SystemTimeInMs(duration.as_millis())
+        let millis = duration.as_millis() as u64;
+        SystemTimeInMs(millis)
+    }
+
+    /// canister_time is in nanoseconds
+    pub fn from_canister_time(canister_time: u64) -> Self {
+        SystemTimeInMs(canister_time / 1_000_000)
     }
 
     pub fn to_system_time(&self) -> Option<SystemTime> {
-        let duration = Duration::from_millis(self.0 as u64);
+        let duration = Duration::from_millis(self.0);
         UNIX_EPOCH.checked_add(duration)
     }
 }
@@ -117,32 +125,41 @@ impl Default for SystemTimeInMs {
 impl Storable for SystemTimeInMs {
     fn to_bytes(&self) -> Cow<[u8]> {
         // Encode the u128 value to bytes
-        let value = Cow::Owned(Encode!(&self.0).unwrap());
-        dbg!("  ENCODE SystemTimeInMs {} \n\n", "//".repeat(400));
-        dbg!(&value);
-        value
+        // let value = Cow::Owned(Encode!(&self.0).unwrap());
+        // dbg!("  ENCODE SystemTimeInMs {} \n\n", "//".repeat(400));
+        // dbg!(&value);
+        // value
+
+        // let value =
+        Cow::Owned(Encode!(&self).unwrap())
+        // ic_cdk::println!("value: {:?}", value);
+        // value
     }
 
     fn from_bytes(bytes: Cow<[u8]>) -> Self {
         // Decode the bytes back into a u128 value
-        let print_val = if bytes.len() != 16 {
-            format!("Expected 16 bytes for u128, got {}", bytes.len())
-        } else {
-            format!("16 bytes length {} ", bytes.len())
-        };
+        // let print_val = if bytes.len() != 16 {
+        //     format!("Expected 16 bytes for u128, got {}", bytes.len())
+        // } else {
+        //     format!("16 bytes length {} ", bytes.len())
+        // };
 
-        ic_cdk::println!("print_val: {:?}", print_val);
-        ic_cdk::println!("bytes: {:?}", bytes);
-        let value: u128 = Decode!(&bytes, u128).unwrap();
+        // ic_cdk::println!("print_val: {:?}", print_val);
+        // ic_cdk::println!("bytes: {:?}", bytes);
+        // let value =
+        Decode!(&bytes, Self).unwrap()
+        // ic_cdk::println!("print_val dfx: {:?}", value);
+
+        // value
         // let (value, two) = Decode!(&bytes,  u128, String).unwrap();
         // ic_cdk::println!("two: {:?}", two);
 
-        SystemTimeInMs(value)
+        // SystemTimeInMs(value)
     }
 
     const BOUND: Bound = Bound::Bounded {
-        max_size: 16, // size of u128 in bytes
-        is_fixed_size: true,
+        max_size: 100, // size of u128 in bytes
+        is_fixed_size: false,
     };
 }
 
@@ -165,20 +182,24 @@ impl From<u8> for NewSlotType {
 
 impl Storable for NewSlotType {
     fn to_bytes(&self) -> Cow<[u8]> {
-        dbg!("  ENCODE NewSlotType {} \n\n", "//".repeat(400));
-        Cow::Owned(Encode!(&self.0).unwrap())
+        // dbg!("  ENCODE NewSlotType {} \n\n", "//".repeat(400));
+        Cow::Owned(Encode!(&self).unwrap())
         // Cow::Owned(Encode!(&self.0).unwrap())
     }
 
     fn from_bytes(from_u64_bytes: Cow<[u8]>) -> Self {
-        dbg!("DECODE NewSlotType \n\n ", "\\".repeat(10));
-        let inner_u64 = Decode!(&from_u64_bytes, u64).unwrap();
-        Self(inner_u64)
+        // dbg!("DECODE NewSlotType \n\n ", "\\".repeat(10));
+        // let inner_u64 = Decode!(&from_u64_bytes, u64).unwrap();
+        // Self(inner_u64)
+        // let inner_u64
+        Decode!(&from_u64_bytes, Self).unwrap()
+        // ic_cdk::println!("inner_u64 dfx: {:?}", inner_u64);
+        // inner_u64
     }
 
     const BOUND: Bound = Bound::Bounded {
         max_size: 150,
-        is_fixed_size: true,
+        is_fixed_size: false,
     };
 }
 

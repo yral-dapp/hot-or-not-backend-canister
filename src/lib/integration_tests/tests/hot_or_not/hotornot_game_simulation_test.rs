@@ -35,7 +35,6 @@ fn post_cache_canister_wasm() -> Vec<u8> {
 }
 
 #[test]
-// #[ignore]
 fn hotornot_game_simulation_test() {
     let pic = PocketIc::new();
 
@@ -277,7 +276,9 @@ fn hotornot_game_simulation_test() {
                     WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
                     _ => panic!("\n🛑 place_bet failed\n"),
                 };
-            bet_status.unwrap()
+            let val = bet_status;
+            ic_cdk::println!("\n\nResultBet status: {:?}\n\n", val);
+            val.unwrap() 
         })
         .unwrap();
     ic_cdk::println!("Bet status: {:?}", bet_status);
@@ -527,8 +528,10 @@ fn hotornot_game_simulation_test() {
     println!("Charlie token balance: {:?}", charlie_token_balance);
 
     // Forward timer
-    pic.advance_time(Duration::from_secs(60 * 60));
-    pic.tick();
+    pic.advance_time(Duration::from_secs(60 * 60 + 30));
+    for _i in 1..=10 {
+        pic.tick();
+    }
 
     // Show alice rewards
 

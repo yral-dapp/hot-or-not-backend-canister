@@ -9,7 +9,7 @@ use shared_utils::{
 use crate::{
     api::{
         canister_management::update_last_access_time::update_last_canister_functionality_access_time,
-        hot_or_not_bet::tabulate_hot_or_not_outcome_for_post_slot::tabulate_hot_or_not_outcome_for_post_slot,
+        // hot_or_not_bet::tabulate_hot_or_not_outcome_for_post_slot::tabulate_hot_or_not_outcome_for_post_slot,
     },
     data_model::CanisterData,
     CANISTER_DATA,

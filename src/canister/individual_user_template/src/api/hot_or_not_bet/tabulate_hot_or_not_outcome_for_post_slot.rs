@@ -4,7 +4,7 @@ use shared_utils::{
     canister_specific::individual_user_template::types::{
         hot_or_not::{
             BetDetails, BetDirection, BetOutcomeForBetMaker, BetPayout, GlobalBetId, GlobalRoomId,
-            RoomBetPossibleOutcomes, RoomDetailsV1, SlotDetails, StablePrincipal,
+            RoomBetPossibleOutcomes, RoomDetailsV1, StablePrincipal,
         },
         post::Post,
     },

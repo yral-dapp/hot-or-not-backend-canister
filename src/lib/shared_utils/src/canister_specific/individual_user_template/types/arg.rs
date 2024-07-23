@@ -13,7 +13,7 @@ pub struct IndividualUserTemplateInitArgs {
     pub version: String,
 }
 
-#[derive(Deserialize, CandidType, Clone)]
+#[derive(Deserialize, CandidType, Debug, Clone)]
 pub struct PlaceBetArg {
     pub post_canister_id: Principal,
     pub post_id: u64,
