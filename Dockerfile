@@ -1,13 +1,10 @@
 FROM ghcr.io/dfinity/icp-dev-env:latest
 
-ARG ADMIN_IDENTITY
-
 WORKDIR /app
 
 COPY . .
 
-RUN echo "$ADMIN_IDENTITY" >> admin.pem
-RUN dfx identity import --storage-mode=plaintext admin admin.pem 
+RUN dfx identity import --storage-mode=plaintext admin ./scripts/canisters/docker/local-admin.pem
 RUN dfx identity use admin
 
 RUN apt-get update && apt-get install -y bsdmainutils parallel --no-install-recommends && \
