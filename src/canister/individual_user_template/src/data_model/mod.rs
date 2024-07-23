@@ -1,14 +1,15 @@
 use std::{
     collections::{BTreeMap, BTreeSet},
-    time::SystemTime,time::UNIX_EPOCH
+    time::SystemTime,
+    // time::UNIX_EPOCH,
 };
 
 use candid::{Deserialize, Principal};
 use ic_cdk::api::management_canister::provisional::CanisterId;
-use ic_stable_structures::Storable;
+// use ic_stable_structures::Storable;
 
-use std::borrow::Cow;
-use ic_stable_structures::storable::Bound;
+// use ic_stable_structures::storable::Bound;
+// use std::borrow::Cow;
 
 // use ic_cdk_timers::TimerId;
 use serde::Serialize;
@@ -18,7 +19,7 @@ use shared_utils::{
         follow::FollowData,
         hot_or_not::{
             BetDetails, GlobalBetId, GlobalRoomId, PlacedBetDetail, RoomDetailsV1, RoomId,
-            SlotDetailsV1,  StablePrincipal,
+            SlotDetailsV1, StablePrincipal,
         },
         migration::MigrationInfo,
         post::{FeedScore, Post, PostViewStatistics},
@@ -27,7 +28,11 @@ use shared_utils::{
         token::TokenBalance,
     },
     common::types::{
-        app_primitive_type::PostId, known_principal::KnownPrincipalMap, top_posts::{post_score_index::PostScoreIndex, post_score_index_item::PostStatus}, utility_token::token_event::{NewSlotType, SystemTimeInMs}, version_details::VersionDetails
+        app_primitive_type::PostId,
+        known_principal::KnownPrincipalMap,
+        top_posts::{post_score_index::PostScoreIndex, post_score_index_item::PostStatus},
+        utility_token::token_event::{NewSlotType, SystemTimeInMs},
+        version_details::VersionDetails,
     },
 };
 
@@ -84,13 +89,15 @@ pub struct CanisterData {
     #[serde(default)]
     pub app_storage: AppStorage,
     // u64 is post_id, SystemTime refers to time when first_bet is placed
-    #[serde(skip, default = "_default_bet_timer_vec")]
-    pub bet_timer_posts: ic_stable_structures::vec::Vec<PostId, Memory>,
+    // #[serde(skip, default = "_default_bet_timer_vec")]
+    // pub bet_timer_posts: ic_stable_structures::vec::Vec<PostId, Memory>,
+    #[serde(skip, default = "_default_bet_timer_posts_queue")]
+    pub bet_timer_posts:
+        ic_stable_structures::btreemap::BTreeMap<(SystemTimeInMs, PostId), (), Memory>,
     // this keeps track of when the first bet was placed.
     #[serde(skip, default = "_default_bet_timer_first_bet_placed_at_map")]
-    // pub first_bet_placed_at_hashmap: BTreeMap<PostId, SystemTime>,
     pub first_bet_placed_at_hashmap:
-        ic_stable_structures::btreemap::BTreeMap<PostId, (SystemTimeInMs, NewSlotType), Memory>, 
+        ic_stable_structures::btreemap::BTreeMap<PostId, (SystemTimeInMs, NewSlotType), Memory>,
     // #{serde(skip, default = "_default_global_bet_timer")}
     // there is one global timer for processing bets
     pub is_timer_running: Option<PostId>,
@@ -121,12 +128,17 @@ pub fn _default_bet_timer_first_bet_placed_at_map(
     ic_stable_structures::btreemap::BTreeMap::init(get_bet_timer_first_bet_at_memory())
 }
 
-pub fn _default_bet_timer_vec() -> ic_stable_structures::vec::Vec<PostId, Memory> {
-    match ic_stable_structures::vec::Vec::init(get_bet_timer_memory()) {
-        Ok(vec) => vec,
-        Err(err) => panic!("Failed to initialize bet timer vec: {}", err),
-    }
+pub fn _default_bet_timer_posts_queue(
+) -> ic_stable_structures::btreemap::BTreeMap<(SystemTimeInMs, PostId), (), Memory> {
+    ic_stable_structures::btreemap::BTreeMap::init(get_bet_timer_memory())
 }
+
+// pub fn _default_bet_timer_vec() -> ic_stable_structures::vec::Vec<PostId, Memory> {
+//     match ic_stable_structures::vec::Vec::init(get_bet_timer_memory()) {
+//         Ok(vec) => vec,
+//         Err(err) => panic!("Failed to initialize bet timer vec: {}", err),
+//     }
+// }
 
 // pub fn _default_global_bet_timer() -> ic_stable_structures::vec::Vec<PostId, Memory> {
 //     match ic_stable_structures::vec::Vec::init(get_global_bet_timer_memory()) {
@@ -161,12 +173,12 @@ impl Default for CanisterData {
             app_storage: AppStorage::default(),
             // these two fields together help with infinite slots in yral game
             first_bet_placed_at_hashmap: _default_bet_timer_first_bet_placed_at_map(),
-            bet_timer_posts: _default_bet_timer_vec(),
+            // bet_timer_posts: _default_bet_timer_vec(),
+            bet_timer_posts: _default_bet_timer_posts_queue(),
             is_timer_running: None,
         }
     }
 }
-
 
 // impl Storable for SystemTime {
 //     fn to_bytes(&self) -> Cow<[u8]> {
