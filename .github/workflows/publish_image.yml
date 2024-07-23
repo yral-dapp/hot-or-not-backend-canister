@@ -1,0 +1,25 @@
+name: Deploy to ghcr.io
+
+on:
+  push:
+    branches:
+      - main
+      - rupansh/container
+  workflow_dispatch:
+
+jobs:
+  docker_publish:
+    runs-on: "ubuntu-20.04"
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build and publish docker image
+        uses: macbre/push-to-ghcr@master
+        with:
+          image_name: go-bazzinga/yral-backend-dev
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          image_tag: ${{ github.sha }}
