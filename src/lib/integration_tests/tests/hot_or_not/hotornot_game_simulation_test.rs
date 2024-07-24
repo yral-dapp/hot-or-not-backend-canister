@@ -276,12 +276,10 @@ fn hotornot_game_simulation_test() {
                     WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
                     _ => panic!("\n🛑 place_bet failed\n"),
                 };
-            let val = bet_status;
-            ic_cdk::println!("\n\nResultBet status: {:?}\n\n", val);
-            val.unwrap() 
+            bet_status.unwrap()
         })
         .unwrap();
-    ic_cdk::println!("Bet status: {:?}", bet_status);
+    // ic_cdk::println!("Bet status: {:?}", bet_status);
 
     // Dan places bet on Alice post 1
     let dan_place_bet_arg = PlaceBetArg {
@@ -529,7 +527,13 @@ fn hotornot_game_simulation_test() {
 
     // Forward timer
     pic.advance_time(Duration::from_secs(60 * 60 + 30));
-    for _i in 1..=10 {
+    for _i in 1..=5 {
+        pic.tick();
+    }
+
+    // Forward timer for another post
+    pic.advance_time(Duration::from_secs(10));
+    for _i in 1..=5 {
         pic.tick();
     }
 
@@ -794,8 +798,11 @@ fn hotornot_game_simulation_test() {
     ic_cdk::println!("Bet status: {:?}", bet_status);
 
     // Forward timer
-    pic.advance_time(Duration::from_secs(60 * 60));
-    pic.tick();
+    pic.advance_time(Duration::from_secs(60 * 60 + 10));
+    for _i in 1..=10 {
+        pic.tick();
+    }
+
 
     // Show alice rewards
 
@@ -1088,7 +1095,9 @@ fn hotornot_game_simulation_test_2() {
 
     // Forward timer
     pic.advance_time(Duration::from_secs(60 * 60));
-    pic.tick();
+    for _i in 1..=10 {
+        pic.tick();
+    }
 
     // Check rewards
 

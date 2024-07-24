@@ -114,6 +114,29 @@ impl SystemTimeInMs {
         let duration = Duration::from_millis(self.0);
         UNIX_EPOCH.checked_add(duration)
     }
+
+    pub fn checked_add(&self, duration: Duration) -> Option<SystemTimeInMs> {
+        let duration_ms = duration.as_millis() as u64;
+        self.0.checked_add(duration_ms).map(SystemTimeInMs)
+    }
+
+    pub fn calculate_remaining_interval(
+        &self,
+        earlier_time: &SystemTimeInMs,
+        future_duration: Duration,
+    ) -> Result<Duration, &'static str> {
+        let future_time = earlier_time
+            .checked_add(future_duration)
+            .ok_or("Overflow when calculating future time")?;
+
+        if future_time.0 > self.0 {
+            Ok(Duration::from_millis(future_time.0 - self.0))
+        } else {
+            // keeping default to be 3s instead of 0ms for concurrent bets on two posts of the same user
+            // if the last best timer was just processed, wait for 3s to process another post.
+            Ok(Duration::from_millis(3000))
+        }
+    }
 }
 
 impl Default for SystemTimeInMs {

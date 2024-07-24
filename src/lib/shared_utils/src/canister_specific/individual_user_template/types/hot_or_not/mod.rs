@@ -21,7 +21,7 @@ use super::{
     token::TokenBalance,
 };
 
-#[derive(CandidType, PartialEq, Eq, Debug, Serialize, Deserialize)]
+#[derive(CandidType, PartialEq, Eq, Debug, Clone, Serialize, Deserialize)]
 pub enum BettingStatus {
     BettingOpen {
         started_at: SystemTime,
