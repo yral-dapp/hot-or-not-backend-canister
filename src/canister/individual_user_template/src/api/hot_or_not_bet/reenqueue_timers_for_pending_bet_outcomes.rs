@@ -6,17 +6,21 @@ use crate::{data_model::CanisterData, CANISTER_DATA};
 
 use super::tabulate_hot_or_not_outcome_for_post_slot::tabulate_hot_or_not_outcome_for_post_slot;
 
+#[deprecated(
+    note = "Use `reenqueue_timers_for_pending_bet_outcomes_v1` instead"
+)]
 pub fn reenqueue_timers_for_pending_bet_outcomes() {
     let current_time = system_time::get_current_system_time_from_ic();
 
     CANISTER_DATA.with(|canister_data_ref_cell| {
         let mut canister_data = canister_data_ref_cell.borrow_mut();
 
-        let posts = get_posts_that_have_pending_outcomes(&canister_data, &current_time);
+        let posts = get_posts_that_have_pending_outcomes_v1(&canister_data, &current_time);
 
-        // reenqueue_timers_for_these_posts(&mut canister_data, posts, &current_time);
+        reenqueue_timers_for_these_posts(&mut canister_data, posts, &current_time);
     });
 }
+
 
 fn get_posts_that_have_pending_outcomes(
     canister_data: &CanisterData,
@@ -40,41 +44,41 @@ fn get_posts_that_have_pending_outcomes(
         .collect()
 }
 
-// fn reenqueue_timers_for_these_posts(
-//     canister_data: &mut CanisterData,
-//     post_ids: Vec<u64>,
-//     current_time: &SystemTime,
-// ) {
-//     for post_id in post_ids {
-//         let post = canister_data.all_created_posts.get(&post_id).unwrap();
+fn reenqueue_timers_for_these_posts(
+    canister_data: &mut CanisterData,
+    post_ids: Vec<u64>,
+    current_time: &SystemTime,
+) {
+    for post_id in post_ids {
+        let post = canister_data.all_created_posts.get(&post_id).unwrap();
 
-//         let slot_to_enqueue_onwards = (current_time
-//             .duration_since(post.created_at)
-//             .unwrap()
-//             .as_secs()
-//             / (60 * 60)) as u8;
+        let slot_to_enqueue_onwards = (current_time
+            .duration_since(post.created_at)
+            .unwrap()
+            .as_secs()
+            / (60 * 60)) as u8;
 
-//         // * schedule hot_or_not outcome tabulation for the 48 hours after the post is created
-//         (slot_to_enqueue_onwards..=48).for_each(|slot_number| {
-//             ic_cdk_timers::set_timer(
-//                 post.created_at
-//                     .checked_add(Duration::from_secs((slot_number as u64) * 60 * 60))
-//                     .unwrap()
-//                     .duration_since(*current_time)
-//                     .unwrap_or_default(),
-//                 move || {
-//                     CANISTER_DATA.with(|canister_data_ref_cell| {
-//                         tabulate_hot_or_not_outcome_for_post_slot(
-//                             &mut canister_data_ref_cell.borrow_mut(),
-//                             post_id,
-//                             slot_number + 1,
-//                         );
-//                     });
-//                 },
+        // * schedule hot_or_not outcome tabulation for the 48 hours after the post is created
+        (slot_to_enqueue_onwards..=48).for_each(|slot_number| {
+            ic_cdk_timers::set_timer(
+                post.created_at
+                    .checked_add(Duration::from_secs((slot_number as u64) * 60 * 60))
+                    .unwrap()
+                    .duration_since(*current_time)
+                    .unwrap_or_default(),
+                move || {
+                    CANISTER_DATA.with(|canister_data_ref_cell| {
+                        tabulate_hot_or_not_outcome_for_post_slot(
+                            &mut canister_data_ref_cell.borrow_mut(),
+                            post_id,
+                            slot_number + 1,
+                        );
+                    });
+                },
 //             );
-//         })
-//     }
-// }
+        })
+    }
+}
 
 #[cfg(test)]
 mod test {

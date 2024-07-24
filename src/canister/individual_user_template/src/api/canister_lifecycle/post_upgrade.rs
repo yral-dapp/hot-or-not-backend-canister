@@ -8,7 +8,7 @@ use crate::data_model::memory;
 use shared_utils::canister_specific::individual_user_template::types::arg::IndividualUserTemplateInitArgs;
 
 use crate::{
-    api::hot_or_not_bet::reenqueue_timers_for_pending_bet_outcomes::reenqueue_timers_for_pending_bet_outcomes,
+    api::hot_or_not_bet::reenqueue_timers_for_pending_bet_outcomes_v1::reenqueue_timers_for_pending_bet_outcomes_v1,
     CANISTER_DATA,
 };
 
@@ -16,7 +16,7 @@ use crate::{
 fn post_upgrade() {
     restore_data_from_stable_memory();
     save_upgrade_args_to_memory();
-    reenqueue_timers_for_pending_bet_outcomes();
+    reenqueue_timers_for_pending_bet_outcomes_v1();
 }
 
 fn restore_data_from_stable_memory() {
