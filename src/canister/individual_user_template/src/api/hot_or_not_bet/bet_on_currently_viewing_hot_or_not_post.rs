@@ -34,11 +34,6 @@ async fn bet_on_currently_viewing_post(
 
     update_last_canister_functionality_access_time();
 
-    ic_cdk::println!(
-        "{:?}",
-        "calling response receive_bet_from_bet_makers_canister"
-    );
-
     let response = ic_cdk::call::<_, (Result<BettingStatus, BetOnCurrentlyViewingPostError>,)>(
         place_bet_arg.post_canister_id,
         "receive_bet_from_bet_makers_canister",
@@ -56,8 +51,6 @@ async fn bet_on_currently_viewing_post(
     .await
     .map_err(|_| BetOnCurrentlyViewingPostError::PostCreatorCanisterCallFailed)?
     .0?;
-
-    ic_cdk::println!("{:?}", &response);
 
     match response {
         // this case should never match in yral game implementation
@@ -98,8 +91,6 @@ async fn bet_on_currently_viewing_post(
                         outcome_received: BetOutcomeForBetMaker::default(),
                     },
                 );
-
-                ic_cdk::println!("2+ bet on same post: {:?}", place_bet_arg.post_id);
             });
         }
     }

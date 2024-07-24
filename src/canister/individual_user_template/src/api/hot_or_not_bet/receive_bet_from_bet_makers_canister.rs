@@ -39,8 +39,6 @@ fn receive_bet_from_bet_makers_canister(
     let bet_maker_canister_id = ic_cdk::caller();
     update_last_canister_functionality_access_time();
 
-    ic_cdk::println!("receive_bet_from_bet_makers_canister - creator_post: {:?}",&place_bet_arg.post_id);
-
     let current_time = system_time::get_current_system_time_from_ic();
 
     let status = CANISTER_DATA.with(|canister_data_ref_cell| {
@@ -90,12 +88,10 @@ fn maybe_start_timer_based_on_bet_result(canister_data: &mut CanisterData, curre
             .first_bet_placed_at_hashmap
             .contains_key(&place_bet_arg.post_id)
         {
-            ic_cdk::println!("current_time: {:?}", current_time);
             canister_data.first_bet_placed_at_hashmap.insert(
                 place_bet_arg.post_id,
                 (SystemTimeInMs::from_system_time(current_time), ongoing_slot),
             );
-            ic_cdk::println!("maybe_start_timer_based_on_bet_result: canister_data.first_bet_placed_at_hashmap: {}", print_btree_map(&canister_data.first_bet_placed_at_hashmap));
             
             // also push the post_id to the queue
             let bet_timer_posts = &mut canister_data.bet_timer_posts;
@@ -111,14 +107,8 @@ fn maybe_start_timer_based_on_bet_result(canister_data: &mut CanisterData, curre
                 None => "Failed to push timer to empty array".to_string(),
             };
 
-            ic_cdk::println!(
-                "before maybe_enqueue_timer (maybe_start_timer_based_on_bet_result) - bet_timer_posts: {:?}",
-                print_btree_map(&canister_data.bet_timer_posts)
-            );
-
             maybe_enqueue_timer(canister_data);
         }
-        ic_cdk::println!("second bet on same post: {:?}", place_bet_arg.post_id);
     }
 }
     }
@@ -139,8 +129,6 @@ fn receive_bet_from_bet_makers_canister_impl(
     } = place_bet_arg;
 
     let post = canister_data.all_created_posts.get_mut(&post_id).unwrap();
-
-    ic_cdk::println!("receive_bet_from_bet_makers_canister_impl - post: {:?}",&post);
 
     post.place_hot_or_not_bet_v2(
         bet_maker_principal_id,
@@ -163,52 +151,25 @@ fn maybe_enqueue_timer(canister_data: &mut CanisterData) {
         None => !canister_data.first_bet_placed_at_hashmap.is_empty(),
     };
 
-    ic_cdk::println!(
-        "inside maybe_enqueue_timer: timer_running = {:?} ; should_start_timer = {:?} \n",
-        &canister_data.is_timer_running,
-        should_start_timer
-    );
-
     if should_start_timer {
         start_timer(canister_data);
     }
 }
 
 fn process_running_timer(canister_data: &mut CanisterData, post_id: u64) -> bool {
-    ic_cdk::println!("process_running_timer for post_id: {:?}", post_id);
     if !timer_expired(post_id, canister_data) {
         // don't start timer again if previous one has not expired yet
-        ic_cdk::println!("process_running_timer for post_id: {:?} -  early_return as timer is not expired", post_id);
         return false;
     }
-
-    ic_cdk::println!("process_running_timer - canister_data.first_bet_placed_at_hashmap for post_id: {:?}",canister_data.first_bet_placed_at_hashmap.get(&post_id));
 
     if let Some((_, ongoing_slot)) = canister_data.first_bet_placed_at_hashmap.get(&post_id) {
         tabulate_hot_or_not_outcome_for_post_slot(canister_data, post_id, ongoing_slot);
 
-        ic_cdk::println!(
-            "\n\n canister_data.bet_timer_posts: {:?}",
-            print_btree_map(&canister_data.bet_timer_posts)
-        );
-        ic_cdk::println!("\n\n BEFORE PROCESSING TIMER {}", "//".repeat(400));
         // remove the post_id from the hashmap and bet_timer_posts
-        let val = canister_data.first_bet_placed_at_hashmap.remove(&post_id);
-        let same_post_id = canister_data.bet_timer_posts.pop_first();
+        let _val = canister_data.first_bet_placed_at_hashmap.remove(&post_id);
+        let _same_post_id = canister_data.bet_timer_posts.pop_first();
 
         canister_data.is_timer_running = None;
-        ic_cdk::println!(" after PROCESSING TIMER {}", "--".repeat(400));
-        ic_cdk::println!(
-            "\n\n processed_timer for -- post_id: {:?}, same_post_id: {:?}",
-            post_id,
-            same_post_id
-        );
-        ic_cdk::println!("\n\n canister_data.first_bet_placed_at_hashmap NOW: {:?}", print_btree_map(&canister_data.first_bet_placed_at_hashmap));
-        ic_cdk::println!(
-            "\n\n canister_data.bet_timer_posts: {:?}",
-            print_btree_map(&canister_data.bet_timer_posts)
-        );
-
         // return true to indicate that timer has been processed
         true
     } else {
@@ -242,10 +203,7 @@ fn start_timer(canister_data: &mut CanisterData) {
         // bet_timer_posts is a queue with head at the last element of array
         // and tail at the first element of array.
         // this is because `pop` removes the last entry from the vec in ic_stable_structures
-        if let Some(((insertion_time, first_post_id), _)) = canister_data.bet_timer_posts.first_key_value() {
-            // if let Some(composite_key) = canister_data.bet_timer_posts.pop_first() {
-            // ic_cdk::println!("\n--------- post_id: {}, starting timer ------\n", first_post_id);
-            ic_cdk::println!("\n--------- post_id: {:?}, starting timer ------ bet_placed_at: {:?} \n", first_post_id, insertion_time);
+        if let Some(((_insertion_time, first_post_id), _)) = canister_data.bet_timer_posts.first_key_value() {
             if let Some((bet_placed_time, _ongoing_slot_for_post)) =
                 canister_data.first_bet_placed_at_hashmap.get(&first_post_id)
             {
@@ -258,8 +216,6 @@ fn start_timer(canister_data: &mut CanisterData) {
 
                     CANISTER_DATA.with(|canister_data_ref_cell| {
                         let canister_data = &mut canister_data_ref_cell.borrow_mut();
-                        ic_cdk::println!("INSIDE start_timer - canister_data.first_bet_placed_at_hashmap: {}, post_id: {}, interval_for_timer: {:?} \n",print_btree_map(&canister_data.first_bet_placed_at_hashmap), first_post_id, interval_for_timer);
-
                         maybe_enqueue_timer(canister_data);
                     });
                 });
@@ -279,27 +235,10 @@ fn timer_expired(post_id: PostId, canister_data: &CanisterData) -> bool {
                 let current_time = SystemTimeInMs::now();
                 let interval = current_time.duration_since(&bet_placed_time);
                 let return_val = interval > TIMER_DURATION;
-
-                ic_cdk::println!(
-                    "post_id ({}) == last_post_id ({}), {}, \n bet_timer_posts: {:?}, \n bet_timer_posts.time: {:?} === first_bet_placed_at_hashmap.time: {:?}", 
-                    post_id,
-                    first_post_id,
-                    post_id == first_post_id,
-                    print_btree_map(&canister_data.bet_timer_posts),
-                    first_time, 
-                    bet_placed_time
-                );
-
-                ic_cdk::println!("post_id: {}, timer_expired: {:?}", post_id, return_val);
-
                 return return_val;
             }
         }
     }
-    ic_cdk::println!(
-        "post_id: {}, timer_expired: FALSE (returning from outside)",
-        post_id
-    );
 
     false
 }
