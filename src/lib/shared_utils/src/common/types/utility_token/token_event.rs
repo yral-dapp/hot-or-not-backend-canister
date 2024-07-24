@@ -120,6 +120,43 @@ impl SystemTimeInMs {
         self.0.checked_add(duration_ms).map(SystemTimeInMs)
     }
 
+
+    /// Calculates the remaining interval between the current time and a future time.
+    ///
+    /// The minimum returned duration is 3 seconds. This is to handle concurrent operations,
+    /// specifically for processing bets on multiple posts by the same user. If the last bet timer
+    /// was just processed, this ensures a 3-second wait before processing another post.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::time::Duration;
+    /// 
+    /// let current_time = SystemTimeInMs(1620);
+    /// let earlier_time = SystemTimeInMs(1600);
+    /// let future_duration = Duration::from_secs(3600); // 1 hour
+    ///
+    /// let result = current_time.calculate_remaining_interval(&earlier_time, future_duration);
+    /// assert!(result.is_ok());
+    /// 
+    /// if let Ok(interval) = result {
+    ///     assert_eq!(interval, Duration::from_secs(3580));
+    ///     println!("Remaining interval: {:?}", interval);
+    /// }
+    ///
+    /// // Test the minimum 3-second return
+    /// let current_time = SystemTimeInMs(5000);
+    /// let earlier_time = SystemTimeInMs(1000);
+    /// let future_duration = Duration::from_secs(3); // 3 seconds
+    ///
+    /// let result = current_time.calculate_remaining_interval(&earlier_time, future_duration);
+    /// assert!(result.is_ok());
+    /// 
+    /// if let Ok(interval) = result {
+    ///     assert_eq!(interval, Duration::from_secs(3));
+    ///     println!("Minimum interval: {:?}", interval);
+    /// }
+    /// ```
     pub fn calculate_remaining_interval(
         &self,
         earlier_time: &SystemTimeInMs,

@@ -14,6 +14,7 @@ use shared_utils::{
     },
     types::canister_specific::post_cache::error_types::TopPostsFetchError,
 };
+use shared_utils::common::types::utility_token::token_event::NewSlotType;
 use test_utils::setup::{
     env::v1::{get_initialized_env_with_provisioned_known_canisters, get_new_state_machine},
     test_constants::{
@@ -340,7 +341,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
         BettingStatus::BettingOpen {
             started_at: post_creation_time,
             number_of_participants: 1,
-            ongoing_slot: 3,
+            ongoing_slot: NewSlotType(3),
             ongoing_room: 1,
             has_this_user_participated_in_this_post: Some(true),
         }
@@ -487,7 +488,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
         BettingStatus::BettingOpen {
             started_at: post_creation_time,
             number_of_participants: 1,
-            ongoing_slot: 6,
+            ongoing_slot: NewSlotType(6),
             ongoing_room: 1,
             has_this_user_participated_in_this_post: Some(true),
         }
@@ -764,7 +765,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
         BettingStatus::BettingOpen {
             started_at: post_creation_time,
             number_of_participants: 1,
-            ongoing_slot: 9,
+            ongoing_slot: NewSlotType(9),
             ongoing_room: 1,
             has_this_user_participated_in_this_post: Some(true),
         }
