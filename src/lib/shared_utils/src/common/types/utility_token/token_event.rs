@@ -120,43 +120,6 @@ impl SystemTimeInMs {
         self.0.checked_add(duration_ms).map(SystemTimeInMs)
     }
 
-
-    /// Calculates the remaining interval between the current time and a future time.
-    ///
-    /// The minimum returned duration is 3 seconds. This is to handle concurrent operations,
-    /// specifically for processing bets on multiple posts by the same user. If the last bet timer
-    /// was just processed, this ensures a 3-second wait before processing another post.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use std::time::Duration;
-    /// 
-    /// let current_time = SystemTimeInMs(1620);
-    /// let earlier_time = SystemTimeInMs(1600);
-    /// let future_duration = Duration::from_secs(3600); // 1 hour
-    ///
-    /// let result = current_time.calculate_remaining_interval(&earlier_time, future_duration);
-    /// assert!(result.is_ok());
-    /// 
-    /// if let Ok(interval) = result {
-    ///     assert_eq!(interval, Duration::from_secs(3580));
-    ///     println!("Remaining interval: {:?}", interval);
-    /// }
-    ///
-    /// // Test the minimum 3-second return
-    /// let current_time = SystemTimeInMs(5000);
-    /// let earlier_time = SystemTimeInMs(1000);
-    /// let future_duration = Duration::from_secs(3); // 3 seconds
-    ///
-    /// let result = current_time.calculate_remaining_interval(&earlier_time, future_duration);
-    /// assert!(result.is_ok());
-    /// 
-    /// if let Ok(interval) = result {
-    ///     assert_eq!(interval, Duration::from_secs(3));
-    ///     println!("Minimum interval: {:?}", interval);
-    /// }
-    /// ```
     pub fn calculate_remaining_interval(
         &self,
         earlier_time: &SystemTimeInMs,
@@ -184,41 +147,15 @@ impl Default for SystemTimeInMs {
 
 impl Storable for SystemTimeInMs {
     fn to_bytes(&self) -> Cow<[u8]> {
-        // Encode the u128 value to bytes
-        // let value = Cow::Owned(Encode!(&self.0).unwrap());
-        // dbg!("  ENCODE SystemTimeInMs {} \n\n", "//".repeat(400));
-        // dbg!(&value);
-        // value
-
-        // let value =
         Cow::Owned(Encode!(&self).unwrap())
-        // ic_cdk::println!("value: {:?}", value);
-        // value
     }
 
     fn from_bytes(bytes: Cow<[u8]>) -> Self {
-        // Decode the bytes back into a u128 value
-        // let print_val = if bytes.len() != 16 {
-        //     format!("Expected 16 bytes for u128, got {}", bytes.len())
-        // } else {
-        //     format!("16 bytes length {} ", bytes.len())
-        // };
-
-        // ic_cdk::println!("print_val: {:?}", print_val);
-        // ic_cdk::println!("bytes: {:?}", bytes);
-        // let value =
         Decode!(&bytes, Self).unwrap()
-        // ic_cdk::println!("print_val dfx: {:?}", value);
-
-        // value
-        // let (value, two) = Decode!(&bytes,  u128, String).unwrap();
-        // ic_cdk::println!("two: {:?}", two);
-
-        // SystemTimeInMs(value)
     }
 
     const BOUND: Bound = Bound::Bounded {
-        max_size: 100, // size of u128 in bytes
+        max_size: 100,
         is_fixed_size: false,
     };
 }

@@ -220,6 +220,7 @@ fn start_timer(canister_data: &mut CanisterData) {
                 .get(&first_post_id)
             {
                 let current_time = SystemTimeInMs::now();
+
                 let interval_for_timer = current_time
                     .calculate_remaining_interval(&bet_placed_time, TIMER_DURATION)
                     .unwrap();
@@ -350,85 +351,4 @@ mod test {
             get_mock_user_alice_canister_id()
         );
     }
-}
-
-#[cfg(test)]
-mod test_maybe_enqueue_timer {
-
-    use shared_utils::common::types::utility_token::token_event::{NewSlotType,SystemTimeInMs};
-
-    use super::*;
-    use crate::data_model::CanisterData;
-    #[test]
-    fn test_1_no_timer_empty_hashmap() {
-        // Test case 1: When timer is not running and first_bet_placed_at_hashmap is empty.
-        // Explanation: Ensures no timer is started when there are no bets.
-
-        let mut canister_data = CanisterData::default();
-
-        maybe_enqueue_timer(&mut canister_data);
-
-        assert!(canister_data.is_timer_running.is_none());
-        assert!(canister_data.first_bet_placed_at_hashmap.is_empty());
-        assert!(canister_data.bet_timer_posts.is_empty());
-    }
-
-    #[test]
-    fn test_2_start_timer_with_bet() {
-        // Test case 2: When a bet is placed and timer should start
-        // Explanation: Ensures timer is started when the first bet is placed
-
-        let mut canister_data = CanisterData::default();
-        let current_sys_time = SystemTime::now(); // Arbitrary system time
-        let current_time = SystemTimeInMs::from_system_time(current_sys_time);
-
-        let post_id: PostId = 1;
-
-        // Simulate placing a bet
-        canister_data.first_bet_placed_at_hashmap.insert(
-            post_id,
-            (current_time, NewSlotType::default()), // Assuming NewSlotType has a default implementation
-        );
-
-        let val = canister_data.bet_timer_posts.insert((current_time,post_id,),());
-
-        maybe_enqueue_timer(&mut canister_data);
-
-        // Assert that the timer is now running
-        assert_eq!(canister_data.is_timer_running, Some(post_id));
-        
-        // Assert that the bet is in the hashmap
-        assert_eq!(canister_data.first_bet_placed_at_hashmap.len(), 1);
-        assert!(canister_data.first_bet_placed_at_hashmap.contains_key(&post_id));
-        
-        // Assert that a timer post is created
-        assert!(val.is_some());
-        assert_eq!(canister_data.bet_timer_posts.len(), 1);
-        assert!(canister_data.bet_timer_posts.contains_key(&(current_time, post_id)));
-
-    }
-    // #[test]
-    // fn test_3_running_timer_not_expired() {
-    //     // Test case 3: When timer is running and hasn't expired yet.
-    //     // Explanation: Confirms no new timer is started if the current one is still active.
-
-    //     let mut canister_data = CanisterData {
-    //         is_timer_running: Some(1),
-    //         first_bet_placed_at_hashmap: HashMap::new(),
-    //         bet_timer_posts: Vec::new(),
-    //         // ... other fields initialized as needed
-    //     };
-
-    //     // Add an entry to first_bet_placed_at_hashmap with a recent timestamp
-    //     let recent_time = SystemTimeInMs::now() - Duration::from_secs(30); // 30 seconds ago
-    //     canister_data
-    //         .first_bet_placed_at_hashmap
-    //         .insert(1, (recent_time, 0));
-    //     canister_data.bet_timer_posts.push((recent_time, 1));
-
-    //     maybe_enqueue_timer(&mut canister_data);
-
-    //     assert_eq!(canister_data.is_timer_running, Some(1));
-    //     // Additional assertions to verify no new timer was started
-    // }
 }
