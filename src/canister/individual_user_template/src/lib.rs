@@ -20,6 +20,7 @@ use shared_utils::{
         hot_or_not::{BetOutcomeForBetMaker, BettingStatus, PlacedBetDetail},
         kv_storage::{NamespaceErrors, NamespaceForFrontend},
         migration::MigrationErrors,
+        ml_data::{SuccessHistoryItem, WatchHistoryItem},
         post::{
             Post, PostDetailsForFrontend, PostDetailsFromFrontend, PostViewDetailsFromFrontend,
         },

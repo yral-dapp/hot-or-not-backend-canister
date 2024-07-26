@@ -5,6 +5,7 @@ use std::{
 
 use candid::{Deserialize, Principal};
 use ic_cdk::api::management_canister::provisional::CanisterId;
+use memory::{get_success_history_memory, get_watch_history_memory};
 use serde::Serialize;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
@@ -15,6 +16,7 @@ use shared_utils::{
             SlotDetailsV1, SlotId, StablePrincipal,
         },
         migration::MigrationInfo,
+        ml_data::{SuccessHistoryItem, WatchHistoryItem},
         post::{FeedScore, Post, PostViewStatistics},
         profile::UserProfile,
         session::SessionType,
@@ -74,6 +76,10 @@ pub struct CanisterData {
     pub migration_info: MigrationInfo,
     #[serde(default)]
     pub app_storage: AppStorage,
+    #[serde(skip, default = "_default_watch_history")]
+    pub watch_history: ic_stable_structures::btreemap::BTreeMap<WatchHistoryItem, (), Memory>,
+    #[serde(skip, default = "_default_success_history")]
+    pub success_history: ic_stable_structures::btreemap::BTreeMap<SuccessHistoryItem, (), Memory>,
 }
 
 pub fn _default_room_details(
@@ -94,6 +100,16 @@ pub fn _default_post_principal_map(
 pub fn _default_slot_details_map(
 ) -> ic_stable_structures::btreemap::BTreeMap<(PostId, SlotId), SlotDetailsV1, Memory> {
     ic_stable_structures::btreemap::BTreeMap::init(get_slot_details_memory())
+}
+
+pub fn _default_watch_history(
+) -> ic_stable_structures::btreemap::BTreeMap<WatchHistoryItem, (), Memory> {
+    ic_stable_structures::btreemap::BTreeMap::init(get_watch_history_memory())
+}
+
+pub fn _default_success_history(
+) -> ic_stable_structures::btreemap::BTreeMap<SuccessHistoryItem, (), Memory> {
+    ic_stable_structures::btreemap::BTreeMap::init(get_success_history_memory())
 }
 
 impl Default for CanisterData {
@@ -120,6 +136,8 @@ impl Default for CanisterData {
             last_canister_functionality_access_time: None,
             migration_info: MigrationInfo::NotMigrated,
             app_storage: AppStorage::default(),
+            watch_history: _default_watch_history(),
+            success_history: _default_success_history(),
         }
     }
 }

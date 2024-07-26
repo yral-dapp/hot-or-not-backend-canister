@@ -20,7 +20,7 @@ use test_utils::setup::test_constants::{
 };
 
 const OLD_INDIVIDUAL_TEMPLATE_WASM_PATH: &str =
-    "../../../target/wasm32-unknown-unknown/release/old_individual_user_template.wasm.gz";
+    "../../../target/wasm32-unknown-unknown/release/individual_user_template_main_branch.wasm.gz";
 const INDIVIDUAL_TEMPLATE_WASM_PATH: &str =
     "../../../target/wasm32-unknown-unknown/release/individual_user_template.wasm.gz";
 const POST_CACHE_WASM_PATH: &str =
