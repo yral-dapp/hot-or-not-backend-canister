@@ -36,7 +36,7 @@ const INDIVIDUAL_TEMPLATE_WASM_PATH: &str =
 
 // #[cfg(feature = "feed_filter_upgrade_test")]
 #[test]
-#[ignore = "New Slot Type Upgrade to be tested only locally"]
+// #[ignore = "New Slot Type Upgrade to be tested only locally"]
 fn new_slot_type_upgrade_test() {
     let pic = PocketIc::new();
 
@@ -58,6 +58,7 @@ fn new_slot_type_upgrade_test() {
         KnownPrincipalType::UserIdGlobalSuperAdmin,
         admin_principal_id,
     );
+    known_prinicipal_values.insert(KnownPrincipalType::CanisterIdUserIndex, admin_principal_id);
 
     let post_cache_wasm_bytes = old_post_cache_canister_wasm();
 
