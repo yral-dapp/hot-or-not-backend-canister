@@ -16,8 +16,8 @@ const POST_PRINCIPAL_MEMORY: MemoryId = MemoryId::new(3);
 const SLOT_DETAILS_MEMORY: MemoryId = MemoryId::new(4);
 const KV_STORAGE_NAMESPACE_MEMORY: MemoryId = MemoryId::new(5);
 const KV_STORAGE_NAMESPACE_KEY_VALUE_MEMORY: MemoryId = MemoryId::new(6);
-const WATCH_HISTORY_MEMORY: MemoryId = MemoryId::new(9);
-const SUCCESS_HISTORY_MEMORY: MemoryId = MemoryId::new(10);
+const WATCH_HISTORY_MEMORY: MemoryId = MemoryId::new(7);
+const SUCCESS_HISTORY_MEMORY: MemoryId = MemoryId::new(8);
 
 pub type Memory = VirtualMemory<DefaultMemoryImpl>;
 
