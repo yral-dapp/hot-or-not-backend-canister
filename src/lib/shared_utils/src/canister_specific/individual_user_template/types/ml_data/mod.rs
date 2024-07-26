@@ -10,13 +10,13 @@ use ic_stable_structures::storable::Bound;
 use ic_stable_structures::Storable;
 use serde::Serialize;
 
-#[derive(Deserialize, Serialize, PartialEq, PartialOrd, Clone, CandidType)]
+#[derive(Deserialize, Serialize, PartialEq, PartialOrd, Clone, CandidType, Debug)]
 pub struct WatchHistoryItem {
-    post_id: u64,
-    publisher_canister_id: Principal,
-    viewed_at: SystemTime,
-    cf_video_id: String,
-    percentage_watched: f32,
+    pub post_id: u64,
+    pub publisher_canister_id: Principal,
+    pub viewed_at: SystemTime,
+    pub cf_video_id: String,
+    pub percentage_watched: f32,
 }
 
 impl Ord for WatchHistoryItem {
@@ -42,12 +42,12 @@ impl Storable for WatchHistoryItem {
     };
 }
 
-#[derive(Deserialize, Serialize, PartialEq, PartialOrd, Clone, CandidType)]
+#[derive(Deserialize, Serialize, PartialEq, PartialOrd, Clone, CandidType, Debug)]
 pub struct SuccessHistoryItem {
-    post_id: u64,
-    publisher_canister_id: Principal,
-    interacted_at: SystemTime,
-    cf_video_id: String,
+    pub post_id: u64,
+    pub publisher_canister_id: Principal,
+    pub interacted_at: SystemTime,
+    pub cf_video_id: String,
 }
 
 impl Ord for SuccessHistoryItem {

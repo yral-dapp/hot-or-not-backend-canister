@@ -29,6 +29,12 @@ const POST_CACHE_WASM_PATH: &str =
 #[cfg(feature = "bet_details_heap_to_stable_mem_upgrade")]
 #[test]
 fn bet_details_heap_to_stable_mem_upgrade() {
+    use std::time::SystemTime;
+
+    use shared_utils::canister_specific::individual_user_template::types::ml_data::{
+        SuccessHistoryItem, WatchHistoryItem,
+    };
+
     let pic = PocketIc::new();
 
     let alice_principal_id = get_mock_user_alice_principal_id();
@@ -178,6 +184,14 @@ fn bet_details_heap_to_stable_mem_upgrade() {
             newly_created_post_id_result.unwrap()
         })
         .unwrap();
+
+    // Topup Alice's account
+    let reward = pic.update_call(
+        alice_individual_template_canister_id,
+        admin_principal_id,
+        "get_rewarded_for_signing_up",
+        encode_one(()).unwrap(),
+    );
 
     // Top up Bob's account
     let reward = pic.update_call(
@@ -369,8 +383,10 @@ fn bet_details_heap_to_stable_mem_upgrade() {
     .unwrap();
 
     // Advance timer to allow the canister spawn
-    pic.advance_time(Duration::from_secs(2));
-    pic.tick();
+    pic.advance_time(Duration::from_secs(100));
+    for _ in 0..30 {
+        pic.tick();
+    }
 
     // Get Bob bet details for post 0
 
@@ -562,6 +578,165 @@ fn bet_details_heap_to_stable_mem_upgrade() {
         })
         .unwrap();
     ic_cdk::println!("Bet details: {:?}", bet_details);
+
+    // --------------------------
+    // Test watch history
+
+    // Alice watches post 1
+    let watch_history = pic
+        .update_call(
+            alice_individual_template_canister_id,
+            admin_principal_id,
+            "update_watch_history",
+            encode_one(WatchHistoryItem {
+                post_id: 1,
+                publisher_canister_id: bob_individual_template_canister_id,
+                viewed_at: SystemTime::now(),
+                cf_video_id: "dasfas_1".to_string(),
+                percentage_watched: 70.0,
+            })
+            .unwrap(),
+        )
+        .map(|reply_payload| {
+            let watch_history: Result<String, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 watch_post failed\n"),
+            };
+            watch_history.unwrap()
+        })
+        .unwrap();
+
+    // Alice watches post 2
+    let watch_history = pic
+        .update_call(
+            alice_individual_template_canister_id,
+            admin_principal_id,
+            "update_watch_history",
+            encode_one(WatchHistoryItem {
+                post_id: 2,
+                publisher_canister_id: bob_individual_template_canister_id,
+                viewed_at: SystemTime::now(),
+                cf_video_id: "dasfas_2".to_string(),
+                percentage_watched: 90.0,
+            })
+            .unwrap(),
+        )
+        .map(|reply_payload| {
+            let watch_history: Result<String, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 watch_post failed\n"),
+            };
+            watch_history.unwrap()
+        })
+        .unwrap();
+
+    // Alice watches post 3
+    let watch_history = pic
+        .update_call(
+            alice_individual_template_canister_id,
+            admin_principal_id,
+            "update_watch_history",
+            encode_one(WatchHistoryItem {
+                post_id: 3,
+                publisher_canister_id: dan_individual_template_canister_id,
+                viewed_at: SystemTime::now(),
+                cf_video_id: "dasfas_3".to_string(),
+                percentage_watched: 100.0,
+            })
+            .unwrap(),
+        )
+        .map(|reply_payload| {
+            let watch_history: Result<String, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 watch_post failed\n"),
+            };
+            watch_history.unwrap()
+        })
+        .unwrap();
+
+    // Alice call update_success_history
+    let success_history = pic
+        .update_call(
+            alice_individual_template_canister_id,
+            admin_principal_id,
+            "update_success_history",
+            encode_one(SuccessHistoryItem {
+                post_id: 1,
+                publisher_canister_id: bob_individual_template_canister_id,
+                interacted_at: SystemTime::now(),
+                cf_video_id: "dasfas_1".to_string(),
+            })
+            .unwrap(),
+        )
+        .map(|reply_payload| {
+            let success_history: Result<String, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 watch_post failed\n"),
+            };
+            success_history.unwrap()
+        })
+        .unwrap();
+
+    // Alice call update_success_history
+    let success_history = pic
+        .update_call(
+            alice_individual_template_canister_id,
+            admin_principal_id,
+            "update_success_history",
+            encode_one(SuccessHistoryItem {
+                post_id: 2,
+                publisher_canister_id: bob_individual_template_canister_id,
+                interacted_at: SystemTime::now(),
+                cf_video_id: "dasfas_2".to_string(),
+            })
+            .unwrap(),
+        )
+        .map(|reply_payload| {
+            let success_history: Result<String, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 watch_post failed\n"),
+            };
+            success_history.unwrap()
+        })
+        .unwrap();
+
+    // Get watch history - get_watch_history
+    let watch_history = pic
+        .query_call(
+            alice_individual_template_canister_id,
+            admin_principal_id,
+            "get_watch_history",
+            encode_one(()).unwrap(),
+        )
+        .map(|reply_payload| {
+            let watch_history: Result<Vec<WatchHistoryItem>, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 get_watch_history failed\n"),
+            };
+            watch_history
+        })
+        .unwrap()
+        .unwrap();
+    ic_cdk::println!("Watch history: {:?}", watch_history);
+
+    // Get success history - get_success_history
+    let success_history = pic
+        .query_call(
+            alice_individual_template_canister_id,
+            admin_principal_id,
+            "get_success_history",
+            encode_one(()).unwrap(),
+        )
+        .map(|reply_payload| {
+            let success_history: Result<Vec<SuccessHistoryItem>, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 get_success_history failed\n"),
+            };
+            success_history
+        })
+        .unwrap()
+        .unwrap();
+    ic_cdk::println!("Success history: {:?}", success_history);
 }
 
 fn old_individual_template_canister_wasm() -> Vec<u8> {
