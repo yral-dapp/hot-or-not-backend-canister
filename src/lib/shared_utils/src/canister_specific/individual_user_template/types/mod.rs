@@ -5,6 +5,7 @@ pub mod follow;
 pub mod hot_or_not;
 pub mod kv_storage;
 pub mod migration;
+pub mod ml_data;
 pub mod post;
 pub mod profile;
 pub mod session;

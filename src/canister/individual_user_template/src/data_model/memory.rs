@@ -16,6 +16,8 @@ const POST_PRINCIPAL_MEMORY: MemoryId = MemoryId::new(3);
 const SLOT_DETAILS_MEMORY: MemoryId = MemoryId::new(4);
 const KV_STORAGE_NAMESPACE_MEMORY: MemoryId = MemoryId::new(5);
 const KV_STORAGE_NAMESPACE_KEY_VALUE_MEMORY: MemoryId = MemoryId::new(6);
+const WATCH_HISTORY_MEMORY: MemoryId = MemoryId::new(7);
+const SUCCESS_HISTORY_MEMORY: MemoryId = MemoryId::new(8);
 
 pub type Memory = VirtualMemory<DefaultMemoryImpl>;
 
@@ -52,6 +54,14 @@ pub fn get_kv_storage_namespace_memory() -> Memory {
 
 pub fn get_kv_storage_namespace_key_value_memory() -> Memory {
     MEMORY_MANAGER.with(|m| m.borrow_mut().get(KV_STORAGE_NAMESPACE_KEY_VALUE_MEMORY))
+}
+
+pub fn get_watch_history_memory() -> Memory {
+    MEMORY_MANAGER.with(|m| m.borrow_mut().get(WATCH_HISTORY_MEMORY))
+}
+
+pub fn get_success_history_memory() -> Memory {
+    MEMORY_MANAGER.with(|m| m.borrow_mut().get(SUCCESS_HISTORY_MEMORY))
 }
 
 pub fn init_memory_manager() {
