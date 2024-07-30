@@ -36,10 +36,6 @@ use kv_storage::AppStorage;
 pub mod kv_storage;
 pub mod memory;
 
-// serilaise -> GlobalRoomId
-// deserialize -> GlobalRoomIdV1 
-// serilaise -> GlobalRoomIdV1
-
 pub type RoomDetailsMapOld = ic_stable_structures::btreemap::BTreeMap<GlobalRoomId, RoomDetailsV1, Memory>;
 pub type BetDetailsMapOld = ic_stable_structures::btreemap::BTreeMap<GlobalBetId, BetDetails, Memory>;
 pub type SlotDetailsMapOld = ic_stable_structures::btreemap::BTreeMap<(PostId, SlotId), SlotDetailsV1, Memory>;
@@ -150,7 +146,6 @@ pub fn _default_slot_details_map() ->  SlotDetailsMapOld {
     ic_stable_structures::btreemap::BTreeMap::init(get_slot_details_memory())
 }
 
-
 pub fn _default_watch_history(
 ) -> ic_stable_structures::btreemap::BTreeMap<WatchHistoryItem, (), Memory> {
     ic_stable_structures::btreemap::BTreeMap::init(get_watch_history_memory())
@@ -159,7 +154,7 @@ pub fn _default_watch_history(
 pub fn _default_success_history(
 ) -> ic_stable_structures::btreemap::BTreeMap<SuccessHistoryItem, (), Memory> {
     ic_stable_structures::btreemap::BTreeMap::init(get_success_history_memory())
-
+}
     pub fn _default_slot_details_map_v1() ->  SlotDetailsMap {
 // ) -> ic_stable_structures::btreemap::BTreeMap<(PostId, NewSlotType), SlotDetailsV1, Memory> {
     ic_stable_structures::btreemap::BTreeMap::init(get_slot_details_memory_v1())

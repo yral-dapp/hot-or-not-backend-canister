@@ -19,8 +19,8 @@ const KV_STORAGE_NAMESPACE_KEY_VALUE_MEMORY: MemoryId = MemoryId::new(6);
 const WATCH_HISTORY_MEMORY: MemoryId = MemoryId::new(7);
 const SUCCESS_HISTORY_MEMORY: MemoryId = MemoryId::new(8);
 
-const BET_TIMER_MEMORY: MemoryId = MemoryId::new(7);
-const BET_FIRST_AT_TIMER_MEMORY: MemoryId = MemoryId::new(8);
+const BET_TIMER_MEMORY: MemoryId = MemoryId::new(9);
+const BET_FIRST_AT_TIMER_MEMORY: MemoryId = MemoryId::new(10);
 
 const BET_DETAILS_MEMORY_V1: MemoryId = MemoryId::new(11);
 const ROOM_DETAILS_MEMORY_V1: MemoryId = MemoryId::new(12);
