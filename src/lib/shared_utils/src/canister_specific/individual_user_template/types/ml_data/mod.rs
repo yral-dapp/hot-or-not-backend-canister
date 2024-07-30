@@ -42,7 +42,7 @@ impl Storable for WatchHistoryItem {
     };
 }
 
-// To be deprecated
+#[deprecated(note = "use SuccessHistoryItemV1 instead")]
 #[derive(Deserialize, Serialize, PartialEq, PartialOrd, Clone, CandidType, Debug)]
 pub struct SuccessHistoryItem {
     pub post_id: u64,
