@@ -1,9 +1,9 @@
 use ic_cdk_macros::query;
 use std::time::SystemTime;
 
-use candid::Principal;
+use candid::{de, Principal};
 use shared_utils::{
-    canister_specific::individual_user_template::types::hot_or_not::BettingStatus,
+    canister_specific::individual_user_template::types::hot_or_not::{BettingStatus, BettingStatusV1},
     common::utils::system_time::{self},
 };
 
@@ -40,6 +40,7 @@ use crate::{
 //         .get_hot_or_not_betting_status_for_this_post(current_time, request_maker)
 // }
 
+#[deprecated(note = "use get_hot_or_not_bet_details_for_this_post_v2 instead")]
 #[query]
 fn get_hot_or_not_bet_details_for_this_post(post_id: u64) -> BettingStatus {
     let request_maker = ic_cdk::caller();
@@ -55,6 +56,7 @@ fn get_hot_or_not_bet_details_for_this_post(post_id: u64) -> BettingStatus {
     })
 }
 
+#[deprecated(note = "use get_hot_or_not_bet_details_for_this_post_impl_v2 instead")]
 fn get_hot_or_not_bet_details_for_this_post_impl(
     canister_data: &CanisterData,
     current_time: &SystemTime,
@@ -63,12 +65,44 @@ fn get_hot_or_not_bet_details_for_this_post_impl(
 ) -> BettingStatus {
     let post = canister_data.all_created_posts.get(&post_id).unwrap();
 
-    post.get_hot_or_not_betting_status_for_this_post_v1(
+     post.get_hot_or_not_betting_status_for_this_post_v1(
         current_time,
         request_maker,
         &canister_data.room_details_map,
         &canister_data.post_principal_map,
         &canister_data.slot_details_map,
+    )
+}
+
+#[query]
+fn get_hot_or_not_bet_details_for_this_post_v2(post_id: u64) -> BettingStatusV1 {
+    let request_maker = ic_cdk::caller();
+    update_last_canister_functionality_access_time();
+
+    CANISTER_DATA.with(|canister_data_ref_cell| {
+        get_hot_or_not_bet_details_for_this_post_impl_v2(
+            &canister_data_ref_cell.borrow(),
+            &system_time::get_current_system_time_from_ic(),
+            &request_maker,
+            post_id,
+        )
+    })
+}
+
+fn get_hot_or_not_bet_details_for_this_post_impl_v2(
+    canister_data: &CanisterData,
+    current_time: &SystemTime,
+    request_maker: &Principal,
+    post_id: u64,
+) -> BettingStatusV1 {
+    let post = canister_data.all_created_posts.get(&post_id).unwrap();
+
+    post.get_hot_or_not_betting_status_for_this_post_v2(
+        current_time,
+        request_maker,
+        &canister_data.room_details_map_v1,
+        &canister_data.post_principal_map,
+        &canister_data.slot_details_map_v1,
     )
 }
 

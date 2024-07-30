@@ -17,7 +17,7 @@ use shared_utils::{
             GetPostsOfUserProfileError,
         },
         follow::{FollowEntryDetail, FollowEntryId},
-        hot_or_not::{BetOutcomeForBetMaker, BettingStatus, PlacedBetDetail},
+        hot_or_not::{BetOutcomeForBetMaker, BettingStatus,BettingStatusV1, PlacedBetDetail, PlacedBetDetailV1},
         kv_storage::{NamespaceErrors, NamespaceForFrontend},
         migration::MigrationErrors,
         ml_data::{SuccessHistoryItem, WatchHistoryItem},
