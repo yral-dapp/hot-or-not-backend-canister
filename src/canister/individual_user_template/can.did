@@ -239,7 +239,7 @@ type Result_1 = variant {
   Ok : BettingStatus;
   Err : BetOnCurrentlyViewingPostError;
 };
-type Result_10 = variant { Ok : vec SuccessHistoryItem; Err : text };
+type Result_10 = variant { Ok : vec SuccessHistoryItemV1; Err : text };
 type Result_11 = variant {
   Ok : vec record { nat64; TokenEvent };
   Err : GetPostsOfUserProfileError;
@@ -276,8 +276,10 @@ type RoomDetails = record {
 type SessionType = variant { AnonymousSession; RegisteredSession };
 type SlotDetails = record { room_details : vec record { nat64; RoomDetails } };
 type StakeEvent = variant { BetOnHotOrNotPost : PlaceBetArg };
-type SuccessHistoryItem = record {
+type SuccessHistoryItemV1 = record {
   post_id : nat64;
+  percentage_watched : float32;
+  item_type : text;
   publisher_canister_id : principal;
   cf_video_id : text;
   interacted_at : SystemTime;
@@ -465,7 +467,7 @@ service : (IndividualUserTemplateInitArgs) -> {
     ) -> (Result_5);
   update_referrer_details : (UserCanisterDetails) -> (Result_15);
   update_session_type : (SessionType) -> (Result_15);
-  update_success_history : (SuccessHistoryItem) -> (Result_15);
+  update_success_history : (SuccessHistoryItemV1) -> (Result_15);
   update_watch_history : (WatchHistoryItem) -> (Result_15);
   update_well_known_principal : (KnownPrincipalType, principal) -> ();
   write_key_value_pair : (nat64, text, text) -> (Result_3);
