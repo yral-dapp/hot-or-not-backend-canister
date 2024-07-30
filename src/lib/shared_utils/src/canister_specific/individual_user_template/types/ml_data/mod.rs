@@ -48,6 +48,8 @@ pub struct SuccessHistoryItem {
     pub publisher_canister_id: Principal,
     pub interacted_at: SystemTime,
     pub cf_video_id: String,
+    pub item_type: String,
+    pub percentage_watched: f32,
 }
 
 impl Ord for SuccessHistoryItem {

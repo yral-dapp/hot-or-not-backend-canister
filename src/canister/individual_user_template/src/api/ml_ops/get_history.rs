@@ -12,7 +12,7 @@ use crate::{
     CANISTER_DATA,
 };
 
-#[query(guard = "is_caller_controller_or_global_admin")]
+#[query]
 fn get_watch_history() -> Result<Vec<WatchHistoryItem>, String> {
     update_last_canister_functionality_access_time();
 
@@ -26,7 +26,7 @@ fn get_watch_history() -> Result<Vec<WatchHistoryItem>, String> {
     })
 }
 
-#[query(guard = "is_caller_controller_or_global_admin")]
+#[query]
 fn get_success_history() -> Result<Vec<SuccessHistoryItem>, String> {
     update_last_canister_functionality_access_time();
 
