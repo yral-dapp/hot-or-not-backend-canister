@@ -36,7 +36,7 @@ const INDIVIDUAL_TEMPLATE_WASM_PATH: &str =
 
 // #[cfg(feature = "feed_filter_upgrade_test")]
 #[test]
-// #[ignore = "New Slot Type Upgrade to be tested only locally"]
+#[ignore = "New Slot Type Upgrade to be tested only locally"]
 fn new_slot_type_upgrade_test() {
     let pic = PocketIc::new();
 
