@@ -36,6 +36,16 @@ type BettingStatus = variant {
   };
   BettingClosed;
 };
+type BettingStatusV1 = variant {
+  BettingOpen : record {
+    number_of_participants : nat8;
+    ongoing_room : nat64;
+    ongoing_slot : nat64;
+    has_this_user_participated_in_this_post : opt bool;
+    started_at : SystemTime;
+  };
+  BettingClosed;
+};
 type FeedScore = record {
   current_score : nat64;
   last_synchronized_at : SystemTime;
@@ -172,6 +182,16 @@ type PlacedBetDetail = record {
   amount_bet : nat64;
   bet_placed_at : SystemTime;
 };
+type PlacedBetDetailV1 = record {
+  outcome_received : BetOutcomeForBetMaker;
+  slot_id : nat64;
+  post_id : nat64;
+  room_id : nat64;
+  canister_id : principal;
+  bet_direction : BetDirection;
+  amount_bet : nat64;
+  bet_placed_at : SystemTime;
+};
 type Post = record {
   id : nat64;
   is_nsfw : bool;
@@ -264,7 +284,6 @@ type Result_8 = variant {
   Ok : vec PostDetailsForFrontend;
   Err : GetPostsOfUserProfileError;
 };
-type Result_9 = variant { Ok : SessionType; Err : text };
 type RoomBetPossibleOutcomes = variant { HotWon; BetOngoing; Draw; NotWon };
 type RoomDetails = record {
   total_hot_bets : nat64;
@@ -372,31 +391,38 @@ service : (IndividualUserTemplateInitArgs) -> {
   add_post_v2 : (PostDetailsFromFrontend) -> (Result);
   backup_data_to_backup_canister : (principal, principal) -> ();
   bet_on_currently_viewing_post : (PlaceBetArg) -> (Result_1);
+  bet_on_currently_viewing_post_v1 : (PlaceBetArg) -> (Result_2);
   check_and_update_scores_and_share_with_post_cache_if_difference_beyond_threshold : (
       vec nat64,
     ) -> ();
   clear_snapshot : () -> ();
-  create_a_namespace : (text) -> (Result_2);
-  delete_key_value_pair : (nat64, text) -> (Result_3);
-  delete_multiple_key_value_pairs : (nat64, vec text) -> (Result_4);
-  do_i_follow_this_user : (FolloweeArg) -> (Result_5) query;
+  create_a_namespace : (text) -> (Result_3);
+  delete_key_value_pair : (nat64, text) -> (Result_4);
+  delete_multiple_key_value_pairs : (nat64, vec text) -> (Result_5);
+  do_i_follow_this_user : (FolloweeArg) -> (Result_6) query;
   download_snapshot : (nat64, nat64) -> (blob) query;
-  get_entire_individual_post_detail_by_id : (nat64) -> (Result_6) query;
+  get_entire_individual_post_detail_by_id : (nat64) -> (Result_7) query;
   get_hot_or_not_bet_details_for_this_post : (nat64) -> (BettingStatus) query;
+  get_hot_or_not_bet_details_for_this_post_v2 : (nat64) -> (
+      BettingStatusV1,
+    ) query;
   get_hot_or_not_bets_placed_by_this_profile_with_pagination : (nat64) -> (
       vec PlacedBetDetail,
+    ) query;
+  get_hot_or_not_bets_placed_by_this_profile_with_pagination_v1 : (nat64) -> (
+      vec PlacedBetDetailV1,
     ) query;
   get_individual_hot_or_not_bet_placed_by_this_profile : (principal, nat64) -> (
       opt PlacedBetDetail,
     ) query;
   get_individual_post_details_by_id : (nat64) -> (PostDetailsForFrontend) query;
-  get_last_access_time : () -> (Result_7) query;
-  get_last_canister_functionality_access_time : () -> (Result_7) query;
+  get_last_access_time : () -> (Result_8) query;
+  get_last_canister_functionality_access_time : () -> (Result_8) query;
   get_posts_of_this_user_profile_with_pagination : (nat64, nat64) -> (
-      Result_8,
+      Result_9,
     ) query;
   get_posts_of_this_user_profile_with_pagination_cursor : (nat64, nat64) -> (
-      Result_8,
+      Result_9,
     ) query;
   get_principals_that_follow_this_profile_paginated : (opt nat64) -> (
       vec record { nat64; FollowEntryDetail },
@@ -408,7 +434,7 @@ service : (IndividualUserTemplateInitArgs) -> {
   get_profile_details_v2 : () -> (UserProfileDetailsForFrontendV2) query;
   get_rewarded_for_referral : (principal, principal) -> ();
   get_rewarded_for_signing_up : () -> ();
-  get_session_type : () -> (Result_9) query;
+  get_session_type : () -> (Result_10) query;
   get_stable_memory_size : () -> (nat32) query;
   get_success_history : () -> (Result_10) query;
   get_user_caniser_cycle_balance : () -> (nat) query;
@@ -427,9 +453,12 @@ service : (IndividualUserTemplateInitArgs) -> {
   list_namespace_keys : (nat64) -> (Result_13) query;
   list_namespaces : (nat64, nat64) -> (vec NamespaceForFrontend) query;
   load_snapshot : (nat64) -> ();
-  read_key_value_pair : (nat64, text) -> (Result_3) query;
+  read_key_value_pair : (nat64, text) -> (Result_4) query;
   receive_and_save_snaphot : (nat64, blob) -> ();
   receive_bet_from_bet_makers_canister : (PlaceBetArg, principal) -> (Result_1);
+  receive_bet_from_bet_makers_canister_v1 : (PlaceBetArg, principal) -> (
+      Result_2,
+    );
   receive_bet_winnings_when_distributed : (nat64, BetOutcomeForBetMaker) -> ();
   receive_data_from_hotornot : (principal, nat64, vec Post) -> (Result_14);
   receive_my_created_posts_from_data_backup_canister : (vec Post) -> ();
@@ -459,7 +488,7 @@ service : (IndividualUserTemplateInitArgs) -> {
   update_profile_set_unique_username_once : (text) -> (Result_18);
   update_profiles_i_follow_toggle_list_with_specified_profile : (
       FolloweeArg,
-    ) -> (Result_5);
+    ) -> (Result_6);
   update_profiles_that_follow_me_toggle_list_with_specified_profile : (
       FollowerArg,
     ) -> (Result_5);
@@ -468,8 +497,8 @@ service : (IndividualUserTemplateInitArgs) -> {
   update_success_history : (SuccessHistoryItem) -> (Result_15);
   update_watch_history : (WatchHistoryItem) -> (Result_15);
   update_well_known_principal : (KnownPrincipalType, principal) -> ();
-  write_key_value_pair : (nat64, text, text) -> (Result_3);
+  write_key_value_pair : (nat64, text, text) -> (Result_4);
   write_multiple_key_value_pairs : (nat64, vec record { text; text }) -> (
-      Result_4,
+      Result_5,
     );
 }

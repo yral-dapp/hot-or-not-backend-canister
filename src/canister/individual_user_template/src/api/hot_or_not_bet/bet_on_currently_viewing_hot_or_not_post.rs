@@ -4,7 +4,7 @@ use shared_utils::{
     canister_specific::individual_user_template::types::{
         arg::PlaceBetArg,
         error::BetOnCurrentlyViewingPostError,
-        hot_or_not::{BetOutcomeForBetMaker, BettingStatus, PlacedBetDetail},
+        hot_or_not::{BetOutcomeForBetMaker, BettingStatus, BettingStatusV1, PlacedBetDetail, PlacedBetDetailV1},
     },
     common::{
         types::utility_token::token_event::{StakeEvent, TokenEvent},
@@ -17,6 +17,7 @@ use crate::{
     data_model::CanisterData, CANISTER_DATA,
 };
 
+#[deprecated(note = "use bet_on_currently_viewing_post_v1 instead")]
 #[update]
 async fn bet_on_currently_viewing_post(
     place_bet_arg: PlaceBetArg,
@@ -80,6 +81,88 @@ async fn bet_on_currently_viewing_post(
                 all_hot_or_not_bets_placed.insert(
                     (place_bet_arg.post_canister_id, place_bet_arg.post_id),
                     PlacedBetDetail {
+                        canister_id: place_bet_arg.post_canister_id,
+                        post_id: place_bet_arg.post_id,
+                        slot_id: ongoing_slot,
+                        room_id: ongoing_room,
+                        bet_direction: place_bet_arg.bet_direction,
+                        bet_placed_at: current_time,
+                        amount_bet: place_bet_arg.bet_amount,
+                        outcome_received: BetOutcomeForBetMaker::default(),
+                    },
+                );
+            });
+        }
+    }
+
+    Ok(response)
+}
+
+
+#[update]
+async fn bet_on_currently_viewing_post_v1(
+    place_bet_arg: PlaceBetArg,
+) -> Result<BettingStatusV1, BetOnCurrentlyViewingPostError> {
+    let bet_maker_principal_id = ic_cdk::caller();
+    let current_time = system_time::get_current_system_time_from_ic();
+
+    CANISTER_DATA.with(|canister_data_ref_cell| {
+        validate_incoming_bet(
+            &canister_data_ref_cell.borrow(),
+            &bet_maker_principal_id,
+            &place_bet_arg,
+        )
+    })?;
+
+    update_last_canister_functionality_access_time();
+
+    let response = ic_cdk::call::<_, (Result<BettingStatusV1, BetOnCurrentlyViewingPostError>,)>(
+        place_bet_arg.post_canister_id,
+        "receive_bet_from_bet_makers_canister_v1",
+        (
+            place_bet_arg.clone(),
+            CANISTER_DATA.with(|canister_data_ref_cell| {
+                canister_data_ref_cell
+                    .borrow()
+                    .profile
+                    .principal_id
+                    .unwrap()
+            }),
+        ),
+    )
+    .await
+    .map_err(|_| BetOnCurrentlyViewingPostError::PostCreatorCanisterCallFailed)?
+    .0?;
+
+    match response {
+        // this case should never match in yral game implementation
+        BettingStatusV1::BettingClosed => {
+            return Err(BetOnCurrentlyViewingPostError::BettingClosed);
+        }
+        BettingStatusV1::BettingOpen {
+            ongoing_slot,
+            ongoing_room,
+            ..
+        } => {
+            CANISTER_DATA.with(|canister_data_ref_cell| {
+                let canister_data = &mut canister_data_ref_cell.borrow_mut();
+
+                let my_token_balance = &mut canister_data.my_token_balance;
+                my_token_balance.handle_token_event(TokenEvent::Stake {
+                    amount: place_bet_arg.bet_amount,
+                    details: StakeEvent::BetOnHotOrNotPost {
+                        post_canister_id: place_bet_arg.post_canister_id,
+                        post_id: place_bet_arg.post_id,
+                        bet_amount: place_bet_arg.bet_amount,
+                        bet_direction: place_bet_arg.bet_direction.clone(),
+                    },
+                    timestamp: current_time,
+                });
+
+                let all_hot_or_not_bets_placed = &mut canister_data.all_hot_or_not_bets_placed_v1;
+                all_hot_or_not_bets_placed.insert(
+                    (place_bet_arg.post_canister_id, place_bet_arg.post_id),
+                    PlacedBetDetailV1 {
                         canister_id: place_bet_arg.post_canister_id,
                         post_id: place_bet_arg.post_id,
                         slot_id: ongoing_slot,
