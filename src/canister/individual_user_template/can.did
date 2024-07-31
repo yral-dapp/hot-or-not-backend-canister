@@ -39,9 +39,10 @@ type BettingStatus = variant {
 };
 type Canister = record { id : opt principal };
 type CdaoDeployError = variant {
-  AlreadyDeployed;
+  Unregistered;
   CallError : record { RejectionCode; text };
   InvalidInitPayload : text;
+  TokenLimit : nat64;
 };
 type CfNeuron = record {
   has_created_neuron_recipes : opt bool;
@@ -502,6 +503,7 @@ service : (IndividualUserTemplateInitArgs) -> {
   delete_key_value_pair : (nat64, text) -> (Result_3);
   delete_multiple_key_value_pairs : (nat64, vec text) -> (Result_4);
   deploy_cdao_sns : (SnsInitPayload) -> (Result_5);
+  deployed_cdao_canisters : () -> (vec DeployedCdaoCanisters) query;
   do_i_follow_this_user : (FolloweeArg) -> (Result_6) query;
   download_snapshot : (nat64, nat64) -> (blob) query;
   get_entire_individual_post_detail_by_id : (nat64) -> (Result_7) query;

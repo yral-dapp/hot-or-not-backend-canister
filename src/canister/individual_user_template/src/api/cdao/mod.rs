@@ -10,15 +10,14 @@ use ic_cdk::{
     api::management_canister::main::{
         create_canister, install_code, update_settings, CanisterInstallMode, CanisterSettings,
         CreateCanisterArgument, InstallCodeArgument, UpdateSettingsArgument,
-    },
-    update,
+    }, query, update
 };
 use ic_sns_init::{pb::v1::SnsInitPayload, SnsCanisterIds};
 use ic_sns_wasm::pb::v1::GetWasmResponse;
 use shared_utils::{
-    canister_specific::individual_user_template::types::{
-        cdao::DeployedCdaoCanisters, error::CdaoDeployError,
-    },
+    canister_specific::individual_user_template::{consts::CDAO_TOKEN_LIMIT, types::{
+        cdao::DeployedCdaoCanisters, error::CdaoDeployError, session::SessionType,
+    }},
     common::types::known_principal::KnownPrincipalType,
 };
 
@@ -63,13 +62,30 @@ async fn update_controllers(
     Ok(())
 }
 
+#[query]
+async fn deployed_cdao_canisters() -> Vec<DeployedCdaoCanisters> {
+    CANISTER_DATA.with(|cdata| {
+        cdata
+            .borrow()
+            .cdao_canisters
+            .clone()
+    })
+}
+
 #[update]
 async fn deploy_cdao_sns(
     init_payload: SnsInitPayload,
-) -> Result<DeployedCdaoCanisters, CdaoDeployError> {
-    let deployed = CANISTER_DATA.with(|cdata| cdata.borrow().cdao_canisters.is_some());
-    if deployed {
-        return Err(CdaoDeployError::AlreadyDeployed);
+) -> Result<DeployedCdaoCanisters, CdaoDeployError> { 
+    let (registered, limit_hit) = CANISTER_DATA.with(|cdata| {
+        let cdata = cdata.borrow();
+        let registered = matches!(cdata.session_type, Some(SessionType::RegisteredSession));
+        (registered, cdata.cdao_canisters.len() == CDAO_TOKEN_LIMIT)
+    });
+    if !registered {
+        return Err(CdaoDeployError::Unregistered);
+    }
+    if limit_hit {
+        return Err(CdaoDeployError::TokenLimit(CDAO_TOKEN_LIMIT));
     }
 
     let creation_arg = CreateCanisterArgument {
@@ -218,7 +234,7 @@ async fn deploy_cdao_sns(
         index: index.0,
     };
     CANISTER_DATA.with(|cdata| {
-        cdata.borrow_mut().cdao_canisters = Some(deployed_cans);
+        cdata.borrow_mut().cdao_canisters.push(deployed_cans);
     });
 
     Ok(deployed_cans)

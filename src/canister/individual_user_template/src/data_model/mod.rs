@@ -79,7 +79,7 @@ pub struct CanisterData {
     #[serde(skip, default = "_default_success_history")]
     pub success_history: ic_stable_structures::btreemap::BTreeMap<SuccessHistoryItem, (), Memory>,
     #[serde(default)]
-    pub cdao_canisters: Option<DeployedCdaoCanisters>,
+    pub cdao_canisters: Vec<DeployedCdaoCanisters>,
 }
 
 pub fn _default_room_details(
@@ -138,7 +138,7 @@ impl Default for CanisterData {
             app_storage: AppStorage::default(),
             watch_history: _default_watch_history(),
             success_history: _default_success_history(),
-            cdao_canisters: None,
+            cdao_canisters: Vec::new(),
         }
     }
 }

@@ -43,7 +43,8 @@ pub enum FollowAnotherUserProfileError {
 
 #[derive(CandidType, Deserialize, PartialEq, Eq, Debug)]
 pub enum CdaoDeployError {
-    AlreadyDeployed,
+    Unregistered,
+    TokenLimit(usize),
     CallError(RejectionCode, String),
     InvalidInitPayload(String),
 }
