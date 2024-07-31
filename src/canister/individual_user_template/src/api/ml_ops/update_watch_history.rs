@@ -10,7 +10,7 @@ use crate::{
     CANISTER_DATA,
 };
 
-#[update(guard = "is_caller_controller_or_global_admin")]
+#[update] //(guard = "is_caller_controller_or_global_admin")]
 fn update_watch_history(watch_history_item: WatchHistoryItem) -> Result<String, String> {
     update_last_canister_functionality_access_time();
 

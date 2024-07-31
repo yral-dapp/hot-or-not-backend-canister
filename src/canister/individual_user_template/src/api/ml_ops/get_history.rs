@@ -30,7 +30,7 @@ fn get_success_history() -> Result<Vec<SuccessHistoryItemV1>, String> {
     CANISTER_DATA.with(|canister_data| {
         let canister_data = canister_data.borrow();
         Ok(canister_data
-            .success_history_v1
+            .success_history
             .iter()
             .map(|(k, _)| k.clone())
             .collect())
