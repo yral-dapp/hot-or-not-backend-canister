@@ -10,7 +10,7 @@ use crate::{
     CANISTER_DATA,
 };
 
-#[update] //(guard = "is_caller_controller_or_global_admin")]
+#[update(guard = "is_caller_controller_or_global_admin")]
 fn update_success_history(success_history_item: SuccessHistoryItemV1) -> Result<String, String> {
     update_last_canister_functionality_access_time();
 
