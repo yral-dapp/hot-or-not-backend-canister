@@ -71,16 +71,14 @@ pub struct CanisterData {
     // #[serde(skip)]
     pub all_hot_or_not_bets_placed: BTreeMap<(CanisterId, PostId), PlacedBetDetail>,
 
-    // this is a temp field. this will be manually migrated after the upgrade
-    #[serde(skip_deserializing)]
     pub all_hot_or_not_bets_placed_v1: BTreeMap<(CanisterId, PostId), PlacedBetDetailV1>,
 
     pub configuration: IndividualUserConfiguration,
     pub follow_data: FollowData,
     pub known_principal_ids: KnownPrincipalMap,
+    // #[serde(skip)]
     pub my_token_balance: TokenBalance,
 
-    #[serde(skip_deserializing)]
     pub my_token_balance_v1: TokenBalanceV1,
     pub posts_index_sorted_by_home_feed_score: PostScoreIndex,
     pub posts_index_sorted_by_hot_or_not_feed_score: PostScoreIndex,
@@ -177,28 +175,25 @@ impl Default for CanisterData {
     fn default() -> Self {
         Self {
             all_created_posts: BTreeMap::new(),
-            // todo migration
+
             room_details_map: _default_room_details(),
             room_details_map_v1: _default_room_details_v1(),
             
-            // todo migration
             bet_details_map: _default_bet_details(),
             bet_details_map_v1: _default_bet_details_v1(),
             
             post_principal_map: _default_post_principal_map(),
             
-            // todo migration
             slot_details_map: _default_slot_details_map(),
             slot_details_map_v1: _default_slot_details_map_v1(),
             
-            // todo migration
             all_hot_or_not_bets_placed: BTreeMap::new(),
             all_hot_or_not_bets_placed_v1: BTreeMap::new(),
 
             configuration: IndividualUserConfiguration::default(),
             follow_data: FollowData::default(),
             known_principal_ids: KnownPrincipalMap::default(),
-            // todo migration
+
             my_token_balance: TokenBalance::default(),
             my_token_balance_v1: TokenBalanceV1::default(),
 
