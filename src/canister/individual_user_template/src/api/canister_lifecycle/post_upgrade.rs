@@ -1,9 +1,9 @@
 use ciborium::de;
 use ic_cdk_macros::post_upgrade;
 use ic_stable_structures::Memory;
-use std::{borrow::BorrowMut, time::Duration};
+use std::borrow::BorrowMut;
 
-use crate::data_model::{_default_success_history_v1, memory};
+use crate::data_model::memory;
 
 use shared_utils::canister_specific::individual_user_template::types::arg::IndividualUserTemplateInitArgs;
 
@@ -17,7 +17,6 @@ fn post_upgrade() {
     restore_data_from_stable_memory();
     save_upgrade_args_to_memory();
     reenqueue_timers_for_pending_bet_outcomes();
-    // migrate_data();
 }
 
 fn restore_data_from_stable_memory() {
@@ -64,18 +63,3 @@ fn save_upgrade_args_to_memory() {
         }
     });
 }
-
-// TODO: remove this on the next push
-// const DELAY_FOR_MIGRATING_DATA: Duration = Duration::from_secs(3);
-// fn migrate_data() {
-//     ic_cdk_timers::set_timer(DELAY_FOR_MIGRATING_DATA, || {
-//         ic_cdk::spawn(migrate_data_impl());
-//     });
-// }
-
-// async fn migrate_data_impl() {
-//     CANISTER_DATA.with(|canister_data_ref_cell| {
-//         let mut canister_data_ref_cell = canister_data_ref_cell.borrow_mut();
-//         canister_data_ref_cell.success_history = _default_success_history_v1();
-//     });
-// }
