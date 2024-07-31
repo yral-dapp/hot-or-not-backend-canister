@@ -168,7 +168,7 @@ mod test_v2 {
             post_id,
         );
         match result {
-            BettingStatusV1::BettingClosed => {}
+            BettingStatusV1::BettingOpen { started_at, number_of_participants, ongoing_slot, ongoing_room, has_this_user_participated_in_this_post } => {}
             _ => panic!("Expected BettingStatus::BettingClosed"),
         }
     }

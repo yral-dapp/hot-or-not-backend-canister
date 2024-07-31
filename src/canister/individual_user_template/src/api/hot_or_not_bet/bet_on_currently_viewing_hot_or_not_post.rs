@@ -256,7 +256,7 @@ fn validate_incoming_bet_v1(
 mod test_validate_incoming_bet_v1_mod {
     use std::time::SystemTime;
 
-    use shared_utils::canister_specific::individual_user_template::types::hot_or_not::BetDirection;
+    use shared_utils::{canister_specific::individual_user_template::types::hot_or_not::BetDirection, common::types::utility_token::token_event::NewSlotType};
     use test_utils::setup::test_constants::{
         get_mock_user_alice_canister_id, get_mock_user_alice_principal_id,
         get_mock_user_bob_principal_id,
@@ -312,7 +312,7 @@ mod test_validate_incoming_bet_v1_mod {
             Err(BetOnCurrentlyViewingPostError::InsufficientBalance)
         );
 
-        canister_data.my_token_balance.utility_token_balance = 1000;
+        canister_data.my_token_balance_v1.utility_token_balance = 1000;
 
         let result = validate_incoming_bet_v1(
             &canister_data,
@@ -327,12 +327,12 @@ mod test_validate_incoming_bet_v1_mod {
 
         assert_eq!(result, Ok(()));
 
-        canister_data.all_hot_or_not_bets_placed.insert(
+        canister_data.all_hot_or_not_bets_placed_v1.insert(
             (get_mock_user_alice_canister_id(), 0),
-            PlacedBetDetail {
+            PlacedBetDetailV1 {
                 canister_id: get_mock_user_alice_canister_id(),
                 post_id: 0,
-                slot_id: 1,
+                slot_id: NewSlotType(1),
                 room_id: 1,
                 amount_bet: 100,
                 bet_direction: BetDirection::Hot,
