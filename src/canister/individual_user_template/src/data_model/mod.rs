@@ -16,7 +16,7 @@ use shared_utils::{
             SlotDetailsV1, SlotId, StablePrincipal,
         },
         migration::MigrationInfo,
-        ml_data::{SuccessHistoryItem, WatchHistoryItem},
+        ml_data::{SuccessHistoryItem, SuccessHistoryItemV1, WatchHistoryItem},
         post::{FeedScore, Post, PostViewStatistics},
         profile::UserProfile,
         session::SessionType,
@@ -78,8 +78,8 @@ pub struct CanisterData {
     pub app_storage: AppStorage,
     #[serde(skip, default = "_default_watch_history")]
     pub watch_history: ic_stable_structures::btreemap::BTreeMap<WatchHistoryItem, (), Memory>,
-    #[serde(skip, default = "_default_success_history")]
-    pub success_history: ic_stable_structures::btreemap::BTreeMap<SuccessHistoryItem, (), Memory>,
+    #[serde(skip, default = "_default_success_history_v1")]
+    pub success_history: ic_stable_structures::btreemap::BTreeMap<SuccessHistoryItemV1, (), Memory>,
 }
 
 pub fn _default_room_details(
@@ -107,8 +107,14 @@ pub fn _default_watch_history(
     ic_stable_structures::btreemap::BTreeMap::init(get_watch_history_memory())
 }
 
+#[deprecated(note = "Use _default_success_history_v1 instead")]
 pub fn _default_success_history(
 ) -> ic_stable_structures::btreemap::BTreeMap<SuccessHistoryItem, (), Memory> {
+    ic_stable_structures::btreemap::BTreeMap::init(get_success_history_memory())
+}
+
+pub fn _default_success_history_v1(
+) -> ic_stable_structures::btreemap::BTreeMap<SuccessHistoryItemV1, (), Memory> {
     ic_stable_structures::btreemap::BTreeMap::init(get_success_history_memory())
 }
 
@@ -137,7 +143,7 @@ impl Default for CanisterData {
             migration_info: MigrationInfo::NotMigrated,
             app_storage: AppStorage::default(),
             watch_history: _default_watch_history(),
-            success_history: _default_success_history(),
+            success_history: _default_success_history_v1(),
         }
     }
 }

@@ -42,6 +42,7 @@ impl Storable for WatchHistoryItem {
     };
 }
 
+#[deprecated(note = "use SuccessHistoryItemV1 instead")]
 #[derive(Deserialize, Serialize, PartialEq, PartialOrd, Clone, CandidType, Debug)]
 pub struct SuccessHistoryItem {
     pub post_id: u64,
@@ -59,6 +60,39 @@ impl Ord for SuccessHistoryItem {
 impl Eq for SuccessHistoryItem {}
 
 impl Storable for SuccessHistoryItem {
+    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
+        Cow::Owned(Encode!(self).unwrap())
+    }
+
+    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
+        Decode!(bytes.as_ref(), Self).unwrap()
+    }
+
+    const BOUND: Bound = Bound::Bounded {
+        max_size: 200,
+        is_fixed_size: false,
+    };
+}
+
+#[derive(Deserialize, Serialize, PartialEq, PartialOrd, Clone, CandidType, Debug)]
+pub struct SuccessHistoryItemV1 {
+    pub post_id: u64,
+    pub publisher_canister_id: Principal,
+    pub interacted_at: SystemTime,
+    pub cf_video_id: String,
+    pub item_type: String,
+    pub percentage_watched: f32,
+}
+
+impl Ord for SuccessHistoryItemV1 {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.interacted_at.cmp(&other.interacted_at)
+    }
+}
+
+impl Eq for SuccessHistoryItemV1 {}
+
+impl Storable for SuccessHistoryItemV1 {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
         Cow::Owned(Encode!(self).unwrap())
     }

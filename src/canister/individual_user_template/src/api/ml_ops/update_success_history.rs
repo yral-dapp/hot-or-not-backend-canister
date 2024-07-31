@@ -1,5 +1,5 @@
 use shared_utils::{
-    canister_specific::individual_user_template::types::ml_data::SuccessHistoryItem,
+    canister_specific::individual_user_template::types::ml_data::SuccessHistoryItemV1,
     common::utils::permissions::is_caller_controller_or_global_admin,
 };
 
@@ -11,7 +11,7 @@ use crate::{
 };
 
 #[update(guard = "is_caller_controller_or_global_admin")]
-fn update_success_history(success_history_item: SuccessHistoryItem) -> Result<String, String> {
+fn update_success_history(success_history_item: SuccessHistoryItemV1) -> Result<String, String> {
     update_last_canister_functionality_access_time();
 
     CANISTER_DATA.with(|canister_data| {

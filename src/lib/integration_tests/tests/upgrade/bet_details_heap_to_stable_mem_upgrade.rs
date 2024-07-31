@@ -32,7 +32,7 @@ fn bet_details_heap_to_stable_mem_upgrade() {
     use std::time::SystemTime;
 
     use shared_utils::canister_specific::individual_user_template::types::ml_data::{
-        SuccessHistoryItem, WatchHistoryItem,
+        SuccessHistoryItem, SuccessHistoryItemV1, WatchHistoryItem,
     };
 
     let pic = PocketIc::new();
@@ -660,11 +660,13 @@ fn bet_details_heap_to_stable_mem_upgrade() {
             alice_individual_template_canister_id,
             admin_principal_id,
             "update_success_history",
-            encode_one(SuccessHistoryItem {
+            encode_one(SuccessHistoryItemV1 {
                 post_id: 1,
                 publisher_canister_id: bob_individual_template_canister_id,
                 interacted_at: SystemTime::now(),
                 cf_video_id: "dasfas_1".to_string(),
+                item_type: "like_video".to_string(),
+                percentage_watched: 0.0,
             })
             .unwrap(),
         )
@@ -683,11 +685,13 @@ fn bet_details_heap_to_stable_mem_upgrade() {
             alice_individual_template_canister_id,
             admin_principal_id,
             "update_success_history",
-            encode_one(SuccessHistoryItem {
+            encode_one(SuccessHistoryItemV1 {
                 post_id: 2,
                 publisher_canister_id: bob_individual_template_canister_id,
                 interacted_at: SystemTime::now(),
                 cf_video_id: "dasfas_2".to_string(),
+                item_type: "like_video".to_string(),
+                percentage_watched: 0.0,
             })
             .unwrap(),
         )
@@ -728,7 +732,7 @@ fn bet_details_heap_to_stable_mem_upgrade() {
             encode_one(()).unwrap(),
         )
         .map(|reply_payload| {
-            let success_history: Result<Vec<SuccessHistoryItem>, String> = match reply_payload {
+            let success_history: Result<Vec<SuccessHistoryItemV1>, String> = match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
                 _ => panic!("\n🛑 get_success_history failed\n"),
             };
