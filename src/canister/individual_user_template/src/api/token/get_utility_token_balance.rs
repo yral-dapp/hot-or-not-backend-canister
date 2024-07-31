@@ -5,6 +5,7 @@ use crate::{
     CANISTER_DATA,
 };
 
+#[deprecated(note = "Please use get_utility_token_balance_v1")]
 #[query]
 fn get_utility_token_balance() -> u64 {
     update_last_canister_functionality_access_time();

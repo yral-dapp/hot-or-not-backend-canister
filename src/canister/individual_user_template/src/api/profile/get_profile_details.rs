@@ -5,6 +5,7 @@ use crate::{
 use ic_cdk_macros::query;
 use shared_utils::canister_specific::individual_user_template::types::profile::UserProfileDetailsForFrontend;
 
+#[deprecated(note = "Please use get_profile_details_v3")]
 #[query]
 fn get_profile_details() -> UserProfileDetailsForFrontend {
     update_last_canister_functionality_access_time();
