@@ -295,8 +295,13 @@ type Result_1 = variant {
   Ok : BettingStatus;
   Err : BetOnCurrentlyViewingPostError;
 };
-type Result_10 = variant { Ok : vec SuccessHistoryItemV1; Err : text };
-type Result_11 = variant {
+type Result_10 = variant {
+  Ok : vec PostDetailsForFrontendV1;
+  Err : GetPostsOfUserProfileError;
+};
+type Result_11 = variant { Ok : SessionType; Err : text };
+type Result_12 = variant { Ok : vec SuccessHistoryItemV1; Err : text };
+type Result_13 = variant {
   Ok : vec record { nat64; TokenEvent };
   Err : GetPostsOfUserProfileError;
 };
@@ -578,11 +583,11 @@ service : (IndividualUserTemplateInitArgs) -> {
     ) -> (Result_6);
   update_profiles_that_follow_me_toggle_list_with_specified_profile : (
       FollowerArg,
-    ) -> (Result_5);
-  update_referrer_details : (UserCanisterDetails) -> (Result_15);
-  update_session_type : (SessionType) -> (Result_15);
-  update_success_history : (SuccessHistoryItemV1) -> (Result_15);
-  update_watch_history : (WatchHistoryItem) -> (Result_15);
+    ) -> (Result_6);
+  update_referrer_details : (UserCanisterDetails) -> (Result_17);
+  update_session_type : (SessionType) -> (Result_17);
+  update_success_history : (SuccessHistoryItemV1) -> (Result_17);
+  update_watch_history : (WatchHistoryItem) -> (Result_17);
   update_well_known_principal : (KnownPrincipalType, principal) -> ();
   write_key_value_pair : (nat64, text, text) -> (Result_4);
   write_multiple_key_value_pairs : (nat64, vec record { text; text }) -> (
