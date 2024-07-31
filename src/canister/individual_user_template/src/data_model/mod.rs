@@ -144,7 +144,6 @@ impl Default for CanisterData {
             app_storage: AppStorage::default(),
             watch_history: _default_watch_history(),
             success_history: _default_success_history_v1(),
-            // success_history_v1: _default_success_history_v1(),
         }
     }
 }
