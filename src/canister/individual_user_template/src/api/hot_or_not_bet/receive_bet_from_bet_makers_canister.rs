@@ -98,13 +98,6 @@ fn receive_bet_from_bet_makers_canister_v1(
     let bet_maker_canister_id = ic_cdk::caller();
     update_last_canister_functionality_access_time();
     let current_time = system_time::get_current_system_time_from_ic();
-    
-
-
-
-
-    
-    ic_cdk::println!("{:?}",&current_time);
 
     let status = CANISTER_DATA.with(|canister_data_ref_cell| {
         let canister_data = &mut canister_data_ref_cell.borrow_mut();
@@ -117,8 +110,6 @@ fn receive_bet_from_bet_makers_canister_v1(
             &system_time::get_current_system_time_from_ic(),
         )
     })?;
-
-    dbg!(&status);
 
     CANISTER_DATA.with(|canister_data_ref_cell| {
         maybe_start_timer_based_on_bet_result(
@@ -221,35 +212,20 @@ fn maybe_start_timer_based_on_bet_result(
 // TIMER LOGIC STARTS HERE
 
 pub fn maybe_enqueue_timer(canister_data: &mut CanisterData) {
-    let should_start_timer = match canister_data.is_timer_running {
-        Some(post_id) => process_running_timer(canister_data, post_id),
-        None => !canister_data.first_bet_placed_at_hashmap.is_empty(),
-    };
-
-    if should_start_timer {
-        start_timer(canister_data);
+    if  let Some((insertion_time, post_id)) = canister_data.bet_timer_posts.first_key_value() {
+        start_timer(canister_data)
     }
 }
 
-fn process_running_timer(canister_data: &mut CanisterData, post_id: u64) -> bool {
-    if !timer_expired(post_id, canister_data) {
-        // don't start timer again if previous one has not expired yet
-        return false;
-    }
-
+fn process_running_timer(canister_data: &mut CanisterData, post_id: u64) {
     if let Some((_, ongoing_slot)) = canister_data.first_bet_placed_at_hashmap.get(&post_id) {
         tabulate_hot_or_not_outcome_for_post_slot_v1(canister_data, post_id, ongoing_slot);
 
         // remove the post_id from the hashmap and bet_timer_posts
         let _val = canister_data.first_bet_placed_at_hashmap.remove(&post_id);
         let _same_post_id = canister_data.bet_timer_posts.pop_first();
-
-        canister_data.is_timer_running = None;
-        // return true to indicate that timer has been processed
-        true
-    } else {
-        false
-    }
+        maybe_enqueue_timer(canister_data);
+    } 
 }
 
 // pub fn print_btree_map<K, V, M>(btree: &BTreeMap<K, V, M>) -> String
@@ -291,35 +267,15 @@ fn start_timer(canister_data: &mut CanisterData) {
                     .calculate_remaining_interval(&bet_placed_time, TIMER_DURATION)
                     .unwrap();
 
-                canister_data.is_timer_running = Some(first_post_id);
-
                 ic_cdk_timers::set_timer(interval_for_timer, move || {
                     CANISTER_DATA.with(|canister_data_ref_cell| {
                         let canister_data = &mut canister_data_ref_cell.borrow_mut();
-                        maybe_enqueue_timer(canister_data);
+                        process_running_timer(canister_data, first_post_id);
                     });
                 });
             }
         }
     }
-}
-
-fn timer_expired(post_id: PostId, canister_data: &CanisterData) -> bool {
-    if !canister_data.first_bet_placed_at_hashmap.is_empty() {
-        if let Some(((first_time, first_post_id), _)) =
-            canister_data.bet_timer_posts.first_key_value()
-        {
-            if let Some((bet_placed_time, _ongoing_slot_for_post)) =
-                canister_data.first_bet_placed_at_hashmap.get(&post_id)
-            {
-                let current_time = SystemTimeInMs::now();
-                let interval = current_time.duration_since(&bet_placed_time);
-                return interval > TIMER_DURATION;
-            }
-        }
-    }
-
-    false
 }
 
 // TIMER LOGIC ENDS HERE

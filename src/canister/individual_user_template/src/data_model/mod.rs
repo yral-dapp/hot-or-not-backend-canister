@@ -101,8 +101,6 @@ pub struct CanisterData {
     #[serde(skip, default = "_default_success_history_v1")]
     pub success_history: ic_stable_structures::btreemap::BTreeMap<SuccessHistoryItemV1, (), Memory>,
      // u64 is post_id, SystemTime refers to time when first_bet is placed
-    // #[serde(skip, default = "_default_bet_timer_vec")]
-    // pub bet_timer_posts: ic_stable_structures::vec::Vec<PostId, Memory>,
     #[serde(skip, default = "_default_bet_timer_posts_queue")]
     pub bet_timer_posts:
         ic_stable_structures::btreemap::BTreeMap<(SystemTimeInMs, PostId), (), Memory>,
@@ -112,7 +110,7 @@ pub struct CanisterData {
         ic_stable_structures::btreemap::BTreeMap<PostId, (SystemTimeInMs, NewSlotType), Memory>,
     // #{serde(skip, default = "_default_global_bet_timer")}
     // there is one global timer for processing bets
-    pub is_timer_running: Option<PostId>,
+    // pub is_timer_running: Option<PostId>,
 }
 
 pub fn _default_room_details() -> RoomDetailsMapOld {
@@ -214,7 +212,7 @@ impl Default for CanisterData {
             first_bet_placed_at_hashmap: _default_bet_timer_first_bet_placed_at_map(),
             // bet_timer_posts: _default_bet_timer_vec(),
             bet_timer_posts: _default_bet_timer_posts_queue(),
-            is_timer_running: None,
+            // is_timer_running: None,
         }
     }
 }
