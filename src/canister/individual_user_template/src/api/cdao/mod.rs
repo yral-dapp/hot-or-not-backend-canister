@@ -13,7 +13,7 @@ use ic_cdk::{
     }, query, update
 };
 use ic_sns_init::{pb::v1::SnsInitPayload, SnsCanisterIds};
-use ic_sns_wasm::pb::v1::GetWasmResponse;
+use ic_sns_wasm::pb::v1::{GetWasmResponse, GetWasmRequest};
 use shared_utils::{
     canister_specific::individual_user_template::{consts::CDAO_TOKEN_LIMIT, types::{
         cdao::DeployedCdaoCanisters, error::CdaoDeployError, session::SessionType,
@@ -22,8 +22,8 @@ use shared_utils::{
 };
 
 use crate::CANISTER_DATA;
-
-const CDAO_CYCLE_CNT: u128 = 500000000000;
+// 0.1T
+const CDAO_CYCLE_CNT: u128 = 100000000000;
 
 async fn create_empty_canister(
     arg: CreateCanisterArgument,
@@ -81,9 +81,9 @@ async fn deploy_cdao_sns(
         let registered = matches!(cdata.session_type, Some(SessionType::RegisteredSession));
         (registered, cdata.cdao_canisters.len() == CDAO_TOKEN_LIMIT)
     });
-    if !registered {
+    /*if !registered {
         return Err(CdaoDeployError::Unregistered);
-    }
+    }*/
     if limit_hit {
         return Err(CdaoDeployError::TokenLimit(CDAO_TOKEN_LIMIT));
     }
@@ -138,13 +138,16 @@ async fn deploy_cdao_sns(
     let ledger_hash = get_wasm_hash("Ledger");
     let root_hash = get_wasm_hash("Root");
     let swap_hash = get_wasm_hash("Swap");
-    let index_hash = get_wasm_hash("Index");
+    let index_hash = get_wasm_hash("Ledger Index");
 
     let mut wasm_bins: VecDeque<_> = [gov_hash, ledger_hash, root_hash, swap_hash, index_hash]
         .into_iter()
         .map(|hash| async move {
+            let req = GetWasmRequest {
+                hash,
+            };
             let wasm_res =
-                ic_cdk::call::<_, (GetWasmResponse,)>(sns_wasm, "get_wasm", (hash,)).await?;
+                ic_cdk::call::<_, (GetWasmResponse,)>(sns_wasm, "get_wasm", (req,)).await?;
             Ok::<_, CdaoDeployError>(wasm_res.0.wasm.unwrap().wasm)
         })
         .collect::<FuturesOrdered<_>>()
@@ -182,7 +185,7 @@ async fn deploy_cdao_sns(
     };
     sns_install_futs.push(install_canister_wasm(
         wasm_bins.pop_front().unwrap(),
-        Encode!(&index_init).unwrap(),
+        index_init,
         index,
     ));
     while sns_install_futs.try_next().await?.is_some() {}

@@ -2,7 +2,7 @@ use std::cell::RefCell;
 
 use crate::common::types::known_principal::{KnownPrincipalMap, KnownPrincipalType};
 use candid::Principal;
-pub const INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT: u128 = 200_000_000_000; // 0.2T Cycles
+pub const INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT: u128 = 1_000_000_000_000; // 1T Cycles
 pub const CYCLES_THRESHOLD_TO_INITIATE_RECHARGE: u128 = 100_000_000_000; // 0.1T Cycles
 
 pub const SUBNET_ORCHESTRATOR_CANISTER_INITIAL_CYCLES: u128 = 2_500_000_000_000_000; //2.5kT Cycles
