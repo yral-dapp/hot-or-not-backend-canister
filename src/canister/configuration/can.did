@@ -6,10 +6,12 @@ type KnownPrincipalType = variant {
   CanisterIdUserIndex;
   CanisterIdPlatformOrchestrator;
   CanisterIdConfiguration;
+  CanisterIdHotOrNotSubnetOrchestrator;
   CanisterIdProjectMemberIndex;
   CanisterIdTopicCacheIndex;
   CanisterIdRootCanister;
   CanisterIdDataBackup;
+  CanisterIdSnsWasm;
   CanisterIdPostCache;
   CanisterIdSNSController;
   CanisterIdSnsGovernance;
@@ -17,6 +19,7 @@ type KnownPrincipalType = variant {
 };
 type Result = variant { Ok; Err : text };
 service : (ConfigurationInitArgs) -> {
+  __get_candid_interface_tmp_hack : () -> (text) query;
   are_signups_enabled : () -> (bool) query;
   get_current_list_of_all_well_known_principal_values : () -> (
       vec record { KnownPrincipalType; principal },
