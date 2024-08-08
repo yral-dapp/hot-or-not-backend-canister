@@ -26,6 +26,8 @@ dfx canister create --no-wallet post_cache
 dfx canister create --no-wallet user_index
 dfx canister create --no-wallet platform_orchestrator
 
+scripts/canisters/local_deploy/create_sns_wasm.sh
+
 dfx build individual_user_template
 gzip -f -1 ./target/wasm32-unknown-unknown/release/individual_user_template.wasm
 dfx build configuration
@@ -66,6 +68,10 @@ dfx canister install configuration --argument "(record {
       variant { CanisterIdUserIndex };
       principal \"$(dfx canister id user_index)\";
     };
+    record {
+      variant { CanisterIdSnsWasm };
+      principal \"$(dfx canister id sns_wasm)\";
+    };
   };
   signups_enabled = opt true;
   access_control_map = opt vec {
@@ -98,6 +104,10 @@ dfx canister install data_backup --argument "(record {
       variant { CanisterIdUserIndex };
       principal \"$(dfx canister id user_index)\";
     };
+    record {
+      variant { CanisterIdSnsWasm };
+      principal \"$(dfx canister id sns_wasm)\";
+    };
   };
   access_control_map = opt vec {
     record {
@@ -129,6 +139,10 @@ dfx canister install post_cache --argument "(record {
       variant { CanisterIdUserIndex };
       principal \"$(dfx canister id user_index)\";
     };
+    record {
+      variant { CanisterIdSnsWasm };
+      principal \"$(dfx canister id sns_wasm)\";
+    };
   };
   version= \"v1.0.0\"
 })"
@@ -154,6 +168,10 @@ dfx canister install user_index --argument "(record {
     record {
       variant { CanisterIdUserIndex };
       principal \"$(dfx canister id user_index)\";
+    };
+    record {
+      variant { CanisterIdSnsWasm };
+      principal \"$(dfx canister id sns_wasm)\";
     };
   };
   access_control_map = opt vec {
