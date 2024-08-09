@@ -21,6 +21,7 @@ use shared_utils::{
         profile::UserProfile,
         session::SessionType,
         token::TokenBalance,
+        device_id::DeviceIdentity,
     },
     common::types::{
         app_primitive_type::PostId,
@@ -80,6 +81,8 @@ pub struct CanisterData {
     pub watch_history: ic_stable_structures::btreemap::BTreeMap<WatchHistoryItem, (), Memory>,
     #[serde(skip, default = "_default_success_history_v1")]
     pub success_history: ic_stable_structures::btreemap::BTreeMap<SuccessHistoryItemV1, (), Memory>,
+    #[serde(default)]
+    pub device_identities: Vec<DeviceIdentity>,
 }
 
 pub fn _default_room_details(
@@ -144,6 +147,7 @@ impl Default for CanisterData {
             app_storage: AppStorage::default(),
             watch_history: _default_watch_history(),
             success_history: _default_success_history_v1(),
+            device_identities: Vec::new(),
         }
     }
 }
