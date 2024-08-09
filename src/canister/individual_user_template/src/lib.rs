@@ -5,7 +5,7 @@ use api::{
     follow::update_profiles_that_follow_me_toggle_list_with_specified_profile::FollowerArg,
     profile::update_profile_display_details::UpdateProfileDetailsError,
 };
-use candid::Principal;
+use candid::{Principal, Nat};
 use data_model::CanisterData;
 use ic_cdk::api::management_canister::provisional::CanisterId;
 use ic_cdk_macros::export_candid;
@@ -14,7 +14,7 @@ use shared_utils::{
         arg::{FolloweeArg, IndividualUserTemplateInitArgs, PlaceBetArg},
         error::{
             BetOnCurrentlyViewingPostError, FollowAnotherUserProfileError,
-            GetPostsOfUserProfileError, CdaoDeployError,
+            GetPostsOfUserProfileError, CdaoDeployError, CdaoTokenError,
         },
         follow::{FollowEntryDetail, FollowEntryId},
         hot_or_not::{BetOutcomeForBetMaker, BettingStatus, PlacedBetDetail},
@@ -41,8 +41,10 @@ use shared_utils::{
     types::canister_specific::individual_user_template::error_types::{
         GetUserUtilityTokenTransactionHistoryError, UpdateProfileSetUniqueUsernameError,
     },
+    pagination::PaginationError,
 };
 use ic_sns_init::pb::v1::SnsInitPayload;
+use icrc_ledger_types::icrc1::transfer::Memo;
 
 mod api;
 pub mod data_model;

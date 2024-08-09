@@ -1,3 +1,5 @@
+mod token;
+
 use std::collections::{HashMap, VecDeque};
 
 use candid::{Encode, Principal};
@@ -237,7 +239,9 @@ async fn deploy_cdao_sns(
         index: index.0,
     };
     CANISTER_DATA.with(|cdata| {
-        cdata.borrow_mut().cdao_canisters.push(deployed_cans);
+        let mut cdata = cdata.borrow_mut();
+        cdata.cdao_canisters.push(deployed_cans);
+        cdata.token_roots.insert(root.0, ());
     });
 
     Ok(deployed_cans)

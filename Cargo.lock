@@ -814,7 +814,7 @@ dependencies = [
  "ic-types",
  "ic-xrc-types",
  "icp-ledger",
- "icrc-ledger-types",
+ "icrc-ledger-types 0.1.5",
  "lazy_static",
  "on_wire",
  "prost",
@@ -1716,7 +1716,7 @@ dependencies = [
  "ic-ledger-canister-core",
  "ic-ledger-core",
  "ic-ledger-hash-of",
- "icrc-ledger-types",
+ "icrc-ledger-types 0.1.5",
  "num-bigint",
  "num-traits",
  "serde",
@@ -1744,7 +1744,7 @@ dependencies = [
  "ic-icrc1-tokens-u64",
  "ic-ledger-hash-of",
  "ic-metrics-encoder",
- "icrc-ledger-types",
+ "icrc-ledger-types 0.1.5",
  "num-traits",
  "scopeguard",
  "serde",
@@ -1770,7 +1770,7 @@ dependencies = [
  "ic-ledger-core",
  "ic-metrics-encoder",
  "ic-stable-structures",
- "icrc-ledger-types",
+ "icrc-ledger-types 0.1.5",
  "num-traits",
  "scopeguard",
  "serde",
@@ -1799,7 +1799,7 @@ dependencies = [
  "ic-ledger-hash-of",
  "ic-metrics-encoder",
  "icrc-ledger-client",
- "icrc-ledger-types",
+ "icrc-ledger-types 0.1.5",
  "num-traits",
  "serde",
  "serde_bytes",
@@ -1915,7 +1915,7 @@ dependencies = [
  "ic-nervous-system-runtime",
  "ic-utils",
  "icrc-ledger-client",
- "icrc-ledger-types",
+ "icrc-ledger-types 0.1.5",
  "num-traits",
  "serde",
 ]
@@ -1948,7 +1948,7 @@ dependencies = [
  "ic-nns-constants",
  "ic-stable-structures",
  "icp-ledger",
- "icrc-ledger-types",
+ "icrc-ledger-types 0.1.5",
  "json5",
  "lazy_static",
  "maplit",
@@ -2180,7 +2180,7 @@ dependencies = [
  "ic-utils",
  "icp-ledger",
  "icrc-ledger-client",
- "icrc-ledger-types",
+ "icrc-ledger-types 0.1.5",
  "lazy_static",
  "maplit",
  "num-traits",
@@ -2231,7 +2231,7 @@ dependencies = [
  "ic-nervous-system-string",
  "ic-nns-constants",
  "ic-sns-swap-proto-library",
- "icrc-ledger-types",
+ "icrc-ledger-types 0.1.5",
  "mockall",
  "rust_decimal",
 ]
@@ -2254,7 +2254,7 @@ dependencies = [
  "ic-sns-governance",
  "ic-sns-root",
  "ic-sns-swap",
- "icrc-ledger-types",
+ "icrc-ledger-types 0.1.5",
  "isocountry",
  "lazy_static",
  "maplit",
@@ -2287,7 +2287,7 @@ dependencies = [
  "ic-nervous-system-root",
  "ic-nervous-system-runtime",
  "ic-sns-swap",
- "icrc-ledger-types",
+ "icrc-ledger-types 0.1.5",
  "prost",
  "serde",
 ]
@@ -2319,7 +2319,7 @@ dependencies = [
  "ic-stable-structures",
  "ic-utils",
  "icp-ledger",
- "icrc-ledger-types",
+ "icrc-ledger-types 0.1.5",
  "itertools 0.12.1",
  "lazy_static",
  "maplit",
@@ -2374,7 +2374,7 @@ dependencies = [
  "ic-types",
  "ic-utils",
  "ic-wasm",
- "icrc-ledger-types",
+ "icrc-ledger-types 0.1.5",
  "libflate 1.4.0",
  "maplit",
  "prost",
@@ -2521,7 +2521,7 @@ dependencies = [
  "ic-ledger-canister-core",
  "ic-ledger-core",
  "ic-ledger-hash-of",
- "icrc-ledger-types",
+ "icrc-ledger-types 0.1.5",
  "lazy_static",
  "num-traits",
  "on_wire",
@@ -2541,7 +2541,7 @@ source = "git+https://github.com/dfinity/ic?rev=tags/release-2024-05-29_23-02-ba
 dependencies = [
  "async-trait",
  "candid",
- "icrc-ledger-types",
+ "icrc-ledger-types 0.1.5",
  "serde",
 ]
 
@@ -2560,6 +2560,26 @@ dependencies = [
  "serde",
  "serde_bytes",
  "sha2 0.10.8",
+]
+
+[[package]]
+name = "icrc-ledger-types"
+version = "0.1.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "589f7f6b54df25295dd0ce2722d583c15e2ee7eec9cef58c10b424feb54561b2"
+dependencies = [
+ "base32",
+ "candid",
+ "crc32fast",
+ "hex",
+ "itertools 0.12.1",
+ "num-bigint",
+ "num-traits",
+ "serde",
+ "serde_bytes",
+ "sha2 0.10.8",
+ "strum",
+ "time",
 ]
 
 [[package]]
@@ -2741,8 +2761,10 @@ dependencies = [
  "ic-icrc1-ledger",
  "ic-nns-constants",
  "ic-sns-init",
+ "ic-sns-root",
  "ic-sns-wasm",
  "ic-stable-structures",
+ "icrc-ledger-types 0.1.6",
  "serde",
  "serde_bytes",
  "serde_json",
@@ -3095,9 +3117,9 @@ dependencies = [
 
 [[package]]
 name = "num-bigint"
-version = "0.4.5"
+version = "0.4.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c165a9ab64cf766f73521c0dd2cfdff64f488b8f0b3e621face3462d3db536d7"
+checksum = "a5e44f723f1133c9deac646763579fdb3ac745e418f2a7af9cd0c431da1f20b9"
 dependencies = [
  "num-integer",
  "num-traits",
@@ -4148,6 +4170,7 @@ dependencies = [
  "ic-cdk 0.12.0",
  "ic-cdk-timers 0.6.0",
  "ic-stable-structures",
+ "icrc-ledger-types 0.1.6",
  "pprof",
  "rmp-serde",
  "serde",

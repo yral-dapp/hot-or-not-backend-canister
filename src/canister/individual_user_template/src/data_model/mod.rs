@@ -5,7 +5,7 @@ use std::{
 
 use candid::{Deserialize, Principal};
 use ic_cdk::api::management_canister::provisional::CanisterId;
-use memory::{get_success_history_memory, get_watch_history_memory};
+use memory::{get_success_history_memory, get_token_list_memory, get_watch_history_memory};
 use serde::Serialize;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
@@ -80,6 +80,9 @@ pub struct CanisterData {
     pub success_history: ic_stable_structures::btreemap::BTreeMap<SuccessHistoryItem, (), Memory>,
     #[serde(default)]
     pub cdao_canisters: Vec<DeployedCdaoCanisters>,
+    // list of root token canisters 
+    #[serde(skip, default = "_default_token_list")]
+    pub token_roots: ic_stable_structures::btreemap::BTreeMap<Principal, (), Memory>
 }
 
 pub fn _default_room_details(
@@ -112,6 +115,10 @@ pub fn _default_success_history(
     ic_stable_structures::btreemap::BTreeMap::init(get_success_history_memory())
 }
 
+pub fn _default_token_list() -> ic_stable_structures::btreemap::BTreeMap<Principal, (), Memory> {
+    ic_stable_structures::btreemap::BTreeMap::new(get_token_list_memory())
+}
+
 impl Default for CanisterData {
     fn default() -> Self {
         Self {
@@ -139,6 +146,7 @@ impl Default for CanisterData {
             watch_history: _default_watch_history(),
             success_history: _default_success_history(),
             cdao_canisters: Vec::new(),
+            token_roots: _default_token_list()
         }
     }
 }
