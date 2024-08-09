@@ -254,6 +254,7 @@ type Result_16 = variant {
 };
 type Result_17 = variant { Ok; Err : text };
 type Result_18 = variant { Ok; Err : UpdateProfileSetUniqueUsernameError };
+type Result_19 = variant { Ok : bool; Err : text };
 type Result_2 = variant { Ok : NamespaceForFrontend; Err : NamespaceErrors };
 type Result_3 = variant { Ok : opt text; Err : NamespaceErrors };
 type Result_4 = variant { Ok; Err : NamespaceErrors };
@@ -371,6 +372,7 @@ type WatchHistoryItem = record {
   cf_video_id : text;
 };
 service : (IndividualUserTemplateInitArgs) -> {
+  add_device_id : (text) -> (Result_19);
   add_post_v2 : (PostDetailsFromFrontend) -> (Result);
   backup_data_to_backup_canister : (principal, principal) -> ();
   bet_on_currently_viewing_post : (PlaceBetArg) -> (Result_1);
