@@ -1,4 +1,5 @@
 use ic_cdk::api;
+use ic_cdk_macros::update;
 use shared_utils::canister_specific::individual_user_template::types::device_id::DeviceIdentity;
 
 use crate::{
@@ -7,7 +8,7 @@ use crate::{
 };
 
 /// #### Access Control
-/// Only the user whose profile details are stored in this canister can create a post.
+/// Only the user whose profile details are stored in this canister can add the device identity.
 #[update]
 fn add_device_id(identity_token: String) -> Result<bool, ()> {
     // * access control
@@ -21,14 +22,18 @@ fn add_device_id(identity_token: String) -> Result<bool, ()> {
     let response = CANISTER_DATA.with(|canister_data_ref_cell| {
         add_device_id_to_memory(
             &mut canister_data_ref_cell.borrow_mut(),
-            &device_id
+            device_id
         )
     });
 
-    Ok(response)
+    if response {
+        Ok(true)
+    } else {
+        Err(())
+    }
 }
 
-fn add_device_id_to_memory(canister_data: &mut CanisterData, device_id: &DeviceIdentity) -> Result<u64, String> {
+fn add_device_id_to_memory(canister_data: &mut CanisterData, device_id: DeviceIdentity) -> bool {
     canister_data.device_identities.push(device_id);
-    Ok(true)
+    true
 }
