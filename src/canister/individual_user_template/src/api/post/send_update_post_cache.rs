@@ -48,7 +48,7 @@ pub fn send_update_post_cache(post_id: &u64) {
         let _ = call::notify(
             post_cache_canister_principal_id,
             "update_post_hot_or_not_feed",
-            (hot_or_not_index_score_item.unwrap(),),
+            (hot_or_not_index_score_item.clone().unwrap(),),
         );
     }
 

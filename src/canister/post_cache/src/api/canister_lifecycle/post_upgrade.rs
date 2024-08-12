@@ -116,6 +116,11 @@ async fn migrate_data_impl() {
             canister_data_ref_cell
                 .posts_index_sorted_by_home_feed_score_v1
                 .replace(&new_post);
+
+            // // Migrate Yral Feed
+            // canister_data_ref_cell
+            //     .posts_index_sorted_by_yral_feed_score
+            //     .replace(&new_post);
         });
     }
 
@@ -165,61 +170,14 @@ async fn migrate_data_impl() {
                 canister_data_ref_cell
                     .posts_index_sorted_by_hot_or_not_feed_score_v1
                     .replace(&new_post);
+        
+                // // Migrate Yral Feed
+
+                // canister_data_ref_cell
+                //     .posts_index_sorted_by_yral_feed_score
+                    // .replace(&new_post);
             });
         }
     }
 
-    migrate_yral_feed()
-}
-
-fn migrate_yral_feed(){
-     // Migrate Yral Feed
-
-     let old_post_score_hot_or_not_index = CANISTER_DATA.with(|canister_data_ref_cell| {
-        let canister_data_ref_cell = canister_data_ref_cell.borrow_mut();
-
-        canister_data_ref_cell
-            .posts_index_sorted_by_yral_feed_score
-            .clone()
-    });
-
-    for post in old_post_score_hot_or_not_index.iter() {
-        let post_id = post.post_id;
-        let publisher_canister_id = post.publisher_canister_id;
-
-        let post_details: PostDetailsForFrontend = match call::call(
-            publisher_canister_id,
-            "get_individual_post_details_by_id",
-            (post_id,),
-        )
-        .await
-        {
-            Ok((post_details,)) => post_details,
-            Err((rejection_code, err)) => {
-                ic_cdk::print(format!(
-                            "Error: get_individual_post_details_by_id failed with rejection code: {:?}, error: {}",
-                            rejection_code, err
-                        ));
-                continue;
-            }
-        };
-
-        if let Some(hot_or_not_feed_ranking_score) = post_details.hot_or_not_feed_ranking_score {
-            let new_post = PostScoreIndexItemV1 {
-                score: hot_or_not_feed_ranking_score,
-                post_id: post_details.id,
-                publisher_canister_id,
-                is_nsfw: post_details.is_nsfw,
-                created_at: Some(post_details.created_at),
-                status: post_details.status,
-            };
-
-            CANISTER_DATA.with(|canister_data_ref_cell| {
-                let mut canister_data_ref_cell = canister_data_ref_cell.borrow_mut();
-                canister_data_ref_cell
-                    .posts_index_sorted_by_yral_feed_score 
-                    .replace(&new_post);
-            });
-        }
-    }
 }
