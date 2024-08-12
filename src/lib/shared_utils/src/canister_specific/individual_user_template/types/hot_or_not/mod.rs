@@ -10,7 +10,9 @@ use serde::Serialize;
 use crate::common::types::{
     app_primitive_type::PostId,
     utility_token::token_event::{
-        HotOrNotOutcomePayoutEvent, HotOrNotOutcomePayoutEventV1, NewSlotType, TokenEvent, TokenEventV1, HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE, HOT_OR_NOT_BET_WINNINGS_MULTIPLIER
+        HotOrNotOutcomePayoutEvent, HotOrNotOutcomePayoutEventV1, NewSlotType, TokenEvent,
+        TokenEventV1, HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE,
+        HOT_OR_NOT_BET_WINNINGS_MULTIPLIER,
     },
 };
 
@@ -315,7 +317,7 @@ impl Storable for GlobalRoomIdV1 {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
         // let mut bytes = vec![];
         // ciborium::ser::into_writer(self, &mut bytes).unwrap();
-        
+
         Cow::Owned(Encode!(self).unwrap())
     }
 
@@ -1272,120 +1274,119 @@ impl Post {
         });
     }
 
+    pub fn tabulate_hot_or_not_outcome_for_slot_v2(
+        &mut self,
+        post_canister_id: &CanisterId,
+        slot_id_type: &NewSlotType,
+        token_balance: &mut TokenBalanceV1,
+        current_time: &SystemTime,
+        room_details_map: &mut ic_stable_structures::btreemap::BTreeMap<
+            GlobalRoomIdV1,
+            RoomDetailsV1,
+            VirtualMemory<DefaultMemoryImpl>,
+        >,
+        bet_details_map: &mut ic_stable_structures::btreemap::BTreeMap<
+            GlobalBetIdV1,
+            BetDetails,
+            VirtualMemory<DefaultMemoryImpl>,
+        >,
+    ) {
+        let slot_id_owned = slot_id_type.clone();
 
-pub fn tabulate_hot_or_not_outcome_for_slot_v2(
-    &mut self,
-    post_canister_id: &CanisterId,
-    slot_id_type: &NewSlotType,
-    token_balance: &mut TokenBalanceV1,
-    current_time: &SystemTime,
-    room_details_map: &mut ic_stable_structures::btreemap::BTreeMap<
-        GlobalRoomIdV1,
-        RoomDetailsV1,
-        VirtualMemory<DefaultMemoryImpl>,
-    >,
-    bet_details_map: &mut ic_stable_structures::btreemap::BTreeMap<
-        GlobalBetIdV1,
-        BetDetails,
-        VirtualMemory<DefaultMemoryImpl>,
-    >,
-) {
-    let slot_id_owned = slot_id_type.clone();
+        let hot_or_not_details = self.hot_or_not_details.as_mut();
 
-    let hot_or_not_details = self.hot_or_not_details.as_mut();
+        // if hot_or_not_details.is_none() {
+        //     return;
+        // }
 
-    // if hot_or_not_details.is_none() {
-    //     return;
-    // }
+        let start_global_room_id = GlobalRoomIdV1(self.id, slot_id_owned, 1);
+        let end_global_room_id = GlobalRoomIdV1(self.id, slot_id_owned.increment_by(1), 1);
 
-    let start_global_room_id = GlobalRoomIdV1(self.id, slot_id_owned, 1);
-    let end_global_room_id = GlobalRoomIdV1(self.id, slot_id_owned.increment_by(1), 1);
+        let room_details = room_details_map
+            .range(start_global_room_id..end_global_room_id)
+            .collect::<Vec<_>>();
+        room_details.iter().for_each(|(groomid, room_detail)| {
+            let mut room_detail = room_detail.clone();
+            let room_id = groomid.2;
 
-    let room_details = room_details_map
-        .range(start_global_room_id..end_global_room_id)
-        .collect::<Vec<_>>();
-    room_details.iter().for_each(|(groomid, room_detail)| {
-        let mut room_detail = room_detail.clone();
-        let room_id = groomid.2;
-
-        if room_detail.bet_outcome == RoomBetPossibleOutcomes::BetOngoing {
-            // * Figure out which side won
-            match room_detail.total_hot_bets.cmp(&room_detail.total_not_bets) {
-                Ordering::Greater => {
-                    room_detail.bet_outcome = RoomBetPossibleOutcomes::HotWon;
+            if room_detail.bet_outcome == RoomBetPossibleOutcomes::BetOngoing {
+                // * Figure out which side won
+                match room_detail.total_hot_bets.cmp(&room_detail.total_not_bets) {
+                    Ordering::Greater => {
+                        room_detail.bet_outcome = RoomBetPossibleOutcomes::HotWon;
+                    }
+                    Ordering::Less => {
+                        room_detail.bet_outcome = RoomBetPossibleOutcomes::NotWon;
+                    }
+                    Ordering::Equal => room_detail.bet_outcome = RoomBetPossibleOutcomes::Draw,
                 }
-                Ordering::Less => {
-                    room_detail.bet_outcome = RoomBetPossibleOutcomes::NotWon;
-                }
-                Ordering::Equal => room_detail.bet_outcome = RoomBetPossibleOutcomes::Draw,
+
+                // * Reward creator with commission. Commission is 10% of total pot
+                token_balance.handle_token_event(TokenEventV1::HotOrNotOutcomePayout {
+                    amount: room_detail.room_bets_total_pot
+                        * HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE
+                        / 100,
+                    details: HotOrNotOutcomePayoutEventV1::CommissionFromHotOrNotBet {
+                        post_canister_id: *post_canister_id,
+                        post_id: self.id,
+                        slot_id: slot_id_owned,
+                        room_id: room_id as u16,
+                        room_pot_total_amount: room_detail.room_bets_total_pot,
+                    },
+                    timestamp: *current_time,
+                });
+
+                room_details_map.insert(*groomid, room_detail.clone());
             }
 
-            // * Reward creator with commission. Commission is 10% of total pot
-            token_balance.handle_token_event(TokenEventV1::HotOrNotOutcomePayout {
-                amount: room_detail.room_bets_total_pot
-                    * HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE
-                    / 100,
-                details: HotOrNotOutcomePayoutEventV1::CommissionFromHotOrNotBet {
-                    post_canister_id: *post_canister_id,
-                    post_id: self.id,
-                    slot_id: slot_id_owned,
-                    room_id,
-                    room_pot_total_amount: room_detail.room_bets_total_pot,
-                },
-                timestamp: *current_time,
+            // * Reward individual participants
+            let start_global_bet_id =
+                GlobalBetIdV1(start_global_room_id, StablePrincipal::default());
+            let end_global_bet_id = GlobalBetIdV1(end_global_room_id, StablePrincipal::default());
+            let bet_details = bet_details_map
+                .range(start_global_bet_id..end_global_bet_id)
+                .collect::<Vec<_>>();
+            bet_details.iter().for_each(|(gbetid, bet_detail)| {
+                let mut bet_detail = bet_detail.clone();
+                match &room_detail.bet_outcome {
+                    RoomBetPossibleOutcomes::HotWon => {
+                        if bet_detail.bet_direction == BetDirection::Hot {
+                            bet_detail.payout = BetPayout::Calculated(
+                                bet_detail.amount
+                                    * HOT_OR_NOT_BET_WINNINGS_MULTIPLIER
+                                    * (100 - HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE)
+                                    / 100,
+                            );
+                        } else {
+                            bet_detail.payout = BetPayout::Calculated(0);
+                        }
+                    }
+                    RoomBetPossibleOutcomes::NotWon => {
+                        if bet_detail.bet_direction == BetDirection::Not {
+                            bet_detail.payout = BetPayout::Calculated(
+                                bet_detail.amount
+                                    * HOT_OR_NOT_BET_WINNINGS_MULTIPLIER
+                                    * (100 - HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE)
+                                    / 100,
+                            );
+                        } else {
+                            bet_detail.payout = BetPayout::Calculated(0);
+                        }
+                    }
+                    RoomBetPossibleOutcomes::Draw => {
+                        bet_detail.payout = BetPayout::Calculated(
+                            bet_detail.amount
+                                * (100 - HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE)
+                                / 100,
+                        );
+                    }
+                    RoomBetPossibleOutcomes::BetOngoing => {}
+                };
+
+                bet_details_map.insert(gbetid.clone(), bet_detail);
             });
-
-            room_details_map.insert(*groomid, room_detail.clone());
-        }
-
-        // * Reward individual participants
-        let start_global_bet_id = GlobalBetIdV1(start_global_room_id, StablePrincipal::default());
-        let end_global_bet_id = GlobalBetIdV1(end_global_room_id, StablePrincipal::default());
-        let bet_details = bet_details_map
-            .range(start_global_bet_id..end_global_bet_id)
-            .collect::<Vec<_>>();
-        bet_details.iter().for_each(|(gbetid, bet_detail)| {
-            let mut bet_detail = bet_detail.clone();
-            match &room_detail.bet_outcome {
-                RoomBetPossibleOutcomes::HotWon => {
-                    if bet_detail.bet_direction == BetDirection::Hot {
-                        bet_detail.payout = BetPayout::Calculated(
-                            bet_detail.amount
-                                * HOT_OR_NOT_BET_WINNINGS_MULTIPLIER
-                                * (100 - HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE)
-                                / 100,
-                        );
-                    } else {
-                        bet_detail.payout = BetPayout::Calculated(0);
-                    }
-                }
-                RoomBetPossibleOutcomes::NotWon => {
-                    if bet_detail.bet_direction == BetDirection::Not {
-                        bet_detail.payout = BetPayout::Calculated(
-                            bet_detail.amount
-                                * HOT_OR_NOT_BET_WINNINGS_MULTIPLIER
-                                * (100 - HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE)
-                                / 100,
-                        );
-                    } else {
-                        bet_detail.payout = BetPayout::Calculated(0);
-                    }
-                }
-                RoomBetPossibleOutcomes::Draw => {
-                    bet_detail.payout = BetPayout::Calculated(
-                        bet_detail.amount
-                            * (100 - HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE)
-                            / 100,
-                    );
-                }
-                RoomBetPossibleOutcomes::BetOngoing => {}
-            };
-
-            bet_details_map.insert(gbetid.clone(), bet_detail);
         });
-    });
-}
-
+    }
 }
 
 #[cfg(test)]
