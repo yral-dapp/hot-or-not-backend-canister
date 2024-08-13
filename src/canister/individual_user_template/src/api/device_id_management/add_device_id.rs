@@ -12,15 +12,15 @@ use crate::{
 #[update]
 fn add_device_id(identity_token: String) -> Result<bool, ()> {
     // * access control
-    // let current_caller = ic_cdk::caller();
-    // let my_principal_id = CANISTER_DATA
-    //     .with(|canister_data_ref_cell| canister_data_ref_cell.borrow().profile.principal_id);
-    // if my_principal_id != Some(current_caller) {
-    //     return Err(
-    //         "Only the user whose profile details are stored in this canister can create a post."
-    //             .to_string(),
-    //     );
-    // };
+    let current_caller = ic_cdk::caller();
+    let my_principal_id = CANISTER_DATA
+        .with(|canister_data_ref_cell| canister_data_ref_cell.borrow().profile.principal_id);
+    if my_principal_id != Some(current_caller) {
+        return Err(
+            "Only the user whose profile details are stored in this canister can add a device id."
+                .to_string(),
+        );
+    };
 
     let device_id = DeviceIdentity {
         device_id: identity_token,
