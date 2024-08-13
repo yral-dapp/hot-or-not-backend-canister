@@ -1,4 +1,4 @@
-use ic_cdk::api;
+use ic_cdk::{api, query};
 use ic_cdk_macros::update;
 use shared_utils::canister_specific::individual_user_template::types::device_id::DeviceIdentity;
 
@@ -12,7 +12,15 @@ use crate::{
 #[update]
 fn add_device_id(identity_token: String) -> Result<bool, ()> {
     // * access control
-    let current_caller = ic_cdk::caller();
+    // let current_caller = ic_cdk::caller();
+    // let my_principal_id = CANISTER_DATA
+    //     .with(|canister_data_ref_cell| canister_data_ref_cell.borrow().profile.principal_id);
+    // if my_principal_id != Some(current_caller) {
+    //     return Err(
+    //         "Only the user whose profile details are stored in this canister can create a post."
+    //             .to_string(),
+    //     );
+    // };
 
     let device_id = DeviceIdentity {
         device_id: identity_token,
@@ -36,4 +44,11 @@ fn add_device_id(identity_token: String) -> Result<bool, ()> {
 fn add_device_id_to_memory(canister_data: &mut CanisterData, device_id: DeviceIdentity) -> bool {
     canister_data.device_identities.push(device_id);
     true
+}
+
+#[query]
+fn get_device_identities() -> Vec<DeviceIdentity> {
+    CANISTER_DATA.with(|canister_data_ref_cell| {
+        canister_data_ref_cell.borrow().device_identities.clone()
+    })
 }
