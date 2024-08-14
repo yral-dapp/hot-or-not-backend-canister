@@ -459,7 +459,8 @@ type WatchHistoryItem = record {
   cf_video_id : text;
 };
 service : (IndividualUserTemplateInitArgs) -> {
-  add_post_v2 : (PostDetailsFromFrontend) -> (Result);
+  add_device_id : (text) -> (Result);
+  add_post_v2 : (PostDetailsFromFrontend) -> (Result_1);
   backup_data_to_backup_canister : (principal, principal) -> ();
   bet_on_currently_viewing_post : (PlaceBetArg) -> (Result_1);
   bet_on_currently_viewing_post_v1 : (PlaceBetArg) -> (Result_2);

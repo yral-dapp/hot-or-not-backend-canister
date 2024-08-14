@@ -20,6 +20,7 @@ use shared_utils::{
         profile::UserProfile,
         session::SessionType,
         token::{TokenBalance, TokenBalanceV1},
+        device_id::DeviceIdentity,
     },
     common::types::{
         app_primitive_type::PostId, known_principal::KnownPrincipalMap, top_posts::{post_score_index::PostScoreIndex, post_score_index_item::PostStatus}, utility_token::token_event::{NewSlotType, SystemTimeInMs}, version_details::VersionDetails
@@ -111,6 +112,8 @@ pub struct CanisterData {
     // #{serde(skip, default = "_default_global_bet_timer")}
     // there is one global timer for processing bets
     // pub is_timer_running: Option<PostId>,
+    #[serde(default)]
+    pub device_identities: Vec<DeviceIdentity>,
 }
 
 pub fn _default_room_details() -> RoomDetailsMapOld {
@@ -213,6 +216,7 @@ impl Default for CanisterData {
             // bet_timer_posts: _default_bet_timer_vec(),
             bet_timer_posts: _default_bet_timer_posts_queue(),
             // is_timer_running: None,
+            device_identities: Vec::new(),
         }
     }
 }

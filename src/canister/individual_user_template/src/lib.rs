@@ -12,6 +12,7 @@ use ic_cdk_macros::export_candid;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
         arg::{FolloweeArg, IndividualUserTemplateInitArgs, PlaceBetArg},
+        device_id::DeviceIdentity,
         error::{
             BetOnCurrentlyViewingPostError, FollowAnotherUserProfileError,
             GetPostsOfUserProfileError,
