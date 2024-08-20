@@ -36,6 +36,7 @@ fn remove_all_feed_entries_impl(canister_data: &mut CanisterData) {
     canister_data.posts_index_sorted_by_home_feed_score_v1 = PostScoreHomeIndex::default();
     canister_data.posts_index_sorted_by_hot_or_not_feed_score_v1 =
         PostScoreHotOrNotIndex::default();
+    canister_data.posts_index_sorted_by_yral_feed_score = PostScoreHotOrNotIndex::default();
 }
 
 #[cfg(test)]
@@ -69,6 +70,13 @@ mod test {
                 .count(),
             0
         );
+        assert_eq!(
+            canister_data
+                .posts_index_sorted_by_yral_feed_score
+                .iter()
+                .count(),
+            0
+        );
 
         canister_data
             .posts_index_sorted_by_home_feed_score_v1
@@ -103,6 +111,27 @@ mod test {
             });
         canister_data
             .posts_index_sorted_by_hot_or_not_feed_score_v1
+            .replace(&PostScoreIndexItemV1 {
+                post_id: 1,
+                publisher_canister_id: get_mock_user_alice_canister_id(),
+                score: 200,
+                is_nsfw: false,
+                created_at: Some(SystemTime::now()),
+                status: PostStatus::ReadyToView,
+            });
+
+        canister_data
+            .posts_index_sorted_by_yral_feed_score
+            .replace(&PostScoreIndexItemV1 {
+                post_id: 0,
+                publisher_canister_id: get_mock_user_alice_canister_id(),
+                score: 100,
+                is_nsfw: false,
+                created_at: Some(SystemTime::now()),
+                status: PostStatus::ReadyToView,
+            });
+        canister_data
+            .posts_index_sorted_by_yral_feed_score
             .replace(&PostScoreIndexItemV1 {
                 post_id: 1,
                 publisher_canister_id: get_mock_user_alice_canister_id(),
@@ -122,6 +151,14 @@ mod test {
         assert_eq!(
             canister_data
                 .posts_index_sorted_by_hot_or_not_feed_score_v1
+                .iter()
+                .count(),
+            2
+        );
+
+        assert_eq!(
+            canister_data
+                .posts_index_sorted_by_yral_feed_score
                 .iter()
                 .count(),
             2
@@ -139,6 +176,14 @@ mod test {
         assert_eq!(
             canister_data
                 .posts_index_sorted_by_hot_or_not_feed_score_v1
+                .iter()
+                .count(),
+            0
+        );
+
+        assert_eq!(
+            canister_data
+                .posts_index_sorted_by_yral_feed_score
                 .iter()
                 .count(),
             0
