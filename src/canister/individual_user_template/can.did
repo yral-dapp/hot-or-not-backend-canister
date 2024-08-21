@@ -235,7 +235,7 @@ type PostViewStatistics = record {
   average_watch_percentage : nat8;
   threshold_view_count : nat64;
 };
-type Result = variant { Ok : bool; Err };
+type Result = variant { Ok : bool; Err : text };
 type Result_1 = variant { Ok : nat64; Err : text };
 type Result_10 = variant { Ok : SessionType; Err : text };
 type Result_11 = variant { Ok : vec SuccessHistoryItemV1; Err : text };
