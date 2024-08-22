@@ -5,7 +5,9 @@ use shared_utils::{
     common::{
         types::{
             app_primitive_type::PostId,
-            utility_token::token_event::{HotOrNotOutcomePayoutEvent, HotOrNotOutcomePayoutEventV1, TokenEvent, TokenEventV1},
+            utility_token::token_event::{
+                HotOrNotOutcomePayoutEvent, HotOrNotOutcomePayoutEventV1, TokenEvent, TokenEventV1,
+            },
         },
         utils::system_time,
     },
@@ -80,8 +82,6 @@ fn receive_bet_winnings_when_distributed(post_id: PostId, outcome: BetOutcomeFor
     });
 }
 
-
-
 #[update]
 fn receive_bet_winnings_when_distributed_v1(post_id: PostId, outcome: BetOutcomeForBetMaker) {
     let post_creator_canister_id = ic_cdk::caller();
@@ -135,7 +135,7 @@ fn receive_bet_winnings_when_distributed_v1(post_id: PostId, outcome: BetOutcome
                 post_canister_id: post_creator_canister_id,
                 post_id,
                 slot_id: placed_bet_detail.slot_id,
-                room_id: placed_bet_detail.room_id,
+                room_id: placed_bet_detail.room_id as u16,
                 winnings_amount: match outcome {
                     BetOutcomeForBetMaker::Draw(amount) => amount,
                     BetOutcomeForBetMaker::Won(amount) => amount,

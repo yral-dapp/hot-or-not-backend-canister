@@ -1,8 +1,8 @@
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
-use std::borrow::Cow;
 use candid::{CandidType, Decode, Deserialize, Encode, Principal};
-use ic_stable_structures::{storable::Bound,Storable};
+use ic_stable_structures::{storable::Bound, Storable};
 use serde::Serialize;
+use std::borrow::Cow;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use crate::canister_specific::individual_user_template::types::hot_or_not::{
     BetDirection, BetOutcomeForBetMaker,
@@ -51,7 +51,6 @@ impl TokenEvent {
         }
     }
 }
-
 
 #[derive(Clone, CandidType, Deserialize, Debug, PartialEq, Eq, Serialize)]
 pub enum TokenEventV1 {
@@ -195,14 +194,14 @@ pub enum HotOrNotOutcomePayoutEventV1 {
         post_canister_id: Principal,
         post_id: u64,
         slot_id: NewSlotType,
-        room_id: u64,
+        room_id: u16,
         room_pot_total_amount: u64,
     },
     WinningsEarnedFromBet {
         post_canister_id: Principal,
         post_id: u64,
         slot_id: NewSlotType,
-        room_id: u64,
+        room_id: u16,
         event_outcome: BetOutcomeForBetMaker,
         winnings_amount: u64,
     },
@@ -221,7 +220,7 @@ impl From<HotOrNotOutcomePayoutEvent> for HotOrNotOutcomePayoutEventV1 {
                 post_canister_id,
                 post_id,
                 slot_id: NewSlotType::from(slot_id), // Assuming NewSlotType implements From<u8>
-                room_id,
+                room_id: room_id as u16,
                 room_pot_total_amount,
             },
             HotOrNotOutcomePayoutEvent::WinningsEarnedFromBet {
@@ -235,14 +234,13 @@ impl From<HotOrNotOutcomePayoutEvent> for HotOrNotOutcomePayoutEventV1 {
                 post_canister_id,
                 post_id,
                 slot_id: NewSlotType::from(slot_id), // Assuming NewSlotType implements From<u8>
-                room_id,
+                room_id: room_id as u16,
                 event_outcome,
                 winnings_amount,
             },
         }
     }
 }
-
 
 #[derive(
     Clone, Copy, Default, CandidType, Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Ord,
