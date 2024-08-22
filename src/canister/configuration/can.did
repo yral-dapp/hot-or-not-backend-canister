@@ -26,6 +26,7 @@ service : (ConfigurationInitArgs) -> {
   get_well_known_principal_value : (KnownPrincipalType) -> (
       opt principal,
     ) query;
+  return_cycles_to_platform_orchestrator_canister : () -> ();
   toggle_signups_enabled : () -> (Result);
   update_list_of_well_known_principals : (KnownPrincipalType, principal) -> (
       Result,

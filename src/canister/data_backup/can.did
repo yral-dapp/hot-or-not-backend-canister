@@ -219,6 +219,7 @@ service : (DataBackupInitArgs) -> {
       principal,
     ) -> ();
   restore_backed_up_data_to_individual_users_canister : (principal) -> (text);
+  return_cycles_to_platform_orchestrator_canister : () -> ();
   send_restore_data_back_to_user_index_canister : () -> ();
   update_user_add_role : (UserAccessRole, principal) -> ();
   update_user_remove_role : (UserAccessRole, principal) -> ();
