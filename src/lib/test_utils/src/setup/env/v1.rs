@@ -5,8 +5,7 @@ use ic_test_state_machine_client::{CanisterSettings, StateMachine};
 use shared_utils::{
     access_control::UserAccessRole,
     canister_specific::{
-        configuration::types::args::ConfigurationInitArgs,
-        data_backup::types::args::DataBackupInitArgs, post_cache::types::arg::PostCacheInitArgs,
+        post_cache::types::arg::PostCacheInitArgs,
         user_index::types::args::UserIndexInitArgs,
     },
     common::types::known_principal::{KnownPrincipalMap, KnownPrincipalType},
@@ -70,14 +69,6 @@ pub fn get_initialized_env_with_provisioned_known_canisters(
         get_global_super_admin_principal_id(),
     );
     known_principal_map_with_all_canisters.insert(
-        KnownPrincipalType::CanisterIdConfiguration,
-        canister_provisioner(CANISTER_INITIAL_CYCLES_FOR_NON_SPAWNING_CANISTERS),
-    );
-    known_principal_map_with_all_canisters.insert(
-        KnownPrincipalType::CanisterIdDataBackup,
-        canister_provisioner(CANISTER_INITIAL_CYCLES_FOR_NON_SPAWNING_CANISTERS),
-    );
-    known_principal_map_with_all_canisters.insert(
         KnownPrincipalType::CanisterIdPostCache,
         canister_provisioner(CANISTER_INITIAL_CYCLES_FOR_NON_SPAWNING_CANISTERS),
     );
@@ -101,28 +92,6 @@ pub fn get_initialized_env_with_provisioned_known_canisters(
         );
     };
 
-    canister_installer(
-        *known_principal_map_with_all_canisters
-            .get(&KnownPrincipalType::CanisterIdConfiguration)
-            .unwrap(),
-        get_canister_wasm(KnownPrincipalType::CanisterIdConfiguration),
-        candid::encode_one(ConfigurationInitArgs {
-            known_principal_ids: Some(known_principal_map_with_all_canisters.clone()),
-            ..Default::default()
-        })
-        .unwrap(),
-    );
-    canister_installer(
-        *known_principal_map_with_all_canisters
-            .get(&KnownPrincipalType::CanisterIdDataBackup)
-            .unwrap(),
-        get_canister_wasm(KnownPrincipalType::CanisterIdDataBackup),
-        candid::encode_one(DataBackupInitArgs {
-            known_principal_ids: Some(known_principal_map_with_all_canisters.clone()),
-            ..Default::default()
-        })
-        .unwrap(),
-    );
     canister_installer(
         *known_principal_map_with_all_canisters
             .get(&KnownPrincipalType::CanisterIdPostCache)
