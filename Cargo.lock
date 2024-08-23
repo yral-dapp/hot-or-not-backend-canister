@@ -244,17 +244,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "configuration"
-version = "0.1.0"
-dependencies = [
- "candid",
- "ic-cdk",
- "serde",
- "shared_utils",
- "test_utils",
-]
-
-[[package]]
 name = "core-foundation"
 version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -333,20 +322,6 @@ name = "data-encoding"
 version = "2.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e8566979429cf69b49a5c740c60791108e86440e8be149bbea4fe54d2c32d6e2"
-
-[[package]]
-name = "data_backup"
-version = "0.1.0"
-dependencies = [
- "candid",
- "ciborium",
- "ic-cdk",
- "ic-cdk-timers",
- "ic-stable-structures",
- "serde",
- "shared_utils",
- "test_utils",
-]
 
 [[package]]
 name = "debugid"
