@@ -24,8 +24,8 @@ fn get_current_list_of_all_well_known_principal_values_impl(
 #[cfg(test)]
 mod test {
     use test_utils::setup::test_constants::{
-        get_global_super_admin_principal_id, get_mock_canister_id_configuration,
-        get_mock_canister_id_data_backup, get_mock_canister_id_post_cache,
+        get_global_super_admin_principal_id,
+        get_mock_canister_id_post_cache,
         get_mock_canister_id_user_index,
     };
 
@@ -37,14 +37,6 @@ mod test {
         known_principal_ids.insert(
             KnownPrincipalType::UserIdGlobalSuperAdmin,
             get_global_super_admin_principal_id(),
-        );
-        known_principal_ids.insert(
-            KnownPrincipalType::CanisterIdConfiguration,
-            get_mock_canister_id_configuration(),
-        );
-        known_principal_ids.insert(
-            KnownPrincipalType::CanisterIdDataBackup,
-            get_mock_canister_id_data_backup(),
         );
         known_principal_ids.insert(
             KnownPrincipalType::CanisterIdPostCache,
@@ -60,20 +52,6 @@ mod test {
                 .contains(&(
                     KnownPrincipalType::UserIdGlobalSuperAdmin,
                     get_global_super_admin_principal_id()
-                ))
-        );
-        assert!(
-            get_current_list_of_all_well_known_principal_values_impl(&known_principal_ids)
-                .contains(&(
-                    KnownPrincipalType::CanisterIdConfiguration,
-                    get_mock_canister_id_configuration()
-                ))
-        );
-        assert!(
-            get_current_list_of_all_well_known_principal_values_impl(&known_principal_ids)
-                .contains(&(
-                    KnownPrincipalType::CanisterIdDataBackup,
-                    get_mock_canister_id_data_backup()
                 ))
         );
         assert!(
