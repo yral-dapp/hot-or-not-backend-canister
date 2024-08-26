@@ -23,7 +23,7 @@ use crate::CANISTER_DATA;
 fn post_upgrade() {
     restore_data_from_stable_memory();
     save_upgrade_args_to_memory();
-    // migrate_data();
+    migrate_data();
 
     reenqueue_timers_for_pending_bet_outcomes_v1();
 }
@@ -73,84 +73,84 @@ fn save_upgrade_args_to_memory() {
     });
 }
 
-// const DELAY_FOR_MIGRATING_DATA: Duration = Duration::from_secs(3);
-// fn migrate_data() {
-//     ic_cdk_timers::set_timer(DELAY_FOR_MIGRATING_DATA, || {
-//         ic_cdk::spawn(migrate_data_impl());
-//     });
-// }
+const DELAY_FOR_MIGRATING_DATA: Duration = Duration::from_secs(3);
+fn migrate_data() {
+    ic_cdk_timers::set_timer(DELAY_FOR_MIGRATING_DATA, || {
+        ic_cdk::spawn(migrate_data_impl());
+    });
+}
 
-// async fn migrate_data_impl() {
-//     // Migrate Slot Details Map
-//     CANISTER_DATA.with(|canister_data_ref_cell| {
-//         let mut canister_data = canister_data_ref_cell.borrow_mut();
-//         let old_slot_details_map = canister_data
-//             .slot_details_map
-//             .iter()
-//             .map(|(k, v)| (k, v.clone()))
-//             .collect::<std::collections::BTreeMap<_, _>>();
+async fn migrate_data_impl() {
+    // Migrate Slot Details Map
+    CANISTER_DATA.with(|canister_data_ref_cell| {
+        let mut canister_data = canister_data_ref_cell.borrow_mut();
+        let old_slot_details_map = canister_data
+            .slot_details_map
+            .iter()
+            .map(|(k, v)| (k, v.clone()))
+            .collect::<std::collections::BTreeMap<_, _>>();
 
-//         let new_slot_details_map = &mut canister_data.slot_details_map_v1;
+        let new_slot_details_map = &mut canister_data.slot_details_map_v1;
 
-//         for ((post_id, old_slot_id), old_slot_details) in old_slot_details_map.iter() {
-//             let new_slot_id: NewSlotType = (*old_slot_id).into();
-//             new_slot_details_map.insert(((*post_id), new_slot_id), old_slot_details.clone());
-//         }
-//     });
+        for ((post_id, old_slot_id), old_slot_details) in old_slot_details_map.iter() {
+            let new_slot_id: NewSlotType = (*old_slot_id).into();
+            new_slot_details_map.insert(((*post_id), new_slot_id), old_slot_details.clone());
+        }
+    });
 
-//     // Migrate Room Details Map
-//     CANISTER_DATA.with(|canister_data_ref_cell| {
-//         let mut canister_data = canister_data_ref_cell.borrow_mut();
-//         let old_room_details_map = canister_data
-//             .room_details_map
-//             .iter()
-//             .map(|(k, v)| (k, v.clone()))
-//             .collect::<std::collections::BTreeMap<_, _>>();
-//         let new_room_details_map = &mut canister_data.room_details_map_v1;
+    // Migrate Room Details Map
+    CANISTER_DATA.with(|canister_data_ref_cell| {
+        let mut canister_data = canister_data_ref_cell.borrow_mut();
+        let old_room_details_map = canister_data
+            .room_details_map
+            .iter()
+            .map(|(k, v)| (k, v.clone()))
+            .collect::<std::collections::BTreeMap<_, _>>();
+        let new_room_details_map = &mut canister_data.room_details_map_v1;
 
-//         for (old_global_room_id, room_details) in old_room_details_map.iter() {
-//             let new_global_room_id: GlobalRoomIdV1 = (*old_global_room_id).into();
-//             new_room_details_map.insert(new_global_room_id, room_details.clone());
-//         }
-//     });
+        for (old_global_room_id, room_details) in old_room_details_map.iter() {
+            let new_global_room_id: GlobalRoomIdV1 = (*old_global_room_id).into();
+            new_room_details_map.insert(new_global_room_id, room_details.clone());
+        }
+    });
 
-//     // Migrate Bet Details Map
-//     CANISTER_DATA.with(|canister_data_ref_cell| {
-//         let mut canister_data = canister_data_ref_cell.borrow_mut();
-//         let old_bet_details_map = canister_data
-//             .bet_details_map
-//             .iter()
-//             .map(|(k, v)| (k, v.clone()))
-//             .collect::<std::collections::BTreeMap<_, _>>();
-//         let new_bet_details_map = &mut canister_data.bet_details_map_v1;
+    // Migrate Bet Details Map
+    CANISTER_DATA.with(|canister_data_ref_cell| {
+        let mut canister_data = canister_data_ref_cell.borrow_mut();
+        let old_bet_details_map = canister_data
+            .bet_details_map
+            .iter()
+            .map(|(k, v)| (k, v.clone()))
+            .collect::<std::collections::BTreeMap<_, _>>();
+        let new_bet_details_map = &mut canister_data.bet_details_map_v1;
 
-//         for (old_global_bet_id, bet_details) in old_bet_details_map.iter() {
-//             let new_global_bet_id: GlobalBetIdV1 = old_global_bet_id.clone().into();
-//             new_bet_details_map.insert(new_global_bet_id, bet_details.clone());
-//         }
-//     });
+        for (old_global_bet_id, bet_details) in old_bet_details_map.iter() {
+            let new_global_bet_id: GlobalBetIdV1 = old_global_bet_id.clone().into();
+            new_bet_details_map.insert(new_global_bet_id, bet_details.clone());
+        }
+    });
 
-//     // Migrate all_hot_or_not_bets_placed
-//     CANISTER_DATA.with(|canister_data_ref_cell| {
-//         let mut canister_data = canister_data_ref_cell.borrow_mut();
-//         let old_hot_or_not_bets = canister_data.all_hot_or_not_bets_placed.clone();
-//         // iter().map(|(k, v)| (k, v.clone())).collect::<std::collections::BTreeMap<_, _>>();
-//         // let new_hot_or_not_bets = &mut canister_data.all_hot_or_not_bets_placed_v1;
+    // Migrate all_hot_or_not_bets_placed
+    CANISTER_DATA.with(|canister_data_ref_cell| {
+        let mut canister_data = canister_data_ref_cell.borrow_mut();
+        let old_hot_or_not_bets = canister_data.all_hot_or_not_bets_placed.clone();
+        // iter().map(|(k, v)| (k, v.clone())).collect::<std::collections::BTreeMap<_, _>>();
+        // let new_hot_or_not_bets = &mut canister_data.all_hot_or_not_bets_placed_v1;
 
-//         for ((canister_id, post_id), placed_bet_detail) in old_hot_or_not_bets.iter() {
-//             let placed_bet_detail_v1: PlacedBetDetailV1 = placed_bet_detail.clone().into();
-//             // new_hot_or_not_bets.insert((*canister_id, *post_id), placed_bet_detail_v1);
-//             canister_data
-//                 .all_hot_or_not_bets_placed_v1
-//                 .insert((*canister_id, *post_id), placed_bet_detail_v1);
-//         }
-//     });
+        for ((canister_id, post_id), placed_bet_detail) in old_hot_or_not_bets.iter() {
+            let placed_bet_detail_v1: PlacedBetDetailV1 = placed_bet_detail.clone().into();
+            // new_hot_or_not_bets.insert((*canister_id, *post_id), placed_bet_detail_v1);
+            canister_data
+                .all_hot_or_not_bets_placed_v1
+                .insert((*canister_id, *post_id), placed_bet_detail_v1);
+        }
+    });
 
-//     // Assuming `TokenBalanceV1` implements `From<TokenBalance>`
-//     CANISTER_DATA.with(|canister_data_ref_cell| {
-//         let mut canister_data = canister_data_ref_cell.borrow_mut();
+    // Assuming `TokenBalanceV1` implements `From<TokenBalance>`
+    CANISTER_DATA.with(|canister_data_ref_cell| {
+        let mut canister_data = canister_data_ref_cell.borrow_mut();
 
-//         // Migrate my_token_balance to my_token_balance_v1
-//         canister_data.my_token_balance_v1 = canister_data.my_token_balance.clone().into();
-//     });
-// }
+        // Migrate my_token_balance to my_token_balance_v1
+        canister_data.my_token_balance_v1 = canister_data.my_token_balance.clone().into();
+    });
+}
