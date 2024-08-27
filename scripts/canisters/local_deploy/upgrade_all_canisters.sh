@@ -23,8 +23,6 @@ dfx build individual_user_template
 gzip -f -1 ./target/wasm32-unknown-unknown/release/individual_user_template.wasm
 dfx build configuration
 gzip -f -1 ./target/wasm32-unknown-unknown/release/configuration.wasm
-dfx build data_backup
-gzip -f -1 ./target/wasm32-unknown-unknown/release/data_backup.wasm
 dfx build user_index
 gzip -f -1 ./target/wasm32-unknown-unknown/release/user_index.wasm
 dfx build post_cache
@@ -38,7 +36,6 @@ then
 fi
 
 dfx canister install configuration --mode upgrade --argument "(record {})"
-dfx canister install data_backup --mode upgrade --argument "(record {})"
 dfx canister install post_cache --mode upgrade --argument "(record {
     version= \"v1.1.0\"
 })"
