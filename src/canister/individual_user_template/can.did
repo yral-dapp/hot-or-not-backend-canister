@@ -326,14 +326,6 @@ type UserCanisterDetails = record {
   user_canister_id : principal;
   profile_owner : principal;
 };
-type UserProfile = record {
-  unique_user_name : opt text;
-  profile_picture_url : opt text;
-  display_name : opt text;
-  principal_id : opt principal;
-  profile_stats : UserProfileGlobalStats;
-  referrer_details : opt UserCanisterDetails;
-};
 type UserProfileDetailsForFrontend = record {
   unique_user_name : opt text;
   lifetime_earnings : nat64;
@@ -375,7 +367,6 @@ type WatchHistoryItem = record {
 service : (IndividualUserTemplateInitArgs) -> {
   add_device_id : (text) -> (Result);
   add_post_v2 : (PostDetailsFromFrontend) -> (Result_1);
-  backup_data_to_backup_canister : (principal, principal) -> ();
   bet_on_currently_viewing_post : (PlaceBetArg) -> (Result_2);
   check_and_update_scores_and_share_with_post_cache_if_difference_beyond_threshold : (
       vec nat64,
@@ -438,16 +429,6 @@ service : (IndividualUserTemplateInitArgs) -> {
   receive_bet_from_bet_makers_canister : (PlaceBetArg, principal) -> (Result_2);
   receive_bet_winnings_when_distributed : (nat64, BetOutcomeForBetMaker) -> ();
   receive_data_from_hotornot : (principal, nat64, vec Post) -> (Result_15);
-  receive_my_created_posts_from_data_backup_canister : (vec Post) -> ();
-  receive_my_profile_from_data_backup_canister : (UserProfile) -> ();
-  receive_my_utility_token_balance_from_data_backup_canister : (nat64) -> ();
-  receive_my_utility_token_transaction_history_from_data_backup_canister : (
-      vec record { nat64; TokenEvent },
-    ) -> ();
-  receive_principals_i_follow_from_data_backup_canister : (vec principal) -> ();
-  receive_principals_that_follow_me_from_data_backup_canister : (
-      vec principal,
-    ) -> ();
   return_cycles_to_user_index_canister : (opt nat) -> ();
   save_snapshot_json : () -> (nat32);
   transfer_tokens_and_posts : (principal, principal) -> (Result_15);
