@@ -4,10 +4,7 @@ use candid::Principal;
 use ic_cdk::api::management_canister::main::CanisterInstallMode;
 use ic_test_state_machine_client::{CanisterSettings, WasmResult};
 use shared_utils::{
-    canister_specific::{
-        configuration::types::args::ConfigurationInitArgs,
-        data_backup::types::args::DataBackupInitArgs,
-    },
+    canister_specific::configuration::types::args::ConfigurationInitArgs,
     common::types::known_principal::{KnownPrincipalMap, KnownPrincipalType},
 };
 use test_utils::setup::{
@@ -44,10 +41,6 @@ fn on_every_upgrade_fetch_the_latest_list_of_well_known_principals_and_update_ca
     );
     known_principal_map_with_all_canisters.insert(
         KnownPrincipalType::CanisterIdConfiguration,
-        canister_provisioner(CANISTER_INITIAL_CYCLES_FOR_NON_SPAWNING_CANISTERS),
-    );
-    known_principal_map_with_all_canisters.insert(
-        KnownPrincipalType::CanisterIdDataBackup,
         canister_provisioner(CANISTER_INITIAL_CYCLES_FOR_NON_SPAWNING_CANISTERS),
     );
     known_principal_map_with_all_canisters.insert(
@@ -144,79 +137,4 @@ fn on_every_upgrade_fetch_the_latest_list_of_well_known_principals_and_update_ca
         .expect("🛑 Failed to query the user index canister id from the configuration canister");
 
     assert!(user_index_canister_id_from_configuration_canister.is_some());
-
-    canister_installer(
-        *known_principal_map_with_all_canisters
-            .get(&KnownPrincipalType::CanisterIdDataBackup)
-            .unwrap(),
-        get_canister_wasm(KnownPrincipalType::CanisterIdDataBackup),
-        candid::encode_one(DataBackupInitArgs {
-            known_principal_ids: Some(incomplete_known_principal_map.clone()),
-            ..Default::default()
-        })
-        .unwrap(),
-        CanisterInstallMode::Install,
-    );
-
-    let user_index_canister_id_from_data_backup_canister: Option<Principal> = state_machine
-        .query_call(
-            *known_principal_map_with_all_canisters
-                .get(&KnownPrincipalType::CanisterIdDataBackup)
-                .unwrap(),
-            Principal::anonymous(),
-            "get_well_known_principal_value",
-            candid::encode_one(KnownPrincipalType::CanisterIdUserIndex).unwrap(),
-        )
-        .map(|reply_payload| {
-            let user_index_canister_id_from_configuration_canister: Option<Principal> =
-                match reply_payload {
-                    WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                    _ => panic!("\n🛑 get_well_known_principal_value failed\n"),
-                };
-            user_index_canister_id_from_configuration_canister
-        })
-        .expect("🛑 Failed to query the user index canister id from the configuration canister");
-
-    // * Freshly installed data backup canister does not have canister id of user index canister
-    assert!(user_index_canister_id_from_data_backup_canister.is_none());
-
-    // * Upgrade data backup canister
-    state_machine
-        .upgrade_canister(
-            *known_principal_map_with_all_canisters
-                .get(&KnownPrincipalType::CanisterIdDataBackup)
-                .unwrap(),
-            get_canister_wasm(KnownPrincipalType::CanisterIdDataBackup),
-            candid::encode_one(DataBackupInitArgs {
-                ..Default::default()
-            })
-            .unwrap(),
-            Some(get_global_super_admin_principal_id()),
-        )
-        .ok();
-
-    state_machine.advance_time(Duration::from_secs(1));
-    state_machine.tick();
-
-    let user_index_canister_id_from_data_backup_canister: Option<Principal> = state_machine
-        .query_call(
-            *known_principal_map_with_all_canisters
-                .get(&KnownPrincipalType::CanisterIdDataBackup)
-                .unwrap(),
-            Principal::anonymous(),
-            "get_well_known_principal_value",
-            candid::encode_one(KnownPrincipalType::CanisterIdUserIndex).unwrap(),
-        )
-        .map(|reply_payload| {
-            let user_index_canister_id_from_configuration_canister: Option<Principal> =
-                match reply_payload {
-                    WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                    _ => panic!("\n🛑 get_well_known_principal_value failed\n"),
-                };
-            user_index_canister_id_from_configuration_canister
-        })
-        .expect("🛑 Failed to query the user index canister id from the configuration canister");
-
-    // * Upgrade data backup canister should have fetched canister id of user index canister from configuration canister
-    assert!(user_index_canister_id_from_data_backup_canister.is_some());
 }

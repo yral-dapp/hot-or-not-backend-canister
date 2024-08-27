@@ -127,12 +127,6 @@ pub fn get_canister_wasm(canister_type: KnownPrincipalType) -> Vec<u8> {
                 .unwrap_or_else(|_| panic!("Failed to open file: {}", file_path.to_str().unwrap()));
             file.read_to_end(&mut bytes).expect("Failed to read file");
         }
-        KnownPrincipalType::CanisterIdDataBackup => {
-            file_path.push("data_backup.wasm.gz");
-            let mut file = File::open(&file_path)
-                .unwrap_or_else(|_| panic!("Failed to open file: {}", file_path.to_str().unwrap()));
-            file.read_to_end(&mut bytes).expect("Failed to read file");
-        }
         KnownPrincipalType::CanisterIdPostCache => {
             file_path.push("post_cache.wasm.gz");
             let mut file = File::open(&file_path)

@@ -7,7 +7,6 @@ members = [
     "src/canister/user_index",
     "src/canister/platform_orchestrator",
     "src/canister/configuration",
-    "src/canister/data_backup",
     "src/lib/integration_tests",
     "src/lib/shared_utils",
     "src/lib/test_utils",
