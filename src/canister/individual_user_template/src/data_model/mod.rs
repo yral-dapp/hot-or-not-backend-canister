@@ -72,6 +72,7 @@ pub struct CanisterData {
     // #[serde(skip)]
     pub all_hot_or_not_bets_placed: BTreeMap<(CanisterId, PostId), PlacedBetDetail>,
 
+    #[serde(default)]
     pub all_hot_or_not_bets_placed_v1: BTreeMap<(CanisterId, PostId), PlacedBetDetailV1>,
 
     pub configuration: IndividualUserConfiguration,
@@ -80,6 +81,7 @@ pub struct CanisterData {
     // #[serde(skip)]
     pub my_token_balance: TokenBalance,
 
+    #[serde(default)]
     pub my_token_balance_v1: TokenBalanceV1,
     pub posts_index_sorted_by_home_feed_score: PostScoreIndex,
     pub posts_index_sorted_by_hot_or_not_feed_score: PostScoreIndex,
