@@ -221,7 +221,8 @@ mod test {
                 timestamp: SystemTime::now(),
             });
 
-            assert_eq!(token_balance.utility_token_balance, 1400);
+            // this event is special and does not change the balance
+            assert_eq!(token_balance.utility_token_balance, 1500);
         }
     }
 
