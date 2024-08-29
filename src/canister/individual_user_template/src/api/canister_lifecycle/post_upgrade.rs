@@ -68,8 +68,8 @@ fn save_upgrade_args_to_memory() {
 fn migrate_excessive_tokens(){
     CANISTER_DATA.with(|canister_data_ref_cell| {
         let mut canister_data_ref_cell = canister_data_ref_cell.borrow_mut();
-        if canister_data_ref_cell.utility_token_balance > 18_00_00_00_00_00_00_00_00_00 {
-            canister_data_ref_cell.utility_token_balance = 1000;
+        if canister_data_ref_cell.my_token_balance.utility_token_balance > 18_00_00_00_00_00_00_00_00_00 {
+            canister_data_ref_cell.my_token_balance.utility_token_balance = 1000;
         }
     });
 }
