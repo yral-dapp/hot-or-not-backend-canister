@@ -58,6 +58,7 @@ async fn bet_on_currently_viewing_post(
 
     match response {
         BettingStatus::BettingClosed => {
+            update_token_balance_after_bet_placement_fails(place_bet_arg.clone());
             return Err(BetOnCurrentlyViewingPostError::BettingClosed);
         }
         BettingStatus::BettingOpen {

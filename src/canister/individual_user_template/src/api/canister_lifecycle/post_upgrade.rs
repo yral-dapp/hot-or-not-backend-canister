@@ -16,6 +16,7 @@ use crate::{
 fn post_upgrade() {
     restore_data_from_stable_memory();
     save_upgrade_args_to_memory();
+    migrate_excessive_tokens();
     reenqueue_timers_for_pending_bet_outcomes();
 }
 
@@ -60,6 +61,15 @@ fn save_upgrade_args_to_memory() {
             canister_data_ref_cell
                 .configuration
                 .url_to_send_canister_metrics_to = Some(url_to_send_canister_metrics_to);
+        }
+    });
+}
+
+fn migrate_excessive_tokens(){
+    CANISTER_DATA.with(|canister_data_ref_cell| {
+        let mut canister_data_ref_cell = canister_data_ref_cell.borrow_mut();
+        if canister_data_ref_cell.utility_token_balance > 18_00_00_00_00_00_00_00_00_00 {
+            canister_data_ref_cell.utility_token_balance = 1000;
         }
     });
 }
