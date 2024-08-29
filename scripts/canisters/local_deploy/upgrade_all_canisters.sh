@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+scripts/candid_generator.sh
+
 usage() {
   printf "Usage: \n[-s Skip test] \n[-h Display help] \n";
   exit 0;
