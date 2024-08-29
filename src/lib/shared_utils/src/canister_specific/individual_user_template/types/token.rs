@@ -85,11 +85,11 @@ impl TokenBalance {
     }
 
     // this is being done to handle concurrency issues inside canister
-    fn adjust_balance_pre_bet(&mut self, bet_amount: u64) {
+    pub fn adjust_balance_pre_bet(&mut self, bet_amount: u64) {
         self.utility_token_balance -= bet_amount;
     }
 
-    fn adjust_balance_for_failed_bet_placement(&mut self, bet_amount: u64) {
+    pub fn adjust_balance_for_failed_bet_placement(&mut self, bet_amount: u64) {
         self.utility_token_balance += bet_amount;
     }
 }
