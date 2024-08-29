@@ -66,7 +66,7 @@ fn on_every_upgrade_fetch_the_latest_list_of_well_known_principals_and_update_ca
                     Some(get_global_super_admin_principal_id()),
                 );
             }
-            CanisterInstallMode::Upgrade => {
+            CanisterInstallMode::Upgrade(_) => {
                 state_machine
                     .upgrade_canister(
                         canister_id,
@@ -114,7 +114,7 @@ fn on_every_upgrade_fetch_the_latest_list_of_well_known_principals_and_update_ca
             ..Default::default()
         })
         .unwrap(),
-        CanisterInstallMode::Upgrade,
+        CanisterInstallMode::Upgrade(None),
     );
 
     let user_index_canister_id_from_configuration_canister: Option<Principal> = state_machine

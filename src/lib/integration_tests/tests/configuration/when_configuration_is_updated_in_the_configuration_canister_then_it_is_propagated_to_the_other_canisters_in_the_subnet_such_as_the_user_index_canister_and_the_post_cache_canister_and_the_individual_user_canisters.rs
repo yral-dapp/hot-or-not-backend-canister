@@ -65,7 +65,7 @@ fn when_configuration_is_updated_in_the_configuration_canister_then_it_is_propag
                     Some(get_global_super_admin_principal_id()),
                 );
             }
-            CanisterInstallMode::Upgrade => {
+            CanisterInstallMode::Upgrade(_) => {
                 state_machine
                     .upgrade_canister(
                         canister_id,
