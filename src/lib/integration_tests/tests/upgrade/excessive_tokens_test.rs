@@ -21,14 +21,12 @@ use test_utils::setup::test_constants::{
 
 // use shared_utils::canister_specific::individual_user_template::types::arg::update_token_balance_before_bet_happens;
 
-
 const OLD_INDIVIDUAL_TEMPLATE_WASM_PATH: &str =
     "../../../target/wasm32-unknown-unknown/release/individual_user_template_main_branch.wasm.gz";
 const INDIVIDUAL_TEMPLATE_WASM_PATH: &str =
     "../../../target/wasm32-unknown-unknown/release/individual_user_template.wasm.gz";
 const POST_CACHE_WASM_PATH: &str =
     "../../../target/wasm32-unknown-unknown/release/post_cache.wasm.gz";
-
 
 fn old_individual_template_canister_wasm() -> Vec<u8> {
     std::fs::read(OLD_INDIVIDUAL_TEMPLATE_WASM_PATH).unwrap()
@@ -42,15 +40,14 @@ fn post_cache_canister_wasm() -> Vec<u8> {
     std::fs::read(POST_CACHE_WASM_PATH).unwrap()
 }
 
-
-// #[cfg(feature = "excessive_tokens")]
+#[cfg(feature = "excessive_tokens")]
 #[test]
 fn test_migrate_excessive_tokens() {
     let pic = PocketIc::new();
 
     let alice_principal_id = get_mock_user_alice_principal_id();
     let admin_principal_id = get_mock_user_charlie_principal_id();
-    
+
     let post_cache_canister_id = pic.create_canister();
     pic.add_cycles(post_cache_canister_id, 2_000_000_000_000);
 
@@ -103,7 +100,6 @@ fn test_migrate_excessive_tokens() {
         None,
     );
 
-
     // Topup Alice's account
     let reward = pic.update_call(
         alice_individual_template_canister_id,
@@ -112,23 +108,21 @@ fn test_migrate_excessive_tokens() {
         encode_one(()).unwrap(),
     );
 
-    // from main branch, deposit many tokens, 
+    // from main branch, deposit many tokens,
 
     // this a hack to increase the token balance beyond the limit.
     let bet_amount = 18_00_00_00_00_00_00_00_00_00 + 1 as u64;
 
     let _update = pic
-    .update_call(
-        alice_individual_template_canister_id,
-        alice_principal_id,
-        "update_token_balance_before_bet_happens",
-        encode_one(bet_amount).unwrap(),
-    ).map(|reply_payload| {
-        ic_cdk::println!("{reply_payload:?}")
-    });
+        .update_call(
+            alice_individual_template_canister_id,
+            alice_principal_id,
+            "update_token_balance_before_bet_happens",
+            encode_one(bet_amount).unwrap(),
+        )
+        .map(|reply_payload| ic_cdk::println!("{reply_payload:?}"));
 
-
-    // load new wasm 
+    // load new wasm
     // Upgrade the individual template canister to the new version
 
     let individual_template_wasm_bytes = individual_template_canister_wasm();
@@ -144,6 +138,11 @@ fn test_migrate_excessive_tokens() {
     };
     let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
 
+    pic.advance_time(Duration::from_secs(20));
+    pic.tick();
+    pic.tick();
+    pic.tick();
+
     pic.upgrade_canister(
         alice_individual_template_canister_id,
         individual_template_wasm_bytes.clone(),
@@ -155,22 +154,22 @@ fn test_migrate_excessive_tokens() {
     // assert the result from the post ugprade hook.
 
     let utility_token = pic
-    .update_call(
-        alice_individual_template_canister_id,
-        alice_principal_id,
-        "get_utility_token_balance",
-        candid::encode_one(()).unwrap(),
-    ).map(|reply_payload| {
-        let balance: u64 = match reply_payload {
-            WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-            _ => panic!("\n🛑 get_utility_token_balance failed\n"),
-        };
-        balance
-    })
-    .unwrap();
+        .update_call(
+            alice_individual_template_canister_id,
+            alice_principal_id,
+            "get_utility_token_balance",
+            candid::encode_one(()).unwrap(),
+        )
+        .map(|reply_payload| {
+            let balance: u64 = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 get_utility_token_balance failed\n"),
+            };
+            balance
+        })
+        .unwrap();
 
     ic_cdk::println!("UTILITY TOKENS NOW ARE: {utility_token}");
-
 }
 
 #[cfg(feature = "excessive_tokens")]
