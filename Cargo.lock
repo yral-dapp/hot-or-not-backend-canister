@@ -250,17 +250,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "configuration"
-version = "0.1.0"
-dependencies = [
- "candid",
- "ic-cdk 0.13.5",
- "serde",
- "shared_utils",
- "test_utils",
-]
-
-[[package]]
 name = "core-foundation"
 version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
