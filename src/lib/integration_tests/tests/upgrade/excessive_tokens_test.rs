@@ -12,7 +12,7 @@ use shared_utils::{
         },
         post_cache::types::arg::PostCacheInitArgs,
     },
-    common::types::known_principal::KnownPrincipalType,
+    common::types::{known_principal::KnownPrincipalType, utility_token},
 };
 use test_utils::setup::test_constants::{
     get_mock_user_alice_principal_id, get_mock_user_bob_principal_id,
@@ -117,7 +117,7 @@ fn test_migrate_excessive_tokens() {
     // this a hack to increase the token balance beyond the limit.
     let bet_amount = 18_00_00_00_00_00_00_00_00_00 + 1 as u64;
 
-    let bet_status = pic
+    let _update = pic
     .update_call(
         alice_individual_template_canister_id,
         alice_principal_id,
@@ -129,7 +129,47 @@ fn test_migrate_excessive_tokens() {
 
 
     // load new wasm 
+    // Upgrade the individual template canister to the new version
+
+    let individual_template_wasm_bytes = individual_template_canister_wasm();
+
+    // Alice canister
+
+    let individual_template_args = IndividualUserTemplateInitArgs {
+        known_principal_ids: Some(known_prinicipal_values.clone()),
+        profile_owner: Some(alice_principal_id),
+        upgrade_version_number: None,
+        url_to_send_canister_metrics_to: None,
+        version: "1".to_string(),
+    };
+    let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
+
+    pic.upgrade_canister(
+        alice_individual_template_canister_id,
+        individual_template_wasm_bytes.clone(),
+        individual_template_args_bytes,
+        None,
+    )
+    .unwrap();
+
     // assert the result from the post ugprade hook.
+
+    let utility_token = pic
+    .update_call(
+        alice_individual_template_canister_id,
+        alice_principal_id,
+        "get_utility_token_balance",
+        candid::encode_one(()).unwrap(),
+    ).map(|reply_payload| {
+        let balance: u64 = match reply_payload {
+            WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+            _ => panic!("\n🛑 get_utility_token_balance failed\n"),
+        };
+        balance
+    })
+    .unwrap();
+
+    ic_cdk::println!("UTILITY TOKENS NOW ARE: {utility_token}");
 
 }
 
