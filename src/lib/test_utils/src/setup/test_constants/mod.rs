@@ -83,20 +83,6 @@ pub fn get_user_index_canister_wasm() -> Vec<u8> {
     bytes
 }
 
-pub fn get_configuration_canister_wasm() -> Vec<u8> {
-    let mut file_path = PathBuf::from(
-        std::env::var("CARGO_MANIFEST_DIR")
-            .expect("Failed to read CARGO_MANIFEST_DIR env variable"),
-    );
-    file_path.push("../../../../target/wasm32-unknown-unknown/release/configuration.wasm.gz");
-
-    let mut file = File::open(&file_path)
-        .unwrap_or_else(|_| panic!("Failed to open file: {}", file_path.to_str().unwrap()));
-    let mut bytes = Vec::new();
-    file.read_to_end(&mut bytes).expect("Failed to read file");
-    bytes
-}
-
 pub fn get_post_cache_canister_wasm() -> Vec<u8> {
     let mut file_path = PathBuf::from(
         std::env::var("CARGO_MANIFEST_DIR")
@@ -121,12 +107,6 @@ pub fn get_canister_wasm(canister_type: KnownPrincipalType) -> Vec<u8> {
     file_path.push("../../../target/wasm32-unknown-unknown/release");
 
     match canister_type {
-        KnownPrincipalType::CanisterIdConfiguration => {
-            file_path.push("configuration.wasm.gz");
-            let mut file = File::open(&file_path)
-                .unwrap_or_else(|_| panic!("Failed to open file: {}", file_path.to_str().unwrap()));
-            file.read_to_end(&mut bytes).expect("Failed to read file");
-        }
         KnownPrincipalType::CanisterIdPostCache => {
             file_path.push("post_cache.wasm.gz");
             let mut file = File::open(&file_path)

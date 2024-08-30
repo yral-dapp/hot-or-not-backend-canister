@@ -51,7 +51,7 @@ pub fn send_canister_metrics() {
 mod test {
     use shared_utils::common::types::known_principal::{KnownPrincipalMap, KnownPrincipalType};
     use test_utils::setup::test_constants::{
-        get_global_super_admin_principal_id, get_mock_canister_id_configuration,
+        get_global_super_admin_principal_id,
         get_mock_canister_id_user_index, get_mock_user_alice_principal_id,
     };
 
@@ -64,10 +64,6 @@ mod test {
         known_principal_ids.insert(
             KnownPrincipalType::UserIdGlobalSuperAdmin,
             get_global_super_admin_principal_id(),
-        );
-        known_principal_ids.insert(
-            KnownPrincipalType::CanisterIdConfiguration,
-            get_mock_canister_id_configuration(),
         );
         known_principal_ids.insert(
             KnownPrincipalType::CanisterIdUserIndex,
@@ -95,12 +91,6 @@ mod test {
                 .get(&KnownPrincipalType::UserIdGlobalSuperAdmin)
                 .unwrap(),
             &get_global_super_admin_principal_id()
-        );
-        assert_eq!(
-            data.known_principal_ids
-                .get(&KnownPrincipalType::CanisterIdConfiguration)
-                .unwrap(),
-            &get_mock_canister_id_configuration()
         );
         assert_eq!(
             data.known_principal_ids
