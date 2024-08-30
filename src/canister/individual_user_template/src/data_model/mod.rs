@@ -150,6 +150,7 @@ impl Default for CanisterData {
             watch_history: _default_watch_history(),
             success_history: _default_success_history_v1(),
             device_identities: Vec::new(),
+            ml_feed_cache: Vec::new(),
         }
     }
 }
