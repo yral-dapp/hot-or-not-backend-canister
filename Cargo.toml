@@ -6,7 +6,6 @@ members = [
     "src/canister/post_cache/",
     "src/canister/user_index",
     "src/canister/platform_orchestrator",
-    "src/canister/configuration",
     "src/lib/integration_tests",
     "src/lib/shared_utils",
     "src/lib/test_utils",
