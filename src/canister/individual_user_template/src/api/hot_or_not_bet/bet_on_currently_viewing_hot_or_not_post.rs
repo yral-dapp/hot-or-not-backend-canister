@@ -103,7 +103,7 @@ async fn bet_on_currently_viewing_post(
 }
 
 // this #[update] is for local testing only see: src/lib/integration_tests/tests/upgrade/excessive_tokens_test.rs
-#[update]
+// #[update]
 pub fn update_token_balance_before_bet_happens(  bet_amount: u64) {
     CANISTER_DATA.with_borrow_mut(|canister_data| {
         canister_data.my_token_balance.adjust_balance_pre_bet(bet_amount);
