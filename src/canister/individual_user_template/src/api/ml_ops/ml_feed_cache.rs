@@ -120,6 +120,11 @@ mod test {
 
         assert_eq!(result.len(), 0);
 
+        // get the 1000 items
+        let result = get_ml_feed_cache_paginated_impl(100, 1000, &canister_data);
+
+        assert_eq!(result.len(), 100);
+
         // get out of bound
         let result = get_ml_feed_cache_paginated_impl(2000, 200, &canister_data);
 
