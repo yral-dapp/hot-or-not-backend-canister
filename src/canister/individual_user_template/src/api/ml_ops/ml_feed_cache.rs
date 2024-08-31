@@ -12,7 +12,7 @@ use shared_utils::{
 fn update_ml_feed_cache(ml_feed_cache_items: Vec<MLFeedCacheItem>) -> Result<String, String> {
     update_last_canister_functionality_access_time();
 
-    CANISTER_DATA.with(|canister_data| {
+    let _ = CANISTER_DATA.with(|canister_data| {
         let mut canister_data = canister_data.borrow_mut();
 
         update_ml_feed_cache_impl(ml_feed_cache_items, &mut canister_data)
