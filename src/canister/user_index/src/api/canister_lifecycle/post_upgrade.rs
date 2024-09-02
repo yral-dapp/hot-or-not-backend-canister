@@ -1,5 +1,6 @@
 use ciborium::de;
 
+use ic_cdk::api::call::ArgDecoderConfig;
 use ic_cdk_macros::post_upgrade;
 use ic_stable_structures::Memory;
 use shared_utils::{
@@ -18,7 +19,8 @@ fn post_upgrade() {
 }
 
 fn update_version_from_args() {
-    let (upgrade_args,) = ic_cdk::api::call::arg_data::<(UserIndexInitArgs,)>();
+    let (upgrade_args,) =
+        ic_cdk::api::call::arg_data::<(UserIndexInitArgs,)>(ArgDecoderConfig::default());
     CANISTER_DATA.with(|canister_data_ref| {
         let last_upgrade_status = canister_data_ref.borrow().last_run_upgrade_status.clone();
         let upgrade_status = UpgradeStatus {
