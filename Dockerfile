@@ -4,6 +4,10 @@ WORKDIR /app
 
 COPY . .
 
+RUN apt-get install wget --no-install-recommends
+
+RUN dfx extension install sns
+
 RUN dfx identity import --storage-mode=plaintext admin ./scripts/canisters/docker/local-admin.pem
 RUN dfx identity use admin
 

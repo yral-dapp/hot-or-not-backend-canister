@@ -59,6 +59,11 @@ type CfParticipant = record {
   hotkey_principal : text;
   cf_neurons : vec CfNeuron;
 };
+type Committed = record {
+  total_direct_participation_icp_e8s : opt nat64;
+  total_neurons_fund_participation_icp_e8s : opt nat64;
+  sns_governance_canister_id : opt principal;
+};
 type Countries = record { iso_codes : vec text };
 type DappCanisters = record { canisters : vec Canister };
 type DeployedCdaoCanisters = record {
@@ -106,6 +111,7 @@ type GetPostsOfUserProfileError = variant {
   InvalidBoundsPassed;
   ExceededMaxNumberOfItemsAllowedInOneRequest;
 };
+type GovernanceError = record { error_message : text; error_type : int32 };
 type HotOrNotDetails = record {
   hot_or_not_feed_score : FeedScore;
   aggregate_stats : AggregateStats;
@@ -222,6 +228,12 @@ type NeuronDistribution = record {
   stake_e8s : nat64;
   vesting_period_seconds : opt nat64;
 };
+type NeuronsFundNeuron = record {
+  hotkey_principal : opt text;
+  is_capped : opt bool;
+  nns_neuron_id : opt nat64;
+  amount_icp_e8s : opt nat64;
+};
 type NeuronsFundParticipants = record { participants : vec CfParticipant };
 type NeuronsFundParticipationConstraints = record {
   coefficient_intervals : vec LinearScalingCoefficient;
@@ -229,6 +241,7 @@ type NeuronsFundParticipationConstraints = record {
   min_direct_participation_threshold_icp_e8s : opt nat64;
   ideal_matched_participation_function : opt IdealMatchedParticipationFunction;
 };
+type Ok = record { neurons_fund_neuron_portions : vec NeuronsFundNeuron };
 type PaginationError = variant {
   ReachedEndOfItemsList;
   InvalidBoundsPassed;
@@ -337,18 +350,20 @@ type Result_14 = variant {
 type Result_15 = variant { Ok : vec WatchHistoryItem; Err : text };
 type Result_16 = variant { Ok : vec text; Err : NamespaceErrors };
 type Result_17 = variant { Ok; Err : MigrationErrors };
-type Result_18 = variant { Ok; Err : CdaoTokenError };
-type Result_19 = variant { Ok : text; Err : text };
+type Result_18 = variant { Committed : Committed; Aborted : record {} };
+type Result_19 = variant { Ok : Ok; Err : GovernanceError };
 type Result_2 = variant {
   Ok : BettingStatus;
   Err : BetOnCurrentlyViewingPostError;
 };
-type Result_20 = variant {
+type Result_20 = variant { Ok; Err : CdaoTokenError };
+type Result_21 = variant { Ok : text; Err : text };
+type Result_22 = variant {
   Ok : UserProfileDetailsForFrontend;
   Err : UpdateProfileDetailsError;
 };
-type Result_21 = variant { Ok; Err : text };
-type Result_22 = variant { Ok; Err : UpdateProfileSetUniqueUsernameError };
+type Result_23 = variant { Ok; Err : text };
+type Result_24 = variant { Ok; Err : UpdateProfileSetUniqueUsernameError };
 type Result_3 = variant { Ok : NamespaceForFrontend; Err : NamespaceErrors };
 type Result_4 = variant { Ok : opt text; Err : NamespaceErrors };
 type Result_5 = variant { Ok; Err : NamespaceErrors };
@@ -365,6 +380,11 @@ type RoomDetails = record {
   bet_outcome : RoomBetPossibleOutcomes;
 };
 type SessionType = variant { AnonymousSession; RegisteredSession };
+type SettleNeuronsFundParticipationRequest = record {
+  result : opt Result_18;
+  nns_proposal_id : opt nat64;
+};
+type SettleNeuronsFundParticipationResponse = record { result : opt Result_19 };
 type SlotDetails = record { room_details : vec record { nat64; RoomDetails } };
 type SnsInitPayload = record {
   url : opt text;
@@ -597,11 +617,14 @@ service : (IndividualUserTemplateInitArgs) -> {
     ) -> ();
   return_cycles_to_user_index_canister : (opt nat) -> ();
   save_snapshot_json : () -> (nat32);
+  settle_neurons_fund_participation : (
+      SettleNeuronsFundParticipationRequest,
+    ) -> (SettleNeuronsFundParticipationResponse);
   transfer_token_to_user_canister : (principal, principal, opt blob, nat) -> (
-      Result_18,
+      Result_20,
     );
   transfer_tokens_and_posts : (principal, principal) -> (Result_17);
-  update_last_access_time : () -> (Result_19);
+  update_last_access_time : () -> (Result_21);
   update_last_canister_functionality_access_time : () -> ();
   update_post_add_view_details : (nat64, PostViewDetailsFromFrontend) -> ();
   update_post_as_ready_to_view : (nat64) -> ();
@@ -609,20 +632,20 @@ service : (IndividualUserTemplateInitArgs) -> {
   update_post_status : (nat64, PostStatus) -> ();
   update_post_toggle_like_status_by_caller : (nat64) -> (bool);
   update_profile_display_details : (UserProfileUpdateDetailsFromFrontend) -> (
-      Result_20,
+      Result_22,
     );
-  update_profile_owner : (opt principal) -> (Result_21);
-  update_profile_set_unique_username_once : (text) -> (Result_22);
+  update_profile_owner : (opt principal) -> (Result_23);
+  update_profile_set_unique_username_once : (text) -> (Result_24);
   update_profiles_i_follow_toggle_list_with_specified_profile : (
       FolloweeArg,
     ) -> (Result_7);
   update_profiles_that_follow_me_toggle_list_with_specified_profile : (
       FollowerArg,
     ) -> (Result_7);
-  update_referrer_details : (UserCanisterDetails) -> (Result_19);
-  update_session_type : (SessionType) -> (Result_19);
-  update_success_history : (SuccessHistoryItem) -> (Result_19);
-  update_watch_history : (WatchHistoryItem) -> (Result_19);
+  update_referrer_details : (UserCanisterDetails) -> (Result_21);
+  update_session_type : (SessionType) -> (Result_21);
+  update_success_history : (SuccessHistoryItem) -> (Result_21);
+  update_watch_history : (WatchHistoryItem) -> (Result_21);
   update_well_known_principal : (KnownPrincipalType, principal) -> ();
   write_key_value_pair : (nat64, text, text) -> (Result_4);
   write_multiple_key_value_pairs : (nat64, vec record { text; text }) -> (

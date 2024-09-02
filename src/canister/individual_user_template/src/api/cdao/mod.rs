@@ -16,6 +16,9 @@ use ic_cdk::{
 };
 use ic_sns_init::{pb::v1::SnsInitPayload, SnsCanisterIds};
 use ic_sns_wasm::pb::v1::{GetWasmResponse, GetWasmRequest};
+// use ic_sns_swap::pb::v1::{SettleNeuronsFundParticipationRequest, SettleNeuronsFundParticipationResponse};
+use ic_nns_governance::neurons_fund::NeuronsFundSnapshot;
+use ic_nns_governance::pb::v1::{SettleNeuronsFundParticipationRequest, SettleNeuronsFundParticipationResponse};
 use shared_utils::{
     canister_specific::individual_user_template::{consts::CDAO_TOKEN_LIMIT, types::{
         cdao::DeployedCdaoCanisters, error::CdaoDeployError, session::SessionType,
@@ -26,6 +29,15 @@ use shared_utils::{
 use crate::CANISTER_DATA;
 // 0.1T
 const CDAO_CYCLE_CNT: u128 = 100000000000;
+
+#[update]
+pub async fn settle_neurons_fund_participation(
+    request: SettleNeuronsFundParticipationRequest,
+) -> SettleNeuronsFundParticipationResponse {
+    let response = Ok(NeuronsFundSnapshot::empty());
+    let intermediate = SettleNeuronsFundParticipationResponse::from(response);
+    SettleNeuronsFundParticipationResponse::from(intermediate)
+}
 
 async fn create_empty_canister(
     arg: CreateCanisterArgument,
@@ -115,9 +127,15 @@ async fn deploy_cdao_sns(
         swap,
         index,
     };
-    let payloads = init_payload
+    let mut payloads = init_payload
         .build_canister_payloads(&sns_canisters, None, true)
         .map_err(CdaoDeployError::InvalidInitPayload)?;
+    let time_seconds = ic_cdk::api::time() / 1_000_000_000;
+    payloads.swap.swap_start_timestamp_seconds = Some(time_seconds);
+    payloads.swap.swap_due_timestamp_seconds = Some(time_seconds + 300);
+    payloads.swap.icp_ledger_canister_id = "ryjl3-tyaaa-aaaaa-aaaba-cai".to_string();
+    payloads.swap.nns_governance_canister_id = ic_cdk::id().to_string();
+    
     let sns_wasm = CANISTER_DATA
         .with(|cdata| {
             cdata

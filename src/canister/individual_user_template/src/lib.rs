@@ -45,6 +45,7 @@ use shared_utils::{
 };
 use ic_sns_init::pb::v1::SnsInitPayload;
 use icrc_ledger_types::icrc1::transfer::Memo;
+use ic_nns_governance::pb::v1::{SettleNeuronsFundParticipationRequest, SettleNeuronsFundParticipationResponse};
 
 mod api;
 pub mod data_model;
