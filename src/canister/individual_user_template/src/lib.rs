@@ -12,6 +12,7 @@ use ic_cdk_macros::export_candid;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
         arg::{FolloweeArg, IndividualUserTemplateInitArgs, PlaceBetArg},
+        device_id::DeviceIdentity,
         error::{
             BetOnCurrentlyViewingPostError, FollowAnotherUserProfileError,
             GetPostsOfUserProfileError, CdaoDeployError, CdaoTokenError,
@@ -20,7 +21,7 @@ use shared_utils::{
         hot_or_not::{BetOutcomeForBetMaker, BettingStatus, PlacedBetDetail},
         kv_storage::{NamespaceErrors, NamespaceForFrontend},
         migration::MigrationErrors,
-        ml_data::{SuccessHistoryItem, WatchHistoryItem},
+        ml_data::{MLFeedCacheItem, SuccessHistoryItemV1, WatchHistoryItem},
         post::{
             Post, PostDetailsForFrontend, PostDetailsFromFrontend, PostViewDetailsFromFrontend,
         },

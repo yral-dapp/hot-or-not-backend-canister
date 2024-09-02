@@ -108,7 +108,6 @@ type UserIndexInitArgs = record {
 };
 service : (UserIndexInitArgs) -> {
   are_signups_enabled : () -> (bool) query;
-  backup_all_individual_user_canisters : () -> ();
   create_pool_of_individual_user_available_canisters : (text, blob) -> (Result);
   get_current_list_of_all_well_known_principal_values : () -> (
       vec record { KnownPrincipalType; principal },
@@ -140,11 +139,6 @@ service : (UserIndexInitArgs) -> {
     ) query;
   http_request : (HttpRequest) -> (HttpResponse) query;
   issue_rewards_for_referral : (principal, principal, principal) -> (Result);
-  receive_data_from_backup_canister_and_restore_data_to_heap : (
-      principal,
-      principal,
-      text,
-    ) -> ();
   reclaim_cycles_from_individual_canisters : () -> ();
   request_cycles : (nat) -> (Result_2);
   reset_user_individual_canisters : (vec principal) -> (Result);

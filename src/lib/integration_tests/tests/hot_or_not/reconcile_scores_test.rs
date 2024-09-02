@@ -61,10 +61,6 @@ fn reconcile_scores_test() {
         KnownPrincipalType::UserIdGlobalSuperAdmin,
         admin_principal_id,
     );
-    known_prinicipal_values.insert(
-        KnownPrincipalType::CanisterIdConfiguration,
-        admin_principal_id,
-    );
     known_prinicipal_values.insert(KnownPrincipalType::CanisterIdUserIndex, admin_principal_id);
 
     let post_cache_wasm_bytes = post_cache_canister_wasm();

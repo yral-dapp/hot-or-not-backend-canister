@@ -71,6 +71,64 @@ pub fn trigger_update_hot_or_not_index() {
     }
 }
 
+pub fn trigger_update_yral_index() {
+    let last_updated_hot_or_not_timestamp_index = CANISTER_DATA.with(|canister_data| {
+        canister_data
+            .borrow()
+            .metadata
+            .last_updated_hot_or_not_timestamp_index
+    });
+
+    let now = get_current_system_time();
+    if now
+        .duration_since(
+            last_updated_hot_or_not_timestamp_index
+                .unwrap_or_else(|| now - TRIGGER_UPDATE_HOT_OR_NOT_INDEX),
+        )
+        .unwrap_or_default()
+        >= TRIGGER_UPDATE_HOT_OR_NOT_INDEX
+    {
+        // Update the hot or not index
+
+        let old_post_ids = CANISTER_DATA.with(|canister_data| {
+            let canister_data = canister_data.borrow();
+
+            canister_data
+                .posts_index_sorted_by_yral_feed_score
+                .item_time_index
+                .iter()
+                .take_while(|(&created_at, _)| {
+                    now.duration_since(created_at).unwrap_or_default() >= LATEST_POSTS_WINDOW
+                })
+                .map(|(_, post_ids)| post_ids)
+                .flatten()
+                .cloned()
+                .map(|post_id| {
+                    canister_data
+                        .posts_index_sorted_by_yral_feed_score
+                        .item_presence_index
+                        .get(&post_id)
+                        .unwrap()
+                        .clone()
+                })
+                .collect::<Vec<PostScoreIndexItemV1>>()
+        });
+
+        CANISTER_DATA.with(|canister_data| {
+            let mut canister_data = canister_data.borrow_mut();
+            let hot_or_not_index = &mut canister_data.posts_index_sorted_by_yral_feed_score;
+            // Replace the old post ids
+            for post in old_post_ids {
+                hot_or_not_index.replace(&post);
+            }
+
+            canister_data
+                .metadata
+                .last_updated_hot_or_not_timestamp_index = Some(now);
+        });
+    }
+}
+
 pub fn trigger_reconcile_scores() {
     let last_updated_reconcile_scores = CANISTER_DATA.with(|canister_data| {
         canister_data
@@ -117,6 +175,7 @@ pub fn trigger_reconcile_scores() {
             );
         }
 
+        // todo ----  remove the below code block -- after hot_or_not feed is deprecated
         // Reconcile hot or not feed scores
         //
         let top_hot_or_not_feed = CANISTER_DATA.with(|canister_data| {
@@ -131,6 +190,27 @@ pub fn trigger_reconcile_scores() {
         // Change (Principal, u64) to HashMap with Principal as key and Vec<u64> as value
         let mut top_hot_or_not_feed_by_user = std::collections::HashMap::new();
         for (principal, post_id) in top_hot_or_not_feed {
+            top_hot_or_not_feed_by_user
+                .entry(principal)
+                .or_insert_with(Vec::new)
+                .push(post_id);
+        }
+
+        // todo ----  remove the upper code block -- after hot_or_not feed is deprecated
+        // Reconcile yral feed scores
+        //
+        let top_yral_feed = CANISTER_DATA.with(|canister_data| {
+            canister_data
+                .borrow()
+                .posts_index_sorted_by_yral_feed_score
+                .iter()
+                .take(RECONCILE_SCORES_UPTO)
+                .map(|post| (post.publisher_canister_id.clone(), post.post_id))
+                .collect::<Vec<(Principal, u64)>>()
+        });
+        // Change (Principal, u64) to HashMap with Principal as key and Vec<u64> as value
+        // let mut top_hot_or_not_feed_by_user = std::collections::HashMap::new();
+        for (principal, post_id) in top_yral_feed {
             top_hot_or_not_feed_by_user
                 .entry(principal)
                 .or_insert_with(Vec::new)

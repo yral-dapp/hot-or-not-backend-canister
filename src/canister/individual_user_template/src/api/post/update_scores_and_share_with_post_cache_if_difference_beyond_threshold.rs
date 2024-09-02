@@ -72,6 +72,14 @@ pub fn update_scores_and_share_with_post_cache_if_difference_beyond_threshold(po
         let _ = call::notify(
             post_cache_canister_principal_id,
             "receive_top_hot_or_not_feed_posts_from_publishing_canister",
+            (vec![hot_or_not_index_score_item.clone().unwrap()],),
+        );
+    }
+
+    if hot_or_not_index_score_item.is_some() {
+        let _ = call::notify(
+            post_cache_canister_principal_id,
+            "receive_top_yral_feed_posts_from_publishing_canister",
             (vec![hot_or_not_index_score_item.unwrap()],),
         );
     }
