@@ -10,18 +10,18 @@ use serde::Serialize;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
         configuration::IndividualUserConfiguration,
+        device_id::DeviceIdentity,
         follow::FollowData,
         hot_or_not::{
             BetDetails, GlobalBetId, GlobalRoomId, PlacedBetDetail, RoomDetailsV1, RoomId,
             SlotDetailsV1, SlotId, StablePrincipal,
         },
         migration::MigrationInfo,
-        ml_data::{SuccessHistoryItem, SuccessHistoryItemV1, WatchHistoryItem},
+        ml_data::{MLFeedCacheItem, SuccessHistoryItem, SuccessHistoryItemV1, WatchHistoryItem},
         post::{FeedScore, Post, PostViewStatistics},
         profile::UserProfile,
         session::SessionType,
         token::TokenBalance,
-        device_id::DeviceIdentity,
     },
     common::types::{
         app_primitive_type::PostId,
@@ -83,6 +83,8 @@ pub struct CanisterData {
     pub success_history: ic_stable_structures::btreemap::BTreeMap<SuccessHistoryItemV1, (), Memory>,
     #[serde(default)]
     pub device_identities: Vec<DeviceIdentity>,
+    #[serde(default)]
+    pub ml_feed_cache: Vec<MLFeedCacheItem>,
 }
 
 pub fn _default_room_details(
@@ -148,6 +150,7 @@ impl Default for CanisterData {
             watch_history: _default_watch_history(),
             success_history: _default_success_history_v1(),
             device_identities: Vec::new(),
+            ml_feed_cache: Vec::new(),
         }
     }
 }
