@@ -245,18 +245,19 @@ type Result_12 = variant {
 };
 type Result_13 = variant { Ok : vec WatchHistoryItem; Err : text };
 type Result_14 = variant { Ok : vec text; Err : NamespaceErrors };
-type Result_15 = variant { Ok; Err : MigrationErrors };
-type Result_16 = variant { Ok : text; Err : text };
-type Result_17 = variant {
+type Result_15 = variant { Ok : vec record { nat64; nat8 }; Err : text };
+type Result_16 = variant { Ok; Err : MigrationErrors };
+type Result_17 = variant { Ok : text; Err : text };
+type Result_18 = variant {
   Ok : UserProfileDetailsForFrontend;
   Err : UpdateProfileDetailsError;
 };
-type Result_18 = variant { Ok; Err : text };
-type Result_19 = variant { Ok; Err : UpdateProfileSetUniqueUsernameError };
+type Result_19 = variant { Ok; Err : text };
 type Result_2 = variant {
   Ok : BettingStatus;
   Err : BetOnCurrentlyViewingPostError;
 };
+type Result_20 = variant { Ok; Err : UpdateProfileSetUniqueUsernameError };
 type Result_3 = variant { Ok : NamespaceForFrontend; Err : NamespaceErrors };
 type Result_4 = variant { Ok : opt text; Err : NamespaceErrors };
 type Result_5 = variant { Ok; Err : NamespaceErrors };
@@ -424,15 +425,16 @@ service : (IndividualUserTemplateInitArgs) -> {
   list_namespace_keys : (nat64) -> (Result_14) query;
   list_namespaces : (nat64, nat64) -> (vec NamespaceForFrontend) query;
   load_snapshot : (nat64) -> ();
+  once_reenqueue_timers_for_pending_bet_outcomes : () -> (Result_15);
   read_key_value_pair : (nat64, text) -> (Result_4) query;
   receive_and_save_snaphot : (nat64, blob) -> ();
   receive_bet_from_bet_makers_canister : (PlaceBetArg, principal) -> (Result_2);
   receive_bet_winnings_when_distributed : (nat64, BetOutcomeForBetMaker) -> ();
-  receive_data_from_hotornot : (principal, nat64, vec Post) -> (Result_15);
+  receive_data_from_hotornot : (principal, nat64, vec Post) -> (Result_16);
   return_cycles_to_user_index_canister : (opt nat) -> ();
   save_snapshot_json : () -> (nat32);
-  transfer_tokens_and_posts : (principal, principal) -> (Result_15);
-  update_last_access_time : () -> (Result_16);
+  transfer_tokens_and_posts : (principal, principal) -> (Result_16);
+  update_last_access_time : () -> (Result_17);
   update_last_canister_functionality_access_time : () -> ();
   update_post_add_view_details : (nat64, PostViewDetailsFromFrontend) -> ();
   update_post_as_ready_to_view : (nat64) -> ();
@@ -440,20 +442,20 @@ service : (IndividualUserTemplateInitArgs) -> {
   update_post_status : (nat64, PostStatus) -> ();
   update_post_toggle_like_status_by_caller : (nat64) -> (bool);
   update_profile_display_details : (UserProfileUpdateDetailsFromFrontend) -> (
-      Result_17,
+      Result_18,
     );
-  update_profile_owner : (opt principal) -> (Result_18);
-  update_profile_set_unique_username_once : (text) -> (Result_19);
+  update_profile_owner : (opt principal) -> (Result_19);
+  update_profile_set_unique_username_once : (text) -> (Result_20);
   update_profiles_i_follow_toggle_list_with_specified_profile : (
       FolloweeArg,
     ) -> (Result_6);
   update_profiles_that_follow_me_toggle_list_with_specified_profile : (
       FollowerArg,
     ) -> (Result_6);
-  update_referrer_details : (UserCanisterDetails) -> (Result_16);
-  update_session_type : (SessionType) -> (Result_16);
-  update_success_history : (SuccessHistoryItemV1) -> (Result_16);
-  update_watch_history : (WatchHistoryItem) -> (Result_16);
+  update_referrer_details : (UserCanisterDetails) -> (Result_17);
+  update_session_type : (SessionType) -> (Result_17);
+  update_success_history : (SuccessHistoryItemV1) -> (Result_17);
+  update_watch_history : (WatchHistoryItem) -> (Result_17);
   update_well_known_principal : (KnownPrincipalType, principal) -> ();
   write_key_value_pair : (nat64, text, text) -> (Result_4);
   write_multiple_key_value_pairs : (nat64, vec record { text; text }) -> (

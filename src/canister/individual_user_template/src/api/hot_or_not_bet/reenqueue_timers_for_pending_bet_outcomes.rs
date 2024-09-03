@@ -1,8 +1,10 @@
 use std::time::{Duration, SystemTime};
 
+use ic_cdk_macros::update;
+// use rand::Rng;
 use shared_utils::{
     canister_specific::individual_user_template::types::hot_or_not::{
-        SlotId, DURATION_OF_EACH_SLOT_IN_SECONDS,
+        GlobalRoomId, RoomBetPossibleOutcomes, SlotId, DURATION_OF_EACH_SLOT_IN_SECONDS,
     },
     common::utils::system_time,
 };
@@ -23,31 +25,31 @@ pub fn reenqueue_timers_for_pending_bet_outcomes() {
     });
 }
 
-pub fn once_reenqueue_timers_for_pending_bet_outcomes() {
+#[update]
+async fn once_reenqueue_timers_for_pending_bet_outcomes() -> Result<Vec<(u64, u8)>, String> {
     let current_time = system_time::get_current_system_time_from_ic();
 
-    CANISTER_DATA.with(|canister_data_ref_cell| {
-        let mut canister_data = canister_data_ref_cell.borrow_mut();
+    let post_w_slot = CANISTER_DATA.with(|canister_data_ref_cell| {
+        let canister_data = canister_data_ref_cell.borrow_mut();
 
-        let posts_with_slots =
-            once_get_posts_that_have_pending_outcomes(&canister_data, &current_time);
+        let posts_with_slots = once_get_posts_that_have_pending_outcomes(&canister_data, &current_time);
 
-        once_reenqueue_timers_for_these_posts(&mut canister_data, posts_with_slots, &current_time);
+        // once_reenqueue_timers_for_these_posts(&mut canister_data, posts_with_slots, &current_time);
+        once_reenqueue_timers_for_these_posts(posts_with_slots.clone());
+        posts_with_slots
     });
+
+    Ok(post_w_slot)
 }
 
-fn once_reenqueue_timers_for_these_posts(
-    canister_data: &mut CanisterData,
-    post_slot_ids: Vec<(PostId, SlotId)>,
-    current_time: &SystemTime,
-) {
+fn once_reenqueue_timers_for_these_posts(post_slot_ids: Vec<(u64, u8)>) {
     for (post_id, slot_id) in post_slot_ids {
-        let post = canister_data.all_created_posts.get(&post_id).unwrap();
         let slot_number = slot_id;
+        // let jitter = rand::thread_rng().gen_range(1..60);
 
         ic_cdk_timers::set_timer(
             // random jitter
-            Duration::from_secs(300 + rand::random::<u64>() % 60),
+            Duration::from_secs(300),
             move || {
                 CANISTER_DATA.with(|canister_data_ref_cell| {
                     tabulate_hot_or_not_outcome_for_post_slot(
@@ -64,12 +66,13 @@ fn once_reenqueue_timers_for_these_posts(
 fn once_get_posts_that_have_pending_outcomes(
     canister_data: &CanisterData,
     current_time: &SystemTime,
-) -> Vec<u64> {
+) -> Vec<(u64, u8)> {
+    let room_details_map = &canister_data.room_details_map;
     canister_data
         .all_created_posts
         .iter()
         .rev()
-        .filter_map(|(post_id, post)| {
+        .flat_map(|(post_id, post)| {
             let created_outside_the_last_48_hours = current_time
                 .duration_since(post.created_at)
                 .unwrap_or(Duration::from_secs((48 * 60 + 5) * 60))
@@ -84,24 +87,24 @@ fn once_get_posts_that_have_pending_outcomes(
                 let start_global_room_id = GlobalRoomId(post.id, 1, 1);
                 let end_global_room_id = GlobalRoomId(post.id, 48_u8, latest_room);
 
-                // for each post, there are many room details
-                let room_details = room_details_map
+                // for each post, there are many slot, each slot with many room details
+                room_details_map
                     .range(start_global_room_id..end_global_room_id)
-                    .collect::<Vec<_>>();
-
-                room_details.iter().filter_map(|(groomid, room_detail)| {
-                    if room_detail.bet_outcome == BetOutcome::BetOngoing {
-                        Some((*post_id, groomid.1))
-                    } else {
-                        None
-                    }
-                })
+                    .filter_map(|(groomid, room_detail)| {
+                        if matches!(room_detail.bet_outcome, RoomBetPossibleOutcomes::BetOngoing) {
+                            Some((*post_id, groomid.1))
+                        } else {
+                            None
+                        }
+                    })
+                    .collect::<Vec<_>>()
             } else {
-                None
+                Vec::new()
             }
         })
         .collect()
 }
+
 fn get_posts_that_have_pending_outcomes(
     canister_data: &CanisterData,
     current_time: &SystemTime,
