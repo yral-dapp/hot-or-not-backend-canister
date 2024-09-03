@@ -85,6 +85,8 @@ pub struct CanisterData {
     pub device_identities: Vec<DeviceIdentity>,
     #[serde(default)]
     pub ml_feed_cache: Vec<MLFeedCacheItem>,
+    #[serde(default)]
+    pub onboarding_status: Option<bool>,
 }
 
 pub fn _default_room_details(
@@ -151,6 +153,7 @@ impl Default for CanisterData {
             success_history: _default_success_history_v1(),
             device_identities: Vec::new(),
             ml_feed_cache: Vec::new(),
+            onboarding_status: None,
         }
     }
 }

@@ -13,3 +13,4 @@ pub mod snapshot;
 pub mod token;
 pub mod well_known_principal;
 pub mod device_id_management;
+pub mod onboarding;
