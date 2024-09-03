@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use ic_cdk::api::call;
+use ic_cdk::api::call::{self, ArgDecoderConfig};
 use ic_cdk_macros::post_upgrade;
 use shared_utils::{
     canister_specific::{
@@ -16,9 +16,7 @@ use shared_utils::{
     },
 };
 
-use crate::{
-    data_model::CanisterData, CANISTER_DATA,
-};
+use crate::{data_model::CanisterData, CANISTER_DATA};
 
 use super::pre_upgrade::BUFFER_SIZE_BYTES;
 
@@ -46,7 +44,8 @@ fn restore_data_from_stable_memory() {
 }
 
 fn save_upgrade_args_to_memory() {
-    let upgrade_args = ic_cdk::api::call::arg_data::<(PostCacheInitArgs,)>().0;
+    let upgrade_args =
+        ic_cdk::api::call::arg_data::<(PostCacheInitArgs,)>(ArgDecoderConfig::default()).0;
 
     CANISTER_DATA.with(|canister_data_ref_cell| {
         let mut canister_data_ref_cell = canister_data_ref_cell.borrow_mut();
@@ -170,7 +169,7 @@ async fn migrate_data_impl() {
                 canister_data_ref_cell
                     .posts_index_sorted_by_hot_or_not_feed_score_v1
                     .replace(&new_post);
-        
+
                 // Migrate Yral Feed
 
                 canister_data_ref_cell
@@ -179,5 +178,4 @@ async fn migrate_data_impl() {
             });
         }
     }
-
 }

@@ -1,10 +1,8 @@
 name: Canisters test suite run on any push except main
 on:
-  push:
-    branches-ignore:
+  pull_request:
+    branches:
       - main
-    paths-ignore:
-      - "notes/**"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -67,5 +65,5 @@ jobs:
           gzip -f -1 ./target/wasm32-unknown-unknown/release/post_cache.wasm
       - name: Run canister test suite
         env:
-          POCKET_IC_BIN: ${{ github.workspace }}/pocket-ic-x86_64-linux
+          POCKET_IC_BIN: ${{ github.workspace }}/pocket-ic
         run: nix-shell --run "cargo test"

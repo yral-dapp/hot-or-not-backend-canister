@@ -234,7 +234,7 @@ async fn upgrade_subnet_post_cache_canister(
     version: String,
 ) -> Result<(), String> {
     let install_code_arg = InstallCodeArgument {
-        mode: CanisterInstallMode::Upgrade,
+        mode: CanisterInstallMode::Upgrade(None),
         canister_id,
         wasm_module: wasm,
         arg: candid::encode_one(PostCacheInitArgs {
@@ -256,7 +256,7 @@ async fn upgrade_subnet_orchestrator_canister(
     version: String,
 ) -> Result<(), String> {
     let install_code_arg = InstallCodeArgument {
-        mode: CanisterInstallMode::Upgrade,
+        mode: CanisterInstallMode::Upgrade(None),
         canister_id,
         wasm_module: wasm,
         arg: candid::encode_one(UserIndexInitArgs {

@@ -2,10 +2,7 @@ use ic_cdk::{api, query};
 use ic_cdk_macros::update;
 use shared_utils::canister_specific::individual_user_template::types::device_id::DeviceIdentity;
 
-use crate::{
-    data_model::CanisterData,
-    CANISTER_DATA
-};
+use crate::{data_model::CanisterData, CANISTER_DATA};
 
 /// #### Access Control
 /// Only the user whose profile details are stored in this canister can add the device identity.
@@ -28,10 +25,7 @@ fn add_device_id(identity_token: String) -> Result<bool, (String)> {
     };
 
     let response = CANISTER_DATA.with(|canister_data_ref_cell| {
-        add_device_id_to_memory(
-            &mut canister_data_ref_cell.borrow_mut(),
-            device_id
-        )
+        add_device_id_to_memory(&mut canister_data_ref_cell.borrow_mut(), device_id)
     });
 
     if response {
@@ -48,7 +42,6 @@ fn add_device_id_to_memory(canister_data: &mut CanisterData, device_id: DeviceId
 
 #[query]
 fn get_device_identities() -> Vec<DeviceIdentity> {
-    CANISTER_DATA.with(|canister_data_ref_cell| {
-        canister_data_ref_cell.borrow().device_identities.clone()
-    })
+    CANISTER_DATA
+        .with(|canister_data_ref_cell| canister_data_ref_cell.borrow().device_identities.clone())
 }

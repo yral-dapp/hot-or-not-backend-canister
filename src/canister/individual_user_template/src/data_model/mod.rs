@@ -9,6 +9,7 @@ use memory::{get_success_history_memory, get_token_list_memory, get_watch_histor
 use serde::Serialize;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
+        cdao::DeployedCdaoCanisters,
         configuration::IndividualUserConfiguration,
         device_id::DeviceIdentity,
         follow::FollowData,
