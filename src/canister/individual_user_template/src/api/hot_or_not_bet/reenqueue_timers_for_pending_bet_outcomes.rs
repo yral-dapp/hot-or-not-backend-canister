@@ -26,13 +26,15 @@ pub fn reenqueue_timers_for_pending_bet_outcomes() {
 }
 
 #[update]
+// #[update(guard = "is_caller_global_admin_or_controller")]
 async fn once_reenqueue_timers_for_pending_bet_outcomes() -> Result<Vec<(u64, u8)>, String> {
     let current_time = system_time::get_current_system_time_from_ic();
 
     let post_w_slot = CANISTER_DATA.with(|canister_data_ref_cell| {
         let canister_data = canister_data_ref_cell.borrow_mut();
 
-        let posts_with_slots = once_get_posts_that_have_pending_outcomes(&canister_data, &current_time);
+        let posts_with_slots =
+            once_get_posts_that_have_pending_outcomes(&canister_data, &current_time);
 
         // once_reenqueue_timers_for_these_posts(&mut canister_data, posts_with_slots, &current_time);
         once_reenqueue_timers_for_these_posts(posts_with_slots.clone());
@@ -169,7 +171,7 @@ mod test {
 
     use shared_utils::{
         canister_specific::individual_user_template::types::{
-            hot_or_not::HotOrNotDetails,
+            hot_or_not::{HotOrNotDetails, RoomDetailsV1},
             post::{FeedScore, Post, PostViewStatistics},
         },
         common::types::top_posts::post_score_index_item::PostStatus,
@@ -315,5 +317,76 @@ mod test {
         assert_eq!(posts_that_have_pending_outcomes[0], 2);
         assert_eq!(posts_that_have_pending_outcomes[1], 1);
         assert_eq!(posts_that_have_pending_outcomes[2], 0);
+    }
+
+    #[test]
+    fn test_once_get_posts_that_have_pending_outcomes() {
+        let mut canister_data = CanisterData::default();
+
+        let current_time = SystemTime::now();
+        let old_time = current_time - Duration::from_secs(49 * 60 * 60);
+
+        // Create posts
+        for i in 0..5 {
+            let post = Post {
+                id: i,
+                created_at: if i % 2 != 0 {
+                    old_time.checked_sub(Duration::from_secs(i * 60)).unwrap()
+                } else {
+                    current_time
+                        .checked_sub(Duration::from_secs(3 * 60 * 60))
+                        .unwrap()
+                },
+                // only those posts which have hot_or_not_details !=None and create_at > 48 hrs should filter through
+                hot_or_not_details: if i % 2 != 0 {
+                    Some(HotOrNotDetails::default())
+                } else {
+                    None
+                },
+                is_nsfw: false,
+                description: "Singing and dancing".to_string(),
+                hashtags: vec!["sing".to_string(), "dance".to_string()],
+                video_uid: "video#0001".to_string(),
+                status: PostStatus::ReadyToView,
+                likes: HashSet::new(),
+                share_count: 0,
+                view_stats: PostViewStatistics::default(),
+                home_feed_score: FeedScore::default(),
+                creator_consent_for_inclusion_in_hot_or_not: true,
+            };
+            canister_data.all_created_posts.insert(i, post);
+        }
+
+        // Populate room_details_map
+        let room_details_map = &mut canister_data.room_details_map;
+        for post_id in 0..5 {
+            for slot in 1..=48 {
+                // just to ensure that some slot ids are empty.
+                // i.e. in some slots, there wasn't a single bet placed
+                if slot % 3 == 0 {
+                    continue;
+                }
+
+                for room in 1..=3 {
+                    let global_room_id = GlobalRoomId(post_id, slot, room);
+                    let outcome = if room == 2 {
+                        RoomBetPossibleOutcomes::BetOngoing
+                    } else {
+                        RoomBetPossibleOutcomes::HotWon
+                    };
+                    room_details_map.insert(
+                        global_room_id,
+                        RoomDetailsV1 {
+                            bet_outcome: outcome,
+                            ..Default::default()
+                        },
+                    );
+                }
+            }
+        }
+
+        let result = once_get_posts_that_have_pending_outcomes(&canister_data, &current_time);
+
+        assert!(result.iter().all(|(post_id, _)| post_id % 2 != 0));
     }
 }
