@@ -61,6 +61,7 @@ pub async fn create_empty_user_canister() -> Principal {
     // * config for provisioning canister
     let arg = CreateCanisterArgument {
         settings: Some(CanisterSettings {
+            reserved_cycles_limit: None,
             controllers: Some(vec![
                 // * this subnet_orchestrator canister
                 api::id(),

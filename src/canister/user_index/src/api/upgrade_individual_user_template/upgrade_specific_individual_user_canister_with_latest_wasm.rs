@@ -1,9 +1,15 @@
 use candid::Principal;
-use ic_cdk::api::management_canister::main::{deposit_cycles, CanisterIdRecord, CanisterInstallMode};
+use ic_cdk::api::management_canister::main::{
+    deposit_cycles, CanisterIdRecord, CanisterInstallMode,
+};
 use ic_cdk_macros::update;
 use shared_utils::{
     canister_specific::individual_user_template::types::arg::IndividualUserTemplateInitArgs,
-    common::{types::{known_principal::KnownPrincipalType, wasm::WasmType}, utils::permissions::is_caller_controller}, constant::INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT,
+    common::{
+        types::{known_principal::KnownPrincipalType, wasm::WasmType},
+        utils::permissions::is_caller_controller,
+    },
+    constant::INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT,
 };
 
 use crate::{util::canister_management, CANISTER_DATA};
@@ -16,9 +22,13 @@ async fn upgrade_specific_individual_user_canister_with_latest_wasm(
     user_principal_id: Option<Principal>,
     upgrade_mode: Option<CanisterInstallMode>,
 ) -> String {
-
-    let known_principal_ids = CANISTER_DATA
-        .with(|canister_data_ref_cell| canister_data_ref_cell.borrow().configuration.known_principal_ids.clone());
+    let known_principal_ids = CANISTER_DATA.with(|canister_data_ref_cell| {
+        canister_data_ref_cell
+            .borrow()
+            .configuration
+            .known_principal_ids
+            .clone()
+    });
 
     let saved_upgrade_status = CANISTER_DATA.with(|canister_data_ref_cell| {
         canister_data_ref_cell
@@ -29,20 +39,25 @@ async fn upgrade_specific_individual_user_canister_with_latest_wasm(
 
     let configuration = CANISTER_DATA
         .with(|canister_data_ref_cell| canister_data_ref_cell.borrow().configuration.clone());
-    
-    let individual_canister_wasm = CANISTER_DATA.with_borrow(|canister_data| canister_data.wasms.get(&WasmType::IndividualUserWasm).unwrap());
+
+    let individual_canister_wasm = CANISTER_DATA.with_borrow(|canister_data| {
+        canister_data
+            .wasms
+            .get(&WasmType::IndividualUserWasm)
+            .unwrap()
+    });
 
     match canister_management::upgrade_individual_user_canister(
         user_canister_id,
-        upgrade_mode.unwrap_or(CanisterInstallMode::Upgrade),
+        upgrade_mode.unwrap_or(CanisterInstallMode::Upgrade(None)),
         IndividualUserTemplateInitArgs {
             known_principal_ids: Some(known_principal_ids.clone()),
             profile_owner: user_principal_id,
             upgrade_version_number: Some(saved_upgrade_status.version_number + 1),
             url_to_send_canister_metrics_to: Some(configuration.url_to_send_canister_metrics_to),
-            version: individual_canister_wasm.version
+            version: individual_canister_wasm.version,
         },
-        individual_canister_wasm.wasm_blob
+        individual_canister_wasm.wasm_blob,
     )
     .await
     {

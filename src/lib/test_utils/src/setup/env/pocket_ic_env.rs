@@ -58,6 +58,7 @@ pub fn get_new_pocket_ic_env() -> (PocketIc, KnownPrincipalMap) {
     let platform_canister_id = pocket_ic.create_canister_with_settings(
         Some(super_admin),
         Some(CanisterSettings {
+            reserved_cycles_limit: None,
             controllers: Some(vec![super_admin]),
             compute_allocation: None,
             memory_allocation: None,
