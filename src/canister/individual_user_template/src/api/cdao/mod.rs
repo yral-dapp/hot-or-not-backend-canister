@@ -27,8 +27,8 @@ use shared_utils::{
 };
 
 use crate::CANISTER_DATA;
-// 0.1T
-const CDAO_CYCLE_CNT: u128 = 100000000000;
+// 5 * 0.1T
+const CDAO_CYCLE_CNT: u128 = 5 * 100000000000;
 
 #[update]
 pub async fn settle_neurons_fund_participation(
