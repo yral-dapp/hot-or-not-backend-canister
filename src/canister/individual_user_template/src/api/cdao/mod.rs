@@ -154,21 +154,13 @@ async fn deploy_cdao_sns(
         })
         .expect("SNS WASM not specified in config");
 
-    // let sns_versions = ic_cdk::call::<_, (HashMap<String, String>,)>(
-    //     sns_wasm,
-    //     "get_latest_sns_version_pretty",
-    //     (),
-    // )
-    // .await?
-    // .0;
-
     let mut sns_versions: HashMap<String, String> = HashMap::new();
-    sns_versions.insert("Governance".to_string(), "a46ca12aecbd6a6c962ab12052cea0ae94f0dcaa65ae0d407d1d72c9121b1074".to_string());
-    sns_versions.insert("Ledger Index".to_string(), "14c48700ba8f68a8af2dc68aa198d3c4f41d4fb02d9439cc81052511442236af".to_string());
-    sns_versions.insert("Root".to_string(), "03326e187fca708aa14a3100013c2be4c94d5f89b439e71ec4c3c0c62e0537d4".to_string());
-    sns_versions.insert("Swap".to_string(), "0098ee44db411c37da5e8281d31df5be9e385c67d6df5fc8004577dc92ed4b17".to_string());
-    sns_versions.insert("Ledger".to_string(), "741745514d330168515cd1752100e4159b7122d5bef01cb1d161321e71c0137b".to_string());
-    sns_versions.insert("Ledger Archive".to_string(), "e4a66f4985dac7b59d1df08e451b71d66b99091899daa25b0274b6208cfccaed".to_string());
+    sns_versions.insert("Governance".to_string(), "3feb8ff7b47f53da83235e4c68676bb6db54df1e62df3681de9425ad5cf43be5".to_string());
+    sns_versions.insert("Ledger Index".to_string(), "3bb490d197b8cf2e7d9948bcb5d1fc46747a835294b3ffe47b882dbfa584555f".to_string());
+    sns_versions.insert("Root".to_string(), "495e31370b14fa61c76bd1483c9f9ba66733793ee2963e8e44a231436a60bcc6".to_string());
+    sns_versions.insert("Swap".to_string(), "e8942f56f9439b89b13bd8037f357126e24f1e7932cf03018243347505959fd4".to_string());
+    sns_versions.insert("Ledger".to_string(), "5c595c2adc7f6d9971298fee2fa666929711e73341192ab70804c783a0eee03f".to_string());
+    sns_versions.insert("Ledger Archive".to_string(), "08ae5042c8e413716d04a08db886b8c6b01bb610b8197cdbe052c59538b924f0".to_string());
 
     let get_wasm_hash = |name: &str| hex::decode(&sns_versions[name]).unwrap();
     let gov_hash = get_wasm_hash("Governance");
