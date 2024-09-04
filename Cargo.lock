@@ -1962,20 +1962,6 @@ dependencies = [
 
 [[package]]
 name = "ic-cdk-timers"
-version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8c43b9706fef3ad10c4192a14801d16bd9539068239f0f06f257857441364329"
-dependencies = [
- "futures",
- "ic-cdk 0.12.2",
- "ic0 0.21.1",
- "serde",
- "serde_bytes",
- "slotmap",
-]
-
-[[package]]
-name = "ic-cdk-timers"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "054727a3a1c486528b96349817d54290ff70df6addf417def456ea708a16f7fb"
@@ -2350,7 +2336,7 @@ dependencies = [
  "ic-canisters-http-types",
  "ic-cdk 0.13.5",
  "ic-cdk-macros 0.9.0",
- "ic-cdk-timers 0.7.0",
+ "ic-cdk-timers",
  "ic-icrc1",
  "ic-icrc1-ledger",
  "ic-icrc1-tokens-u64",
@@ -2375,7 +2361,7 @@ dependencies = [
  "ic-canisters-http-types",
  "ic-cdk 0.13.5",
  "ic-cdk-macros 0.9.0",
- "ic-cdk-timers 0.7.0",
+ "ic-cdk-timers",
  "ic-crypto-sha2",
  "ic-icrc1",
  "ic-icrc1-tokens-u64",
@@ -3377,7 +3363,7 @@ dependencies = [
  "ic-base-types",
  "ic-cdk 0.13.5",
  "ic-cdk-macros 0.16.0",
- "ic-cdk-timers 0.6.0",
+ "ic-cdk-timers",
  "ic-icrc1-index",
  "ic-icrc1-index-ng",
  "ic-icrc1-ledger",
@@ -4142,7 +4128,7 @@ dependencies = [
  "candid",
  "ic-cdk 0.13.5",
  "ic-cdk-macros 0.16.0",
- "ic-cdk-timers 0.6.0",
+ "ic-cdk-timers",
  "serde",
  "shared_utils",
  "test_utils",
@@ -4367,9 +4353,9 @@ dependencies = [
 
 [[package]]
 name = "psm"
-version = "0.1.22"
+version = "0.1.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3b1f9bf148c15500d44581654fb9260bc9d82970f3ef777a79a40534f6aa784f"
+checksum = "aa37f80ca58604976033fae9515a8a2989fc13797d953f7c04fb8fa36a11f205"
 dependencies = [
  "cc",
 ]
@@ -5154,7 +5140,7 @@ dependencies = [
  "ciborium",
  "futures",
  "ic-cdk 0.13.5",
- "ic-cdk-timers 0.6.0",
+ "ic-cdk-timers",
  "ic-stable-structures",
  "icrc-ledger-types 0.1.6",
  "pprof",
@@ -5817,7 +5803,7 @@ dependencies = [
  "futures",
  "ic-cdk 0.13.5",
  "ic-cdk-macros 0.16.0",
- "ic-cdk-timers 0.6.0",
+ "ic-cdk-timers",
  "ic-stable-structures",
  "serde",
  "serde_json",
