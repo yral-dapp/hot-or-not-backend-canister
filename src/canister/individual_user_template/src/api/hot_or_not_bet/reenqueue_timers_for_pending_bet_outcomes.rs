@@ -25,8 +25,7 @@ pub fn reenqueue_timers_for_pending_bet_outcomes() {
     });
 }
 
-#[update]
-// #[update(guard = "is_caller_global_admin_or_controller")]
+#[update(guard = "is_caller_global_admin_or_controller")]
 async fn once_reenqueue_timers_for_pending_bet_outcomes() -> Result<Vec<(u64, u8)>, String> {
     let current_time = system_time::get_current_system_time_from_ic();
 
