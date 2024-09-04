@@ -48,6 +48,7 @@ pub enum CdaoDeployError {
     TokenLimit(usize),
     CallError(RejectionCode, String),
     InvalidInitPayload(String),
+    Unauthenticated,
 }
 
 impl From<(RejectionCode, String)> for CdaoDeployError {

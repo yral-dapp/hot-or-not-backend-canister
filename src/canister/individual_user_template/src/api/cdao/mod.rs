@@ -90,6 +90,14 @@ async fn deployed_cdao_canisters() -> Vec<DeployedCdaoCanisters> {
 async fn deploy_cdao_sns(
     init_payload: SnsInitPayload,
 ) -> Result<DeployedCdaoCanisters, CdaoDeployError> { 
+    // * access control
+    let current_caller = ic_cdk::caller();
+    let my_principal_id = CANISTER_DATA
+        .with(|canister_data_ref_cell| canister_data_ref_cell.borrow().profile.principal_id);
+    if my_principal_id != Some(current_caller) {
+        return Err(CdaoDeployError::Unauthenticated);
+    };
+
     let (registered, limit_hit) = CANISTER_DATA.with(|cdata| {
         let cdata = cdata.borrow();
         let registered = matches!(cdata.session_type, Some(SessionType::RegisteredSession));
