@@ -1,6 +1,6 @@
 mod token;
 
-use std::collections::{HashMap, VecDeque};
+use std::collections::VecDeque;
 
 use candid::{Encode, Principal};
 use futures::{
@@ -154,20 +154,11 @@ async fn deploy_cdao_sns(
         })
         .expect("SNS WASM not specified in config");
 
-    let mut sns_versions: HashMap<String, String> = HashMap::new();
-    sns_versions.insert("Governance".to_string(), "3feb8ff7b47f53da83235e4c68676bb6db54df1e62df3681de9425ad5cf43be5".to_string());
-    sns_versions.insert("Ledger Index".to_string(), "3bb490d197b8cf2e7d9948bcb5d1fc46747a835294b3ffe47b882dbfa584555f".to_string());
-    sns_versions.insert("Root".to_string(), "495e31370b14fa61c76bd1483c9f9ba66733793ee2963e8e44a231436a60bcc6".to_string());
-    sns_versions.insert("Swap".to_string(), "e8942f56f9439b89b13bd8037f357126e24f1e7932cf03018243347505959fd4".to_string());
-    sns_versions.insert("Ledger".to_string(), "5c595c2adc7f6d9971298fee2fa666929711e73341192ab70804c783a0eee03f".to_string());
-    sns_versions.insert("Ledger Archive".to_string(), "08ae5042c8e413716d04a08db886b8c6b01bb610b8197cdbe052c59538b924f0".to_string());
-
-    let get_wasm_hash = |name: &str| hex::decode(&sns_versions[name]).unwrap();
-    let gov_hash = get_wasm_hash("Governance");
-    let ledger_hash = get_wasm_hash("Ledger");
-    let root_hash = get_wasm_hash("Root");
-    let swap_hash = get_wasm_hash("Swap");
-    let index_hash = get_wasm_hash("Ledger Index");
+    let gov_hash = hex::decode("3feb8ff7b47f53da83235e4c68676bb6db54df1e62df3681de9425ad5cf43be5").unwrap();
+    let ledger_hash = hex::decode("5c595c2adc7f6d9971298fee2fa666929711e73341192ab70804c783a0eee03f").unwrap();;
+    let root_hash = hex::decode("495e31370b14fa61c76bd1483c9f9ba66733793ee2963e8e44a231436a60bcc6").unwrap();;
+    let swap_hash = hex::decode("e8942f56f9439b89b13bd8037f357126e24f1e7932cf03018243347505959fd4").unwrap();;
+    let index_hash = hex::decode("3bb490d197b8cf2e7d9948bcb5d1fc46747a835294b3ffe47b882dbfa584555f").unwrap();;
 
     let mut wasm_bins: VecDeque<_> = [gov_hash, ledger_hash, root_hash, swap_hash, index_hash]
         .into_iter()
