@@ -43,6 +43,7 @@ type CdaoDeployError = variant {
   CallError : record { RejectionCode; text };
   InvalidInitPayload : text;
   TokenLimit : nat64;
+  Unauthenticated;
 };
 type CdaoTokenError = variant {
   NoBalance;

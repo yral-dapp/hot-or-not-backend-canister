@@ -125,7 +125,7 @@ pub fn _default_success_history(
 }
 
 pub fn _default_token_list() -> ic_stable_structures::btreemap::BTreeMap<Principal, (), Memory> {
-    ic_stable_structures::btreemap::BTreeMap::new(get_token_list_memory())
+    ic_stable_structures::btreemap::BTreeMap::init(get_token_list_memory())
 }
 
 pub fn _default_success_history_v1(
