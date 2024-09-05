@@ -84,6 +84,7 @@ service : (PlatformOrchestratorInitArgs) -> {
   update_canisters_last_functionality_access_time : () -> (Result);
   update_global_known_principal : (KnownPrincipalType, principal) -> (Result);
   update_profile_owner_for_individual_canisters : () -> ();
+  update_restart_timers_hon_game : () -> (Result);
   update_subnet_known_principal : (
       principal,
       KnownPrincipalType,

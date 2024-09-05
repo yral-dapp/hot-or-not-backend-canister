@@ -46,7 +46,7 @@ fn add_post_v2(post_details: PostDetailsFromFrontend) -> Result<u64, String> {
 
     update_scores_and_share_with_post_cache_if_difference_beyond_threshold(&post_id);
 
-    if post_details.creator_consent_for_inclusion_in_hot_or_not {
+    // if post_details.creator_consent_for_inclusion_in_hot_or_not {
         // * schedule hot_or_not outcome tabulation for the 48 hours after the post is created
         (1..=48).for_each(|slot_number: u8| {
             ic_cdk_timers::set_timer(
@@ -61,8 +61,8 @@ fn add_post_v2(post_details: PostDetailsFromFrontend) -> Result<u64, String> {
                     });
                 },
             );
-        })
-    }
+        });
+    // }
 
     Ok(post_id)
 }
