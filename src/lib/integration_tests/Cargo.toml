@@ -12,6 +12,8 @@ pocket-ic = { workspace = true }
 shared_utils = { workspace = true }
 serde = { workspace = true }
 ic-ledger-types = { workspace = true }
+ic-sns-init = { workspace = true }
+ic-sns-wasm = { workspace = true }
 
 [dev-dependencies]
 ic-test-state-machine-client = { workspace = true }

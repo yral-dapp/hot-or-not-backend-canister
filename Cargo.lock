@@ -3416,6 +3416,8 @@ dependencies = [
  "candid",
  "ic-cdk 0.13.5",
  "ic-ledger-types",
+ "ic-sns-init",
+ "ic-sns-wasm",
  "ic-test-state-machine-client",
  "pocket-ic",
  "serde",
