@@ -1,5 +1,25 @@
 {
   "canisters": {
+    "icp_ledger": {
+      "type": "custom",
+      "candid": "candid/ledger.did",
+      "wasm": "./icp_ledger.wasm.gz",
+      "remote": {
+        "id": {
+          "ic": "ryjl3-tyaaa-aaaaa-aaaba-cai"
+        }
+      }
+    },
+    "icp_index": {
+      "type": "custom",
+      "candid": "candid/index.did",
+      "wasm": "./icp_index.wasm.gz",
+      "remote": {
+        "id": {
+          "ic": "qhbym-qaaaa-aaaaa-aaafq-cai"
+        }
+      }
+    },
     "configuration": {
       "candid": "./src/canister/configuration/can.did",
       "declarations": {
