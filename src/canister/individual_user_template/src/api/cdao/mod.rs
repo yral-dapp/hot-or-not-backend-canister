@@ -89,6 +89,7 @@ async fn deployed_cdao_canisters() -> Vec<DeployedCdaoCanisters> {
 #[update]
 async fn deploy_cdao_sns(
     init_payload: SnsInitPayload,
+    swap_time: u64,
 ) -> Result<DeployedCdaoCanisters, CdaoDeployError> { 
     // * access control
     let current_caller = ic_cdk::caller();
@@ -140,7 +141,7 @@ async fn deploy_cdao_sns(
         .map_err(CdaoDeployError::InvalidInitPayload)?;
     let time_seconds = ic_cdk::api::time() / 1_000_000_000;
     payloads.swap.swap_start_timestamp_seconds = Some(time_seconds);
-    payloads.swap.swap_due_timestamp_seconds = Some(time_seconds + 300);
+    payloads.swap.swap_due_timestamp_seconds = Some(time_seconds + swap_time);
     payloads.swap.icp_ledger_canister_id = "ryjl3-tyaaa-aaaaa-aaaba-cai".to_string();
     payloads.swap.nns_governance_canister_id = ic_cdk::id().to_string();
     

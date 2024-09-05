@@ -550,7 +550,7 @@ service : (IndividualUserTemplateInitArgs) -> {
   create_a_namespace : (text) -> (Result_4);
   delete_key_value_pair : (nat64, text) -> (Result_5);
   delete_multiple_key_value_pairs : (nat64, vec text) -> (Result_6);
-  deploy_cdao_sns : (SnsInitPayload) -> (Result_7);
+  deploy_cdao_sns : (SnsInitPayload, nat64) -> (Result_7);
   deployed_cdao_canisters : () -> (vec DeployedCdaoCanisters) query;
   do_i_follow_this_user : (FolloweeArg) -> (Result_8) query;
   download_snapshot : (nat64, nat64) -> (blob) query;
