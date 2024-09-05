@@ -19,6 +19,7 @@ mod update_profile_owner_for_individual_users;
 pub mod upgrade_canisters_in_network;
 mod upgrade_specific_individual_canister;
 pub mod upload_wasms;
+pub mod update_timers_for_hon_game;
 
 #[query]
 pub fn get_version() -> String {
