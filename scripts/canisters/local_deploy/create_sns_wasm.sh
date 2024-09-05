@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DFX_IC_COMMIT=94bbea43c7585a1ef970bd569a447c269af9650b
+DFX_IC_COMMIT=a0207146be211cdff83321c99e9e70baa62733c7
 
 if [ ! -e "./sns-wasm-canister.wasm" ]; then
     wget "https://download.dfinity.systems/ic/$DFX_IC_COMMIT/canisters/sns-wasm-canister.wasm.gz"
@@ -19,7 +19,6 @@ fi
 
 dfx canister create --no-wallet sns_wasm
 SNS_WASM_CANISTER="$(dfx canister id sns_wasm)"
-
 dfx canister install sns_wasm --wasm ./sns-wasm-canister.wasm --argument "(record {
     allowed_principals = vec {};
     access_controls_enabled = false;

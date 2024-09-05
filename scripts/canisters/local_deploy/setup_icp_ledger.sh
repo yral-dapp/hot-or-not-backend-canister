@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 
-DFX_IC_COMMIT=94bbea43c7585a1ef970bd569a447c269af9650b
+DFX_IC_COMMIT=a0207146be211cdff83321c99e9e70baa62733c7
 
 echo -e "\n\n\n\n\n\n\n\n\n"
 
 DIR=/app/target/ic
 
-# if [ ! -d "$DIR" ]; then
-#   mkdir -p "$DIR"
-# fi
+if [ ! -d "$DIR" ]; then
+  mkdir -p "$DIR"
+fi
 
 curl -o ./icp_index.wasm.gz "https://download.dfinity.systems/ic/$DFX_IC_COMMIT/canisters/ic-icp-index-canister.wasm.gz"
 
