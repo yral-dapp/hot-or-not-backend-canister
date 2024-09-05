@@ -3,7 +3,7 @@ use std::time::{Duration, SystemTime};
 use ic_cdk_macros::update;
 // use rand::Rng;
 use shared_utils::{
-    common::utils::permissions::is_caller_controller,
+    common::utils::permissions::is_caller_controller_or_global_admin,
     canister_specific::individual_user_template::types::hot_or_not::{
         GlobalRoomId, RoomBetPossibleOutcomes, SlotId, DURATION_OF_EACH_SLOT_IN_SECONDS,
     },
@@ -26,7 +26,7 @@ pub fn reenqueue_timers_for_pending_bet_outcomes() {
     });
 }
 
-#[update(guard = "is_caller_controller")]
+#[update(guard = "is_caller_controller_or_global_admin")]
 async fn once_reenqueue_timers_for_pending_bet_outcomes() -> Result<Vec<(u64, u8)>, String> {
     let current_time = system_time::get_current_system_time_from_ic();
 
