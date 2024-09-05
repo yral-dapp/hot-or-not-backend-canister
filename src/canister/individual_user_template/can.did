@@ -50,6 +50,7 @@ type CdaoTokenError = variant {
   InvalidRoot;
   CallError : record { RejectionCode; text };
   Transfer : TransferError;
+  Unauthenticated;
 };
 type CfNeuron = record {
   has_created_neuron_recipes : opt bool;

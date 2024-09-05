@@ -39,6 +39,14 @@ async fn add_token(root_canister: Principal) -> Result<bool, CdaoTokenError> {
 
 #[update]
 async fn transfer_token_to_user_canister(token_root: Principal, target_canister: Principal, memo: Option<Memo>, amount: Nat) -> Result<(), CdaoTokenError> {
+    // * access control
+    let current_caller = ic_cdk::caller();
+    let my_principal_id = CANISTER_DATA
+        .with(|canister_data_ref_cell| canister_data_ref_cell.borrow().profile.principal_id);
+    if my_principal_id != Some(current_caller) {
+        return Err(CdaoTokenError::Unauthenticated);
+    };
+
     let res: (ListSnsCanistersResponse,) = ic_cdk::call(token_root, "list_sns_canisters", (ListSnsCanistersRequest {},)).await?;
     let ledger = res.0.ledger.ok_or(CdaoTokenError::InvalidRoot)?;
 

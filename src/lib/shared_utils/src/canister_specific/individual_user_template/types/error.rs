@@ -63,6 +63,7 @@ pub enum CdaoTokenError {
     Transfer(TransferError),
     NoBalance,
     CallError(RejectionCode, String),
+    Unauthenticated
 }
 
 impl From<(RejectionCode, String)> for CdaoTokenError {
