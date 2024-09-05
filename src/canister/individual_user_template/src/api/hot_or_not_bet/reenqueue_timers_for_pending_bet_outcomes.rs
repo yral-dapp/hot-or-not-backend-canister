@@ -3,7 +3,7 @@ use std::time::{Duration, SystemTime};
 use ic_cdk_macros::update;
 // use rand::Rng;
 use shared_utils::{
-    utils::permissions::is_caller_controller,
+    common::utils::permissions::is_caller_controller,
     canister_specific::individual_user_template::types::hot_or_not::{
         GlobalRoomId, RoomBetPossibleOutcomes, SlotId, DURATION_OF_EACH_SLOT_IN_SECONDS,
     },
