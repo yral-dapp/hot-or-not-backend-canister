@@ -11,5 +11,3 @@ ic-test-state-machine
 argument
 .history
 !scripts/canisters/docker/local-admin.pem
-*.wasm
-*.wasm.gz

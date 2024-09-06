@@ -98,6 +98,7 @@ pub const YRAL_POST_CACHE_CANISTER_ID: &str = "zyajx-3yaaa-aaaag-acoga-cai";
 pub const GOVERNANCE_CANISTER_ID: &str = "6wcax-haaaa-aaaaq-aaava-cai";
 pub const NNS_CYCLE_MINTING_CANISTER: &str = "rkp4c-7iaaa-aaaaa-aaaca-cai";
 pub const NNS_LEDGER_CANISTER_ID: &str = "ryjl3-tyaaa-aaaaa-aaaba-cai";
+pub const SNS_WASM_W_PRINCIPAL_ID: &'static str = "qaa6y-5yaaa-aaaaa-aaafa-cai";
 pub const GLOBAL_SUPER_ADMIN_USER_ID: &str =
     "7gaq2-4kttl-vtbt4-oo47w-igteo-cpk2k-57h3p-yioqe-wkawi-wz45g-jae";
 pub const RECLAIM_CANISTER_PRINCIPAL_ID: &str =
