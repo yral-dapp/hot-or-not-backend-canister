@@ -12,7 +12,7 @@ use std::io::Read;
 use std::time::{Duration, UNIX_EPOCH};
 
 
-use candid::{CandidType, Encode, Principal};
+use candid::{CandidType, Decode, Encode, Principal};
 use icp_ledger;
 use ic_cdk::api::{management_canister::provisional::CanisterSettings, time};
 use ic_ledger_types::{AccountIdentifier, BlockIndex, Tokens, DEFAULT_SUBACCOUNT};
@@ -20,7 +20,7 @@ use pocket_ic::{PocketIc, PocketIcBuilder, WasmResult};
 use serde::{Deserialize, Serialize};
 use shared_utils::{
     canister_specific::{
-        individual_user_template,
+        individual_user_template::{self, types::cdao::DeployedCdaoCanisters, types::error::CdaoDeployError},
         platform_orchestrator::{
             self,
             types::args::{PlatformOrchestratorInitArgs, UpgradeCanisterArg},
@@ -34,7 +34,7 @@ use shared_utils::{
         },
         utils::system_time,
     },
-    constant::{NNS_CYCLE_MINTING_CANISTER, NNS_LEDGER_CANISTER_ID, YRAL_POST_CACHE_CANISTER_ID, SNS_WASM_W_PRINCIPAL_ID},
+    constant::{NNS_CYCLE_MINTING_CANISTER, NNS_LEDGER_CANISTER_ID, SNS_WASM_W_PRINCIPAL_ID, YRAL_POST_CACHE_CANISTER_ID},
 };
 use test_utils::setup::{
     env::pocket_ic_env::get_new_pocket_ic_env,
@@ -273,7 +273,7 @@ fn creator_dao_tests() {
         sns_wasm_w_canister_id, 
         super_admin, 
         "add_wasm", 
-        candid::encode_one(add_wasm(include_bytes!("../../../../../wasms/sns-root-canister.wasm.gz"), 1)).unwrap()
+        candid::encode_one(add_wasm(include_bytes!("../../../../../wasms/root.wasm.gz"), 1)).unwrap()
     ).map(|res| {
         let response: AddWasmResultRecord = match res {
             WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
@@ -287,7 +287,7 @@ fn creator_dao_tests() {
         sns_wasm_w_canister_id, 
         super_admin, 
         "add_wasm", 
-        candid::encode_one(add_wasm(include_bytes!("../../../../../wasms/sns-governance-canister.wasm.gz"), 2)).unwrap()
+        candid::encode_one(add_wasm(include_bytes!("../../../../../wasms/governance.wasm.gz"), 2)).unwrap()
     ).map(|res| {
         let response: AddWasmResultRecord = match res {
             WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
@@ -301,7 +301,7 @@ fn creator_dao_tests() {
         sns_wasm_w_canister_id, 
         super_admin, 
         "add_wasm", 
-        candid::encode_one(add_wasm(include_bytes!("../../../../../wasms/ic-icrc1-ledger.wasm.gz"), 3)).unwrap()
+        candid::encode_one(add_wasm(include_bytes!("../../../../../wasms/ledger.wasm.gz"), 3)).unwrap()
     ).map(|res| {
         let response: AddWasmResultRecord = match res {
             WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
@@ -315,7 +315,7 @@ fn creator_dao_tests() {
         sns_wasm_w_canister_id, 
         super_admin, 
         "add_wasm", 
-        candid::encode_one(add_wasm(include_bytes!("../../../../../wasms/sns-swap-canister.wasm.gz"), 4)).unwrap()
+        candid::encode_one(add_wasm(include_bytes!("../../../../../wasms/swap.wasm.gz"), 4)).unwrap()
     ).map(|res| {
         let response: AddWasmResultRecord = match res {
             WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
@@ -329,7 +329,7 @@ fn creator_dao_tests() {
         sns_wasm_w_canister_id, 
         super_admin, 
         "add_wasm", 
-        candid::encode_one(add_wasm(include_bytes!("../../../../../wasms/ic-icrc1-archive.wasm.gz"), 5)).unwrap()
+        candid::encode_one(add_wasm(include_bytes!("../../../../../wasms/archive.wasm.gz"), 5)).unwrap()
     ).map(|res| {
         let response: AddWasmResultRecord = match res {
             WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
@@ -343,7 +343,7 @@ fn creator_dao_tests() {
         sns_wasm_w_canister_id, 
         super_admin, 
         "add_wasm", 
-        candid::encode_one(add_wasm(include_bytes!("../../../../../wasms/ic-icrc1-index.wasm.gz"), 6)).unwrap()
+        candid::encode_one(add_wasm(include_bytes!("../../../../../wasms/index.wasm.gz"), 6)).unwrap()
     ).map(|res| {
         let response: AddWasmResultRecord = match res {
             WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
@@ -454,9 +454,40 @@ fn creator_dao_tests() {
         "deploy_cdao_sns",
         candid::encode_args((sns_init_args, 600 as u64)).unwrap(),
     ).map(|res| {
-        let response: Result<individual_user_template::types::cdao::DeployedCdaoCanisters, individual_user_template::types::error::CdaoDeployError> = match res {
-            WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+        let response: Result<DeployedCdaoCanisters, CdaoDeployError> = match res {
+            WasmResult::Reply(payload) => {
+                ic_cdk::println!("🧪 Call made");
+                Decode!(&payload, Result<DeployedCdaoCanisters, CdaoDeployError>).unwrap()
+            },
             _ => panic!("\n🛑 deploy cdao failed with {:?}", res)
+        };
+        response
+    }).unwrap();
+    ic_cdk::println!("🧪 Result: {:?}", res);
+
+    let res = pocket_ic.query_call(
+        alice_cannister_id,
+        alice_principal,
+        "get_well_known_principal_value", 
+        candid::encode_one((KnownPrincipalType::CanisterIdSnsWasm)).unwrap(),
+    ).map(|res| {
+        let response: Option<Principal> = match res {
+            WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+            _ => panic!("\n🛑 get requester principals canister id failed\n"),
+        };
+        response
+    }).unwrap();
+    ic_cdk::println!("🧪 Result: {:?}", res.unwrap().to_string());
+
+    let res = pocket_ic.query_call(
+        alice_cannister_id,
+        alice_principal,
+        "deployed_cdao_canisters", 
+        candid::encode_one(()).unwrap(),
+    ).map(|res| {
+        let response: Vec<DeployedCdaoCanisters> = match res {
+            WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+            _ => panic!("\n🛑 get requester principals canister id failed\n"),
         };
         response
     }).unwrap();
