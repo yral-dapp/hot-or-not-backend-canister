@@ -273,7 +273,7 @@ fn creator_dao_tests() {
         sns_wasm_w_canister_id, 
         super_admin, 
         "add_wasm", 
-        candid::encode_one(add_wasm(include_bytes!("../../../../../wasms/root.wasm.gz"), 1)).unwrap()
+        candid::encode_one(add_wasm(include_bytes!("../../../../../oldwasm/sns-root-canister.wasm"), 1)).unwrap()
     ).map(|res| {
         let response: AddWasmResultRecord = match res {
             WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
@@ -287,7 +287,7 @@ fn creator_dao_tests() {
         sns_wasm_w_canister_id, 
         super_admin, 
         "add_wasm", 
-        candid::encode_one(add_wasm(include_bytes!("../../../../../wasms/governance.wasm.gz"), 2)).unwrap()
+        candid::encode_one(add_wasm(include_bytes!("../../../../../oldwasm/sns-governance-canister.wasm"), 2)).unwrap()
     ).map(|res| {
         let response: AddWasmResultRecord = match res {
             WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
@@ -301,7 +301,7 @@ fn creator_dao_tests() {
         sns_wasm_w_canister_id, 
         super_admin, 
         "add_wasm", 
-        candid::encode_one(add_wasm(include_bytes!("../../../../../wasms/ledger.wasm.gz"), 3)).unwrap()
+        candid::encode_one(add_wasm(include_bytes!("../../../../../oldwasm/ic-icrc1-ledger.wasm"), 3)).unwrap()
     ).map(|res| {
         let response: AddWasmResultRecord = match res {
             WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
@@ -315,7 +315,7 @@ fn creator_dao_tests() {
         sns_wasm_w_canister_id, 
         super_admin, 
         "add_wasm", 
-        candid::encode_one(add_wasm(include_bytes!("../../../../../wasms/swap.wasm.gz"), 4)).unwrap()
+        candid::encode_one(add_wasm(include_bytes!("../../../../../oldwasm/sns-swap-canister.wasm"), 4)).unwrap()
     ).map(|res| {
         let response: AddWasmResultRecord = match res {
             WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
@@ -329,7 +329,7 @@ fn creator_dao_tests() {
         sns_wasm_w_canister_id, 
         super_admin, 
         "add_wasm", 
-        candid::encode_one(add_wasm(include_bytes!("../../../../../wasms/archive.wasm.gz"), 5)).unwrap()
+        candid::encode_one(add_wasm(include_bytes!("../../../../../oldwasm/ic-icrc1-archive.wasm"), 5)).unwrap()
     ).map(|res| {
         let response: AddWasmResultRecord = match res {
             WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
@@ -343,7 +343,7 @@ fn creator_dao_tests() {
         sns_wasm_w_canister_id, 
         super_admin, 
         "add_wasm", 
-        candid::encode_one(add_wasm(include_bytes!("../../../../../wasms/index.wasm.gz"), 6)).unwrap()
+        candid::encode_one(add_wasm(include_bytes!("../../../../../oldwasm/ic-icrc1-index.wasm"), 6)).unwrap()
     ).map(|res| {
         let response: AddWasmResultRecord = match res {
             WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
