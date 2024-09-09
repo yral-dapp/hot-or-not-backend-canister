@@ -12,7 +12,7 @@ use std::io::Read;
 use std::time::{Duration, UNIX_EPOCH};
 
 
-use candid::{CandidType, Decode, Encode, Principal};
+use candid::{CandidType, Decode, Encode, Principal, Nat};
 use icp_ledger;
 use ic_cdk::api::{management_canister::provisional::CanisterSettings, time};
 use ic_ledger_types::{AccountIdentifier, BlockIndex, Tokens, DEFAULT_SUBACCOUNT};
@@ -120,10 +120,12 @@ fn creator_dao_tests() {
         .cloned()
         .unwrap();
 
-    let super_admin = known_principal
-        .get(&KnownPrincipalType::UserIdGlobalSuperAdmin)
-        .cloned()
-        .unwrap();
+    // let super_admin = known_principal
+    //     .get(&KnownPrincipalType::UserIdGlobalSuperAdmin)
+    //     .cloned()
+    //     .unwrap();
+
+    let super_admin = get_global_super_admin_principal_id();
 
     let application_subnets = pocket_ic.topology().get_app_subnets();
 
@@ -273,7 +275,7 @@ fn creator_dao_tests() {
         sns_wasm_w_canister_id, 
         super_admin, 
         "add_wasm", 
-        candid::encode_one(add_wasm(include_bytes!("../../../../../oldwasm/sns-root-canister.wasm"), 1)).unwrap()
+        candid::encode_one(add_wasm(include_bytes!("../../../../../wasms/root.wasm.gz"), 1)).unwrap()
     ).map(|res| {
         let response: AddWasmResultRecord = match res {
             WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
@@ -287,7 +289,7 @@ fn creator_dao_tests() {
         sns_wasm_w_canister_id, 
         super_admin, 
         "add_wasm", 
-        candid::encode_one(add_wasm(include_bytes!("../../../../../oldwasm/sns-governance-canister.wasm"), 2)).unwrap()
+        candid::encode_one(add_wasm(include_bytes!("../../../../../wasms/governance.wasm.gz"), 2)).unwrap()
     ).map(|res| {
         let response: AddWasmResultRecord = match res {
             WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
@@ -301,7 +303,7 @@ fn creator_dao_tests() {
         sns_wasm_w_canister_id, 
         super_admin, 
         "add_wasm", 
-        candid::encode_one(add_wasm(include_bytes!("../../../../../oldwasm/ic-icrc1-ledger.wasm"), 3)).unwrap()
+        candid::encode_one(add_wasm(include_bytes!("../../../../../wasms/ledger.wasm.gz"), 3)).unwrap()
     ).map(|res| {
         let response: AddWasmResultRecord = match res {
             WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
@@ -315,7 +317,7 @@ fn creator_dao_tests() {
         sns_wasm_w_canister_id, 
         super_admin, 
         "add_wasm", 
-        candid::encode_one(add_wasm(include_bytes!("../../../../../oldwasm/sns-swap-canister.wasm"), 4)).unwrap()
+        candid::encode_one(add_wasm(include_bytes!("../../../../../wasms/swap.wasm.gz"), 4)).unwrap()
     ).map(|res| {
         let response: AddWasmResultRecord = match res {
             WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
@@ -329,7 +331,7 @@ fn creator_dao_tests() {
         sns_wasm_w_canister_id, 
         super_admin, 
         "add_wasm", 
-        candid::encode_one(add_wasm(include_bytes!("../../../../../oldwasm/ic-icrc1-archive.wasm"), 5)).unwrap()
+        candid::encode_one(add_wasm(include_bytes!("../../../../../wasms/archive.wasm.gz"), 5)).unwrap()
     ).map(|res| {
         let response: AddWasmResultRecord = match res {
             WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
@@ -343,7 +345,7 @@ fn creator_dao_tests() {
         sns_wasm_w_canister_id, 
         super_admin, 
         "add_wasm", 
-        candid::encode_one(add_wasm(include_bytes!("../../../../../oldwasm/ic-icrc1-index.wasm"), 6)).unwrap()
+        candid::encode_one(add_wasm(include_bytes!("../../../../../wasms/index.wasm.gz"), 6)).unwrap()
     ).map(|res| {
         let response: AddWasmResultRecord = match res {
             WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
@@ -487,6 +489,42 @@ fn creator_dao_tests() {
     ).map(|res| {
         let response: Vec<DeployedCdaoCanisters> = match res {
             WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+            _ => panic!("\n🛑 get requester principals canister id failed\n"),
+        };
+        response
+    }).unwrap();
+    ic_cdk::println!("🧪 Result: {:?}", res);
+    for can in res {
+        ic_cdk::println!("🧪 Gov Canister ID: {:?}", can.governance.to_string());
+        ic_cdk::println!("🧪 Ind Canister ID: {:?}", can.index.to_string());
+        ic_cdk::println!("🧪 Ldg Canister ID: {:?}", can.ledger.to_string());
+        ic_cdk::println!("🧪 Rrt Canister ID: {:?}", can.root.to_string());
+        ic_cdk::println!("🧪 Swp Canister ID: {:?}", can.swap.to_string());
+    }
+
+    let res = pocket_ic.query_call(
+        Principal::from_text(ICP_LEDGER_CANISTER_ID).unwrap(),
+        super_admin,
+        "icrc1_total_supply",
+        candid::encode_one(()).unwrap(),
+    ).map(|res| {
+        let response = match res {
+            WasmResult::Reply(payload) => Decode!(&payload, Nat).unwrap(),
+            _ => panic!("\n🛑 get requester principals canister id failed\n"),
+        };
+        response
+    }).unwrap();
+    ic_cdk::println!("🧪 Result: {:?}", res);
+
+    // check super admin icp balance
+    let res = pocket_ic.query_call(
+        Principal::from_text(ICP_LEDGER_CANISTER_ID).unwrap(),
+        super_admin,
+        "icrc1_balance_of",
+        candid::encode_one(types::Icrc1BalanceOfArg{owner: super_admin, subaccount: None}).unwrap(),
+    ).map(|res| {
+        let response = match res {
+            WasmResult::Reply(payload) => Decode!(&payload, Nat).unwrap(),
             _ => panic!("\n🛑 get requester principals canister id failed\n"),
         };
         response

@@ -455,3 +455,10 @@ pub struct TransferFee { pub transfer_fee: Tokens }
 //     (TransferFee,)
 //   > { ic_cdk::call(self.0, "transfer_fee", (arg0,)).await }
 // }
+
+// icrc1_balance_of arg
+#[derive(CandidType, Deserialize)]
+pub struct Icrc1BalanceOfArg {
+  pub owner: Principal,
+  pub  subaccount: Option<serde_bytes::ByteBuf>,
+}
