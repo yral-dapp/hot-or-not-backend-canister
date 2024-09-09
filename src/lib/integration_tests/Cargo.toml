@@ -22,6 +22,7 @@ serde_bytes = "0.11.15"
 icp-ledger = { git = "https://github.com/dfinity/ic", rev = "tags/release-2024-05-29_23-02-base"}
 ic-base-types = { git = "https://github.com/dfinity/ic", rev = "tags/release-2024-05-29_23-02-base"}
 ic-sns-swap = { git = "https://github.com/dfinity/ic", rev = "tags/release-2024-05-29_23-02-base"}
+ic-sns-governance = { git = "https://github.com/dfinity/ic", rev = "tags/release-2024-05-29_23-02-base"}
 
 [dev-dependencies]
 ic-test-state-machine-client = { workspace = true }

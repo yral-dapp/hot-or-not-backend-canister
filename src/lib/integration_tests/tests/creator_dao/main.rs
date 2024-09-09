@@ -5,17 +5,18 @@ use std::{
     collections::{HashMap, HashSet}, fmt::Debug, fs, str::FromStr, time::SystemTime, vec
 };
 use ic_sns_init::pb::v1::{SnsInitPayload, FractionalDeveloperVotingPower, sns_init_payload::InitialTokenDistribution, DeveloperDistribution, SwapDistribution, NeuronDistribution, TreasuryDistribution, AirdropDistribution};
-use ic_sns_swap::pb::v1::{NeuronBasketConstructionParameters};
+use ic_sns_swap::pb::v1::{NeuronBasketConstructionParameters, NewSaleTicketRequest, NewSaleTicketResponse, RefreshBuyerTokensRequest, RefreshBuyerTokensResponse, GetInitRequest, GetInitResponse};
 use sha2::{Sha256, Digest};
+use ic_sns_governance::pb::v1::{ListNeurons, ListNeuronsResponse, neuron, ManageNeuron, ManageNeuronResponse, manage_neuron, Account};
 use flate2::read::GzDecoder;
 use std::io::Read;
 use std::time::{Duration, UNIX_EPOCH};
 
 
 use candid::{CandidType, Decode, Encode, Principal, Nat};
-use icp_ledger;
+use icp_ledger::{AccountIdentifier, Memo, Subaccount, TimeStamp, Tokens as ledgerTokens, TransferArgs};
 use ic_cdk::api::{management_canister::provisional::CanisterSettings, time};
-use ic_ledger_types::{AccountIdentifier, BlockIndex, Tokens, DEFAULT_SUBACCOUNT};
+use ic_ledger_types::{BlockIndex, Tokens, DEFAULT_SUBACCOUNT};
 use pocket_ic::{PocketIc, PocketIcBuilder, WasmResult};
 use serde::{Deserialize, Serialize};
 use shared_utils::{
@@ -44,7 +45,7 @@ use test_utils::setup::{
 };
 use ic_base_types::PrincipalId;
 use ic_sns_wasm::init::SnsWasmCanisterInitPayload;
-pub type CanisterId = Principal;
+// pub type CanisterId = Principal;
 
 pub const ICP_LEDGER_CANISTER_ID: &'static str = "ryjl3-tyaaa-aaaaa-aaaba-cai";
 pub const ICP_INDEX_CANISTER_ID: &'static str = "qhbym-qaaaa-aaaaa-aaafq-cai";
@@ -378,10 +379,12 @@ fn creator_dao_tests() {
     ic_cdk::println!("🧪 HASHMAP {:?}", res);
     assert_eq!(res.len(), 6);
     let start = SystemTime::now();
+
+    let tx_fee = 1u64;
    
     let sns_init_args = SnsInitPayload {
-        confirmation_text: Some("Welcome to the jungle baby".to_string()),
-        transaction_fee_e8s: Some(1u64),
+        confirmation_text: Some("GET RICH QUICK".to_string()),
+        transaction_fee_e8s: Some(tx_fee),
         token_name: Some("Simulation Governance".to_string()),
         token_symbol: Some("SIMG".to_string()),
         proposal_reject_cost_e8s: Some(1u64),
@@ -431,8 +434,15 @@ fn creator_dao_tests() {
                         developer_neurons: vec![
                             NeuronDistribution {
                                 controller: Some(PrincipalId::from_str(&alice_principal.to_string()).unwrap()),
-                                stake_e8s: 4_500_000,
+                                stake_e8s: 4_400_000,
                                 memo: 0,
+                                dissolve_delay_seconds: 0,
+                                vesting_period_seconds: None
+                            },
+                            NeuronDistribution {
+                                controller: Some(PrincipalId::from_str(&alice_principal.to_string()).unwrap()),
+                                stake_e8s: 100_000,
+                                memo: 1,
                                 dissolve_delay_seconds: 2,
                                 vesting_period_seconds: None
                             }
@@ -475,7 +485,7 @@ fn creator_dao_tests() {
     ).map(|res| {
         let response: Option<Principal> = match res {
             WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-            _ => panic!("\n🛑 get requester principals canister id failed\n"),
+            _ => panic!("\n🛑 get_well_known_principal_value failed")
         };
         response
     }).unwrap();
@@ -494,13 +504,24 @@ fn creator_dao_tests() {
         response
     }).unwrap();
     ic_cdk::println!("🧪 Result: {:?}", res);
-    for can in res {
+    for can in &res {
         ic_cdk::println!("🧪 Gov Canister ID: {:?}", can.governance.to_string());
         ic_cdk::println!("🧪 Ind Canister ID: {:?}", can.index.to_string());
         ic_cdk::println!("🧪 Ldg Canister ID: {:?}", can.ledger.to_string());
         ic_cdk::println!("🧪 Rrt Canister ID: {:?}", can.root.to_string());
         ic_cdk::println!("🧪 Swp Canister ID: {:?}", can.swap.to_string());
     }
+
+    let mut swap_canister: Option<Principal> = None;
+    let mut gov_canister: Option<Principal> = None;
+    let mut ledger_canister: Option<Principal> = None;
+    if res.len() > 0 {
+        let res = res[0].clone();
+        swap_canister = Some(res.swap);
+        gov_canister = Some(res.governance);
+        ledger_canister = Some(res.ledger);
+    }
+    ic_cdk::println!("🧪🧪🧪 Swap Canister ID: {:?}", swap_canister.unwrap().to_string());
 
     let res = pocket_ic.query_call(
         Principal::from_text(ICP_LEDGER_CANISTER_ID).unwrap(),
@@ -530,4 +551,170 @@ fn creator_dao_tests() {
         response
     }).unwrap();
     ic_cdk::println!("🧪 Result: {:?}", res);
+
+    if let Some(swap_canister) = swap_canister {
+        let res = pocket_ic.update_call(
+            swap_canister, 
+            super_admin, 
+            "new_sale_ticket", 
+            candid::encode_one(NewSaleTicketRequest {
+                amount_icp_e8s: 1000000,
+                subaccount: None,
+            }).unwrap()
+        ).map(|res| {
+            let response: NewSaleTicketResponse = match res {
+                WasmResult::Reply(payload) => Decode!(&payload, NewSaleTicketResponse).unwrap(),
+                _ => panic!("\n🛑 get requester principals canister id failed\n"),
+            };
+            response
+        }).unwrap();
+        ic_cdk::println!("🧪 Result: {:?}", res);
+    // }
+
+    // if let Some(swap_canister) = swap_canister {
+        let subaccount = Subaccount::from(&PrincipalId(super_admin));
+        // let account_id =
+        //     AccountIdentifier::new(PrincipalId(swap_canister), Some(subaccount));
+        let transfer_args = types::Transaction {
+            memo: Some(vec![0]),
+            amount: Nat::from(1000000 as u64),
+            fee: Some(Nat::from(0 as u64)),
+            from_subaccount: None,
+            to: types::Recipient {
+                owner: swap_canister,
+                subaccount: Some(subaccount.to_vec()),
+            },
+            created_at_time: None,
+        };
+        let res = pocket_ic.update_call(
+            Principal::from_text(ICP_LEDGER_CANISTER_ID).unwrap(),
+            super_admin,
+            "icrc1_transfer",
+            Encode!(&transfer_args).unwrap()
+        ).map(|res| {
+            let response: types::TransferResult = match res {
+                WasmResult::Reply(payload) => Decode!(&payload, types::TransferResult).unwrap(),
+                _ => panic!("\n🛑 icrc1_transfer failed with: {:?}", res),
+            };
+            response
+        }).unwrap();
+        ic_cdk::println!("🧪 Result: {:?}", res);
+
+        let res = pocket_ic.update_call(
+            swap_canister,
+            super_admin,
+            "refresh_buyer_tokens",
+            candid::encode_one(RefreshBuyerTokensRequest {
+                buyer: super_admin.to_string(),
+                confirmation_text: Some("GET RICH QUICK".to_string()),
+            }).unwrap()
+        ).map(|res| {
+            let response: RefreshBuyerTokensResponse = match res {
+                WasmResult::Reply(payload) => Decode!(&payload, RefreshBuyerTokensResponse).unwrap(),
+                _ => panic!("\n🛑 get requester principals canister id failed\n"),
+            };
+            response
+        }).unwrap();
+        ic_cdk::println!("🧪 Result: {:?}", res);
+    }
+
+    pocket_ic.advance_time(Duration::from_secs(1000));
+    for _ in 0..500 {
+        pocket_ic.tick();
+    }
+
+    let res = pocket_ic.query_call(
+        swap_canister.unwrap(),
+        super_admin,
+        "get_init",
+        candid::encode_one(GetInitRequest {}).unwrap(),
+    ).map(|res| {
+        let response = match res {
+            WasmResult::Reply(payload) => Decode!(&payload, GetInitResponse).unwrap(),
+            _ => panic!("\n🛑 get requester principals canister id failed\n"),
+        };
+        response
+    }).unwrap();
+    ic_cdk::println!("🧪 Result: {:?}", res);
+
+    if let Some(gov_canister) = gov_canister {
+        let res = pocket_ic.update_call(
+            gov_canister,
+            super_admin,
+            "list_neurons",
+            candid::encode_one(ListNeurons {
+                of_principal: Some(PrincipalId(alice_principal)),
+                limit: 2,
+                start_page_at: None
+            }).unwrap()
+        ).map(|res| {
+            let response: ListNeuronsResponse = match res {
+                WasmResult::Reply(payload) => Decode!(&payload, ListNeuronsResponse).unwrap(),
+                _ => panic!("\n🛑 get requester principals canister id failed\n"),
+            };
+            response
+        }).unwrap();
+        ic_cdk::println!("🧪 Result: {:?}", res);
+
+        let neurons = res.neurons;
+        let mut ix = 0;
+        if neurons[1].dissolve_state.is_some() {
+            if let Some(neuron::DissolveState::DissolveDelaySeconds(x)) = neurons[1].dissolve_state.as_ref() {
+                if *x == 0 {
+                    ix = 1;
+                }
+            }
+        }
+        let neuron_id = neurons[ix].id.as_ref().unwrap().id.clone();
+        let amount = neurons[ix].cached_neuron_stake_e8s;
+        let manage_neuron_arg = ManageNeuron {
+            subaccount: neuron_id,
+            command: Some(
+                manage_neuron::Command::Disburse(manage_neuron::Disburse {
+                    to_account: Some(Account {
+                        owner: Some(PrincipalId(alice_principal)),
+                        subaccount: None
+                    }),
+                    amount: Some(manage_neuron::disburse::Amount { e8s: amount })
+                })
+            )
+        };
+        let res = pocket_ic.update_call(
+            gov_canister,
+            alice_principal,
+            "manage_neuron",
+            candid::encode_one(manage_neuron_arg).unwrap()
+        ).map(|res| {
+            let response: ManageNeuronResponse = match res {
+                WasmResult::Reply(payload) => Decode!(&payload, ManageNeuronResponse).unwrap(),
+                _ => panic!("\n🛑 get requester principals canister id failed\n"),
+            };
+            response
+        }).unwrap();
+        ic_cdk::println!("🧪 Result: {:?}", res);
+    }
+
+    if let Some(ledger_canister) = ledger_canister {
+        let res = pocket_ic.query_call(
+            ledger_canister,
+            alice_principal,
+            "icrc1_balance_of",
+            candid::encode_one(types::Icrc1BalanceOfArg{owner: alice_principal, subaccount: None}).unwrap(),
+        ).map(|res| {
+            let response = match res {
+                WasmResult::Reply(payload) => Decode!(&payload, Nat).unwrap(),
+                _ => panic!("\n🛑 get requester principals canister id failed\n"),
+            };
+            response
+        }).unwrap();
+        ic_cdk::println!("🧪 SNS token Balance of alice: {:?}", res);
+
+        let expected_balance = Nat::from(4_400_000 - tx_fee);
+        ic_cdk::println!("🧪 Expected Balance: {:?}", expected_balance);
+
+        assert!(res == expected_balance);
+
+    } else {
+        panic!("Ledger Canister not found, something is wrong");
+    }
 }
