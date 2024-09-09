@@ -5,7 +5,7 @@ use std::{
     collections::{HashMap, HashSet}, fmt::Debug, fs, str::FromStr, time::SystemTime, vec
 };
 use ic_sns_init::pb::v1::{SnsInitPayload, FractionalDeveloperVotingPower, sns_init_payload::InitialTokenDistribution, DeveloperDistribution, SwapDistribution, NeuronDistribution, TreasuryDistribution, AirdropDistribution};
-use ic_sns_swap::pb::v1::{NeuronBasketConstructionParameters, NewSaleTicketRequest, NewSaleTicketResponse, RefreshBuyerTokensRequest, RefreshBuyerTokensResponse, GetInitRequest, GetInitResponse};
+use ic_sns_swap::{pb::v1::{GetInitRequest, GetInitResponse, NeuronBasketConstructionParameters, NewSaleTicketRequest, NewSaleTicketResponse, RefreshBuyerTokensRequest, RefreshBuyerTokensResponse}, swap};
 use sha2::{Sha256, Digest};
 use ic_sns_governance::pb::v1::{ListNeurons, ListNeuronsResponse, neuron, ManageNeuron, ManageNeuronResponse, manage_neuron, Account};
 use flate2::read::GzDecoder;
@@ -45,7 +45,6 @@ use test_utils::setup::{
 };
 use ic_base_types::PrincipalId;
 use ic_sns_wasm::init::SnsWasmCanisterInitPayload;
-// pub type CanisterId = Principal;
 
 pub const ICP_LEDGER_CANISTER_ID: &'static str = "ryjl3-tyaaa-aaaaa-aaaba-cai";
 pub const ICP_INDEX_CANISTER_ID: &'static str = "qhbym-qaaaa-aaaaa-aaafq-cai";
@@ -58,7 +57,6 @@ struct Wasm {
 }
 
 impl Debug for Wasm {
-    // dont print the wasm: Vec<u8> field
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Wasm")
             .field("proposal_id", &self.proposal_id)
@@ -90,17 +88,12 @@ pub struct ErrorRecord {
 }
 
 fn add_wasm(wasm_file: &[u8], canister_type: u32) -> AddWasmPayload {
-    // Calculate the SHA-256 hash of the WASM file
     let mut hasher = Sha256::new();
     hasher.update(wasm_file);
     let file_hash = hasher.finalize();
 
-    // Create a JSON object representing the WASM module
     let wasm_data = AddWasmPayload {
-        // hash: hex::decode(hex::encode(file_hash)).unwrap(),
         hash: file_hash.to_vec(),
-        // "wasm": base64::encode(wasm_file),
-        // "canister_type": canister_type,
         wasm: Some(Wasm {
             wasm: wasm_file.to_vec(),
             proposal_id: None,
@@ -120,11 +113,6 @@ fn creator_dao_tests() {
         .get(&KnownPrincipalType::CanisterIdPlatformOrchestrator)
         .cloned()
         .unwrap();
-
-    // let super_admin = known_principal
-    //     .get(&KnownPrincipalType::UserIdGlobalSuperAdmin)
-    //     .cloned()
-    //     .unwrap();
 
     let super_admin = get_global_super_admin_principal_id();
 
@@ -188,54 +176,7 @@ fn creator_dao_tests() {
     pocket_ic.add_cycles(alice_cannister_id, 1_000_000_000_000_000);
 
     let offchain_account = get_mock_user_dan_canister_id();
-
-    // let icp_ledger_canister_wasms = include_bytes!("../../../../../wasms/icp_ledger.wasm");
     let icp_ledger_canister_id = Principal::from_text(ICP_LEDGER_CANISTER_ID).unwrap();
-    // let _ = pocket_ic.create_canister_with_id(
-    //     Some(super_admin),
-    //     None,
-    //     Principal::from_text(ICP_LEDGER_CANISTER_ID).unwrap(),
-    // );
-    // let init_args = types::InitArgs {
-    //     send_whitelist: vec![],
-    //     token_symbol: Some("ICP".to_string()),
-    //     transfer_fee: Some(types::Tokens { e8s: 10_000 }), // 10,000 e8s as the transfer fee
-    //     minting_account: alice_cannister_id.to_string(),
-    //     maximum_number_of_accounts: None,
-    //     accounts_overflow_trim_quantity: None,
-    //     transaction_window: None,
-    //     max_message_size_bytes: None,
-    //     icrc1_minting_account: None,
-    //     archive_options: None,
-    //     initial_values: vec![
-    //         (
-    //             minter_account.to_string(),
-    //             types::Tokens { e8s: 100_000_000_000 }, // 100_000_000_000 e8s initial balance
-    //         )
-    //     ],
-    //     token_name: Some("Local ICP".to_string()),
-    //     feature_flags: None,
-    // };
-    // let icp_init_payload = types::LedgerCanisterPayload::Init(init_args);
-
-    // let res = pocket_ic.reinstall_canister(
-    //     icp_ledger_canister_id,
-    //     icp_ledger_canister_wasms.to_vec(),
-    //     Encode!(&icp_init_payload).unwrap(),
-    //     Some(super_admin),
-    // );
-    // if !res.is_ok() {
-    //     let err = res.unwrap_err();
-    //     panic!("🛑 Error: {:?}", err);
-    // }
-
-    // let mint_icp_payload = types::CandidOperation::Mint { to: serde_bytes::ByteBuf::from(icp_ledger::AccountIdentifier::new(PrincipalId(offchain_account), None).to_address()), amount: types::Tokens { e8s: 100_000_000_000 } };
-    // let res = pocket_ic.update_call(
-    //     Principal::from_text(ICP_LEDGER_CANISTER_ID).unwrap(),
-    //     alice_principal,
-    //     "candid_mint",
-    //     candid::encode_one(mint_icp_payload).unwrap(),
-    // );
 
     let sns_wasm_w_canister_wasm = include_bytes!("../../../../../wasms/sns-wasm-canister.wasm");
     let sns_wasm_w_canister_id = Principal::from_text(SNS_WASM_W_PRINCIPAL_ID).unwrap();
@@ -258,19 +199,6 @@ fn creator_dao_tests() {
         Encode!(&sns_wasm_canister_init_payload).unwrap(),
         Some(super_admin),
     );
-
-    // let sns_root_canister_wasm_gz = include_bytes!("../../../../../wasms/sns-root-canister.wasm.gz").to_vec();
-    // let mut hasher = Sha256::new();
-    // hasher.update(&sns_root_canister_wasm_gz);
-    // let file_hash = hasher.finalize();
-    // let file_hash_hex = hex::encode(file_hash);
-    // let mut decoder = GzDecoder::new(&sns_root_canister_wasm_gz[..]);
-    // let mut decompressed_data = Vec::new();
-    // decoder.read_to_end(&mut decompressed_data).unwrap();
-    // let file_hash_bytes = file_hash_hex.as_bytes().to_vec();
-
-    // let mut hash_bytes = [0u8; 32];
-    // hex::decode_to_slice("495e31370b14fa61c76bd1483c9f9ba66733793ee2963e8e44a231436a60bcc6", &mut hash_bytes).expect("Decoding failed");
 
     let res = pocket_ic.update_call(
         sns_wasm_w_canister_id, 
@@ -464,7 +392,7 @@ fn creator_dao_tests() {
         alice_cannister_id,
         alice_principal,
         "deploy_cdao_sns",
-        candid::encode_args((sns_init_args, 600 as u64)).unwrap(),
+        candid::encode_args((sns_init_args, 300 as u64)).unwrap(),
     ).map(|res| {
         let response: Result<DeployedCdaoCanisters, CdaoDeployError> = match res {
             WasmResult::Reply(payload) => {
@@ -512,16 +440,13 @@ fn creator_dao_tests() {
         ic_cdk::println!("🧪 Swp Canister ID: {:?}", can.swap.to_string());
     }
 
-    let mut swap_canister: Option<Principal> = None;
-    let mut gov_canister: Option<Principal> = None;
-    let mut ledger_canister: Option<Principal> = None;
-    if res.len() > 0 {
-        let res = res[0].clone();
-        swap_canister = Some(res.swap);
-        gov_canister = Some(res.governance);
-        ledger_canister = Some(res.ledger);
-    }
-    ic_cdk::println!("🧪🧪🧪 Swap Canister ID: {:?}", swap_canister.unwrap().to_string());
+    assert!(res.len() == 1);
+    let res = res[0];
+    let swap_canister = res.swap;
+    let gov_canister = res.governance;
+    let ledger_canister = res.ledger;
+
+    ic_cdk::println!("🧪🧪🧪 Swap Canister ID: {:?}", swap_canister.to_string());
 
     let res = pocket_ic.query_call(
         Principal::from_text(ICP_LEDGER_CANISTER_ID).unwrap(),
@@ -552,79 +477,73 @@ fn creator_dao_tests() {
     }).unwrap();
     ic_cdk::println!("🧪 Result: {:?}", res);
 
-    if let Some(swap_canister) = swap_canister {
-        let res = pocket_ic.update_call(
-            swap_canister, 
-            super_admin, 
-            "new_sale_ticket", 
-            candid::encode_one(NewSaleTicketRequest {
-                amount_icp_e8s: 1000000,
-                subaccount: None,
-            }).unwrap()
-        ).map(|res| {
-            let response: NewSaleTicketResponse = match res {
-                WasmResult::Reply(payload) => Decode!(&payload, NewSaleTicketResponse).unwrap(),
-                _ => panic!("\n🛑 get requester principals canister id failed\n"),
-            };
-            response
-        }).unwrap();
-        ic_cdk::println!("🧪 Result: {:?}", res);
-    // }
-
-    // if let Some(swap_canister) = swap_canister {
-        let subaccount = Subaccount::from(&PrincipalId(super_admin));
-        // let account_id =
-        //     AccountIdentifier::new(PrincipalId(swap_canister), Some(subaccount));
-        let transfer_args = types::Transaction {
-            memo: Some(vec![0]),
-            amount: Nat::from(1000000 as u64),
-            fee: Some(Nat::from(0 as u64)),
-            from_subaccount: None,
-            to: types::Recipient {
-                owner: swap_canister,
-                subaccount: Some(subaccount.to_vec()),
-            },
-            created_at_time: None,
+    let res = pocket_ic.update_call(
+        swap_canister, 
+        super_admin, 
+        "new_sale_ticket", 
+        candid::encode_one(NewSaleTicketRequest {
+            amount_icp_e8s: 1000000,
+            subaccount: None,
+        }).unwrap()
+    ).map(|res| {
+        let response: NewSaleTicketResponse = match res {
+            WasmResult::Reply(payload) => Decode!(&payload, NewSaleTicketResponse).unwrap(),
+            _ => panic!("\n🛑 get requester principals canister id failed\n"),
         };
-        let res = pocket_ic.update_call(
-            Principal::from_text(ICP_LEDGER_CANISTER_ID).unwrap(),
-            super_admin,
-            "icrc1_transfer",
-            Encode!(&transfer_args).unwrap()
-        ).map(|res| {
-            let response: types::TransferResult = match res {
-                WasmResult::Reply(payload) => Decode!(&payload, types::TransferResult).unwrap(),
-                _ => panic!("\n🛑 icrc1_transfer failed with: {:?}", res),
-            };
-            response
-        }).unwrap();
-        ic_cdk::println!("🧪 Result: {:?}", res);
+        response
+    }).unwrap();
+    ic_cdk::println!("🧪 Result: {:?}", res);
 
-        let res = pocket_ic.update_call(
-            swap_canister,
-            super_admin,
-            "refresh_buyer_tokens",
-            candid::encode_one(RefreshBuyerTokensRequest {
-                buyer: super_admin.to_string(),
-                confirmation_text: Some("GET RICH QUICK".to_string()),
-            }).unwrap()
-        ).map(|res| {
-            let response: RefreshBuyerTokensResponse = match res {
-                WasmResult::Reply(payload) => Decode!(&payload, RefreshBuyerTokensResponse).unwrap(),
-                _ => panic!("\n🛑 get requester principals canister id failed\n"),
-            };
-            response
-        }).unwrap();
-        ic_cdk::println!("🧪 Result: {:?}", res);
-    }
+    let subaccount = Subaccount::from(&PrincipalId(super_admin));
+    let transfer_args = types::Transaction {
+        memo: Some(vec![0]),
+        amount: Nat::from(1000000 as u64),
+        fee: Some(Nat::from(0 as u64)),
+        from_subaccount: None,
+        to: types::Recipient {
+            owner: swap_canister,
+            subaccount: Some(subaccount.to_vec()),
+        },
+        created_at_time: None,
+    };
+    let res = pocket_ic.update_call(
+        Principal::from_text(ICP_LEDGER_CANISTER_ID).unwrap(),
+        super_admin,
+        "icrc1_transfer",
+        Encode!(&transfer_args).unwrap()
+    ).map(|res| {
+        let response: types::TransferResult = match res {
+            WasmResult::Reply(payload) => Decode!(&payload, types::TransferResult).unwrap(),
+            _ => panic!("\n🛑 icrc1_transfer failed with: {:?}", res),
+        };
+        response
+    }).unwrap();
+    ic_cdk::println!("🧪 Result: {:?}", res);
 
-    pocket_ic.advance_time(Duration::from_secs(1000));
+    let res = pocket_ic.update_call(
+        swap_canister,
+        super_admin,
+        "refresh_buyer_tokens",
+        candid::encode_one(RefreshBuyerTokensRequest {
+            buyer: super_admin.to_string(),
+            confirmation_text: Some("GET RICH QUICK".to_string()),
+        }).unwrap()
+    ).map(|res| {
+        let response: RefreshBuyerTokensResponse = match res {
+            WasmResult::Reply(payload) => Decode!(&payload, RefreshBuyerTokensResponse).unwrap(),
+            _ => panic!("\n🛑 get requester principals canister id failed\n"),
+        };
+        response
+    }).unwrap();
+    ic_cdk::println!("🧪 Result: {:?}", res);
+
+    pocket_ic.advance_time(Duration::from_secs(301));
     for _ in 0..500 {
         pocket_ic.tick();
     }
 
     let res = pocket_ic.query_call(
-        swap_canister.unwrap(),
+        swap_canister,
         super_admin,
         "get_init",
         candid::encode_one(GetInitRequest {}).unwrap(),
@@ -637,84 +556,77 @@ fn creator_dao_tests() {
     }).unwrap();
     ic_cdk::println!("🧪 Result: {:?}", res);
 
-    if let Some(gov_canister) = gov_canister {
-        let res = pocket_ic.update_call(
-            gov_canister,
-            super_admin,
-            "list_neurons",
-            candid::encode_one(ListNeurons {
-                of_principal: Some(PrincipalId(alice_principal)),
-                limit: 2,
-                start_page_at: None
-            }).unwrap()
-        ).map(|res| {
-            let response: ListNeuronsResponse = match res {
-                WasmResult::Reply(payload) => Decode!(&payload, ListNeuronsResponse).unwrap(),
-                _ => panic!("\n🛑 get requester principals canister id failed\n"),
-            };
-            response
-        }).unwrap();
-        ic_cdk::println!("🧪 Result: {:?}", res);
+    let res = pocket_ic.update_call(
+        gov_canister,
+        super_admin,
+        "list_neurons",
+        candid::encode_one(ListNeurons {
+            of_principal: Some(PrincipalId(alice_principal)),
+            limit: 2,
+            start_page_at: None
+        }).unwrap()
+    ).map(|res| {
+        let response: ListNeuronsResponse = match res {
+            WasmResult::Reply(payload) => Decode!(&payload, ListNeuronsResponse).unwrap(),
+            _ => panic!("\n🛑 get requester principals canister id failed\n"),
+        };
+        response
+    }).unwrap();
+    ic_cdk::println!("🧪 Result: {:?}", res);
 
-        let neurons = res.neurons;
-        let mut ix = 0;
-        if neurons[1].dissolve_state.is_some() {
-            if let Some(neuron::DissolveState::DissolveDelaySeconds(x)) = neurons[1].dissolve_state.as_ref() {
-                if *x == 0 {
-                    ix = 1;
-                }
+    let neurons = res.neurons;
+    let mut ix = 0;
+    if neurons[1].dissolve_state.is_some() {
+        if let Some(neuron::DissolveState::DissolveDelaySeconds(x)) = neurons[1].dissolve_state.as_ref() {
+            if *x == 0 {
+                ix = 1;
             }
         }
-        let neuron_id = neurons[ix].id.as_ref().unwrap().id.clone();
-        let amount = neurons[ix].cached_neuron_stake_e8s;
-        let manage_neuron_arg = ManageNeuron {
-            subaccount: neuron_id,
-            command: Some(
-                manage_neuron::Command::Disburse(manage_neuron::Disburse {
-                    to_account: Some(Account {
-                        owner: Some(PrincipalId(alice_principal)),
-                        subaccount: None
-                    }),
-                    amount: Some(manage_neuron::disburse::Amount { e8s: amount })
-                })
-            )
+    }
+    let neuron_id = neurons[ix].id.as_ref().unwrap().id.clone();
+    let amount = neurons[ix].cached_neuron_stake_e8s;
+    let manage_neuron_arg = ManageNeuron {
+        subaccount: neuron_id,
+        command: Some(
+            manage_neuron::Command::Disburse(manage_neuron::Disburse {
+                to_account: Some(Account {
+                    owner: Some(PrincipalId(alice_principal)),
+                    subaccount: None
+                }),
+                amount: Some(manage_neuron::disburse::Amount { e8s: amount })
+            })
+        )
+    };
+    let res = pocket_ic.update_call(
+        gov_canister,
+        alice_principal,
+        "manage_neuron",
+        candid::encode_one(manage_neuron_arg).unwrap()
+    ).map(|res| {
+        let response: ManageNeuronResponse = match res {
+            WasmResult::Reply(payload) => Decode!(&payload, ManageNeuronResponse).unwrap(),
+            _ => panic!("\n🛑 get requester principals canister id failed\n"),
         };
-        let res = pocket_ic.update_call(
-            gov_canister,
-            alice_principal,
-            "manage_neuron",
-            candid::encode_one(manage_neuron_arg).unwrap()
-        ).map(|res| {
-            let response: ManageNeuronResponse = match res {
-                WasmResult::Reply(payload) => Decode!(&payload, ManageNeuronResponse).unwrap(),
-                _ => panic!("\n🛑 get requester principals canister id failed\n"),
-            };
-            response
-        }).unwrap();
-        ic_cdk::println!("🧪 Result: {:?}", res);
-    }
+        response
+    }).unwrap();
+    ic_cdk::println!("🧪 Result: {:?}", res);
 
-    if let Some(ledger_canister) = ledger_canister {
-        let res = pocket_ic.query_call(
-            ledger_canister,
-            alice_principal,
-            "icrc1_balance_of",
-            candid::encode_one(types::Icrc1BalanceOfArg{owner: alice_principal, subaccount: None}).unwrap(),
-        ).map(|res| {
-            let response = match res {
-                WasmResult::Reply(payload) => Decode!(&payload, Nat).unwrap(),
-                _ => panic!("\n🛑 get requester principals canister id failed\n"),
-            };
-            response
-        }).unwrap();
-        ic_cdk::println!("🧪 SNS token Balance of alice: {:?}", res);
+    let res = pocket_ic.query_call(
+        ledger_canister,
+        alice_principal,
+        "icrc1_balance_of",
+        candid::encode_one(types::Icrc1BalanceOfArg{owner: alice_principal, subaccount: None}).unwrap(),
+    ).map(|res| {
+        let response = match res {
+            WasmResult::Reply(payload) => Decode!(&payload, Nat).unwrap(),
+            _ => panic!("\n🛑 get requester principals canister id failed\n"),
+        };
+        response
+    }).unwrap();
+    ic_cdk::println!("🧪 SNS token Balance of alice: {:?}", res);
 
-        let expected_balance = Nat::from(4_400_000 - tx_fee);
-        ic_cdk::println!("🧪 Expected Balance: {:?}", expected_balance);
+    let expected_balance = Nat::from(4_400_000 - tx_fee);
+    ic_cdk::println!("🧪 Expected Balance: {:?}", expected_balance);
 
-        assert!(res == expected_balance);
-
-    } else {
-        panic!("Ledger Canister not found, something is wrong");
-    }
+    assert!(res == expected_balance);
 }
