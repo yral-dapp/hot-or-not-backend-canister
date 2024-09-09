@@ -45,8 +45,6 @@ type Result = variant { Ok : text; Err : text };
 type Result_1 = variant { Ok : principal; Err : text };
 type Result_2 = variant { Ok; Err : text };
 type SubnetUpgradeReport = record {
-  succesful_upgrade_count : nat;
-  failed_canister_ids : vec record { principal; principal; text };
   subnet_wise_report : vec record { principal; UpgradeStatus };
 };
 type SystemTime = record {
