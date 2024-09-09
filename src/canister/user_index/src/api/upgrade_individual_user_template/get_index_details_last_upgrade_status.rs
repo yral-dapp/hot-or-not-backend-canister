@@ -1,6 +1,7 @@
 use ic_cdk_macros::query;
 
-use crate::{data_model::canister_upgrade::UpgradeStatus, CANISTER_DATA};
+use crate::CANISTER_DATA;
+use shared_utils::canister_specific::user_index::types::UpgradeStatus;
 
 #[query]
 fn get_index_details_last_upgrade_status() -> UpgradeStatus {

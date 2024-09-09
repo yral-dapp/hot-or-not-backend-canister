@@ -4,13 +4,11 @@ use ic_cdk::api::call::ArgDecoderConfig;
 use ic_cdk_macros::post_upgrade;
 use ic_stable_structures::Memory;
 use shared_utils::{
-    canister_specific::user_index::types::args::UserIndexInitArgs, common::utils::system_time,
+    canister_specific::user_index::types::{args::UserIndexInitArgs, UpgradeStatus},
+    common::utils::system_time,
 };
 
-use crate::{
-    data_model::{canister_upgrade::UpgradeStatus, memory},
-    CANISTER_DATA,
-};
+use crate::{data_model::memory, CANISTER_DATA};
 
 #[post_upgrade]
 fn post_upgrade() {

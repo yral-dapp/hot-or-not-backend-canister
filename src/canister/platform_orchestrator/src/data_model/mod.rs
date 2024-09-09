@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 use shared_utils::{
     canister_specific::platform_orchestrator::types::{
         args::UpgradeCanisterArg, well_known_principal::PlatformOrchestratorKnownPrincipal,
+        SubnetUpgradeReport,
     },
     common::types::wasm::{CanisterWasm, WasmType},
 };
@@ -37,6 +38,8 @@ pub struct CanisterData {
     pub platform_global_admins: HashSet<Principal>,
     #[serde(default)]
     pub known_principals: PlatformOrchestratorKnownPrincipal,
+    #[serde(default)]
+    pub subnets_upgrade_report: SubnetUpgradeReport,
 }
 
 fn _default_wasms() -> StableBTreeMap<WasmType, CanisterWasm, Memory> {
@@ -63,6 +66,7 @@ impl Default for CanisterData {
             last_subnet_canister_upgrade_status: Default::default(),
             known_principals: Default::default(),
             platform_global_admins: Default::default(),
+            subnets_upgrade_report: SubnetUpgradeReport::default(),
         }
     }
 }
