@@ -1,11 +1,17 @@
 use std::time::SystemTime;
 
 use candid::Principal;
-use ic_cdk::api::management_canister::main::CanisterInstallMode;
+use ic_cdk::{api::management_canister::main::CanisterInstallMode, call, notify};
 
 use shared_utils::{
-    canister_specific::individual_user_template::types::arg::IndividualUserTemplateInitArgs,
-    common::utils::{system_time, task},
+    canister_specific::{
+        individual_user_template::types::arg::IndividualUserTemplateInitArgs,
+        platform_orchestrator, user_index::types::UpgradeStatus,
+    },
+    common::{
+        types::known_principal::KnownPrincipalType,
+        utils::{system_time, task},
+    },
 };
 
 use crate::{
@@ -116,6 +122,30 @@ pub async fn upgrade_user_canisters_with_latest_wasm(
             Some(system_time::get_current_system_time_from_ic()),
         );
     });
+
+    let upgrade_status =
+        CANISTER_DATA.with_borrow(|canister_data| canister_data.last_run_upgrade_status.clone());
+
+    send_upgrade_report_to_platform_orchestrator(upgrade_status).await;
+}
+
+async fn send_upgrade_report_to_platform_orchestrator(subnet_upgrade_status: UpgradeStatus) {
+    let platform_orchestrator_canister_id = CANISTER_DATA
+        .with_borrow(|canister_data| {
+            canister_data
+                .configuration
+                .known_principal_ids
+                .get(&KnownPrincipalType::CanisterIdPlatformOrchestrator)
+                .cloned()
+        })
+        .expect("Platform Orchestrator Canister Id to be Present");
+
+    call::<_, (Result<(), String>,)>(
+        platform_orchestrator_canister_id,
+        "report_subnet_upgrade_status",
+        (subnet_upgrade_status,),
+    )
+    .await;
 }
 
 async fn recharge_and_upgrade(

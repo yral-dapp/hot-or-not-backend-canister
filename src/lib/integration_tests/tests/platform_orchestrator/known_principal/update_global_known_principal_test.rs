@@ -94,16 +94,6 @@ struct CyclesMintingCanisterInitPayload {
     last_purged_notification: Option<BlockIndex>,
 }
 
-#[derive(CandidType, Deserialize, Clone, Serialize, Debug)]
-pub struct UpgradeStatus {
-    pub version_number: u64,
-    pub last_run_on: SystemTime,
-    pub successful_upgrade_count: u32,
-    pub failed_canister_ids: Vec<(Principal, Principal, String)>,
-    #[serde(default)]
-    pub version: String,
-}
-
 #[test]
 fn when_global_known_principal_is_updated_it_is_reflected_in_all_canisters() {
     let (pocket_ic, known_principal) = get_new_pocket_ic_env();

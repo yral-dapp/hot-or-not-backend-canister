@@ -44,10 +44,24 @@ type PlatformOrchestratorInitArgs = record { version : text };
 type Result = variant { Ok : text; Err : text };
 type Result_1 = variant { Ok : principal; Err : text };
 type Result_2 = variant { Ok; Err : text };
+type SubnetUpgradeReport = record {
+  subnet_wise_report : vec record { principal; UpgradeStatus };
+};
+type SystemTime = record {
+  nanos_since_epoch : nat32;
+  secs_since_epoch : nat64;
+};
 type UpgradeCanisterArg = record {
   version : text;
   canister : WasmType;
   wasm_blob : blob;
+};
+type UpgradeStatus = record {
+  version_number : nat64;
+  version : text;
+  last_run_on : SystemTime;
+  failed_canister_ids : vec record { principal; principal; text };
+  successful_upgrade_count : nat32;
 };
 type WasmType = variant {
   IndividualUserWasm;
@@ -65,6 +79,7 @@ service : (PlatformOrchestratorInitArgs) -> {
       principal,
     ) query;
   get_subnet_last_upgrade_status : () -> (CanisterUpgradeStatus) query;
+  get_subnets_upgrade_status_report : () -> (SubnetUpgradeReport) query;
   get_version : () -> (text) query;
   http_request : (HttpRequest) -> (HttpResponse) query;
   platform_orchestrator_generic_function : (
@@ -76,6 +91,7 @@ service : (PlatformOrchestratorInitArgs) -> {
   reinstall_yral_post_cache_canister : () -> ();
   remove_principal_from_global_admins : (principal) -> ();
   remove_subnet_orchestrators_from_available_list : (principal) -> (Result);
+  report_subnet_upgrade_status : (UpgradeStatus) -> (Result_2);
   start_reclaiming_cycles_from_individual_canisters : () -> (Result);
   start_reclaiming_cycles_from_subnet_orchestrator_canister : () -> (text);
   stop_upgrades_for_individual_user_canisters : () -> (Result);
