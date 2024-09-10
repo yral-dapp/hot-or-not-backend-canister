@@ -132,9 +132,11 @@ pub fn get_new_pocket_ic_env() -> (PocketIc, KnownPrincipalMap) {
             Principal::from_text(NNS_LEDGER_CANISTER_ID).unwrap(),
         )
         .unwrap();
+    let mut initial_balances = HashMap::new();
+    initial_balances.insert(minting_account.to_string(), Tokens::from_e8s(1_000_000_000_000_000));
     let icp_ledger_init_args = NnsLedgerCanisterInitPayload {
         minting_account: minting_account.to_string(),
-        initial_values: HashMap::new(),
+        initial_values: initial_balances,
         send_whitelist: HashSet::new(),
         transfer_fee: Some(Tokens::from_e8s(10_000)),
     };

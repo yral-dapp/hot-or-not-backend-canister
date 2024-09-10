@@ -50,6 +50,10 @@ dfx canister install post_cache --argument "(record {
       variant { CanisterIdUserIndex };
       principal \"$(dfx canister id user_index)\";
     };
+    record {
+      variant { CanisterIdSnsWasm };
+      principal \"$(dfx canister id sns_wasm)\";
+    };
   };
   version= \"v1.0.0\"
 })"
@@ -67,6 +71,10 @@ dfx canister install user_index --argument "(record {
     record {
       variant { CanisterIdUserIndex };
       principal \"$(dfx canister id user_index)\";
+    };
+    record {
+      variant { CanisterIdSnsWasm };
+      principal \"$(dfx canister id sns_wasm)\";
     };
   };
   access_control_map = opt vec {

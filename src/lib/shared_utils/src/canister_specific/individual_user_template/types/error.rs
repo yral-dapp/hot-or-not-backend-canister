@@ -1,4 +1,6 @@
 use candid::{CandidType, Deserialize};
+use ic_cdk::api::call::RejectionCode;
+use icrc_ledger_types::icrc1::transfer::TransferError;
 
 #[derive(CandidType, Deserialize, PartialEq, Eq, Debug)]
 pub enum GetPostsOfUserProfileError {
@@ -38,4 +40,34 @@ pub enum FollowAnotherUserProfileError {
     UsersICanFollowListIsFull,
     UserITriedToFollowCrossCanisterCallFailed,
     UserITriedToFollowHasTheirFollowersListFull,
+}
+
+#[derive(CandidType, Deserialize, PartialEq, Eq, Debug)]
+pub enum CdaoDeployError {
+    Unregistered,
+    TokenLimit(usize),
+    CallError(RejectionCode, String),
+    InvalidInitPayload(String),
+    Unauthenticated,
+}
+
+impl From<(RejectionCode, String)> for CdaoDeployError {
+    fn from((rejection_code, error_message): (RejectionCode, String)) -> Self {
+        CdaoDeployError::CallError(rejection_code, error_message)
+    }
+}
+
+#[derive(CandidType, Deserialize, PartialEq, Eq, Debug)]
+pub enum CdaoTokenError {
+    InvalidRoot,
+    Transfer(TransferError),
+    NoBalance,
+    CallError(RejectionCode, String),
+    Unauthenticated
+}
+
+impl From<(RejectionCode, String)> for CdaoTokenError {
+    fn from(value: (RejectionCode, String)) -> Self {
+        CdaoTokenError::CallError(value.0, value.1)
+    }
 }

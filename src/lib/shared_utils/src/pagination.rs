@@ -1,6 +1,8 @@
+use candid::CandidType;
+
 use crate::constant::MAX_POSTS_IN_ONE_REQUEST;
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, CandidType)]
 pub enum PaginationError {
     InvalidBoundsPassed,
     ReachedEndOfItemsList,
