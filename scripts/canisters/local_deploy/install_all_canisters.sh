@@ -24,7 +24,6 @@ dfx canister create --no-wallet post_cache
 dfx canister create --no-wallet user_index
 dfx canister create --no-wallet platform_orchestrator
 
-dfx build individual_user_template
 scripts/candid_generator.sh
 
 gzip -f -1 ./target/wasm32-unknown-unknown/release/individual_user_template.wasm
