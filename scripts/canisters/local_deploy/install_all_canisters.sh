@@ -24,8 +24,6 @@ dfx canister create --no-wallet post_cache
 dfx canister create --no-wallet user_index
 dfx canister create --no-wallet platform_orchestrator
 
-scripts/canisters/local_deploy/create_sns_wasm.sh
-
 dfx build individual_user_template
 scripts/candid_generator.sh
 
