@@ -11,6 +11,8 @@ use shared_utils::{
     canister_specific::platform_orchestrator::types::args::{
         PlatformOrchestratorInitArgs, UpgradeCanisterArg,
     },
+    canister_specific::platform_orchestrator::types::SubnetUpgradeReport,
+    canister_specific::user_index::types::UpgradeStatus,
     common::types::http::{HttpRequest, HttpResponse},
     common::types::known_principal::KnownPrincipalType,
     common::types::wasm::WasmType,

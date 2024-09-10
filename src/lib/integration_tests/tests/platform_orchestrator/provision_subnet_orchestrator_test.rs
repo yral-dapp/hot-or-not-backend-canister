@@ -1,40 +1,15 @@
-use std::{
-    collections::{HashMap, HashSet},
-    time::SystemTime,
-};
-
-use candid::{CandidType, Principal};
-use ic_cdk::api::{management_canister::provisional::CanisterSettings, time};
-use ic_ledger_types::{AccountIdentifier, BlockIndex, Tokens, DEFAULT_SUBACCOUNT};
-use pocket_ic::{PocketIc, PocketIcBuilder, WasmResult};
-use serde::{Deserialize, Serialize};
+use candid::Principal;
+use pocket_ic::WasmResult;
 use shared_utils::{
     canister_specific::{
-        individual_user_template,
-        platform_orchestrator::{
-            self,
-            types::args::{PlatformOrchestratorInitArgs, UpgradeCanisterArg},
-        },
-        post_cache::types::arg::PostCacheInitArgs,
+        platform_orchestrator::types::{args::UpgradeCanisterArg, SubnetUpgradeReport},
+        user_index::types::UpgradeStatus,
     },
-    common::{
-        types::{
-            known_principal::{self, KnownPrincipalMap, KnownPrincipalType},
-            wasm::WasmType,
-        },
-        utils::system_time,
-    },
-    constant::{NNS_CYCLE_MINTING_CANISTER, NNS_LEDGER_CANISTER_ID, YRAL_POST_CACHE_CANISTER_ID},
+    common::types::{known_principal::KnownPrincipalType, wasm::WasmType},
 };
 use test_utils::setup::{
-    env::pocket_ic_env::get_new_pocket_ic_env,
-    test_constants::{
-        get_global_super_admin_principal_id, get_mock_user_charlie_principal_id,
-        v1::CANISTER_INITIAL_CYCLES_FOR_SPAWNING_CANISTERS,
-    },
+    env::pocket_ic_env::get_new_pocket_ic_env, test_constants::get_mock_user_charlie_principal_id,
 };
-
-use crate::known_principal::update_global_known_principal_test::UpgradeStatus;
 
 pub type CanisterId = Principal;
 
@@ -172,4 +147,31 @@ fn provision_subnet_orchestrator_canister() {
 
     assert!(last_upgrade_status.version.eq("v1.0.1"));
     assert!(last_upgrade_status.successful_upgrade_count > 0);
+
+    //verify if upgrade report is reported back to platform orchestrator
+    let upgrade_report: SubnetUpgradeReport = pocket_ic
+        .query_call(
+            platform_canister_id,
+            Principal::anonymous(),
+            "get_subnets_upgrade_status_report",
+            candid::encode_one(()).unwrap(),
+        )
+        .map(|res| {
+            let upgrade_status: SubnetUpgradeReport = match res {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("Canister call failed"),
+            };
+            upgrade_status
+        })
+        .unwrap();
+
+    assert!(upgrade_report.subnet_wise_report.len() > 0);
+    assert_eq!(
+        upgrade_report
+            .subnet_wise_report
+            .get(&subnet_orchestrator_canister_id)
+            .unwrap()
+            .clone(),
+        last_upgrade_status
+    )
 }
