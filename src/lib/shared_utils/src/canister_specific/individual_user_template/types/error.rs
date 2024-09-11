@@ -49,6 +49,7 @@ pub enum CdaoDeployError {
     CallError(RejectionCode, String),
     InvalidInitPayload(String),
     Unauthenticated,
+    CycleError(String),
 }
 
 impl From<(RejectionCode, String)> for CdaoDeployError {
@@ -63,7 +64,7 @@ pub enum CdaoTokenError {
     Transfer(TransferError),
     NoBalance,
     CallError(RejectionCode, String),
-    Unauthenticated
+    Unauthenticated,
 }
 
 impl From<(RejectionCode, String)> for CdaoTokenError {
