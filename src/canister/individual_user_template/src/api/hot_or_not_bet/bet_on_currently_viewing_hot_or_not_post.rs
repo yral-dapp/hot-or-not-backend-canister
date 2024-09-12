@@ -4,7 +4,10 @@ use shared_utils::{
     canister_specific::individual_user_template::types::{
         arg::PlaceBetArg,
         error::BetOnCurrentlyViewingPostError,
-        hot_or_not::{BetOutcomeForBetMaker, BettingStatus, BettingStatusV1, PlacedBetDetail, PlacedBetDetailV1},
+        hot_or_not::{
+            BetOutcomeForBetMaker, BettingStatus, BettingStatusV1, PlacedBetDetail,
+            PlacedBetDetailV1,
+        },
     },
     common::{
         types::utility_token::token_event::{StakeEvent, TokenEvent, TokenEventV1},
@@ -35,7 +38,7 @@ async fn bet_on_currently_viewing_post(
 
     update_last_canister_functionality_access_time();
     update_token_balance_before_bet_happens(place_bet_arg.bet_amount);
-    
+
     let response = ic_cdk::call::<_, (Result<BettingStatus, BetOnCurrentlyViewingPostError>,)>(
         place_bet_arg.post_canister_id,
         "receive_bet_from_bet_makers_canister",
@@ -103,7 +106,6 @@ async fn bet_on_currently_viewing_post(
     Ok(response)
 }
 
-
 #[update]
 async fn bet_on_currently_viewing_post_v1(
     place_bet_arg: PlaceBetArg,
@@ -120,6 +122,7 @@ async fn bet_on_currently_viewing_post_v1(
     })?;
 
     update_last_canister_functionality_access_time();
+    update_token_balance_before_bet_happens(place_bet_arg.bet_amount);
 
     let response = ic_cdk::call::<_, (Result<BettingStatusV1, BetOnCurrentlyViewingPostError>,)>(
         place_bet_arg.post_canister_id,
@@ -136,12 +139,16 @@ async fn bet_on_currently_viewing_post_v1(
         ),
     )
     .await
-    .map_err(|_| BetOnCurrentlyViewingPostError::PostCreatorCanisterCallFailed)?
+    .map_err(|_| {
+        update_token_balance_after_bet_placement_fails(place_bet_arg.bet_amount);
+        BetOnCurrentlyViewingPostError::PostCreatorCanisterCallFailed
+    })?
     .0?;
 
     match response {
         // this case should never match in yral game implementation
         BettingStatusV1::BettingClosed => {
+            update_token_balance_after_bet_placement_fails(place_bet_arg.bet_amount);
             return Err(BetOnCurrentlyViewingPostError::BettingClosed);
         }
         BettingStatusV1::BettingOpen {
@@ -185,18 +192,21 @@ async fn bet_on_currently_viewing_post_v1(
     Ok(response)
 }
 
-
 // this #[update] is for local testing only see: src/lib/integration_tests/tests/upgrade/excessive_tokens_test.rs
 // #[update]
-pub fn update_token_balance_before_bet_happens(  bet_amount: u64) {
+pub fn update_token_balance_before_bet_happens(bet_amount: u64) {
     CANISTER_DATA.with_borrow_mut(|canister_data| {
-        canister_data.my_token_balance.adjust_balance_pre_bet(bet_amount);
+        canister_data
+            .my_token_balance
+            .adjust_balance_pre_bet(bet_amount);
     });
 }
 
-fn update_token_balance_after_bet_placement_fails( bet_amount: u64) {
+fn update_token_balance_after_bet_placement_fails(bet_amount: u64) {
     CANISTER_DATA.with_borrow_mut(|canister_data| {
-        canister_data.my_token_balance.adjust_balance_for_failed_bet_placement(bet_amount);
+        canister_data
+            .my_token_balance
+            .adjust_balance_for_failed_bet_placement(bet_amount);
     });
 }
 
@@ -235,7 +245,6 @@ fn validate_incoming_bet(
     Ok(())
 }
 
-
 fn validate_incoming_bet_v1(
     canister_data: &CanisterData,
     bet_maker_principal_id: &Principal,
@@ -254,7 +263,9 @@ fn validate_incoming_bet_v1(
         return Err(BetOnCurrentlyViewingPostError::Unauthorized);
     }
 
-    let utlility_token_balance = canister_data.my_token_balance_v1.get_utility_token_balance();
+    let utlility_token_balance = canister_data
+        .my_token_balance_v1
+        .get_utility_token_balance();
 
     if utlility_token_balance < place_bet_arg.bet_amount {
         return Err(BetOnCurrentlyViewingPostError::InsufficientBalance);
@@ -270,12 +281,14 @@ fn validate_incoming_bet_v1(
     Ok(())
 }
 
-
 #[cfg(test)]
 mod test_validate_incoming_bet_v1_mod {
     use std::time::SystemTime;
 
-    use shared_utils::{canister_specific::individual_user_template::types::hot_or_not::BetDirection, common::types::utility_token::token_event::NewSlotType};
+    use shared_utils::{
+        canister_specific::individual_user_template::types::hot_or_not::BetDirection,
+        common::types::utility_token::token_event::NewSlotType,
+    };
     use test_utils::setup::test_constants::{
         get_mock_user_alice_canister_id, get_mock_user_alice_principal_id,
         get_mock_user_bob_principal_id,
@@ -377,7 +390,6 @@ mod test_validate_incoming_bet_v1_mod {
         );
     }
 }
-
 
 #[cfg(test)]
 mod test_validate_incoming_bet {
