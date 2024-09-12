@@ -551,18 +551,21 @@ impl Post {
                 let denominator = DURATION_OF_EACH_SLOT_IN_SECONDS;
                 let currently_ongoing_slot = ((numerator / denominator) + 1) as u8;
 
-                let temp_room_details_default = RoomDetailsV1::default();
+                // let temp_room_details_default = RoomDetailsV1::default();
 
                 // get currently active room
                 let active_room_id = slot_details_map
                     .get(&(self.id, currently_ongoing_slot))
-                    .unwrap_or(SlotDetailsV1::default())
+                    .unwrap_or_default()
+                    // .unwrap_or(SlotDetailsV1::default())
                     .active_room_id;
+
                 let global_room_id = GlobalRoomId(self.id, currently_ongoing_slot, active_room_id);
 
                 let room_details = room_details_map
                     .get(&global_room_id)
-                    .unwrap_or(temp_room_details_default);
+                    .unwrap_or_default();
+                    // .unwrap_or(temp_room_details_default);
 
                 let number_of_participants =
                     (room_details.total_hot_bets + room_details.total_not_bets) as u8;
@@ -862,7 +865,8 @@ impl Post {
                 let mut hot_or_not_details = self
                     .hot_or_not_details
                     .take()
-                    .unwrap_or(HotOrNotDetails::default());
+                    // .unwrap_or(HotOrNotDetails::default());
+                    .unwrap_or_default();
                 let mut global_room_id = GlobalRoomId(self.id, ongoing_slot, ongoing_room);
                 let mut global_bet_id =
                     GlobalBetId(global_room_id, StablePrincipal(*bet_maker_principal_id));
@@ -908,12 +912,12 @@ impl Post {
 
                 room_details_map.insert(global_room_id, room_detail);
                 if global_room_id.2 != ongoing_room {
-                    slot_details_map.insert(
-                        (self.id, ongoing_slot),
-                        SlotDetailsV1 {
-                            active_room_id: global_room_id.2,
-                        },
-                    );
+                slot_details_map.insert(
+                    (self.id, ongoing_slot),
+                    SlotDetailsV1 {
+                        active_room_id: global_room_id.2,
+                    },
+                );
                 }
 
                 self.hot_or_not_details = Some(hot_or_not_details);

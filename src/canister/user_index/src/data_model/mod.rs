@@ -1,16 +1,16 @@
-use std::collections::{BTreeMap, BTreeSet, HashSet};
+use std::collections::{BTreeMap, HashSet};
 
 use candid::{Deserialize, Principal};
-use ic_stable_structures::storable::Blob;
 use ic_stable_structures::StableBTreeMap;
 use serde::Serialize;
-use shared_utils::canister_specific::user_index::types::{BroadcastCallStatus, RecycleStatus};
+use shared_utils::canister_specific::user_index::types::{
+    BroadcastCallStatus, RecycleStatus, UpgradeStatus,
+};
 use shared_utils::common::types::wasm::{CanisterWasm, WasmType};
 
 use self::memory::get_wasm_memory;
-use self::{canister_upgrade::UpgradeStatus, configuration::Configuration, memory::Memory};
+use self::{configuration::Configuration, memory::Memory};
 
-pub mod canister_upgrade;
 pub mod configuration;
 pub mod memory;
 

@@ -3,6 +3,7 @@ type AggregateStats = record {
   total_amount_bet : nat64;
   total_number_of_hot_bets : nat64;
 };
+type AirdropDistribution = record { airdrop_neurons : vec NeuronDistribution };
 type BetDetails = record {
   bet_direction : BetDirection;
   bet_maker_canister_id : principal;
@@ -45,6 +46,46 @@ type BettingStatusV1 = variant {
     started_at : SystemTime;
   };
   BettingClosed;
+type Canister = record { id : opt principal };
+type CdaoDeployError = variant {
+  Unregistered;
+  CallError : record { RejectionCode; text };
+  InvalidInitPayload : text;
+  TokenLimit : nat64;
+  Unauthenticated;
+};
+type CdaoTokenError = variant {
+  NoBalance;
+  InvalidRoot;
+  CallError : record { RejectionCode; text };
+  Transfer : TransferError;
+  Unauthenticated;
+};
+type CfNeuron = record {
+  has_created_neuron_recipes : opt bool;
+  nns_neuron_id : nat64;
+  amount_icp_e8s : nat64;
+};
+type CfParticipant = record {
+  hotkey_principal : text;
+  cf_neurons : vec CfNeuron;
+};
+type Committed = record {
+  total_direct_participation_icp_e8s : opt nat64;
+  total_neurons_fund_participation_icp_e8s : opt nat64;
+  sns_governance_canister_id : opt principal;
+};
+type Countries = record { iso_codes : vec text };
+type DappCanisters = record { canisters : vec Canister };
+type DeployedCdaoCanisters = record {
+  root : principal;
+  swap : principal;
+  ledger : principal;
+  index : principal;
+  governance : principal;
+};
+type DeveloperDistribution = record {
+  developer_neurons : vec NeuronDistribution;
 };
 type DeviceIdentity = record { device_id : text; timestamp : nat64 };
 type FeedScore = record {
@@ -71,11 +112,18 @@ type FollowerArg = record {
   follower_canister_id : principal;
   follower_principal_id : principal;
 };
+type FractionalDeveloperVotingPower = record {
+  treasury_distribution : opt TreasuryDistribution;
+  developer_distribution : opt DeveloperDistribution;
+  airdrop_distribution : opt AirdropDistribution;
+  swap_distribution : opt SwapDistribution;
+};
 type GetPostsOfUserProfileError = variant {
   ReachedEndOfItemsList;
   InvalidBoundsPassed;
   ExceededMaxNumberOfItemsAllowedInOneRequest;
 };
+type GovernanceError = record { error_message : text; error_type : int32 };
 type HotOrNotDetails = record {
   hot_or_not_feed_score : FeedScore;
   aggregate_stats : AggregateStats;
@@ -126,12 +174,18 @@ type HttpResponse = record {
   headers : vec record { text; text };
   status_code : nat16;
 };
+type IdealMatchedParticipationFunction = record {
+  serialized_representation : opt text;
+};
 type IndividualUserTemplateInitArgs = record {
   known_principal_ids : opt vec record { KnownPrincipalType; principal };
   version : text;
   url_to_send_canister_metrics_to : opt text;
   profile_owner : opt principal;
   upgrade_version_number : opt nat64;
+};
+type InitialTokenDistribution = variant {
+  FractionalDeveloperVotingPower : FractionalDeveloperVotingPower;
 };
 type KnownPrincipalType = variant {
   CanisterIdUserIndex;
@@ -142,10 +196,24 @@ type KnownPrincipalType = variant {
   CanisterIdTopicCacheIndex;
   CanisterIdRootCanister;
   CanisterIdDataBackup;
+  CanisterIdSnsWasm;
   CanisterIdPostCache;
   CanisterIdSNSController;
   CanisterIdSnsGovernance;
   UserIdGlobalSuperAdmin;
+};
+type LinearScalingCoefficient = record {
+  slope_numerator : opt nat64;
+  intercept_icp_e8s : opt nat64;
+  from_direct_participation_icp_e8s : opt nat64;
+  slope_denominator : opt nat64;
+  to_direct_participation_icp_e8s : opt nat64;
+};
+type MLFeedCacheItem = record {
+  post_id : nat64;
+  canister_id : principal;
+  video_id : text;
+  creator_principal_id : opt principal;
 };
 type MigrationErrors = variant {
   InvalidToCanister;
@@ -183,6 +251,36 @@ type NamespaceForFrontend = record {
   id : nat64;
   title : text;
   owner_id : principal;
+};
+type NeuronBasketConstructionParameters = record {
+  dissolve_delay_interval_seconds : nat64;
+  count : nat64;
+};
+type NeuronDistribution = record {
+  controller : opt principal;
+  dissolve_delay_seconds : nat64;
+  memo : nat64;
+  stake_e8s : nat64;
+  vesting_period_seconds : opt nat64;
+};
+type NeuronsFundNeuron = record {
+  hotkey_principal : opt text;
+  is_capped : opt bool;
+  nns_neuron_id : opt nat64;
+  amount_icp_e8s : opt nat64;
+};
+type NeuronsFundParticipants = record { participants : vec CfParticipant };
+type NeuronsFundParticipationConstraints = record {
+  coefficient_intervals : vec LinearScalingCoefficient;
+  max_neurons_fund_participation_icp_e8s : opt nat64;
+  min_direct_participation_threshold_icp_e8s : opt nat64;
+  ideal_matched_participation_function : opt IdealMatchedParticipationFunction;
+};
+type Ok = record { neurons_fund_neuron_portions : vec NeuronsFundNeuron };
+type PaginationError = variant {
+  ReachedEndOfItemsList;
+  InvalidBoundsPassed;
+  ExceededMaxNumberOfItemsAllowedInOneRequest;
 };
 type PlaceBetArg = record {
   bet_amount : nat64;
@@ -323,6 +421,46 @@ type Result_20 = variant { Ok; Err : text };
 type Result_21 = variant { Ok; Err : UpdateProfileSetUniqueUsernameError };
 type Result_3 = variant {
   Ok : BettingStatusV1;
+type RejectionCode = variant {
+  NoError;
+  CanisterError;
+  SysTransient;
+  DestinationInvalid;
+  Unknown;
+  SysFatal;
+  CanisterReject;
+};
+type Result = variant { Ok : bool; Err : text };
+type Result_1 = variant { Ok : nat64; Err : text };
+type Result_10 = variant { Ok : SystemTime; Err : text };
+type Result_11 = variant {
+  Ok : vec PostDetailsForFrontend;
+  Err : GetPostsOfUserProfileError;
+};
+type Result_12 = variant { Ok : SessionType; Err : text };
+type Result_13 = variant { Ok : vec SuccessHistoryItemV1; Err : text };
+type Result_14 = variant { Ok : vec principal; Err : PaginationError };
+type Result_15 = variant {
+  Ok : vec record { nat64; TokenEvent };
+  Err : PaginationError;
+};
+type Result_16 = variant { Ok : vec WatchHistoryItem; Err : text };
+type Result_17 = variant { Ok : vec text; Err : NamespaceErrors };
+type Result_18 = variant { Ok : vec record { nat64; nat8 }; Err : text };
+type Result_19 = variant { Ok; Err : MigrationErrors };
+type Result_2 = variant { Ok : bool; Err : CdaoTokenError };
+type Result_20 = variant { Committed : Committed; Aborted : record {} };
+type Result_21 = variant { Ok : Ok; Err : GovernanceError };
+type Result_22 = variant { Ok; Err : CdaoTokenError };
+type Result_23 = variant { Ok : text; Err : text };
+type Result_24 = variant {
+  Ok : UserProfileDetailsForFrontend;
+  Err : UpdateProfileDetailsError;
+};
+type Result_25 = variant { Ok; Err : text };
+type Result_26 = variant { Ok; Err : UpdateProfileSetUniqueUsernameError };
+type Result_3 = variant {
+  Ok : BettingStatus;
   Err : BetOnCurrentlyViewingPostError;
 };
 type Result_4 = variant { Ok : NamespaceForFrontend; Err : NamespaceErrors };
@@ -331,6 +469,9 @@ type Result_6 = variant { Ok; Err : NamespaceErrors };
 type Result_7 = variant { Ok : bool; Err : FollowAnotherUserProfileError };
 type Result_8 = variant { Ok : Post; Err };
 type Result_9 = variant { Ok : SystemTime; Err : text };
+type Result_7 = variant { Ok : DeployedCdaoCanisters; Err : CdaoDeployError };
+type Result_8 = variant { Ok : bool; Err : FollowAnotherUserProfileError };
+type Result_9 = variant { Ok : Post; Err };
 type RoomBetPossibleOutcomes = variant { HotWon; BetOngoing; Draw; NotWon };
 type RoomDetails = record {
   total_hot_bets : nat64;
@@ -340,7 +481,53 @@ type RoomDetails = record {
   bet_outcome : RoomBetPossibleOutcomes;
 };
 type SessionType = variant { AnonymousSession; RegisteredSession };
+type SettleNeuronsFundParticipationRequest = record {
+  result : opt Result_20;
+  nns_proposal_id : opt nat64;
+};
+type SettleNeuronsFundParticipationResponse = record { result : opt Result_21 };
 type SlotDetails = record { room_details : vec record { nat64; RoomDetails } };
+type SnsInitPayload = record {
+  url : opt text;
+  max_dissolve_delay_seconds : opt nat64;
+  max_dissolve_delay_bonus_percentage : opt nat64;
+  nns_proposal_id : opt nat64;
+  neurons_fund_participation : opt bool;
+  min_participant_icp_e8s : opt nat64;
+  neuron_basket_construction_parameters : opt NeuronBasketConstructionParameters;
+  fallback_controller_principal_ids : vec text;
+  token_symbol : opt text;
+  final_reward_rate_basis_points : opt nat64;
+  max_icp_e8s : opt nat64;
+  neuron_minimum_stake_e8s : opt nat64;
+  confirmation_text : opt text;
+  logo : opt text;
+  name : opt text;
+  swap_start_timestamp_seconds : opt nat64;
+  swap_due_timestamp_seconds : opt nat64;
+  initial_voting_period_seconds : opt nat64;
+  neuron_minimum_dissolve_delay_to_vote_seconds : opt nat64;
+  description : opt text;
+  max_neuron_age_seconds_for_age_bonus : opt nat64;
+  min_participants : opt nat64;
+  initial_reward_rate_basis_points : opt nat64;
+  wait_for_quiet_deadline_increase_seconds : opt nat64;
+  transaction_fee_e8s : opt nat64;
+  dapp_canisters : opt DappCanisters;
+  neurons_fund_participation_constraints : opt NeuronsFundParticipationConstraints;
+  neurons_fund_participants : opt NeuronsFundParticipants;
+  max_age_bonus_percentage : opt nat64;
+  initial_token_distribution : opt InitialTokenDistribution;
+  reward_rate_transition_duration_seconds : opt nat64;
+  token_logo : opt text;
+  token_name : opt text;
+  max_participant_icp_e8s : opt nat64;
+  min_direct_participation_icp_e8s : opt nat64;
+  proposal_reject_cost_e8s : opt nat64;
+  restricted_countries : opt Countries;
+  min_icp_e8s : opt nat64;
+  max_direct_participation_icp_e8s : opt nat64;
+};
 type StakeEvent = variant { BetOnHotOrNotPost : PlaceBetArg };
 type SuccessHistoryItemV1 = record {
   post_id : nat64;
@@ -349,6 +536,10 @@ type SuccessHistoryItemV1 = record {
   publisher_canister_id : principal;
   cf_video_id : text;
   interacted_at : SystemTime;
+};
+type SwapDistribution = record {
+  total_e8s : nat64;
+  initial_swap_amount_e8s : nat64;
 };
 type SystemTime = record {
   nanos_since_epoch : nat32;
@@ -402,6 +593,17 @@ type TokenEventV1 = variant {
     amount : nat64;
   };
 };
+type TransferError = variant {
+  GenericError : record { message : text; error_code : nat };
+  TemporarilyUnavailable;
+  BadBurn : record { min_burn_amount : nat };
+  Duplicate : record { duplicate_of : nat };
+  BadFee : record { expected_fee : nat };
+  CreatedInFuture : record { ledger_time : nat64 };
+  TooOld;
+  InsufficientFunds : record { balance : nat };
+};
+type TreasuryDistribution = record { total_e8s : nat64 };
 type UpdateProfileDetailsError = variant { NotAuthorized };
 type UpdateProfileSetUniqueUsernameError = variant {
   UsernameAlreadyTaken;
@@ -413,14 +615,6 @@ type UpdateProfileSetUniqueUsernameError = variant {
 type UserCanisterDetails = record {
   user_canister_id : principal;
   profile_owner : principal;
-};
-type UserProfile = record {
-  unique_user_name : opt text;
-  profile_picture_url : opt text;
-  display_name : opt text;
-  principal_id : opt principal;
-  profile_stats : UserProfileGlobalStats;
-  referrer_details : opt UserCanisterDetails;
 };
 type UserProfileDetailsForFrontend = record {
   unique_user_name : opt text;
@@ -466,6 +660,8 @@ service : (IndividualUserTemplateInitArgs) -> {
   backup_data_to_backup_canister : (principal, principal) -> ();
   bet_on_currently_viewing_post : (PlaceBetArg) -> (Result_2);
   bet_on_currently_viewing_post_v1 : (PlaceBetArg) -> (Result_3);
+  add_token : (principal) -> (Result_2);
+  bet_on_currently_viewing_post : (PlaceBetArg) -> (Result_3);
   check_and_update_scores_and_share_with_post_cache_if_difference_beyond_threshold : (
       vec nat64,
     ) -> ();
@@ -477,6 +673,12 @@ service : (IndividualUserTemplateInitArgs) -> {
   download_snapshot : (nat64, nat64) -> (blob) query;
   get_device_identities : () -> (vec DeviceIdentity) query;
   get_entire_individual_post_detail_by_id : (nat64) -> (Result_8) query;
+  deploy_cdao_sns : (SnsInitPayload, nat64) -> (Result_7);
+  deployed_cdao_canisters : () -> (vec DeployedCdaoCanisters) query;
+  do_i_follow_this_user : (FolloweeArg) -> (Result_8) query;
+  download_snapshot : (nat64, nat64) -> (blob) query;
+  get_device_identities : () -> (vec DeviceIdentity) query;
+  get_entire_individual_post_detail_by_id : (nat64) -> (Result_9) query;
   get_hot_or_not_bet_details_for_this_post : (nat64) -> (BettingStatus) query;
   get_hot_or_not_bet_details_for_this_post_v2 : (nat64) -> (
       BettingStatusV1,
@@ -507,6 +709,13 @@ service : (IndividualUserTemplateInitArgs) -> {
       Result_10,
     ) query;
   get_posts_of_this_user_profile_with_pagination_v1 : (nat64, nat64) -> (
+  get_last_access_time : () -> (Result_10) query;
+  get_last_canister_functionality_access_time : () -> (Result_10) query;
+  get_ml_feed_cache_paginated : (nat64, nat64) -> (vec MLFeedCacheItem) query;
+  get_posts_of_this_user_profile_with_pagination : (nat64, nat64) -> (
+      Result_11,
+    ) query;
+  get_posts_of_this_user_profile_with_pagination_cursor : (nat64, nat64) -> (
       Result_11,
     ) query;
   get_principals_that_follow_this_profile_paginated : (opt nat64) -> (
@@ -524,16 +733,24 @@ service : (IndividualUserTemplateInitArgs) -> {
   get_session_type : () -> (Result_12) query;
   get_stable_memory_size : () -> (nat32) query;
   get_success_history : () -> (Result_13) query;
+  get_session_type : () -> (Result_12) query;
+  get_stable_memory_size : () -> (nat32) query;
+  get_success_history : () -> (Result_13) query;
+  get_token_roots_of_this_user_with_pagination_cursor : (nat64, nat64) -> (
+      Result_14,
+    ) query;
   get_user_caniser_cycle_balance : () -> (nat) query;
   get_user_utility_token_transaction_history_with_pagination : (
       nat64,
       nat64,
     ) -> (Result_14) query;
+    ) -> (Result_15) query;
   get_utility_token_balance : () -> (nat64) query;
   get_utility_token_balance_v1 : () -> (nat64) query;
   get_version : () -> (text) query;
   get_version_number : () -> (nat64) query;
   get_watch_history : () -> (Result_15) query;
+  get_watch_history : () -> (Result_16) query;
   get_well_known_principal_value : (KnownPrincipalType) -> (
       opt principal,
     ) query;
@@ -571,7 +788,27 @@ service : (IndividualUserTemplateInitArgs) -> {
   save_snapshot_json : () -> (nat32);
   transfer_tokens_and_posts : (principal, principal) -> (Result_17);
   update_last_access_time : () -> (Result_18);
+  list_namespace_keys : (nat64) -> (Result_17) query;
+  list_namespaces : (nat64, nat64) -> (vec NamespaceForFrontend) query;
+  load_snapshot : (nat64) -> ();
+  once_reenqueue_timers_for_pending_bet_outcomes : () -> (Result_18);
+  read_key_value_pair : (nat64, text) -> (Result_5) query;
+  receive_and_save_snaphot : (nat64, blob) -> ();
+  receive_bet_from_bet_makers_canister : (PlaceBetArg, principal) -> (Result_3);
+  receive_bet_winnings_when_distributed : (nat64, BetOutcomeForBetMaker) -> ();
+  receive_data_from_hotornot : (principal, nat64, vec Post) -> (Result_19);
+  return_cycles_to_user_index_canister : (opt nat) -> ();
+  save_snapshot_json : () -> (nat32);
+  settle_neurons_fund_participation : (
+      SettleNeuronsFundParticipationRequest,
+    ) -> (SettleNeuronsFundParticipationResponse);
+  transfer_token_to_user_canister : (principal, principal, opt blob, nat) -> (
+      Result_22,
+    );
+  transfer_tokens_and_posts : (principal, principal) -> (Result_19);
+  update_last_access_time : () -> (Result_23);
   update_last_canister_functionality_access_time : () -> ();
+  update_ml_feed_cache : (vec MLFeedCacheItem) -> (Result_23);
   update_post_add_view_details : (nat64, PostViewDetailsFromFrontend) -> ();
   update_post_as_ready_to_view : (nat64) -> ();
   update_post_increment_share_count : (nat64) -> (nat64);
@@ -592,6 +829,20 @@ service : (IndividualUserTemplateInitArgs) -> {
   update_session_type : (SessionType) -> (Result_18);
   update_success_history : (SuccessHistoryItemV1) -> (Result_18);
   update_watch_history : (WatchHistoryItem) -> (Result_18);
+      Result_24,
+    );
+  update_profile_owner : (opt principal) -> (Result_25);
+  update_profile_set_unique_username_once : (text) -> (Result_26);
+  update_profiles_i_follow_toggle_list_with_specified_profile : (
+      FolloweeArg,
+    ) -> (Result_8);
+  update_profiles_that_follow_me_toggle_list_with_specified_profile : (
+      FollowerArg,
+    ) -> (Result_8);
+  update_referrer_details : (UserCanisterDetails) -> (Result_23);
+  update_session_type : (SessionType) -> (Result_23);
+  update_success_history : (SuccessHistoryItemV1) -> (Result_23);
+  update_watch_history : (WatchHistoryItem) -> (Result_23);
   update_well_known_principal : (KnownPrincipalType, principal) -> ();
   write_key_value_pair : (nat64, text, text) -> (Result_5);
   write_multiple_key_value_pairs : (nat64, vec record { text; text }) -> (

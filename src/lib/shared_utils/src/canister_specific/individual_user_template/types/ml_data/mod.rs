@@ -106,3 +106,11 @@ impl Storable for SuccessHistoryItemV1 {
         is_fixed_size: false,
     };
 }
+
+#[derive(Deserialize, Serialize, Clone, CandidType, Debug)]
+pub struct MLFeedCacheItem {
+    pub post_id: u64,
+    pub canister_id: Principal,
+    pub video_id: String,
+    pub creator_principal_id: Option<Principal>,
+}

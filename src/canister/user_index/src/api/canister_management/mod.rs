@@ -44,6 +44,7 @@ pub mod recycle_canisters;
 pub mod request_cycles;
 pub mod start_upgrades_for_individual_canisters;
 pub mod update_canisters_access_time;
+pub mod update_user_canister_restart_timers;
 
 #[update]
 pub async fn get_user_canister_status(

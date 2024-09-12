@@ -1,15 +1,14 @@
 use ciborium::de;
 
+use ic_cdk::api::call::ArgDecoderConfig;
 use ic_cdk_macros::post_upgrade;
 use ic_stable_structures::Memory;
 use shared_utils::{
-    canister_specific::user_index::types::args::UserIndexInitArgs, common::utils::system_time,
+    canister_specific::user_index::types::{args::UserIndexInitArgs, UpgradeStatus},
+    common::utils::system_time,
 };
 
-use crate::{
-    data_model::{canister_upgrade::UpgradeStatus, memory},
-    CANISTER_DATA,
-};
+use crate::{data_model::memory, CANISTER_DATA};
 
 #[post_upgrade]
 fn post_upgrade() {
@@ -18,7 +17,8 @@ fn post_upgrade() {
 }
 
 fn update_version_from_args() {
-    let (upgrade_args,) = ic_cdk::api::call::arg_data::<(UserIndexInitArgs,)>();
+    let (upgrade_args,) =
+        ic_cdk::api::call::arg_data::<(UserIndexInitArgs,)>(ArgDecoderConfig::default());
     CANISTER_DATA.with(|canister_data_ref| {
         let last_upgrade_status = canister_data_ref.borrow().last_run_upgrade_status.clone();
         let upgrade_status = UpgradeStatus {

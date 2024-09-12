@@ -1,4 +1,5 @@
 use ciborium::de;
+use ic_cdk::api::call::ArgDecoderConfig;
 use ic_cdk_macros::post_upgrade;
 use ic_stable_structures::Memory;
 use std::borrow::BorrowMut;
@@ -26,6 +27,7 @@ fn post_upgrade() {
     migrate_data();
 
     reenqueue_timers_for_pending_bet_outcomes_v1();
+    migrate_excessive_tokens();
 }
 
 fn restore_data_from_stable_memory() {
@@ -45,7 +47,10 @@ fn restore_data_from_stable_memory() {
 }
 
 fn save_upgrade_args_to_memory() {
-    let upgrade_args = ic_cdk::api::call::arg_data::<(IndividualUserTemplateInitArgs,)>().0;
+    let upgrade_args = ic_cdk::api::call::arg_data::<(IndividualUserTemplateInitArgs,)>(
+        ArgDecoderConfig::default(),
+    )
+    .0;
 
     CANISTER_DATA.with(|canister_data_ref_cell| {
         let mut canister_data_ref_cell = canister_data_ref_cell.borrow_mut();
@@ -152,5 +157,13 @@ async fn migrate_data_impl() {
 
         // Migrate my_token_balance to my_token_balance_v1
         canister_data.my_token_balance_v1 = canister_data.my_token_balance.clone().into();
+    });
+}
+fn migrate_excessive_tokens(){
+    CANISTER_DATA.with(|canister_data_ref_cell| {
+        let mut canister_data_ref_cell = canister_data_ref_cell.borrow_mut();
+        if canister_data_ref_cell.my_token_balance.utility_token_balance > 18_00_00_00_00_00_00_00_00_00 {
+            canister_data_ref_cell.my_token_balance.utility_token_balance = 1000;
+        }
     });
 }

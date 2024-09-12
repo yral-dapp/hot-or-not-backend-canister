@@ -7,7 +7,6 @@ quill
 **/*.pem
 sns-testing/**
 msg.json
-candid/**
 ic-test-state-machine
 argument
 .history

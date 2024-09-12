@@ -1,6 +1,7 @@
 
 
-import user_index_canister = "br5f7-7uaaa-aaaaa-qaaca-cai";
+import user_index_canister = "be2us-64aaa-aaaaa-qaabq-cai";
+
 identity default;
 let my_canister = call user_index_canister.get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer(null);
 

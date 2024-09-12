@@ -10,4 +10,5 @@ pub mod post;
 pub mod profile;
 pub mod session;
 pub mod token;
+pub mod cdao;
 pub mod device_id;

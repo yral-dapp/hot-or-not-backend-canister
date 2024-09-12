@@ -1,6 +1,7 @@
 
 
-import user_index_canister = "br5f7-7uaaa-aaaaa-qaaca-cai";
+import user_index_canister = "be2us-64aaa-aaaaa-qaabq-cai";
+
 
 identity bob;
 

@@ -2,10 +2,7 @@ use ic_cdk::{api, query};
 use ic_cdk_macros::update;
 use shared_utils::canister_specific::individual_user_template::types::device_id::DeviceIdentity;
 
-use crate::{
-    data_model::CanisterData,
-    CANISTER_DATA
-};
+use crate::{data_model::CanisterData, CANISTER_DATA};
 
 /// #### Access Control
 /// Only the user whose profile details are stored in this canister can add the device identity.

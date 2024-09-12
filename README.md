@@ -77,4 +77,10 @@ To get the hash for canister deployment:
 - Go to any of the `Deploy all canisters` jobs. ([Click to see an example job](https://github.com/go-bazzinga/hot-or-not-backend-canister/actions/runs/4900015913/jobs/8750374252))
 - Open one of the `Deploy <canister_name> canister` steps. You should find the `Module hash` in this step. This value should match the value you got locally. ([Click to see an example step](https://github.com/go-bazzinga/hot-or-not-backend-canister/actions/runs/4900015913/jobs/8750374252#step:8:16))
 
+To check the status of the deployment
+
+- check if the platform orchestrator performed the step to upgrade subnet canister with appropriate version: [Platform Orchestrator function](https://dashboard.internetcomputer.org/canister/74zq4-iqaaa-aaaam-ab53a-cai#get_subnet_last_upgrade_status)
+- check the status of upgrade for individual canisters in subnet orchestrators and verify the version. Example for one of the subnet orchesrator: [Subnet Orchestrator function](https://dashboard.internetcomputer.org/canister/rimrc-piaaa-aaaao-aaljq-cai#get_index_details_last_upgrade_status)
+
 ---
+

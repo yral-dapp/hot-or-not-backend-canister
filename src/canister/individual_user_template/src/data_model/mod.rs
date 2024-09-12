@@ -5,22 +5,23 @@ use std::{
 
 use candid::{Deserialize, Principal};
 use ic_cdk::api::management_canister::provisional::CanisterId;
-use memory::{get_bet_details_memory_v1, get_bet_timer_first_bet_at_memory, get_bet_timer_memory, get_room_details_memory_v1, get_slot_details_memory_v1,get_success_history_memory, get_watch_history_memory};
+use memory::{get_bet_details_memory_v1, get_bet_timer_first_bet_at_memory, get_bet_timer_memory, get_room_details_memory_v1, get_slot_details_memory_v1,get_success_history_memory, get_watch_history_memory, get_token_list_memory};
 use serde::Serialize;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
+        cdao::DeployedCdaoCanisters,
         configuration::IndividualUserConfiguration,
+        device_id::DeviceIdentity,
         follow::FollowData,
         hot_or_not::{
             BetDetails, GlobalBetId, GlobalBetIdV1, GlobalRoomId, GlobalRoomIdV1, PlacedBetDetail, PlacedBetDetailV1, RoomDetailsV1, RoomId, SlotDetailsV1, SlotId, StablePrincipal
         },
         migration::MigrationInfo,
-        ml_data::{SuccessHistoryItem, SuccessHistoryItemV1, WatchHistoryItem},
+        ml_data::{MLFeedCacheItem, SuccessHistoryItem, SuccessHistoryItemV1, WatchHistoryItem},
         post::{FeedScore, Post, PostViewStatistics},
         profile::UserProfile,
         session::SessionType,
-        token::{TokenBalance, TokenBalanceV1},
-        device_id::DeviceIdentity,
+        token::{TokenBalance, TokenBalanceV1}
     },
     common::types::{
         app_primitive_type::PostId, known_principal::KnownPrincipalMap, top_posts::{post_score_index::PostScoreIndex, post_score_index_item::PostStatus}, utility_token::token_event::{NewSlotType, SystemTimeInMs}, version_details::VersionDetails
@@ -116,6 +117,13 @@ pub struct CanisterData {
     // pub is_timer_running: Option<PostId>,
     #[serde(default)]
     pub device_identities: Vec<DeviceIdentity>,
+    #[serde(default)]
+    pub ml_feed_cache: Vec<MLFeedCacheItem>,
+    #[serde(default)]
+    pub cdao_canisters: Vec<DeployedCdaoCanisters>,
+    // list of root token canisters 
+    #[serde(skip, default = "_default_token_list")]
+    pub token_roots: ic_stable_structures::btreemap::BTreeMap<Principal, (), Memory>,
 }
 
 pub fn _default_room_details() -> RoomDetailsMapOld {
@@ -169,6 +177,10 @@ pub fn _default_bet_timer_posts_queue(
     ic_stable_structures::btreemap::BTreeMap::init(get_bet_timer_memory())
 }
 
+pub fn _default_token_list() -> ic_stable_structures::btreemap::BTreeMap<Principal, (), Memory> {
+    ic_stable_structures::btreemap::BTreeMap::init(get_token_list_memory())
+}
+
 pub fn _default_success_history_v1(
 ) -> ic_stable_structures::btreemap::BTreeMap<SuccessHistoryItemV1, (), Memory> {
     ic_stable_structures::btreemap::BTreeMap::init(get_success_history_memory())
@@ -219,6 +231,9 @@ impl Default for CanisterData {
             bet_timer_posts: _default_bet_timer_posts_queue(),
             // is_timer_running: None,
             device_identities: Vec::new(),
+            ml_feed_cache: Vec::new(),
+            cdao_canisters: Vec::new(),
+            token_roots: _default_token_list()
         }
     }
 }
