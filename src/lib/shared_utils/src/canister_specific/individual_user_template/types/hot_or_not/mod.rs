@@ -114,7 +114,7 @@ impl Default for SlotDetailsV1 {
     }
 }
 
-const MAX_SLOT_DETAILS_VALUE_SIZE: u32 = 100 as u32;
+const MAX_SLOT_DETAILS_VALUE_SIZE: u32 = 100_u32;
 
 impl Storable for SlotDetailsV1 {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
@@ -138,7 +138,7 @@ pub struct RoomDetailsV1 {
     pub total_hot_bets: u64,
     pub total_not_bets: u64,
 }
-const MAX_ROOM_DETAILS_VALUE_SIZE: u32 = 100 as u32;
+const MAX_ROOM_DETAILS_VALUE_SIZE: u32 = 100_u32;
 
 impl Storable for RoomDetailsV1 {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
@@ -164,7 +164,7 @@ pub struct BetDetails {
     pub payout: BetPayout,
     pub bet_maker_canister_id: CanisterId,
 }
-const MAX_BET_DETAILS_VALUE_SIZE: u32 = 200 as u32;
+const MAX_BET_DETAILS_VALUE_SIZE: u32 = 200_u32;
 
 impl Storable for BetDetails {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
@@ -180,6 +180,22 @@ impl Storable for BetDetails {
         is_fixed_size: false,
     };
 }
+
+impl From<BetDetails> for BetOutcomeForBetMaker {
+    fn from(bet_details: BetDetails) -> Self {
+        match bet_details.payout {
+            BetPayout::NotCalculatedYet => BetOutcomeForBetMaker::AwaitingResult,
+            BetPayout::Calculated(calculated_amount) => {
+              match bet_details.amount.cmp(&calculated_amount) {
+                std::cmp::Ordering::Less =>  BetOutcomeForBetMaker::Lost,
+                std::cmp::Ordering::Greater =>BetOutcomeForBetMaker::Won(calculated_amount),
+                std::cmp::Ordering::Equal => BetOutcomeForBetMaker::Draw(calculated_amount),
+              }
+            }
+        }
+    }
+}
+
 
 #[derive(
     CandidType, Clone, Deserialize, Debug, Serialize, Ord, PartialOrd, Eq, PartialEq, Hash,

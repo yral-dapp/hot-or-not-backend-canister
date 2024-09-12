@@ -6,3 +6,5 @@ pub mod receive_bet_from_bet_makers_canister;
 pub mod receive_bet_winnings_when_distributed;
 pub mod reenqueue_timers_for_pending_bet_outcomes;
 pub mod tabulate_hot_or_not_outcome_for_post_slot;
+pub mod resolve_pending_bets;
+pub mod get_resolved_bets_for_caller;
