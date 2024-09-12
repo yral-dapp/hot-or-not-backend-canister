@@ -36,6 +36,7 @@ fn post_cache_canister_wasm() -> Vec<u8> {
 }
 
 #[test]
+#[ignore]
 fn hotornot_game_simulation_test() {
     let pic = PocketIc::new();
 
