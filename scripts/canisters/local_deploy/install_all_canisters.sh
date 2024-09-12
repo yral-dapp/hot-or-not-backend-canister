@@ -19,6 +19,9 @@ while getopts "sih" arg; do
   esac
 done
 
+scripts/canisters/local_deploy/setup_icp_ledger.sh
+scripts/canisters/local_deploy/create_sns_wasm.sh
+
 dfx canister create --no-wallet individual_user_template
 dfx canister create --no-wallet post_cache
 dfx canister create --no-wallet user_index
