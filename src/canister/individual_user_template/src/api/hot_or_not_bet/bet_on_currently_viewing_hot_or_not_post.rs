@@ -186,7 +186,6 @@ async fn bet_on_currently_viewing_post_v1(
 }
 
 
-#[deprecated(note = "use validate_incoming_bet_v1 instead")]
 // this #[update] is for local testing only see: src/lib/integration_tests/tests/upgrade/excessive_tokens_test.rs
 // #[update]
 pub fn update_token_balance_before_bet_happens(  bet_amount: u64) {
@@ -201,7 +200,7 @@ fn update_token_balance_after_bet_placement_fails( bet_amount: u64) {
     });
 }
 
-
+#[deprecated(note = "use validate_incoming_bet_v1 instead")]
 fn validate_incoming_bet(
     canister_data: &CanisterData,
     bet_maker_principal_id: &Principal,
