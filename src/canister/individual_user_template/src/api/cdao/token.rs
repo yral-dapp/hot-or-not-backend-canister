@@ -23,11 +23,9 @@ async fn add_token(root_canister: Principal) -> Result<bool, CdaoTokenError> {
     let ledger = cans.ledger.ok_or(CdaoTokenError::InvalidRoot)?;
 
     let my_principal_id = CANISTER_DATA
-        .with(|canister_data_ref_cell| canister_data_ref_cell.borrow().profile.principal_id);
-    if my_principal_id.is_none() {
-        return Err(CdaoTokenError::Unauthenticated);
-    };
-    let acc = Account { owner: my_principal_id.unwrap(), subaccount: None };
+        .with(|canister_data_ref_cell| canister_data_ref_cell.borrow().profile.principal_id)
+        .ok_or(CdaoTokenError::Unauthenticated)?;
+    let acc = Account { owner: my_principal_id, subaccount: None };
     let balance: (Nat,) = ic_cdk::call(ledger.into(), "icrc1_balance_of", (acc,)).await?;
     if balance.0 == 0u32 {
         return Err(CdaoTokenError::NoBalance);
