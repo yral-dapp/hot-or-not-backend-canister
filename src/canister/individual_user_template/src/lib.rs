@@ -9,6 +9,8 @@ use candid::{Principal, Nat};
 use data_model::CanisterData;
 use ic_cdk::api::management_canister::provisional::CanisterId;
 use ic_cdk_macros::export_candid;
+use shared_utils::canister_specific::individual_user_template::types::hot_or_not::{GlobalBetId,BetDetails};
+
 use shared_utils::{
     canister_specific::individual_user_template::types::{
         arg::{FolloweeArg, IndividualUserTemplateInitArgs, PlaceBetArg},

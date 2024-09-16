@@ -304,6 +304,12 @@ pub struct PlacedBetDetail {
     pub outcome_received: BetOutcomeForBetMaker,
 }
 
+impl PlacedBetDetail{
+    pub fn update_outcome(&mut self, new_outcome: BetOutcomeForBetMaker) {
+        self.outcome_received = new_outcome;
+    }
+}
+
 #[derive(Deserialize, Serialize, Default, CandidType, PartialEq, Eq, Clone, Debug)]
 pub enum BetOutcomeForBetMaker {
     #[default]
