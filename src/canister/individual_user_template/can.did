@@ -49,6 +49,7 @@ type BettingStatusV1 = variant {
 };
 type Canister = record { id : opt principal };
 type CdaoDeployError = variant {
+  CycleError : text;
   Unregistered;
   CallError : record { RejectionCode; text };
   InvalidInitPayload : text;

@@ -12,23 +12,26 @@ use ic_cdk::{
     api::management_canister::main::{
         create_canister, install_code, update_settings, CanisterInstallMode, CanisterSettings,
         CreateCanisterArgument, InstallCodeArgument, UpdateSettingsArgument,
-    }, query, update
+    },
+    query, update,
 };
 use ic_sns_init::{pb::v1::SnsInitPayload, SnsCanisterIds};
-use ic_sns_wasm::pb::v1::{GetWasmResponse, GetWasmRequest};
+use ic_sns_wasm::pb::v1::{GetWasmRequest, GetWasmResponse};
 // use ic_sns_swap::pb::v1::{SettleNeuronsFundParticipationRequest, SettleNeuronsFundParticipationResponse};
 use ic_nns_governance::neurons_fund::NeuronsFundSnapshot;
-use ic_nns_governance::pb::v1::{SettleNeuronsFundParticipationRequest, SettleNeuronsFundParticipationResponse};
+use ic_nns_governance::pb::v1::{
+    SettleNeuronsFundParticipationRequest, SettleNeuronsFundParticipationResponse,
+};
 use shared_utils::{
-    canister_specific::individual_user_template::{consts::CDAO_TOKEN_LIMIT, types::{
-        cdao::DeployedCdaoCanisters, error::CdaoDeployError, session::SessionType,
-    }},
+    canister_specific::individual_user_template::{
+        consts::CDAO_TOKEN_LIMIT,
+        types::{cdao::DeployedCdaoCanisters, error::CdaoDeployError, session::SessionType},
+    },
     common::types::known_principal::KnownPrincipalType,
+    constant::{NNS_LEDGER_CANISTER_ID, USER_SNS_CANISTER_INITIAL_CYCLES},
 };
 
-use crate::CANISTER_DATA;
-// 5 * 0.1T
-const CDAO_CYCLE_CNT: u128 = 5 * 100000000000;
+use crate::{util::cycles::request_cycles_from_subnet_orchestrator, CANISTER_DATA};
 
 #[update]
 pub async fn settle_neurons_fund_participation(
@@ -42,7 +45,7 @@ pub async fn settle_neurons_fund_participation(
 async fn create_empty_canister(
     arg: CreateCanisterArgument,
 ) -> Result<PrincipalId, CdaoDeployError> {
-    let can = create_canister(arg, CDAO_CYCLE_CNT).await?;
+    let can = create_canister(arg, USER_SNS_CANISTER_INITIAL_CYCLES).await?;
     Ok(PrincipalId(can.0.canister_id))
 }
 
@@ -78,19 +81,14 @@ async fn update_controllers(
 
 #[query]
 async fn deployed_cdao_canisters() -> Vec<DeployedCdaoCanisters> {
-    CANISTER_DATA.with(|cdata| {
-        cdata
-            .borrow()
-            .cdao_canisters
-            .clone()
-    })
+    CANISTER_DATA.with(|cdata| cdata.borrow().cdao_canisters.clone())
 }
 
 #[update]
 async fn deploy_cdao_sns(
     init_payload: SnsInitPayload,
     swap_time: u64,
-) -> Result<DeployedCdaoCanisters, CdaoDeployError> { 
+) -> Result<DeployedCdaoCanisters, CdaoDeployError> {
     // * access control
     let current_caller = ic_cdk::caller();
     let my_principal_id = CANISTER_DATA
@@ -104,12 +102,15 @@ async fn deploy_cdao_sns(
         let registered = matches!(cdata.session_type, Some(SessionType::RegisteredSession));
         (registered, cdata.cdao_canisters.len() == CDAO_TOKEN_LIMIT)
     });
-    /*if !registered {
-        return Err(CdaoDeployError::Unregistered);
-    }*/
+
     if limit_hit {
         return Err(CdaoDeployError::TokenLimit(CDAO_TOKEN_LIMIT));
     }
+
+    // Alloting 0.5T more to the user canister to be on safer side while deploying canisters
+    request_cycles_from_subnet_orchestrator(6 * USER_SNS_CANISTER_INITIAL_CYCLES)
+        .await
+        .map_err(|e| CdaoDeployError::CycleError(e))?;
 
     let creation_arg = CreateCanisterArgument {
         settings: Some(CanisterSettings {
@@ -142,9 +143,9 @@ async fn deploy_cdao_sns(
     let time_seconds = ic_cdk::api::time() / 1_000_000_000;
     payloads.swap.swap_start_timestamp_seconds = Some(time_seconds);
     payloads.swap.swap_due_timestamp_seconds = Some(time_seconds + swap_time);
-    payloads.swap.icp_ledger_canister_id = "ryjl3-tyaaa-aaaaa-aaaba-cai".to_string();
+    payloads.swap.icp_ledger_canister_id = NNS_LEDGER_CANISTER_ID.into();
     payloads.swap.nns_governance_canister_id = ic_cdk::id().to_string();
-    
+
     let sns_wasm = CANISTER_DATA
         .with(|cdata| {
             cdata
@@ -154,21 +155,24 @@ async fn deploy_cdao_sns(
                 .copied()
         })
         .expect("SNS WASM not specified in config");
-    
-    let gov_hash = hex::decode("3feb8ff7b47f53da83235e4c68676bb6db54df1e62df3681de9425ad5cf43be5").unwrap();
-    let ledger_hash = hex::decode("e8942f56f9439b89b13bd8037f357126e24f1e7932cf03018243347505959fd4").unwrap();;
-    let root_hash = hex::decode("495e31370b14fa61c76bd1483c9f9ba66733793ee2963e8e44a231436a60bcc6").unwrap();;
-    let swap_hash = hex::decode("3bb490d197b8cf2e7d9948bcb5d1fc46747a835294b3ffe47b882dbfa584555f").unwrap();;
-    let index_hash = hex::decode("08ae5042c8e413716d04a08db886b8c6b01bb610b8197cdbe052c59538b924f0").unwrap();;
+
+    let gov_hash =
+        hex::decode("3feb8ff7b47f53da83235e4c68676bb6db54df1e62df3681de9425ad5cf43be5").unwrap();
+    let ledger_hash =
+        hex::decode("e8942f56f9439b89b13bd8037f357126e24f1e7932cf03018243347505959fd4").unwrap();
+    let root_hash =
+        hex::decode("495e31370b14fa61c76bd1483c9f9ba66733793ee2963e8e44a231436a60bcc6").unwrap();
+    let swap_hash =
+        hex::decode("3bb490d197b8cf2e7d9948bcb5d1fc46747a835294b3ffe47b882dbfa584555f").unwrap();
+    let index_hash =
+        hex::decode("08ae5042c8e413716d04a08db886b8c6b01bb610b8197cdbe052c59538b924f0").unwrap();
 
     ic_cdk::println!("gov_hash: {:?}", gov_hash);
 
     let mut wasm_bins: VecDeque<_> = [gov_hash, ledger_hash, root_hash, swap_hash, index_hash]
         .into_iter()
         .map(|hash| async move {
-            let req = GetWasmRequest {
-                hash,
-            };
+            let req = GetWasmRequest { hash };
             let wasm_res =
                 ic_cdk::call::<_, (GetWasmResponse,)>(sns_wasm, "get_wasm", (req,)).await?;
             Ok::<_, CdaoDeployError>(wasm_res.0.wasm.unwrap().wasm)
