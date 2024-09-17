@@ -1,11 +1,12 @@
 use crate::{
     util::canister_management::{
-        create_empty_user_canister, create_users_canister, install_canister_wasm,
+        check_and_request_cycles_from_platform_orchestrator, create_empty_user_canister,
+        install_canister_wasm,
     },
     CANISTER_DATA,
 };
 use candid::Principal;
-use ic_cdk::api::{call, management_canister::main::canister_status};
+use ic_cdk::api::call;
 use ic_cdk_macros::update;
 use shared_utils::{
     canister_specific::individual_user_template::types::session::SessionType,
@@ -152,11 +153,15 @@ async fn new_user_signup(user_id: Principal) -> Result<Principal, String> {
     let individual_user_canister_subnet_threshold = get_individual_user_canister_subnet_threshold();
     let individual_user_canister_subnet_batch_size =
         get_individual_user_canister_subnet_batch_size();
-    if individual_user_canisters_cnt < individual_user_canister_subnet_threshold {
+    if available_individual_user_canisters_cnt < individual_user_canister_subnet_threshold {
         let new_canister_cnt =
             individual_user_canister_subnet_batch_size.min(backup_individual_user_canister_cnt);
+
+        let max_canister_cnt: u64 = available_individual_user_canisters_cnt
+            + backup_individual_user_canister_cnt.min(individual_user_canister_subnet_batch_size);
         ic_cdk::spawn(provision_new_available_canisters(
             new_canister_cnt,
+            max_canister_cnt,
             individual_user_template_canister_wasm,
         ));
     }
@@ -178,19 +183,30 @@ async fn new_user_signup(user_id: Principal) -> Result<Principal, String> {
 
 async fn provision_new_available_canisters(
     canister_count: u64,
+    max_canister_count: u64,
     individual_user_template_canister_wasm: CanisterWasm,
 ) {
     let install_canister_wasm_futures = CANISTER_DATA.with_borrow(|canister_data| {
         let mut backup_pool_canister = canister_data.backup_canister_pool.clone().into_iter();
         (0..canister_count).map(move |_| {
+            let individual_user_template_canister_wasm_version =
+                individual_user_template_canister_wasm.version.clone();
+
+            let individual_user_template_canister_wasm =
+                individual_user_template_canister_wasm.wasm_blob.clone();
+
             let canister_id = backup_pool_canister.next().unwrap();
-            let future = install_canister_wasm(
-                canister_id,
-                None,
-                individual_user_template_canister_wasm.version.clone(),
-                individual_user_template_canister_wasm.wasm_blob.clone(),
-            );
-            future
+
+            async move {
+                let _ = check_and_request_cycles_from_platform_orchestrator().await;
+                let future = install_canister_wasm(
+                    canister_id,
+                    None,
+                    individual_user_template_canister_wasm_version,
+                    individual_user_template_canister_wasm,
+                );
+                future.await
+            }
         })
     });
 
@@ -203,7 +219,7 @@ async fn provision_new_available_canisters(
 
     let breaking_condition = || {
         CANISTER_DATA.with_borrow(|canister_data| {
-            canister_data.available_canisters.len() as u64 >= canister_count
+            canister_data.available_canisters.len() as u64 >= max_canister_count
         })
     };
 
@@ -230,7 +246,8 @@ async fn provision_new_backup_canisters(canister_count: u64) {
 
     let breaking_condition = || {
         CANISTER_DATA.with_borrow(|canister_data| {
-            canister_data.backup_canister_pool.len() as u64 > canister_count
+            canister_data.backup_canister_pool.len() as u64
+                > get_backup_individual_user_canister_batch_size()
         })
     };
 
