@@ -72,6 +72,8 @@ pub async fn create_empty_user_canister() -> Principal {
         }),
     };
 
+    let _ = check_and_request_cycles_from_platform_orchestrator().await;
+
     // * provisioned canister
     let canister_id: Principal =
         main::create_canister(arg, INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT)

@@ -25,6 +25,14 @@ pub fn get_mock_user_dan_principal_id() -> Principal {
     Principal::self_authenticating([4])
 }
 
+pub fn get_mock_user_tom_principal_id() -> Principal {
+    Principal::self_authenticating([5])
+}
+
+pub fn get_mock_user_lucy_principal_id() -> Principal {
+    Principal::self_authenticating([6])
+}
+
 pub fn get_mock_canister_id_post_cache() -> Principal {
     CanisterId::from_slice(&0_usize.to_ne_bytes())
 }
