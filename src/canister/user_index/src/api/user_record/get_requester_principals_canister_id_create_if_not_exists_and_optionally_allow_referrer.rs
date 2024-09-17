@@ -157,8 +157,8 @@ async fn new_user_signup(user_id: Principal) -> Result<Principal, String> {
         let new_canister_cnt =
             individual_user_canister_subnet_batch_size.min(backup_individual_user_canister_cnt);
 
-        let max_canister_cnt: u64 =
-            backup_individual_user_canister_cnt.min(individual_user_canister_subnet_batch_size);
+        let max_canister_cnt: u64 = available_individual_user_canisters_cnt
+            + backup_individual_user_canister_cnt.min(individual_user_canister_subnet_batch_size);
         ic_cdk::spawn(provision_new_available_canisters(
             new_canister_cnt,
             max_canister_cnt,
