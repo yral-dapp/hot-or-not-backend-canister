@@ -182,9 +182,7 @@ async fn new_user_signup(user_id: Principal) -> Result<Principal, String> {
             .clone()
     });
     let individual_user_canister_subnet_threshold = get_individual_user_canister_subnet_threshold();
-    if response.is_err()
-        && available_individual_user_canisters_cnt < individual_user_canister_subnet_threshold
-    {
+    if available_individual_user_canisters_cnt < individual_user_canister_subnet_threshold {
         ic_cdk::spawn(provision_new_available_canisters(
             individual_user_template_canister_wasm,
         ));
