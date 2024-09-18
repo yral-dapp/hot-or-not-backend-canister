@@ -104,16 +104,19 @@ pub fn provision_new_available_and_backup_canisters_on_signup_if_required() {
         .update_call(
             subnet_orchestrator_canister_id,
             alice_prinicpal_id,
-            "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer",
+            "get_requester_principals_canister_id_create_if_not_exists",
             encode_one(()).unwrap(),
         )
         .map(|reply_payload| {
-            let result: Principal = match reply_payload {
+            let result: Result<Principal, String> = match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer failed\n"),
+                _ => panic!(
+                    "\n🛑 get_requester_principals_canister_id_create_if_not_exists failed\n"
+                ),
             };
             result
         })
+        .unwrap()
         .unwrap();
 
     for _ in 0..10 {
@@ -138,20 +141,23 @@ pub fn provision_new_available_and_backup_canisters_on_signup_if_required() {
     assert_eq!(subnet_available_canister_cnt, 9);
 
     let bob_canister_id = pocket_ic
-    .update_call(
-        subnet_orchestrator_canister_id,
-        bob_principal_id,
-        "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer",
-        encode_one(()).unwrap(),
-    )
-    .map(|reply_payload| {
-        let result: Principal = match reply_payload {
-            WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-            _ => panic!("\n🛑 get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer failed\n"),
-        };
-        result
-    })
-    .unwrap();
+        .update_call(
+            subnet_orchestrator_canister_id,
+            bob_principal_id,
+            "get_requester_principals_canister_id_create_if_not_exists",
+            encode_one(()).unwrap(),
+        )
+        .map(|reply_payload| {
+            let result: Result<Principal, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!(
+                    "\n🛑 get_requester_principals_canister_id_create_if_not_exists failed\n"
+                ),
+            };
+            result
+        })
+        .unwrap()
+        .unwrap();
 
     for _ in 0..10 {
         pocket_ic.tick();
@@ -176,20 +182,23 @@ pub fn provision_new_available_and_backup_canisters_on_signup_if_required() {
     assert_eq!(subnet_available_canister_cnt, 8);
 
     let lucy_canister_id = pocket_ic
-    .update_call(
-        subnet_orchestrator_canister_id,
-        lucy_principal_id,
-        "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer",
-        encode_one(()).unwrap(),
-    )
-    .map(|reply_payload| {
-        let result: Principal = match reply_payload {
-            WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-            _ => panic!("\n🛑 get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer failed\n"),
-        };
-        result
-    })
-    .unwrap();
+        .update_call(
+            subnet_orchestrator_canister_id,
+            lucy_principal_id,
+            "get_requester_principals_canister_id_create_if_not_exists",
+            encode_one(()).unwrap(),
+        )
+        .map(|reply_payload| {
+            let result: Result<Principal, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!(
+                    "\n🛑 get_requester_principals_canister_id_create_if_not_exists failed\n"
+                ),
+            };
+            result
+        })
+        .unwrap()
+        .unwrap();
 
     for _ in 0..10 {
         pocket_ic.tick();
@@ -214,20 +223,23 @@ pub fn provision_new_available_and_backup_canisters_on_signup_if_required() {
     assert_eq!(subnet_available_canister_cnt, 7);
 
     let dan_canister_id = pocket_ic
-    .update_call(
-        subnet_orchestrator_canister_id,
-        dan_principal_id,
-        "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer",
-        encode_one(()).unwrap(),
-    )
-    .map(|reply_payload| {
-        let result: Principal = match reply_payload {
-            WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-            _ => panic!("\n🛑 get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer failed\n"),
-        };
-        result
-    })
-    .unwrap();
+        .update_call(
+            subnet_orchestrator_canister_id,
+            dan_principal_id,
+            "get_requester_principals_canister_id_create_if_not_exists",
+            encode_one(()).unwrap(),
+        )
+        .map(|reply_payload| {
+            let result: Result<Principal, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!(
+                    "\n🛑 get_requester_principals_canister_id_create_if_not_exists failed\n"
+                ),
+            };
+            result
+        })
+        .unwrap()
+        .unwrap();
 
     for _ in 0..10 {
         pocket_ic.tick();
@@ -252,20 +264,23 @@ pub fn provision_new_available_and_backup_canisters_on_signup_if_required() {
     assert_eq!(subnet_available_canister_cnt, 6);
 
     let tom_canister_id = pocket_ic
-    .update_call(
-        subnet_orchestrator_canister_id,
-        tom_principal_id,
-        "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer",
-        encode_one(()).unwrap(),
-    )
-    .map(|reply_payload| {
-        let result: Principal = match reply_payload {
-            WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-            _ => panic!("\n🛑 get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer failed\n"),
-        };
-        result
-    })
-    .unwrap();
+        .update_call(
+            subnet_orchestrator_canister_id,
+            tom_principal_id,
+            "get_requester_principals_canister_id_create_if_not_exists",
+            encode_one(()).unwrap(),
+        )
+        .map(|reply_payload| {
+            let result: Result<Principal, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!(
+                    "\n🛑 get_requester_principals_canister_id_create_if_not_exists failed\n"
+                ),
+            };
+            result
+        })
+        .unwrap()
+        .unwrap();
 
     for _ in 0..10 {
         pocket_ic.tick();
@@ -307,20 +322,23 @@ pub fn provision_new_available_and_backup_canisters_on_signup_if_required() {
     assert_eq!(subnet_backup_canister_cnt, 20);
 
     let charlie_canister_id = pocket_ic
-    .update_call(
-        subnet_orchestrator_canister_id,
-        charlie_global_admin,
-        "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer",
-        encode_one(()).unwrap(),
-    )
-    .map(|reply_payload| {
-        let result: Principal = match reply_payload {
-            WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-            _ => panic!("\n🛑 get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer failed\n"),
-        };
-        result
-    })
-    .unwrap();
+        .update_call(
+            subnet_orchestrator_canister_id,
+            charlie_global_admin,
+            "get_requester_principals_canister_id_create_if_not_exists",
+            encode_one(()).unwrap(),
+        )
+        .map(|reply_payload| {
+            let result: Result<Principal, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!(
+                    "\n🛑 get_requester_principals_canister_id_create_if_not_exists failed\n"
+                ),
+            };
+            result
+        })
+        .unwrap()
+        .unwrap();
 
     for _ in 0..10 {
         pocket_ic.tick();

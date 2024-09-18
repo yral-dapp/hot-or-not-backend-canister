@@ -1,8 +1,11 @@
 use candid::Principal;
 use ic_test_state_machine_client::WasmResult;
 use shared_utils::{
-    canister_specific::individual_user_template::types::{profile::UserProfileDetailsForFrontend, session::SessionType},
-    common::types::known_principal::KnownPrincipalType, constant::GLOBAL_SUPER_ADMIN_USER_ID,
+    canister_specific::individual_user_template::types::{
+        profile::UserProfileDetailsForFrontend, session::SessionType,
+    },
+    common::types::known_principal::KnownPrincipalType,
+    constant::GLOBAL_SUPER_ADMIN_USER_ID,
 };
 use test_utils::setup::{
     env::v1::{get_initialized_env_with_provisioned_known_canisters, get_new_state_machine},
@@ -10,8 +13,7 @@ use test_utils::setup::{
 };
 
 #[test]
-fn update_session_type_tests(
-) {
+fn update_session_type_tests() {
     let state_machine = get_new_state_machine();
     let known_principal_map = get_initialized_env_with_provisioned_known_canisters(&state_machine);
     let user_index_canister_id = known_principal_map
@@ -19,18 +21,24 @@ fn update_session_type_tests(
         .unwrap();
     let alice_principal_id = get_mock_user_alice_principal_id();
 
-    let alice_canister_id = state_machine.update_call(
-        *user_index_canister_id,
-        alice_principal_id,
-        "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer",
-        candid::encode_one(()).unwrap(),
-    ).map(|reply_payload| {
-        let alice_canister_id: Principal = match reply_payload {
-            WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-            _ => panic!("\n🛑 get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer failed\n"),
-        };
-        alice_canister_id
-    }).unwrap();
+    let alice_canister_id = state_machine
+        .update_call(
+            *user_index_canister_id,
+            alice_principal_id,
+            "get_requester_principals_canister_id_create_if_not_exists",
+            candid::encode_one(()).unwrap(),
+        )
+        .map(|reply_payload| {
+            let alice_canister_id: Result<Principal, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!(
+                    "\n🛑 get_requester_principals_canister_id_create_if_not_exists failed\n"
+                ),
+            };
+            alice_canister_id
+        })
+        .unwrap()
+        .unwrap();
 
     let session_type = state_machine
         .query_call(
@@ -44,20 +52,21 @@ fn update_session_type_tests(
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
                 _ => panic!("\n🛑 get_session_type failed\n"),
             };
-        session_type_res 
+            session_type_res
         })
         .unwrap()
         .unwrap();
     assert_eq!(session_type, SessionType::AnonymousSession);
 
     // user cannot update the session type
-    state_machine.update_call(
-        alice_canister_id, 
-        alice_principal_id, 
-        "update_session_type", 
-        candid::encode_one(SessionType::RegisteredSession).unwrap()
-    )
-    .unwrap(); 
+    state_machine
+        .update_call(
+            alice_canister_id,
+            alice_principal_id,
+            "update_session_type",
+            candid::encode_one(SessionType::RegisteredSession).unwrap(),
+        )
+        .unwrap();
 
     let session_type = state_machine
         .query_call(
@@ -71,23 +80,22 @@ fn update_session_type_tests(
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
                 _ => panic!("\n🛑 get_session_type failed\n"),
             };
-        session_type_res 
+            session_type_res
         })
         .unwrap()
         .unwrap();
 
     assert_eq!(session_type, SessionType::AnonymousSession);
 
-
-    
     // global admin can update the session type of canister
-    state_machine.update_call(
-        alice_canister_id, 
-        Principal::from_text(GLOBAL_SUPER_ADMIN_USER_ID).unwrap(), 
-        "update_session_type", 
-        candid::encode_one(SessionType::RegisteredSession).unwrap()
-    )
-    .unwrap(); 
+    state_machine
+        .update_call(
+            alice_canister_id,
+            Principal::from_text(GLOBAL_SUPER_ADMIN_USER_ID).unwrap(),
+            "update_session_type",
+            candid::encode_one(SessionType::RegisteredSession).unwrap(),
+        )
+        .unwrap();
 
     let session_type = state_machine
         .query_call(
@@ -101,23 +109,22 @@ fn update_session_type_tests(
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
                 _ => panic!("\n🛑 get_session_type failed\n"),
             };
-        session_type_res 
+            session_type_res
         })
         .unwrap()
         .unwrap();
-
 
     assert_eq!(session_type, SessionType::RegisteredSession);
 
-
     //once set to registered session cannot update back to Anonymous Session
-    state_machine.update_call(
-        alice_canister_id, 
-        Principal::from_text(GLOBAL_SUPER_ADMIN_USER_ID).unwrap(),
-        "update_session_type", 
-        candid::encode_one(SessionType::AnonymousSession).unwrap()
-    )
-    .unwrap(); 
+    state_machine
+        .update_call(
+            alice_canister_id,
+            Principal::from_text(GLOBAL_SUPER_ADMIN_USER_ID).unwrap(),
+            "update_session_type",
+            candid::encode_one(SessionType::AnonymousSession).unwrap(),
+        )
+        .unwrap();
 
     let session_type = state_machine
         .query_call(
@@ -131,14 +138,10 @@ fn update_session_type_tests(
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
                 _ => panic!("\n🛑 get_session_type failed\n"),
             };
-        session_type_res 
+            session_type_res
         })
         .unwrap()
         .unwrap();
 
-
     assert_eq!(session_type, SessionType::RegisteredSession)
-
-
-   
 }

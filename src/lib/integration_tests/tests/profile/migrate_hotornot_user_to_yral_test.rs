@@ -96,15 +96,22 @@ fn test_transfer_token_can_heppen_only_once_from_hot_or_not_canister_to_yral_can
 
     //Alice hot or not and yral canister
     let alice_hot_or_not_principal_id = get_mock_user_alice_principal_id();
-    let alice_hot_or_not_canister_id: Principal = pocket_ic.update_call(hot_or_not_subnet_orchestrator_canister_id, alice_hot_or_not_principal_id, "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer", candid::encode_one(()).unwrap())
-    .map(|res| {
-        let canister_id: Principal = match res {
-            PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-            _ => panic!("Canister call failed")
-        };
-        canister_id
-    })
-    .unwrap();
+    let alice_hot_or_not_canister_id: Principal = pocket_ic
+        .update_call(
+            hot_or_not_subnet_orchestrator_canister_id,
+            alice_hot_or_not_principal_id,
+            "get_requester_principals_canister_id_create_if_not_exists",
+            candid::encode_one(()).unwrap(),
+        )
+        .map(|res| {
+            let canister_id: Result<Principal, String> = match res {
+                PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("Canister call failed"),
+            };
+            canister_id
+        })
+        .unwrap()
+        .unwrap();
 
     for _ in 0..52 {
         let _alice_post_id = pocket_ic
@@ -149,15 +156,22 @@ fn test_transfer_token_can_heppen_only_once_from_hot_or_not_canister_to_yral_can
         .unwrap();
 
     let alice_yral_principal_id = get_mock_user_bob_principal_id();
-    let alice_yral_canister_id: Principal = pocket_ic.update_call(yral_subnet_orchestrator_canister_id, alice_yral_principal_id, "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer", candid::encode_one(()).unwrap())
-    .map(|res| {
-        let canister_id: Principal = match res {
-            PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-            _ => panic!("Canister call failed")
-        };
-        canister_id
-    })
-    .unwrap();
+    let alice_yral_canister_id: Principal = pocket_ic
+        .update_call(
+            yral_subnet_orchestrator_canister_id,
+            alice_yral_principal_id,
+            "get_requester_principals_canister_id_create_if_not_exists",
+            candid::encode_one(()).unwrap(),
+        )
+        .map(|res| {
+            let canister_id: Result<Principal, String> = match res {
+                PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("Canister call failed"),
+            };
+            canister_id
+        })
+        .unwrap()
+        .unwrap();
 
     pocket_ic
         .update_call(
@@ -201,26 +215,40 @@ fn test_transfer_token_can_heppen_only_once_from_hot_or_not_canister_to_yral_can
 
     //charlie hot or not and yral canister
     let charlie_hot_or_not_principal_id = get_mock_user_charlie_principal_id();
-    let charlie_hot_or_not_canister_id: Principal = pocket_ic.update_call(hot_or_not_subnet_orchestrator_canister_id, charlie_hot_or_not_principal_id, "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer", candid::encode_one(()).unwrap())
-    .map(|res| {
-        let canister_id: Principal = match res {
-            PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-            _ => panic!("Canister call failed")
-        };
-        canister_id
-    })
-    .unwrap();
+    let charlie_hot_or_not_canister_id: Principal = pocket_ic
+        .update_call(
+            hot_or_not_subnet_orchestrator_canister_id,
+            charlie_hot_or_not_principal_id,
+            "get_requester_principals_canister_id_create_if_not_exists",
+            candid::encode_one(()).unwrap(),
+        )
+        .map(|res| {
+            let canister_id: Result<Principal, String> = match res {
+                PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("Canister call failed"),
+            };
+            canister_id
+        })
+        .unwrap()
+        .unwrap();
 
     let charlie_yral_principal_id = get_mock_user_dan_principal_id();
-    let charlie_yral_canister_id = pocket_ic.update_call(yral_subnet_orchestrator_canister_id, charlie_yral_principal_id, "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer", candid::encode_one(()).unwrap())
-    .map(|res| {
-        let canister_id: Principal = match res {
-            PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-            _ => panic!("Canister call failed")
-        };
-        canister_id
-    })
-    .unwrap();
+    let charlie_yral_canister_id = pocket_ic
+        .update_call(
+            yral_subnet_orchestrator_canister_id,
+            charlie_yral_principal_id,
+            "get_requester_principals_canister_id_create_if_not_exists",
+            candid::encode_one(()).unwrap(),
+        )
+        .map(|res| {
+            let canister_id: Result<Principal, String> = match res {
+                PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("Canister call failed"),
+            };
+            canister_id
+        })
+        .unwrap()
+        .unwrap();
 
     //update subnet known principal
     pocket_ic
@@ -570,15 +598,22 @@ fn test_when_user_tries_to_misuse_to_recieve_tokens_and_posts() {
     }
 
     let alice_yral_principal_id = get_mock_user_alice_principal_id();
-    let alice_yral_canister_id = pocket_ic.update_call(yral_subnet_orchestrator_canister_id, alice_yral_principal_id, "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer", candid::encode_one(()).unwrap())
-    .map(|res| {
-        let canister_id: Principal = match res {
-            PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-            _ => panic!("Canister call failed")
-        };
-        canister_id
-    })
-    .unwrap();
+    let alice_yral_canister_id = pocket_ic
+        .update_call(
+            yral_subnet_orchestrator_canister_id,
+            alice_yral_principal_id,
+            "get_requester_principals_canister_id_create_if_not_exists",
+            candid::encode_one(()).unwrap(),
+        )
+        .map(|res| {
+            let canister_id: Result<Principal, String> = match res {
+                PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("Canister call failed"),
+            };
+            canister_id
+        })
+        .unwrap()
+        .unwrap();
 
     //mark alice yral canister as registered
     pocket_ic
