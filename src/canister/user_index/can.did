@@ -27,6 +27,8 @@ type DefiniteCanisterSettings = record {
   freezing_threshold : nat;
   controllers : vec principal;
   reserved_cycles_limit : nat;
+  log_visibility : LogVisibility;
+  wasm_memory_limit : nat;
   memory_allocation : nat;
   compute_allocation : nat;
 };
@@ -56,6 +58,7 @@ type KnownPrincipalType = variant {
   CanisterIdSnsGovernance;
   UserIdGlobalSuperAdmin;
 };
+type LogVisibility = variant { controllers; public };
 type QueryStats = record {
   response_payload_bytes_total : nat;
   num_instructions_total : nat;

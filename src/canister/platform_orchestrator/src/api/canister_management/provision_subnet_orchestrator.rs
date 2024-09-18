@@ -66,11 +66,8 @@ pub async fn provision_subnet_orchestrator_canister(
     let create_canister_arg = CreateCanisterCmcArgument {
         subnet_selection: Some(SubnetType::Subnet(Subnet { subnet })),
         canister_settings: Some(CanisterSettings {
-            reserved_cycles_limit: None,
             controllers: Some(vec![api::id()]),
-            compute_allocation: None,
-            memory_allocation: None,
-            freezing_threshold: None,
+            ..Default::default()
         }),
         subnet_type: None,
     };

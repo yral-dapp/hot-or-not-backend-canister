@@ -8,6 +8,7 @@ mod get_last_subnet_upgrade_status;
 mod get_subnets_upgrade_status_report;
 mod global_admin;
 mod known_principal;
+pub mod logging;
 mod populate_known_principal_for_all_subnet;
 pub mod provision_subnet_orchestrator;
 mod recharge_subnet_orchestrator;
