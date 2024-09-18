@@ -1,5 +1,8 @@
 use candid::Principal;
-use ic_cdk::api::management_canister::main::{deposit_cycles, CanisterId, CanisterIdRecord};
+use ic_cdk::api::management_canister::main::{
+    deposit_cycles, update_settings, CanisterIdRecord, CanisterSettings, LogVisibility,
+    UpdateSettingsArgument,
+};
 
 use crate::CANISTER_DATA;
 
@@ -33,6 +36,30 @@ impl RegisteredSubnetOrchestrator {
             },
             cycles,
         )
+        .await
+        .map_err(|e| e.1)
+    }
+
+    pub async fn make_logs_public(&self) -> Result<(), String> {
+        update_settings(UpdateSettingsArgument {
+            canister_id: self.canister_id,
+            settings: CanisterSettings {
+                log_visibility: Some(LogVisibility::Public),
+                ..Default::default()
+            },
+        })
+        .await
+        .map_err(|e| e.1)
+    }
+
+    pub async fn make_logs_private(&self) -> Result<(), String> {
+        update_settings(UpdateSettingsArgument {
+            canister_id: self.canister_id,
+            settings: CanisterSettings {
+                log_visibility: Some(LogVisibility::Controllers),
+                ..Default::default()
+            },
+        })
         .await
         .map_err(|e| e.1)
     }

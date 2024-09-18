@@ -587,7 +587,7 @@ service : (IndividualUserTemplateInitArgs) -> {
   get_rewarded_for_referral : (principal, principal) -> ();
   get_rewarded_for_signing_up : () -> ();
   get_session_type : () -> (Result_12) query;
-  get_stable_memory_size : () -> (nat32) query;
+  get_stable_memory_size : () -> (nat64) query;
   get_success_history : () -> (Result_13) query;
   get_token_roots_of_this_user_with_pagination_cursor : (nat64, nat64) -> (
       Result_14,

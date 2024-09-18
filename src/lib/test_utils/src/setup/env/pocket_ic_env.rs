@@ -1,21 +1,20 @@
 use std::collections::{HashMap, HashSet};
 
 use candid::{CandidType, Principal};
-use ic_cdk::api::management_canister::main::{CanisterId, CanisterSettings};
+use ic_cdk::api::management_canister::main::CanisterId;
 use ic_ledger_types::{AccountIdentifier, BlockIndex, Tokens, DEFAULT_SUBACCOUNT};
-use pocket_ic::{PocketIc, PocketIcBuilder, WasmResult};
+use pocket_ic::{CanisterSettings, PocketIc, PocketIcBuilder};
 use shared_utils::{
     canister_specific::platform_orchestrator::types::args::PlatformOrchestratorInitArgs,
     common::types::{
-        known_principal::{self, KnownPrincipalMap, KnownPrincipalType},
+        known_principal::{KnownPrincipalMap, KnownPrincipalType},
         wasm::WasmType,
     },
     constant::{NNS_CYCLE_MINTING_CANISTER, NNS_LEDGER_CANISTER_ID},
 };
 
 use crate::setup::test_constants::{
-    get_global_super_admin_principal_id, get_mock_user_charlie_principal_id,
-    v1::CANISTER_INITIAL_CYCLES_FOR_SPAWNING_CANISTERS,
+    get_global_super_admin_principal_id, v1::CANISTER_INITIAL_CYCLES_FOR_SPAWNING_CANISTERS,
 };
 
 #[derive(CandidType)]
@@ -58,11 +57,8 @@ pub fn get_new_pocket_ic_env() -> (PocketIc, KnownPrincipalMap) {
     let platform_canister_id = pocket_ic.create_canister_with_settings(
         Some(super_admin),
         Some(CanisterSettings {
-            reserved_cycles_limit: None,
             controllers: Some(vec![super_admin]),
-            compute_allocation: None,
-            memory_allocation: None,
-            freezing_threshold: None,
+            ..Default::default()
         }),
     );
 
@@ -133,7 +129,10 @@ pub fn get_new_pocket_ic_env() -> (PocketIc, KnownPrincipalMap) {
         )
         .unwrap();
     let mut initial_balances = HashMap::new();
-    initial_balances.insert(minting_account.to_string(), Tokens::from_e8s(1_000_000_000_000_000));
+    initial_balances.insert(
+        minting_account.to_string(),
+        Tokens::from_e8s(1_000_000_000_000_000),
+    );
     let icp_ledger_init_args = NnsLedgerCanisterInitPayload {
         minting_account: minting_account.to_string(),
         initial_values: initial_balances,
