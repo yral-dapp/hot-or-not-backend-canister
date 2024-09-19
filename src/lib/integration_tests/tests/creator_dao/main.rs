@@ -160,19 +160,22 @@ fn creator_dao_tests() {
     }
 
     let alice_principal = get_mock_user_alice_principal_id();
-    let alice_canister_id: Principal = pocket_ic.update_call(
-        subnet_orchestrator_canister_id,
-        alice_principal,
-        "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer",
-        candid::encode_one(()).unwrap(),
-    ).map(|reply_payload| {
-        let response: Principal = match reply_payload {
-            WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-            _ => panic!("\n🛑 get requester principals canister id failed\n"),
-        };
-        response
-    })
-    .unwrap();
+    let alice_canister_id: Principal = pocket_ic
+        .update_call(
+            subnet_orchestrator_canister_id,
+            alice_principal,
+            "get_requester_principals_canister_id_create_if_not_exists",
+            candid::encode_one(()).unwrap(),
+        )
+        .map(|reply_payload| {
+            let response: Result<Principal, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 get requester principals canister id failed\n"),
+            };
+            response
+        })
+        .unwrap()
+        .unwrap();
 
     let alice_initial_cycle_balance = pocket_ic.cycle_balance(alice_canister_id);
 

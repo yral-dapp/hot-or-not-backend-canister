@@ -82,12 +82,13 @@ type RejectionCode = variant {
   CanisterReject;
 };
 type Result = variant { Ok : text; Err : text };
-type Result_1 = variant {
+type Result_1 = variant { Ok : principal; Err : text };
+type Result_2 = variant {
   Ok : record { CanisterStatusResponse };
   Err : record { RejectionCode; text };
 };
-type Result_2 = variant { Ok; Err : text };
-type Result_3 = variant { Ok; Err : SetUniqueUsernameError };
+type Result_3 = variant { Ok; Err : text };
+type Result_4 = variant { Ok; Err : SetUniqueUsernameError };
 type SetUniqueUsernameError = variant {
   UsernameAlreadyTaken;
   SendingCanisterDoesNotMatchUserCanisterId;
@@ -126,6 +127,7 @@ service : (UserIndexInitArgs) -> {
   get_last_broadcast_call_status : () -> (BroadcastCallStatus) query;
   get_list_of_available_canisters : () -> (vec principal) query;
   get_recycle_status : () -> (RecycleStatus) query;
+  get_requester_principals_canister_id_create_if_not_exists : () -> (Result_1);
   get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer : () -> (
       principal,
     );
@@ -137,7 +139,7 @@ service : (UserIndexInitArgs) -> {
     ) query;
   get_user_canister_incl_avail_list : () -> (vec principal) query;
   get_user_canister_list : () -> (vec principal) query;
-  get_user_canister_status : (principal) -> (Result_1);
+  get_user_canister_status : (principal) -> (Result_2);
   get_user_id_and_canister_list : () -> (
       vec record { principal; principal },
     ) query;
@@ -149,17 +151,17 @@ service : (UserIndexInitArgs) -> {
   http_request : (HttpRequest) -> (HttpResponse) query;
   issue_rewards_for_referral : (principal, principal, principal) -> (Result);
   reclaim_cycles_from_individual_canisters : () -> ();
-  request_cycles : (nat) -> (Result_2);
+  request_cycles : (nat) -> (Result_3);
   reset_user_individual_canisters : (vec principal) -> (Result);
   return_cycles_to_platform_orchestrator_canister : () -> (Result);
   set_permission_to_upgrade_individual_canisters : (bool) -> (text);
   start_upgrades_for_individual_canisters : (text, blob) -> (text);
-  toggle_signups_enabled : () -> (Result_2);
+  toggle_signups_enabled : () -> (Result_3);
   update_canisters_last_functionality_access_time : () -> (text);
   update_index_with_unique_user_name_corresponding_to_user_principal_id : (
       text,
       principal,
-    ) -> (Result_3);
+    ) -> (Result_4);
   update_profile_owner_for_individual_canisters : () -> ();
   update_restart_timers_hon_game : () -> (text);
   update_well_known_principal : (KnownPrincipalType, principal) -> ();

@@ -20,18 +20,24 @@ fn when_creating_a_new_post_then_post_score_should_be_calculated() {
         .unwrap();
     let alice_principal_id = get_mock_user_alice_principal_id();
 
-    let alice_canister_id = state_machine.update_call(
-        *user_index_canister_id,
-        alice_principal_id,
-        "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer",
-        candid::encode_one(()).unwrap(),
-    ).map(|reply_payload| {
-        let alice_canister_id: Principal = match reply_payload {
-            WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-            _ => panic!("\n🛑 get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer failed\n"),
-        };
-        alice_canister_id
-    }).unwrap();
+    let alice_canister_id = state_machine
+        .update_call(
+            *user_index_canister_id,
+            alice_principal_id,
+            "get_requester_principals_canister_id_create_if_not_exists",
+            candid::encode_one(()).unwrap(),
+        )
+        .map(|reply_payload| {
+            let alice_canister_id: Result<Principal, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!(
+                    "\n🛑 get_requester_principals_canister_id_create_if_not_exists failed\n"
+                ),
+            };
+            alice_canister_id
+        })
+        .unwrap()
+        .unwrap();
 
     let newly_created_post_id = state_machine
         .update_call(

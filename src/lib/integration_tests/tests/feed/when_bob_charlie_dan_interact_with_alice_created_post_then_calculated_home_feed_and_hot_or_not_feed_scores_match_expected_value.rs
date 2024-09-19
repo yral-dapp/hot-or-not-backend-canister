@@ -43,57 +43,81 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
         user_index_canister_id.to_text()
     );
 
-    let alice_canister_id = state_machine.update_call(
-        *user_index_canister_id,
-        alice_principal_id,
-        "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer",
-        candid::encode_one(()).unwrap(),
-    ).map(|reply_payload| {
-        let alice_canister_id: Principal = match reply_payload {
-            WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-            _ => panic!("\n🛑 get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer failed\n"),
-        };
-        alice_canister_id
-    }).unwrap();
+    let alice_canister_id = state_machine
+        .update_call(
+            *user_index_canister_id,
+            alice_principal_id,
+            "get_requester_principals_canister_id_create_if_not_exists",
+            candid::encode_one(()).unwrap(),
+        )
+        .map(|reply_payload| {
+            let alice_canister_id: Result<Principal, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!(
+                    "\n🛑 get_requester_principals_canister_id_create_if_not_exists failed\n"
+                ),
+            };
+            alice_canister_id
+        })
+        .unwrap()
+        .unwrap();
 
-    let bob_canister_id = state_machine.update_call(
-        *user_index_canister_id,
-        bob_principal_id,
-        "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer",
-        candid::encode_one(()).unwrap(),
-    ).map(|reply_payload| {
-        let bob_canister_id: Principal = match reply_payload {
-            WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-            _ => panic!("\n🛑 get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer failed\n"),
-        };
-        bob_canister_id
-    }).unwrap();
+    let bob_canister_id = state_machine
+        .update_call(
+            *user_index_canister_id,
+            bob_principal_id,
+            "get_requester_principals_canister_id_create_if_not_exists",
+            candid::encode_one(()).unwrap(),
+        )
+        .map(|reply_payload| {
+            let bob_canister_id: Result<Principal, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!(
+                    "\n🛑 get_requester_principals_canister_id_create_if_not_exists failed\n"
+                ),
+            };
+            bob_canister_id
+        })
+        .unwrap()
+        .unwrap();
 
-    let charlie_canister_id = state_machine.update_call(
-        *user_index_canister_id,
-        charlie_principal_id,
-        "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer",
-        candid::encode_one(()).unwrap(),
-    ).map(|reply_payload| {
-        let charlie_canister_id: Principal = match reply_payload {
-            WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-            _ => panic!("\n🛑 get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer failed\n"),
-        };
-        charlie_canister_id
-    }).unwrap();
+    let charlie_canister_id = state_machine
+        .update_call(
+            *user_index_canister_id,
+            charlie_principal_id,
+            "get_requester_principals_canister_id_create_if_not_exists",
+            candid::encode_one(()).unwrap(),
+        )
+        .map(|reply_payload| {
+            let charlie_canister_id: Result<Principal, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!(
+                    "\n🛑 get_requester_principals_canister_id_create_if_not_exists failed\n"
+                ),
+            };
+            charlie_canister_id
+        })
+        .unwrap()
+        .unwrap();
 
-    let dan_canister_id = state_machine.update_call(
-        *user_index_canister_id,
-        dan_principal_id,
-        "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer",
-        candid::encode_one(()).unwrap(),
-    ).map(|reply_payload| {
-        let dan_canister_id: Principal = match reply_payload {
-            WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-            _ => panic!("\n🛑 get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer failed\n"),
-        };
-        dan_canister_id
-    }).unwrap();
+    let dan_canister_id = state_machine
+        .update_call(
+            *user_index_canister_id,
+            dan_principal_id,
+            "get_requester_principals_canister_id_create_if_not_exists",
+            candid::encode_one(()).unwrap(),
+        )
+        .map(|reply_payload| {
+            let dan_canister_id: Result<Principal, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!(
+                    "\n🛑 get_requester_principals_canister_id_create_if_not_exists failed\n"
+                ),
+            };
+            dan_canister_id
+        })
+        .unwrap()
+        .unwrap();
 
     println!("🧪 alice_canister_id: {:?}", alice_canister_id.to_text());
 

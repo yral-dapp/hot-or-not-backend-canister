@@ -10,8 +10,7 @@ use test_utils::setup::{
 };
 
 #[test]
-fn requesting_new_canister_for_a_user_sets_the_profile_owner(
-) {
+fn requesting_new_canister_for_a_user_sets_the_profile_owner() {
     let state_machine = get_new_state_machine();
     let known_principal_map = get_initialized_env_with_provisioned_known_canisters(&state_machine);
     let user_index_canister_id = known_principal_map
@@ -19,19 +18,24 @@ fn requesting_new_canister_for_a_user_sets_the_profile_owner(
         .unwrap();
     let alice_principal_id = get_mock_user_alice_principal_id();
 
-    let alice_canister_id = state_machine.update_call(
-        *user_index_canister_id,
-        alice_principal_id,
-        "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer",
-        candid::encode_one(()).unwrap(),
-    ).map(|reply_payload| {
-        let alice_canister_id: Principal = match reply_payload {
-            WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-            _ => panic!("\n🛑 get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer failed\n"),
-        };
-        alice_canister_id
-    }).unwrap();
-
+    let alice_canister_id = state_machine
+        .update_call(
+            *user_index_canister_id,
+            alice_principal_id,
+            "get_requester_principals_canister_id_create_if_not_exists",
+            candid::encode_one(()).unwrap(),
+        )
+        .map(|reply_payload| {
+            let alice_canister_id: Result<Principal, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!(
+                    "\n🛑 get_requester_principals_canister_id_create_if_not_exists failed\n"
+                ),
+            };
+            alice_canister_id
+        })
+        .unwrap()
+        .unwrap();
 
     let profile_details_from_user_canister = state_machine
         .query_call(
@@ -54,5 +58,4 @@ fn requesting_new_canister_for_a_user_sets_the_profile_owner(
         profile_details_from_user_canister.principal_id,
         alice_principal_id
     );
-
 }

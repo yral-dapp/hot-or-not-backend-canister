@@ -27,6 +27,37 @@ use shared_utils::{
 };
 
 #[update]
+async fn get_requester_principals_canister_id_create_if_not_exists() -> Result<Principal, String> {
+    let api_caller = ic_cdk::caller();
+
+    if api_caller == Principal::anonymous() {
+        panic!("Anonymous principal is not allowed to call this method");
+    }
+
+    let canister_id_for_this_caller = CANISTER_DATA.with(|canister_data_ref_cell| {
+        canister_data_ref_cell
+            .borrow()
+            .user_principal_id_to_canister_id_map
+            .get(&api_caller)
+            .cloned()
+    });
+
+    match canister_id_for_this_caller {
+        // * canister already exists
+        Some(canister_id) => Ok(canister_id),
+        None => {
+            // * create new canister
+            let created_canister_id = new_user_signup(api_caller).await?;
+            // * reward user for signing up
+            call::notify(created_canister_id, "get_rewarded_for_signing_up", ()).ok();
+
+            Ok(created_canister_id)
+        }
+    }
+}
+
+#[deprecated(note = "use get_requester_principals_canister_id_create_if_not_exists instead")]
+#[update]
 async fn get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer(
 ) -> Principal {
     let api_caller = ic_cdk::caller();
@@ -151,17 +182,8 @@ async fn new_user_signup(user_id: Principal) -> Result<Principal, String> {
             .clone()
     });
     let individual_user_canister_subnet_threshold = get_individual_user_canister_subnet_threshold();
-    let individual_user_canister_subnet_batch_size =
-        get_individual_user_canister_subnet_batch_size();
     if available_individual_user_canisters_cnt < individual_user_canister_subnet_threshold {
-        let new_canister_cnt =
-            individual_user_canister_subnet_batch_size.min(backup_individual_user_canister_cnt);
-
-        let max_canister_cnt: u64 = available_individual_user_canisters_cnt
-            + backup_individual_user_canister_cnt.min(individual_user_canister_subnet_batch_size);
         ic_cdk::spawn(provision_new_available_canisters(
-            new_canister_cnt,
-            max_canister_cnt,
             individual_user_template_canister_wasm,
         ));
     }
@@ -181,11 +203,15 @@ async fn new_user_signup(user_id: Principal) -> Result<Principal, String> {
     response
 }
 
-async fn provision_new_available_canisters(
-    canister_count: u64,
-    max_canister_count: u64,
-    individual_user_template_canister_wasm: CanisterWasm,
-) {
+async fn provision_new_available_canisters(individual_user_template_canister_wasm: CanisterWasm) {
+    let backup_pool_canister_count =
+        CANISTER_DATA.with_borrow(|canister_data| canister_data.backup_canister_pool.len() as u64);
+    let individual_canister_batch_size = get_individual_user_canister_subnet_batch_size();
+    let canister_count = individual_canister_batch_size.min(backup_pool_canister_count);
+    let available_canister_count =
+        CANISTER_DATA.with_borrow(|canister_data| canister_data.available_canisters.len() as u64);
+    let max_canister_count = available_canister_count + canister_count;
+
     let install_canister_wasm_futures = CANISTER_DATA.with_borrow(|canister_data| {
         let mut backup_pool_canister = canister_data.backup_canister_pool.clone().into_iter();
         (0..canister_count).map(move |_| {

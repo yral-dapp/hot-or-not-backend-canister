@@ -193,54 +193,63 @@ fn reset_individual_canister_test() {
     // create user canisters
 
     let alice_individual_template_canister_id = pocket_ic
-            .update_call(
-                user_index_canister_id,
-                alice_principal_id,
-                "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer",
-                encode_one(()).unwrap(),
-            )
-            .map(|reply_payload| {
-                let result: Principal = match reply_payload {
-                    WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                    _ => panic!("\n🛑 get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer failed\n"),
-                };
-                result
-            })
-            .unwrap();
+        .update_call(
+            user_index_canister_id,
+            alice_principal_id,
+            "get_requester_principals_canister_id_create_if_not_exists",
+            encode_one(()).unwrap(),
+        )
+        .map(|reply_payload| {
+            let result: Result<Principal, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!(
+                    "\n🛑 get_requester_principals_canister_id_create_if_not_exists failed\n"
+                ),
+            };
+            result
+        })
+        .unwrap()
+        .unwrap();
     println!("res1: {:?}", alice_individual_template_canister_id);
 
     let bob_individual_template_canister_id = pocket_ic
-            .update_call(
-                user_index_canister_id,
-                bob_principal_id,
-                "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer",
-                encode_one(()).unwrap(),
-            )
-            .map(|reply_payload| {
-                let result: Principal = match reply_payload {
-                    WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                    _ => panic!("\n🛑 get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer failed\n"),
-                };
-                result
-            })
-            .unwrap();
+        .update_call(
+            user_index_canister_id,
+            bob_principal_id,
+            "get_requester_principals_canister_id_create_if_not_exists",
+            encode_one(()).unwrap(),
+        )
+        .map(|reply_payload| {
+            let result: Result<Principal, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!(
+                    "\n🛑 get_requester_principals_canister_id_create_if_not_exists failed\n"
+                ),
+            };
+            result
+        })
+        .unwrap()
+        .unwrap();
     println!("res2: {:?}", bob_individual_template_canister_id);
 
     let dan_individual_template_canister_id = pocket_ic
-            .update_call(
-                user_index_canister_id,
-                dan_principal_id,
-                "get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer",
-                encode_one(()).unwrap(),
-            )
-            .map(|reply_payload| {
-                let result: Principal = match reply_payload {
-                    WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                    _ => panic!("\n🛑 get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer failed\n"),
-                };
-                result
-            })
-            .unwrap();
+        .update_call(
+            user_index_canister_id,
+            dan_principal_id,
+            "get_requester_principals_canister_id_create_if_not_exists",
+            encode_one(()).unwrap(),
+        )
+        .map(|reply_payload| {
+            let result: Result<Principal, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!(
+                    "\n🛑 get_requester_principals_canister_id_create_if_not_exists failed\n"
+                ),
+            };
+            result
+        })
+        .unwrap()
+        .unwrap();
     println!("res3: {:?}", dan_individual_template_canister_id);
 
     pocket_ic.add_cycles(alice_individual_template_canister_id, 2_000_000_000_000_000);
