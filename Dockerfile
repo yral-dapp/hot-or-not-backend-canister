@@ -6,10 +6,11 @@ COPY . .
 
 RUN apt-get install wget --no-install-recommends
 
+RUN cargo install candid-extractor --locked
+
 RUN dfx extension install sns
 
 RUN dfx identity import --storage-mode=plaintext admin ./scripts/canisters/docker/local-admin.pem
-RUN dfx identity import --storage-mode=plaintext minter ./scripts/canisters/docker/minter.pem
 RUN dfx identity use admin
 
 RUN apt-get update && apt-get install -y bsdmainutils parallel --no-install-recommends && \

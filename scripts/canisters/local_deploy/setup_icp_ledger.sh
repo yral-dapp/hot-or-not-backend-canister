@@ -4,7 +4,7 @@ DFX_IC_COMMIT=a0207146be211cdff83321c99e9e70baa62733c7
 
 echo -e "\n\n\n\n\n\n\n\n\n"
 
-DIR=/app/target/ic
+DIR=./target/ic
 
 if [ ! -d "$DIR" ]; then
   mkdir -p "$DIR"
@@ -13,18 +13,14 @@ fi
 curl -o ./icp_index.wasm.gz "https://download.dfinity.systems/ic/$DFX_IC_COMMIT/canisters/ic-icp-index-canister.wasm.gz"
 
 curl -o ./icp_ledger.wasm.gz "https://download.dfinity.systems/ic/$DFX_IC_COMMIT/canisters/ledger-canister.wasm.gz"
-pwd && ls -la /app/target/ic
+pwd && ls -la $DIR
 
-dfx identity use minter
-MINTER_ACCOUNT_ID=$(dfx ledger account-id)
-
-dfx identity use admin
 LEDGER_ACCOUNT_ID=$(dfx ledger account-id)
 
 dfx deploy --specified-id ryjl3-tyaaa-aaaaa-aaaba-cai icp_ledger --argument "
   (variant {
     Init = record {
-      minting_account = \"$MINTER_ACCOUNT_ID\";
+      minting_account = \"$LEDGER_ACCOUNT_ID\";
       initial_values = vec {
         record {
           \"$LEDGER_ACCOUNT_ID\";
