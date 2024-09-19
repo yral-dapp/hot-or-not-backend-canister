@@ -6,6 +6,8 @@ COPY . .
 
 RUN apt-get install wget --no-install-recommends
 
+RUN cargo install candid-extractor --locked
+
 RUN dfx extension install sns
 
 RUN dfx identity import --storage-mode=plaintext admin ./scripts/canisters/docker/local-admin.pem

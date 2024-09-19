@@ -27,15 +27,16 @@ dfx canister create --no-wallet post_cache
 dfx canister create --no-wallet user_index
 dfx canister create --no-wallet platform_orchestrator
 
-build_canister() {
-  dfx build $1
+gzip_canister() {
   gzip -f -1 ./target/wasm32-unknown-unknown/release/$1.wasm
 }
 
-build_canister individual_user_template
-build_canister user_index
-build_canister post_cache
-build_canister platform_orchestrator
+scripts/candid_generator.sh
+
+gzip_canister individual_user_template
+gzip_canister user_index
+gzip_canister post_cache
+gzip_canister platform_orchestrator
 
 if [[ $skip_test != true ]]
 then
