@@ -71,7 +71,6 @@ mod test {
                 last_synchronized_score: 1200,
                 last_synchronized_at: SystemTime::now(),
             },
-            creator_consent_for_inclusion_in_hot_or_not: true,
             hot_or_not_details: Some(HotOrNotDetailsForSnapshot {
                 hot_or_not_feed_score: FeedScore {
                     current_score: 1200,
@@ -236,7 +235,7 @@ mod test {
             session_type: Some(SessionType::RegisteredSession),
             last_access_time: Some(SystemTime::now()),
             last_canister_functionality_access_time: Some(SystemTime::now()),
-            migration_info: MigrationInfo::NotMigrated
+            migration_info: MigrationInfo::NotMigrated,
         };
 
         let serde_str = serde_json::to_string(&canister_data_snapshot);

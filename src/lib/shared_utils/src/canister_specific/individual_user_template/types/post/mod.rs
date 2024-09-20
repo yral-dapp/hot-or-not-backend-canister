@@ -17,6 +17,7 @@ use super::hot_or_not::{
 };
 
 #[derive(CandidType, Clone, Deserialize, Debug, Serialize)]
+#[serde(from = "PostV1")]
 pub struct Post {
     pub id: u64,
     pub description: String,
@@ -28,10 +29,45 @@ pub struct Post {
     pub share_count: u64,
     pub view_stats: PostViewStatistics,
     pub home_feed_score: FeedScore,
-    pub creator_consent_for_inclusion_in_hot_or_not: bool,
     pub hot_or_not_details: Option<HotOrNotDetails>,
     #[serde(default)]
     pub is_nsfw: bool,
+}
+
+#[derive(Deserialize)]
+pub struct PostV1 {
+    pub id: u64,
+    pub description: String,
+    pub hashtags: Vec<String>,
+    pub video_uid: String,
+    pub status: PostStatus,
+    pub created_at: SystemTime,
+    pub likes: HashSet<Principal>,
+    pub share_count: u64,
+    pub view_stats: PostViewStatistics,
+    pub home_feed_score: FeedScore,
+    pub hot_or_not_details: Option<HotOrNotDetails>,
+    pub is_nsfw: bool,
+    pub creator_consent_for_inclusion_in_hot_or_not: bool,
+}
+
+impl From<PostV1> for Post {
+    fn from(value: PostV1) -> Self {
+        Self {
+            id: value.id,
+            hashtags: value.hashtags,
+            video_uid: value.video_uid,
+            status: value.status,
+            created_at: value.created_at,
+            likes: value.likes,
+            share_count: value.share_count,
+            view_stats: value.view_stats,
+            home_feed_score: value.home_feed_score,
+            hot_or_not_details: value.hot_or_not_details,
+            description: value.description,
+            is_nsfw: value.is_nsfw,
+        }
+    }
 }
 
 #[derive(CandidType, Clone, Deserialize, Debug, Serialize)]
@@ -106,8 +142,7 @@ impl From<Post> for PostDetailsFromFrontend {
             description: value.description,
             hashtags: value.hashtags,
             video_uid: value.video_uid,
-            creator_consent_for_inclusion_in_hot_or_not: value
-                .creator_consent_for_inclusion_in_hot_or_not,
+            creator_consent_for_inclusion_in_hot_or_not: true,
             is_nsfw: value.is_nsfw,
         }
     }
@@ -189,17 +224,13 @@ impl Post {
             } else {
                 None
             },
-            hot_or_not_betting_status: if self.creator_consent_for_inclusion_in_hot_or_not {
-                Some(self.get_hot_or_not_betting_status_for_this_post_v1(
-                    current_time,
-                    &caller,
-                    room_details_map,
-                    post_principal_map,
-                    slot_details_map,
-                ))
-            } else {
-                None
-            },
+            hot_or_not_betting_status: Some(self.get_hot_or_not_betting_status_for_this_post_v1(
+                current_time,
+                &caller,
+                room_details_map,
+                post_principal_map,
+                slot_details_map,
+            )),
         }
     }
 
@@ -229,15 +260,7 @@ impl Post {
                 average_watch_percentage: 0,
             },
             home_feed_score: FeedScore::default(),
-            creator_consent_for_inclusion_in_hot_or_not: post_details_from_frontend
-                .creator_consent_for_inclusion_in_hot_or_not,
-            hot_or_not_details: if post_details_from_frontend
-                .creator_consent_for_inclusion_in_hot_or_not
-            {
-                Some(HotOrNotDetails::default())
-            } else {
-                None
-            },
+            hot_or_not_details: Some(HotOrNotDetails::default()),
         }
     }
 
