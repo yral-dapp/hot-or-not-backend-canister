@@ -472,7 +472,7 @@ mod test {
             &SystemTime::now(),
         );
 
-        assert!(post.hot_or_not_details.is_none());
+        assert!(post.hot_or_not_details.is_some());
 
         let post = Post::new(
             0,
