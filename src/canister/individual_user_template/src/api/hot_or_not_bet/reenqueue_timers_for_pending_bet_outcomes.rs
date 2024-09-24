@@ -3,10 +3,10 @@ use std::time::{Duration, SystemTime};
 use ic_cdk_macros::update;
 // use rand::Rng;
 use shared_utils::{
-    common::utils::permissions::is_caller_controller_or_global_admin,
     canister_specific::individual_user_template::types::hot_or_not::{
         GlobalRoomId, RoomBetPossibleOutcomes, SlotId, DURATION_OF_EACH_SLOT_IN_SECONDS,
     },
+    common::utils::permissions::is_caller_controller_or_global_admin,
     common::utils::system_time,
 };
 
@@ -196,7 +196,6 @@ mod test {
             share_count: 0,
             view_stats: PostViewStatistics::default(),
             home_feed_score: FeedScore::default(),
-            creator_consent_for_inclusion_in_hot_or_not: true,
             hot_or_not_details: Some(HotOrNotDetails::default()),
         };
 
@@ -245,7 +244,6 @@ mod test {
             share_count: 0,
             view_stats: PostViewStatistics::default(),
             home_feed_score: FeedScore::default(),
-            creator_consent_for_inclusion_in_hot_or_not: true,
             hot_or_not_details: Some(HotOrNotDetails::default()),
         };
 
@@ -298,7 +296,6 @@ mod test {
             share_count: 0,
             view_stats: PostViewStatistics::default(),
             home_feed_score: FeedScore::default(),
-            creator_consent_for_inclusion_in_hot_or_not: true,
             hot_or_not_details: Some(HotOrNotDetails::default()),
         };
 
@@ -352,7 +349,6 @@ mod test {
                 share_count: 0,
                 view_stats: PostViewStatistics::default(),
                 home_feed_score: FeedScore::default(),
-                creator_consent_for_inclusion_in_hot_or_not: true,
             };
             canister_data.all_created_posts.insert(i, post);
         }

@@ -286,7 +286,6 @@ type Post = record {
   home_feed_score : FeedScore;
   view_stats : PostViewStatistics;
   hot_or_not_details : opt HotOrNotDetails;
-  creator_consent_for_inclusion_in_hot_or_not : bool;
 };
 type PostDetailsForFrontend = record {
   id : nat64;

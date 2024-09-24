@@ -87,7 +87,6 @@ pub struct PostForSnapshot {
     pub share_count: u64,
     pub view_stats: PostViewStatistics,
     pub home_feed_score: FeedScore,
-    pub creator_consent_for_inclusion_in_hot_or_not: bool,
     pub hot_or_not_details: Option<HotOrNotDetailsForSnapshot>,
     #[serde(default)]
     pub is_nsfw: bool,
@@ -151,8 +150,6 @@ impl From<&CanisterData> for CanisterDataForSnapshot {
                 share_count: v.share_count,
                 view_stats: v.view_stats.clone(),
                 home_feed_score: v.home_feed_score.clone(),
-                creator_consent_for_inclusion_in_hot_or_not: v
-                    .creator_consent_for_inclusion_in_hot_or_not,
                 hot_or_not_details: hot_or_not_details_snapshot,
                 is_nsfw: v.is_nsfw,
             };
@@ -271,8 +268,6 @@ impl From<CanisterDataForSnapshot> for CanisterData {
                 share_count: v.share_count,
                 view_stats: v.view_stats.clone(),
                 home_feed_score: v.home_feed_score.clone(),
-                creator_consent_for_inclusion_in_hot_or_not: v
-                    .creator_consent_for_inclusion_in_hot_or_not,
                 hot_or_not_details: hot_or_not_details,
                 is_nsfw: v.is_nsfw,
             };

@@ -108,7 +108,6 @@ mod test {
                 share_count: 0,
                 view_stats: PostViewStatistics::default(),
                 home_feed_score: FeedScore::default(),
-                creator_consent_for_inclusion_in_hot_or_not: true,
                 hot_or_not_details: Some(HotOrNotDetails::default()),
             },
         );

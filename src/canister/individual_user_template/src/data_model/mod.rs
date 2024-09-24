@@ -88,7 +88,7 @@ pub struct CanisterData {
     pub ml_feed_cache: Vec<MLFeedCacheItem>,
     #[serde(default)]
     pub cdao_canisters: Vec<DeployedCdaoCanisters>,
-    // list of root token canisters 
+    // list of root token canisters
     #[serde(skip, default = "_default_token_list")]
     pub token_roots: ic_stable_structures::btreemap::BTreeMap<Principal, (), Memory>,
 }
@@ -162,7 +162,7 @@ impl Default for CanisterData {
             device_identities: Vec::new(),
             ml_feed_cache: Vec::new(),
             cdao_canisters: Vec::new(),
-            token_roots: _default_token_list()
+            token_roots: _default_token_list(),
         }
     }
 }
