@@ -12,12 +12,11 @@ use crate::{
 };
 
 use super::hot_or_not::{
-    BetDetails, BettingStatus, GlobalBetId, GlobalRoomId, HotOrNotDetails, RoomDetailsV1,
-    SlotDetailsV1, SlotId, StablePrincipal,
+    BettingStatus, GlobalRoomId, HotOrNotDetails, RoomDetailsV1, SlotDetailsV1, SlotId,
+    StablePrincipal,
 };
 
 #[derive(CandidType, Clone, Deserialize, Debug, Serialize)]
-#[serde(from = "PostV1")]
 pub struct Post {
     pub id: u64,
     pub description: String,
@@ -32,42 +31,6 @@ pub struct Post {
     pub hot_or_not_details: Option<HotOrNotDetails>,
     #[serde(default)]
     pub is_nsfw: bool,
-}
-
-#[derive(Deserialize)]
-pub struct PostV1 {
-    pub id: u64,
-    pub description: String,
-    pub hashtags: Vec<String>,
-    pub video_uid: String,
-    pub status: PostStatus,
-    pub created_at: SystemTime,
-    pub likes: HashSet<Principal>,
-    pub share_count: u64,
-    pub view_stats: PostViewStatistics,
-    pub home_feed_score: FeedScore,
-    pub hot_or_not_details: Option<HotOrNotDetails>,
-    pub is_nsfw: bool,
-    pub creator_consent_for_inclusion_in_hot_or_not: bool,
-}
-
-impl From<PostV1> for Post {
-    fn from(value: PostV1) -> Self {
-        Self {
-            id: value.id,
-            hashtags: value.hashtags,
-            video_uid: value.video_uid,
-            status: value.status,
-            created_at: value.created_at,
-            likes: value.likes,
-            share_count: value.share_count,
-            view_stats: value.view_stats,
-            home_feed_score: value.home_feed_score,
-            hot_or_not_details: value.hot_or_not_details,
-            description: value.description,
-            is_nsfw: value.is_nsfw,
-        }
-    }
 }
 
 #[derive(CandidType, Clone, Deserialize, Debug, Serialize)]
