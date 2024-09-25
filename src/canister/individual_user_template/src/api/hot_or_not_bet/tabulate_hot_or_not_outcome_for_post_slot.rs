@@ -8,16 +8,25 @@ use shared_utils::{
         },
         post::Post,
     },
-    common::utils::system_time,
+    common::{types::known_principal::KnownPrincipalType, utils::system_time},
 };
 
-use crate::data_model::CanisterData;
+use crate::{data_model::CanisterData, util::cycles::recieve_cycles_from_subnet_orchestrator};
 
 pub fn tabulate_hot_or_not_outcome_for_post_slot(
     canister_data: &mut CanisterData,
     post_id: u64,
     slot_id: u8,
 ) {
+    let subnet_orchestrator_canister_id = canister_data
+        .known_principal_ids
+        .get(&KnownPrincipalType::CanisterIdUserIndex)
+        .copied();
+
+    recharge_indvidual_canister_using_subnet_orchestrator_if_needed(
+        subnet_orchestrator_canister_id,
+    );
+
     let current_time = system_time::get_current_system_time_from_ic();
     let this_canister_id = ic_cdk::id();
 
@@ -111,6 +120,14 @@ pub fn inform_participants_of_outcome(
                 bet_outcome_for_bet_maker,
             ));
         }
+    });
+}
+
+fn recharge_indvidual_canister_using_subnet_orchestrator_if_needed(
+    subnet_orchestrator_canister_id: Option<Principal>,
+) {
+    ic_cdk::spawn(async move {
+        recieve_cycles_from_subnet_orchestrator(subnet_orchestrator_canister_id).await;
     });
 }
 
