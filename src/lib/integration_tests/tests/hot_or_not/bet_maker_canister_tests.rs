@@ -446,26 +446,26 @@ fn when_bet_maker_places_bet_on_a_post_it_is_assigned_a_slot_id_and_the_outcome_
     pocket_ic.advance_time(Duration::from_secs(20 * 60));
     pocket_ic.tick();
 
-    // let individual_user_template_wasm = include_bytes!(
-    //     "../../../../../target/wasm32-unknown-unknown/release/individual_user_template.wasm.gz"
-    // );
+    let individual_user_template_wasm = include_bytes!(
+        "../../../../../target/wasm32-unknown-unknown/release/individual_user_template.wasm.gz"
+    );
 
-    // let individual_user_template_upgrade_args = IndividualUserTemplateInitArgs {
-    //     version: "v1.1.0".into(),
-    //     upgrade_version_number: None,
-    //     known_principal_ids: None,
-    //     profile_owner: None,
-    //     url_to_send_canister_metrics_to: None,
-    // };
+    let individual_user_template_upgrade_args = IndividualUserTemplateInitArgs {
+        version: "v1.1.0".into(),
+        upgrade_version_number: None,
+        known_principal_ids: None,
+        profile_owner: None,
+        url_to_send_canister_metrics_to: None,
+    };
 
-    // pocket_ic
-    //     .upgrade_canister(
-    //         alice_canister_id,
-    //         individual_user_template_wasm.to_vec(),
-    //         candid::encode_one(individual_user_template_upgrade_args).unwrap(),
-    //         Some(subnet_orchestrator_canister_id_0),
-    //     )
-    //     .unwrap();
+    pocket_ic
+        .upgrade_canister(
+            alice_canister_id,
+            individual_user_template_wasm.to_vec(),
+            candid::encode_one(individual_user_template_upgrade_args).unwrap(),
+            Some(subnet_orchestrator_canister_id_0),
+        )
+        .unwrap();
 
     pocket_ic.tick();
 
