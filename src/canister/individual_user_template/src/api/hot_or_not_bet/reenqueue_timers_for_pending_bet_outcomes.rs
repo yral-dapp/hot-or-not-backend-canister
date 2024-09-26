@@ -47,19 +47,12 @@ async fn once_reenqueue_timers_for_pending_bet_outcomes() -> Result<Vec<(u64, u8
 fn once_reenqueue_timers_for_these_posts(post_slot_ids: Vec<(u64, u8)>) {
     for (post_id, slot_id) in post_slot_ids {
         let slot_number = slot_id;
-        // let jitter = rand::thread_rng().gen_range(1..60);
 
         ic_cdk_timers::set_timer(
             // random jitter
             Duration::from_secs(300),
             move || {
-                CANISTER_DATA.with(|canister_data_ref_cell| {
-                    tabulate_hot_or_not_outcome_for_post_slot(
-                        &mut canister_data_ref_cell.borrow_mut(),
-                        post_id,
-                        slot_number,
-                    );
-                });
+                tabulate_hot_or_not_outcome_for_post_slot(post_id, slot_number);
             },
         );
     }
@@ -152,13 +145,7 @@ fn reenqueue_timers_for_these_posts(
                     .duration_since(*current_time)
                     .unwrap_or_default(),
                 move || {
-                    CANISTER_DATA.with(|canister_data_ref_cell| {
-                        tabulate_hot_or_not_outcome_for_post_slot(
-                            &mut canister_data_ref_cell.borrow_mut(),
-                            post_id,
-                            slot_number + 1,
-                        );
-                    });
+                    tabulate_hot_or_not_outcome_for_post_slot(post_id, slot_number + 1);
                 },
             );
         })
