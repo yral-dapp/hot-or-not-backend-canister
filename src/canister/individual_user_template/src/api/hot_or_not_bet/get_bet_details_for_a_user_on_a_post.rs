@@ -1,12 +1,12 @@
 use candid::Principal;
-use ic_cdk_macros::update;
+use ic_cdk_macros::query;
 use shared_utils::canister_specific::individual_user_template::types::hot_or_not::{
     BetDetails, StablePrincipal,
 };
 
 use crate::CANISTER_DATA;
 
-#[update]
+#[query]
 pub fn get_bet_details_for_a_user_on_a_post(
     user_principal: Principal,
     post_id: u64,
