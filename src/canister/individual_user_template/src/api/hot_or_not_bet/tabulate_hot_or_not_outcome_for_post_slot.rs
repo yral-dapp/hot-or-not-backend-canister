@@ -53,7 +53,7 @@ pub fn tabulate_hot_or_not_outcome_for_post_slot(post_id: u64, slot_id: u8) {
 }
 
 pub fn inform_participants_of_outcome(post_id: u64, slot_id: u8) {
-    ic_cdk::println!("Informating participant for {post_id} and {slot_id}");
+    ic_cdk::println!("Informating participant for post: {post_id} and slot: {slot_id}");
     let Some(post) = CANISTER_DATA.with_borrow(|canister_data| {
         let post = canister_data.all_created_posts.get(&post_id);
         post.cloned()
@@ -153,7 +153,12 @@ async fn receive_bet_winnings_when_distributed(
     let mut bet_maker_informed_status = Some(BetMakerInformedStatus::InformedSuccessfully);
 
     if let Err(e) = res {
-        bet_maker_informed_status = Some(BetMakerInformedStatus::Failed(e.1));
+        bet_maker_informed_status = Some(BetMakerInformedStatus::Failed(format!(
+            "Informing bet maker canister {} failed: {:?} {}",
+            bet_maker_canister_id.to_string(),
+            e.0,
+            e.1
+        )));
     }
 
     CANISTER_DATA.with_borrow_mut(|canister_data| {

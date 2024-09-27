@@ -157,7 +157,7 @@ impl Storable for RoomDetailsV1 {
 
 pub type BetMaker = Principal;
 
-#[derive(CandidType, Clone, Deserialize, Debug, Serialize)]
+#[derive(CandidType, Clone, Deserialize, Debug, Serialize, PartialEq, Eq)]
 pub enum BetMakerInformedStatus {
     InformedSuccessfully,
     Failed(String),
@@ -183,10 +183,7 @@ impl Storable for BetDetails {
         Decode!(bytes.as_ref(), Self).unwrap()
     }
 
-    const BOUND: Bound = Bound::Bounded {
-        max_size: MAX_BET_DETAILS_VALUE_SIZE,
-        is_fixed_size: false,
-    };
+    const BOUND: Bound = Bound::Unbounded;
 }
 
 #[derive(
@@ -268,7 +265,7 @@ impl Storable for GlobalBetId {
     };
 }
 
-#[derive(Clone, Deserialize, Debug, CandidType, Serialize, Default)]
+#[derive(Clone, Deserialize, Debug, CandidType, Serialize, Default, PartialEq)]
 pub enum BetPayout {
     #[default]
     NotCalculatedYet,
@@ -509,7 +506,11 @@ impl Post {
                 self.hot_or_not_details = Some(hot_or_not_details);
 
                 let started_at = self.created_at;
-                let number_of_participants = (num_bets_made + 1) as u8;
+                let number_of_participants = if num_bets_made >= 100 {
+                    ((num_bets_made + 1) % 100) as u8
+                } else {
+                    (num_bets_made + 1) as u8
+                } as u8;
                 let ongoing_slot = global_room_id.1;
                 let ongoing_room = global_room_id.2;
 
