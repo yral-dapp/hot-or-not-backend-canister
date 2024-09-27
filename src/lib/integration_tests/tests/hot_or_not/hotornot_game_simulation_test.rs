@@ -1021,8 +1021,6 @@ fn hotornot_game_simulation_test_2() {
     let last_individual_template_principal_id =
         Principal::self_authenticating((111 as usize).to_ne_bytes());
 
-    pic.add_cycles(last_individual_template_canister_id, 10_000_000_000_000);
-
     // Create a post
 
     let last_post_1 = PostDetailsFromFrontend {
@@ -1136,6 +1134,9 @@ fn hotornot_game_simulation_test_2() {
     for _ in 0..20 {
         pic.tick();
     }
+
+    let post_creator_cycle_balance = pic.cycle_balance(last_individual_template_canister_id);
+
     // Check rewards
 
     let last_rewards = pic

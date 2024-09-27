@@ -7,7 +7,7 @@ use shared_utils::{
     common::{types::known_principal::KnownPrincipalType, utils::system_time},
 };
 
-use crate::{util::cycles::recieve_cycles_from_subnet_orchestrator, CANISTER_DATA};
+use crate::CANISTER_DATA;
 
 pub fn tabulate_hot_or_not_outcome_for_post_slot(post_id: u64, slot_id: u8) {
     ic_cdk::println!("Computing outcome for post:{post_id} and slot:{slot_id} ");
@@ -17,10 +17,6 @@ pub fn tabulate_hot_or_not_outcome_for_post_slot(post_id: u64, slot_id: u8) {
             .known_principal_ids
             .get(&KnownPrincipalType::CanisterIdUserIndex)
             .copied();
-
-        recharge_indvidual_canister_using_subnet_orchestrator_if_needed(
-            subnet_orchestrator_canister_id,
-        );
 
         let current_time = system_time::get_current_system_time_from_ic();
         let this_canister_id = ic_cdk::id();
@@ -122,14 +118,6 @@ pub fn inform_participants_of_outcome(post_id: u64, slot_id: u8) {
                 ));
             }
         });
-}
-
-fn recharge_indvidual_canister_using_subnet_orchestrator_if_needed(
-    subnet_orchestrator_canister_id: Option<Principal>,
-) {
-    ic_cdk::spawn(async move {
-        let _ = recieve_cycles_from_subnet_orchestrator(subnet_orchestrator_canister_id).await;
-    });
 }
 
 async fn receive_bet_winnings_when_distributed(

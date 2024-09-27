@@ -6,7 +6,7 @@ use shared_utils::{
     canister_specific::individual_user_template::types::{
         arg::{IndividualUserTemplateInitArgs, PlaceBetArg},
         error::BetOnCurrentlyViewingPostError,
-        hot_or_not::{BetDirection, BettingStatus},
+        hot_or_not::{BetDetails, BetDirection, BettingStatus},
         post::PostDetailsFromFrontend,
     },
     common::types::known_principal::KnownPrincipalType,
@@ -70,7 +70,7 @@ fn when_bet_maker_places_bet_on_a_post_it_is_assigned_a_slot_id_and_the_outcome_
             platform_orchestrator_canister_id,
             global_admin_principal,
             "provision_subnet_orchestrator_canister",
-            candid::encode_one(application_subnets[0]).unwrap(),
+            candid::encode_one(application_subnets[1]).unwrap(),
         )
         .map(|res| {
             let canister_id_result: Result<Principal, String> = match res {

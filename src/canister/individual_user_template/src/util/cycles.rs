@@ -26,11 +26,15 @@ pub async fn request_cycles_from_subnet_orchestrator(amount: u128) -> Result<(),
     result
 }
 
-pub async fn recieve_cycles_from_subnet_orchestrator(
-    subnet_orchestrator_canister_id: Option<Principal>,
-) -> Result<(), String> {
-    let subnet_orchestrator_canister_id = subnet_orchestrator_canister_id
-        .ok_or("Subnet Orchestrator Canister Id not found".to_owned())?;
+pub async fn recieve_cycles_from_subnet_orchestrator() -> Result<(), String> {
+    let subnet_orchestrator_canister_id = CANISTER_DATA
+        .with_borrow(|canister_data| {
+            canister_data
+                .known_principal_ids
+                .get(&KnownPrincipalType::CanisterIdUserIndex)
+                .cloned()
+        })
+        .ok_or(String::from("subnet orchestrator canister id not found"))?;
     ic_cdk::call::<_, (Result<(), String>,)>(
         subnet_orchestrator_canister_id,
         "recharge_individual_user_canister",
