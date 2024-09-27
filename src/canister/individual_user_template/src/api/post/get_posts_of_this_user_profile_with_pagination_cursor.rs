@@ -127,6 +127,7 @@ mod test {
                 home_feed_score: FeedScore::default(),
                 hot_or_not_details: None,
                 is_nsfw: false,
+                slots_left_to_be_computed: (1..=48).collect(),
             },
             Post {
                 id: 2,
@@ -141,6 +142,7 @@ mod test {
                 home_feed_score: FeedScore::default(),
                 hot_or_not_details: None,
                 is_nsfw: false,
+                slots_left_to_be_computed: (1..=48).collect(),
             },
             Post {
                 id: 3,
@@ -155,6 +157,7 @@ mod test {
                 home_feed_score: FeedScore::default(),
                 hot_or_not_details: None,
                 is_nsfw: false,
+                slots_left_to_be_computed: (1..=48).collect(),
             },
             Post {
                 id: 4,
@@ -169,6 +172,7 @@ mod test {
                 home_feed_score: FeedScore::default(),
                 hot_or_not_details: None,
                 is_nsfw: false,
+                slots_left_to_be_computed: (1..=48).collect(),
             },
             Post {
                 id: 5,
@@ -183,6 +187,7 @@ mod test {
                 home_feed_score: FeedScore::default(),
                 hot_or_not_details: None,
                 is_nsfw: false,
+                slots_left_to_be_computed: (1..=48).collect(),
             },
             Post {
                 id: 6,
@@ -197,6 +202,7 @@ mod test {
                 home_feed_score: FeedScore::default(),
                 hot_or_not_details: None,
                 is_nsfw: false,
+                slots_left_to_be_computed: (1..=48).collect(),
             },
         ];
 

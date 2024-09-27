@@ -306,67 +306,6 @@ pub enum BetOutcomeForBetMaker {
 }
 
 impl Post {
-    // pub fn get_hot_or_not_betting_status_for_this_post(
-    //     &self,
-    //     current_time_when_request_being_made: &SystemTime,
-    //     bet_maker_principal_id: &Principal,
-    // ) -> BettingStatus {
-    //     let betting_status =
-    //         match current_time_when_request_being_made
-    //             .duration_since(self.created_at)
-    //             .unwrap()
-    //             .as_secs()
-    //         {
-    //             // * contest is still ongoing
-    //             0..=TOTAL_DURATION_OF_ALL_SLOTS_IN_SECONDS => {
-    //                 let started_at = self.created_at;
-    //                 let numerator = current_time_when_request_being_made
-    //                     .duration_since(started_at)
-    //                     .unwrap()
-    //                     .as_secs();
-
-    //                 let denominator = DURATION_OF_EACH_SLOT_IN_SECONDS;
-    //                 let currently_ongoing_slot = ((numerator / denominator) + 1) as u8;
-
-    //                 let temp_hot_or_not_default = &HotOrNotDetails::default();
-    //                 let temp_slot_details_default = &SlotDetails::default();
-    //                 let room_details = &self
-    //                     .hot_or_not_details
-    //                     .as_ref()
-    //                     .unwrap_or(temp_hot_or_not_default)
-    //                     .slot_history
-    //                     .get(&currently_ongoing_slot)
-    //                     .unwrap_or(temp_slot_details_default)
-    //                     .room_details;
-
-    //                 let temp_room_details_default = &RoomDetails::default();
-    //                 let currently_active_room = room_details
-    //                     .last_key_value()
-    //                     .unwrap_or((&1, temp_room_details_default));
-    //                 let number_of_participants = currently_active_room.1.bets_made.len() as u8;
-    //                 BettingStatus::BettingOpen {
-    //                     started_at,
-    //                     number_of_participants,
-    //                     ongoing_slot: currently_ongoing_slot,
-    //                     ongoing_room: *currently_active_room.0,
-    //                     has_this_user_participated_in_this_post: if *bet_maker_principal_id
-    //                         == Principal::anonymous()
-    //                     {
-    //                         None
-    //                     } else {
-    //                         Some(self.has_this_principal_already_bet_on_this_post(
-    //                             bet_maker_principal_id,
-    //                         ))
-    //                     },
-    //                 }
-    //             }
-    //             // * contest is over
-    //             _ => BettingStatus::BettingClosed,
-    //         };
-
-    //     betting_status
-    // }
-
     pub fn get_hot_or_not_betting_status_for_this_post_v1(
         &self,
         current_time_when_request_being_made: &SystemTime,
@@ -604,12 +543,6 @@ impl Post {
             VirtualMemory<DefaultMemoryImpl>,
         >,
     ) {
-        let hot_or_not_details = self.hot_or_not_details.as_mut();
-
-        if hot_or_not_details.is_none() {
-            return;
-        }
-
         let start_global_room_id = GlobalRoomId(self.id, *slot_id, 1);
         let end_global_room_id = GlobalRoomId(self.id, *slot_id + 1, 1);
 
@@ -651,13 +584,13 @@ impl Post {
             }
 
             // * Reward individual participants
-            let start_global_bet_id = GlobalBetId(start_global_room_id, StablePrincipal::default());
-            let end_global_bet_id = GlobalBetId(end_global_room_id, StablePrincipal::default());
-            let bet_details = bet_details_map
-                .range(start_global_bet_id..end_global_bet_id)
-                .collect::<Vec<_>>();
-            bet_details.iter().for_each(|(gbetid, bet_detail)| {
-                let mut bet_detail = bet_detail.clone();
+
+            let bets_map: Vec<(GlobalBetId, BetDetails)> = bet_details_map
+                .iter()
+                .filter(|(global_bet_id, _)| global_bet_id.0 == *groomid)
+                .collect();
+
+            bets_map.into_iter().for_each(|(gbetid, mut bet_detail)| {
                 match &room_detail.bet_outcome {
                     RoomBetPossibleOutcomes::HotWon => {
                         if bet_detail.bet_direction == BetDirection::Hot {
@@ -693,7 +626,7 @@ impl Post {
                     RoomBetPossibleOutcomes::BetOngoing => {}
                 };
 
-                bet_details_map.insert(gbetid.clone(), bet_detail);
+                bet_details_map.insert(gbetid, bet_detail);
             });
         });
     }

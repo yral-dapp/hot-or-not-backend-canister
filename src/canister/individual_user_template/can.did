@@ -286,6 +286,7 @@ type Post = record {
   likes : vec principal;
   video_uid : text;
   home_feed_score : FeedScore;
+  slots_left_to_be_computed : blob;
   view_stats : PostViewStatistics;
   hot_or_not_details : opt HotOrNotDetails;
 };

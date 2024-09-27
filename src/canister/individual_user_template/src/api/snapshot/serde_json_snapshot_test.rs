@@ -11,7 +11,7 @@ mod test {
     use shared_utils::{
         canister_specific::individual_user_template::types::{
             configuration::IndividualUserConfiguration,
-            follow::{FollowData, FollowEntryDetail, FollowList},
+            follow::FollowEntryDetail,
             hot_or_not::{
                 AggregateStats, BetDetails, BetDirection, BetOutcomeForBetMaker, BetPayout,
                 GlobalBetId, GlobalRoomId, PlacedBetDetail, RoomBetPossibleOutcomes, RoomDetailsV1,
@@ -21,15 +21,11 @@ mod test {
             post::{FeedScore, PostViewStatistics},
             profile::{UserProfile, UserProfileGlobalStats},
             session::SessionType,
-            token::TokenBalance,
         },
         common::types::{
             app_primitive_type::PostId,
             known_principal::KnownPrincipalType,
-            top_posts::{
-                post_score_index::PostScoreIndex,
-                post_score_index_item::{PostScoreIndexItem, PostStatus},
-            },
+            top_posts::post_score_index_item::{PostScoreIndexItem, PostStatus},
             utility_token::token_event::{MintEvent, TokenEvent},
             version_details::VersionDetails,
         },
@@ -42,7 +38,6 @@ mod test {
             HotOrNotDetailsForSnapshot, PostForSnapshot, PostScoreIndexForSnapshot,
             TokenBalanceForSnapshot,
         },
-        api::well_known_principal::get_well_known_principal_value,
         data_model::CanisterData,
     };
 
@@ -84,6 +79,7 @@ mod test {
                 },
             }),
             is_nsfw: false,
+            slots_left_to_be_computed: (1..=48).collect(),
         };
         created_posts.insert(1, post1);
 
@@ -108,6 +104,7 @@ mod test {
                 bet_direction: BetDirection::Hot,
                 payout: BetPayout::Calculated(1000),
                 bet_maker_canister_id: temp_principal,
+                bet_maker_informed_status: None,
             },
         );
 

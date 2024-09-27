@@ -1,22 +1,17 @@
 use candid::Principal;
-use ic_stable_structures::{memory_manager::VirtualMemory, DefaultMemoryImpl};
 use shared_utils::{
-    canister_specific::individual_user_template::types::{
-        hot_or_not::{
-            BetDetails, BetDirection, BetMaker, BetMakerInformedStatus, BetOutcomeForBetMaker,
-            BetPayout, GlobalBetId, GlobalRoomId, RoomBetPossibleOutcomes, RoomDetailsV1,
-            SlotDetails, StablePrincipal,
-        },
-        post::Post,
+    canister_specific::individual_user_template::types::hot_or_not::{
+        BetDirection, BetMakerInformedStatus, BetOutcomeForBetMaker, BetPayout, GlobalBetId,
+        GlobalRoomId, RoomBetPossibleOutcomes,
     },
     common::{types::known_principal::KnownPrincipalType, utils::system_time},
 };
 
-use crate::{
-    data_model::CanisterData, util::cycles::recieve_cycles_from_subnet_orchestrator, CANISTER_DATA,
-};
+use crate::{util::cycles::recieve_cycles_from_subnet_orchestrator, CANISTER_DATA};
 
 pub fn tabulate_hot_or_not_outcome_for_post_slot(post_id: u64, slot_id: u8) {
+    ic_cdk::println!("Computing outcome for post:{post_id} and slot:{slot_id} ");
+
     CANISTER_DATA.with_borrow_mut(|canister_data| {
         let subnet_orchestrator_canister_id = canister_data
             .known_principal_ids
@@ -30,8 +25,11 @@ pub fn tabulate_hot_or_not_outcome_for_post_slot(post_id: u64, slot_id: u8) {
         let current_time = system_time::get_current_system_time_from_ic();
         let this_canister_id = ic_cdk::id();
 
-        let post_to_tabulate_results_for =
-            canister_data.all_created_posts.get_mut(&post_id).unwrap();
+        let Some(post_to_tabulate_results_for) = canister_data.all_created_posts.get_mut(&post_id)
+        else {
+            return;
+        };
+
         let token_balance = &mut canister_data.my_token_balance;
 
         post_to_tabulate_results_for.tabulate_hot_or_not_outcome_for_slot_v1(
@@ -42,16 +40,26 @@ pub fn tabulate_hot_or_not_outcome_for_post_slot(post_id: u64, slot_id: u8) {
             &mut canister_data.room_details_map,
             &mut canister_data.bet_details_map,
         );
+
+        canister_data
+            .all_created_posts
+            .get_mut(&post_id)
+            .map(|post| post.slots_left_to_be_computed.remove(&slot_id));
     });
+
+    ic_cdk::println!("Computed outcome for post:{post_id} and slot:{slot_id}");
 
     inform_participants_of_outcome(post_id, slot_id);
 }
 
 pub fn inform_participants_of_outcome(post_id: u64, slot_id: u8) {
-    let post = CANISTER_DATA.with_borrow(|canister_data| {
+    ic_cdk::println!("Informating participant for {post_id} and {slot_id}");
+    let Some(post) = CANISTER_DATA.with_borrow(|canister_data| {
         let post = canister_data.all_created_posts.get(&post_id);
-        post.unwrap().clone()
-    });
+        post.cloned()
+    }) else {
+        return;
+    };
 
     let start_global_room_id = GlobalRoomId(post.id, slot_id, 1);
     let end_global_room_id = GlobalRoomId(post.id, slot_id + 1, 1);
@@ -65,58 +73,62 @@ pub fn inform_participants_of_outcome(post_id: u64, slot_id: u8) {
         room_details
     });
 
-    room_details.iter().for_each(|(_groomid, room_detail)| {
-        let start_global_bet_id = GlobalBetId(start_global_room_id, StablePrincipal::default());
-        let end_global_bet_id = GlobalBetId(end_global_room_id, StablePrincipal::default());
-        let bet_details = CANISTER_DATA.with_borrow(|canister_data| {
-            canister_data
-                .bet_details_map
-                .range(start_global_bet_id..end_global_bet_id)
-                .collect::<Vec<_>>()
-        });
+    room_details
+        .iter()
+        .for_each(|(global_room_id, room_detail)| {
+            let bet_details = CANISTER_DATA.with_borrow(|canister_data| {
+                canister_data
+                    .bet_details_map
+                    .iter()
+                    .filter(|(global_bet_id, _bet_details)| global_bet_id.0 == *global_room_id)
+                    .collect::<Vec<_>>()
+            });
 
-        for (global_bet_id, bet) in bet_details.iter() {
-            let bet_outcome_for_bet_maker: BetOutcomeForBetMaker = match room_detail.bet_outcome {
-                RoomBetPossibleOutcomes::BetOngoing => BetOutcomeForBetMaker::AwaitingResult,
-                RoomBetPossibleOutcomes::Draw => BetOutcomeForBetMaker::Draw(match bet.payout {
-                    BetPayout::Calculated(amount) => amount,
-                    _ => 0,
-                }),
-                RoomBetPossibleOutcomes::HotWon => match bet.bet_direction {
-                    BetDirection::Hot => BetOutcomeForBetMaker::Won(match bet.payout {
-                        BetPayout::Calculated(amount) => amount,
-                        _ => 0,
-                    }),
-                    BetDirection::Not => BetOutcomeForBetMaker::Lost,
-                },
-                RoomBetPossibleOutcomes::NotWon => match bet.bet_direction {
-                    BetDirection::Hot => BetOutcomeForBetMaker::Lost,
-                    BetDirection::Not => BetOutcomeForBetMaker::Won(match bet.payout {
-                        BetPayout::Calculated(amount) => amount,
-                        _ => 0,
-                    }),
-                },
-            };
+            for (global_bet_id, bet) in bet_details.iter() {
+                let bet_outcome_for_bet_maker: BetOutcomeForBetMaker = match room_detail.bet_outcome
+                {
+                    RoomBetPossibleOutcomes::BetOngoing => BetOutcomeForBetMaker::AwaitingResult,
+                    RoomBetPossibleOutcomes::Draw => {
+                        BetOutcomeForBetMaker::Draw(match bet.payout {
+                            BetPayout::Calculated(amount) => amount,
+                            _ => 0,
+                        })
+                    }
+                    RoomBetPossibleOutcomes::HotWon => match bet.bet_direction {
+                        BetDirection::Hot => BetOutcomeForBetMaker::Won(match bet.payout {
+                            BetPayout::Calculated(amount) => amount,
+                            _ => 0,
+                        }),
+                        BetDirection::Not => BetOutcomeForBetMaker::Lost,
+                    },
+                    RoomBetPossibleOutcomes::NotWon => match bet.bet_direction {
+                        BetDirection::Hot => BetOutcomeForBetMaker::Lost,
+                        BetDirection::Not => BetOutcomeForBetMaker::Won(match bet.payout {
+                            BetPayout::Calculated(amount) => amount,
+                            _ => 0,
+                        }),
+                    },
+                };
 
-            if bet_outcome_for_bet_maker == BetOutcomeForBetMaker::AwaitingResult {
-                continue;
+                if bet_outcome_for_bet_maker == BetOutcomeForBetMaker::AwaitingResult {
+                    continue;
+                }
+
+                ic_cdk::spawn(receive_bet_winnings_when_distributed(
+                    global_bet_id.clone(),
+                    bet.bet_maker_canister_id,
+                    post.id,
+                    bet_outcome_for_bet_maker,
+                ));
             }
-
-            ic_cdk::spawn(receive_bet_winnings_when_distributed(
-                global_bet_id.clone(),
-                bet.bet_maker_canister_id,
-                post.id,
-                bet_outcome_for_bet_maker,
-            ));
-        }
-    });
+        });
 }
 
 fn recharge_indvidual_canister_using_subnet_orchestrator_if_needed(
     subnet_orchestrator_canister_id: Option<Principal>,
 ) {
     ic_cdk::spawn(async move {
-        recieve_cycles_from_subnet_orchestrator(subnet_orchestrator_canister_id).await;
+        let _ = recieve_cycles_from_subnet_orchestrator(subnet_orchestrator_canister_id).await;
     });
 }
 
@@ -126,6 +138,11 @@ async fn receive_bet_winnings_when_distributed(
     post_id: u64,
     bet_outcome_for_bet_maker: BetOutcomeForBetMaker,
 ) {
+    ic_cdk::println!(
+        "Informating participant with canister:{} for post:{post_id}",
+        bet_maker_canister_id.to_string()
+    );
+
     let res = ic_cdk::call::<_, ()>(
         bet_maker_canister_id,
         "receive_bet_winnings_when_distributed",

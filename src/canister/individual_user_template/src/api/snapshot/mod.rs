@@ -90,6 +90,7 @@ pub struct PostForSnapshot {
     pub hot_or_not_details: Option<HotOrNotDetailsForSnapshot>,
     #[serde(default)]
     pub is_nsfw: bool,
+    pub slots_left_to_be_computed: HashSet<SlotId>,
 }
 
 #[derive(CandidType, Clone, Deserialize, Debug, Serialize, Default)]
@@ -152,6 +153,7 @@ impl From<&CanisterData> for CanisterDataForSnapshot {
                 home_feed_score: v.home_feed_score.clone(),
                 hot_or_not_details: hot_or_not_details_snapshot,
                 is_nsfw: v.is_nsfw,
+                slots_left_to_be_computed: v.slots_left_to_be_computed.clone(),
             };
 
             all_created_posts.insert(k.clone(), post_details);
@@ -270,6 +272,7 @@ impl From<CanisterDataForSnapshot> for CanisterData {
                 home_feed_score: v.home_feed_score.clone(),
                 hot_or_not_details: hot_or_not_details,
                 is_nsfw: v.is_nsfw,
+                slots_left_to_be_computed: v.slots_left_to_be_computed.clone(),
             };
 
             all_created_posts.insert(k.clone(), post_details);
