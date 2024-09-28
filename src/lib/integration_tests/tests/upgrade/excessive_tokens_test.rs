@@ -1,177 +1,138 @@
-use std::{collections::HashMap, time::Duration};
-
-use candid::encode_one;
-use pocket_ic::{PocketIc, WasmResult};
-use shared_utils::{
-    canister_specific::{
-        individual_user_template::types::{
-            arg::{IndividualUserTemplateInitArgs, PlaceBetArg},
-            error::BetOnCurrentlyViewingPostError,
-            hot_or_not::{BetDirection, BettingStatus},
-            post::PostDetailsFromFrontend,
-        },
-        post_cache::types::arg::PostCacheInitArgs,
-    },
-    common::types::{known_principal::KnownPrincipalType, utility_token},
-};
-use test_utils::setup::test_constants::{
-    get_mock_user_alice_principal_id, get_mock_user_bob_principal_id,
-    get_mock_user_charlie_principal_id, get_mock_user_dan_principal_id,
-};
-
+// unused tests
 // use shared_utils::canister_specific::individual_user_template::types::arg::update_token_balance_before_bet_happens;
 
-const OLD_INDIVIDUAL_TEMPLATE_WASM_PATH: &str =
-    "../../../target/wasm32-unknown-unknown/release/individual_user_template_main_branch.wasm.gz";
-const INDIVIDUAL_TEMPLATE_WASM_PATH: &str =
-    "../../../target/wasm32-unknown-unknown/release/individual_user_template.wasm.gz";
-const POST_CACHE_WASM_PATH: &str =
-    "../../../target/wasm32-unknown-unknown/release/post_cache.wasm.gz";
+// #[cfg(feature = "excessive_tokens")]
+// #[test]
+// fn test_migrate_excessive_tokens() {
+//     let pic = PocketIc::new();
 
-fn old_individual_template_canister_wasm() -> Vec<u8> {
-    std::fs::read(OLD_INDIVIDUAL_TEMPLATE_WASM_PATH).unwrap()
-}
+//     let alice_principal_id = get_mock_user_alice_principal_id();
+//     let admin_principal_id = get_mock_user_charlie_principal_id();
 
-fn individual_template_canister_wasm() -> Vec<u8> {
-    std::fs::read(INDIVIDUAL_TEMPLATE_WASM_PATH).unwrap()
-}
+//     let post_cache_canister_id = pic.create_canister();
+//     pic.add_cycles(post_cache_canister_id, 2_000_000_000_000);
 
-fn post_cache_canister_wasm() -> Vec<u8> {
-    std::fs::read(POST_CACHE_WASM_PATH).unwrap()
-}
+//     let mut known_prinicipal_values = HashMap::new();
+//     known_prinicipal_values.insert(
+//         KnownPrincipalType::CanisterIdPostCache,
+//         post_cache_canister_id,
+//     );
+//     known_prinicipal_values.insert(
+//         KnownPrincipalType::UserIdGlobalSuperAdmin,
+//         admin_principal_id,
+//     );
+//     known_prinicipal_values.insert(KnownPrincipalType::CanisterIdUserIndex, admin_principal_id);
 
-#[cfg(feature = "excessive_tokens")]
-#[test]
-fn test_migrate_excessive_tokens() {
-    let pic = PocketIc::new();
+//     let post_cache_wasm_bytes = post_cache_canister_wasm();
+//     let post_cache_args = PostCacheInitArgs {
+//         known_principal_ids: Some(known_prinicipal_values.clone()),
+//         upgrade_version_number: Some(1),
+//         version: "1".to_string(),
+//     };
+//     let post_cache_args_bytes = encode_one(post_cache_args).unwrap();
+//     pic.install_canister(
+//         post_cache_canister_id,
+//         post_cache_wasm_bytes,
+//         post_cache_args_bytes,
+//         None,
+//     );
 
-    let alice_principal_id = get_mock_user_alice_principal_id();
-    let admin_principal_id = get_mock_user_charlie_principal_id();
+//     // Individual template canisters
+//     let individual_template_wasm_bytes = old_individual_template_canister_wasm();
 
-    let post_cache_canister_id = pic.create_canister();
-    pic.add_cycles(post_cache_canister_id, 2_000_000_000_000);
+//     // Init individual template canister - alice
 
-    let mut known_prinicipal_values = HashMap::new();
-    known_prinicipal_values.insert(
-        KnownPrincipalType::CanisterIdPostCache,
-        post_cache_canister_id,
-    );
-    known_prinicipal_values.insert(
-        KnownPrincipalType::UserIdGlobalSuperAdmin,
-        admin_principal_id,
-    );
-    known_prinicipal_values.insert(KnownPrincipalType::CanisterIdUserIndex, admin_principal_id);
+//     let alice_individual_template_canister_id = pic.create_canister();
+//     pic.add_cycles(alice_individual_template_canister_id, 2_000_000_000_000);
 
-    let post_cache_wasm_bytes = post_cache_canister_wasm();
-    let post_cache_args = PostCacheInitArgs {
-        known_principal_ids: Some(known_prinicipal_values.clone()),
-        upgrade_version_number: Some(1),
-        version: "1".to_string(),
-    };
-    let post_cache_args_bytes = encode_one(post_cache_args).unwrap();
-    pic.install_canister(
-        post_cache_canister_id,
-        post_cache_wasm_bytes,
-        post_cache_args_bytes,
-        None,
-    );
+//     let individual_template_args = IndividualUserTemplateInitArgs {
+//         known_principal_ids: Some(known_prinicipal_values.clone()),
+//         profile_owner: Some(alice_principal_id),
+//         upgrade_version_number: None,
+//         url_to_send_canister_metrics_to: None,
+//         version: "1".to_string(),
+//     };
+//     let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
 
-    // Individual template canisters
-    let individual_template_wasm_bytes = old_individual_template_canister_wasm();
+//     pic.install_canister(
+//         alice_individual_template_canister_id,
+//         individual_template_wasm_bytes.clone(),
+//         individual_template_args_bytes,
+//         None,
+//     );
 
-    // Init individual template canister - alice
+//     // Topup Alice's account
+//     let reward = pic.update_call(
+//         alice_individual_template_canister_id,
+//         admin_principal_id,
+//         "get_rewarded_for_signing_up",
+//         encode_one(()).unwrap(),
+//     );
 
-    let alice_individual_template_canister_id = pic.create_canister();
-    pic.add_cycles(alice_individual_template_canister_id, 2_000_000_000_000);
+//     // from main branch, deposit many tokens,
 
-    let individual_template_args = IndividualUserTemplateInitArgs {
-        known_principal_ids: Some(known_prinicipal_values.clone()),
-        profile_owner: Some(alice_principal_id),
-        upgrade_version_number: None,
-        url_to_send_canister_metrics_to: None,
-        version: "1".to_string(),
-    };
-    let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
+//     // this a hack to increase the token balance beyond the limit.
+//     let bet_amount = 18_00_00_00_00_00_00_00_00_00 + 1 as u64;
 
-    pic.install_canister(
-        alice_individual_template_canister_id,
-        individual_template_wasm_bytes.clone(),
-        individual_template_args_bytes,
-        None,
-    );
+//     let _update = pic
+//         .update_call(
+//             alice_individual_template_canister_id,
+//             alice_principal_id,
+//             "update_token_balance_before_bet_happens",
+//             encode_one(bet_amount).unwrap(),
+//         )
+//         .map(|reply_payload| ic_cdk::println!("{reply_payload:?}"));
 
-    // Topup Alice's account
-    let reward = pic.update_call(
-        alice_individual_template_canister_id,
-        admin_principal_id,
-        "get_rewarded_for_signing_up",
-        encode_one(()).unwrap(),
-    );
+//     // load new wasm
+//     // Upgrade the individual template canister to the new version
 
-    // from main branch, deposit many tokens,
+//     let individual_template_wasm_bytes = individual_template_canister_wasm();
 
-    // this a hack to increase the token balance beyond the limit.
-    let bet_amount = 18_00_00_00_00_00_00_00_00_00 + 1 as u64;
+//     // Alice canister
 
-    let _update = pic
-        .update_call(
-            alice_individual_template_canister_id,
-            alice_principal_id,
-            "update_token_balance_before_bet_happens",
-            encode_one(bet_amount).unwrap(),
-        )
-        .map(|reply_payload| ic_cdk::println!("{reply_payload:?}"));
+//     let individual_template_args = IndividualUserTemplateInitArgs {
+//         known_principal_ids: Some(known_prinicipal_values.clone()),
+//         profile_owner: Some(alice_principal_id),
+//         upgrade_version_number: None,
+//         url_to_send_canister_metrics_to: None,
+//         version: "1".to_string(),
+//     };
+//     let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
 
-    // load new wasm
-    // Upgrade the individual template canister to the new version
+//     pic.advance_time(Duration::from_secs(20));
+//     pic.tick();
+//     pic.tick();
+//     pic.tick();
 
-    let individual_template_wasm_bytes = individual_template_canister_wasm();
+//     pic.upgrade_canister(
+//         alice_individual_template_canister_id,
+//         individual_template_wasm_bytes.clone(),
+//         individual_template_args_bytes,
+//         None,
+//     )
+//     .unwrap();
 
-    // Alice canister
+//     // assert the result from the post ugprade hook.
 
-    let individual_template_args = IndividualUserTemplateInitArgs {
-        known_principal_ids: Some(known_prinicipal_values.clone()),
-        profile_owner: Some(alice_principal_id),
-        upgrade_version_number: None,
-        url_to_send_canister_metrics_to: None,
-        version: "1".to_string(),
-    };
-    let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
+//     let utility_token = pic
+//         .update_call(
+//             alice_individual_template_canister_id,
+//             alice_principal_id,
+//             "get_utility_token_balance",
+//             candid::encode_one(()).unwrap(),
+//         )
+//         .map(|reply_payload| {
+//             let balance: u64 = match reply_payload {
+//                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+//                 _ => panic!("\n🛑 get_utility_token_balance failed\n"),
+//             };
+//             balance
+//         })
+//         .unwrap();
 
-    pic.advance_time(Duration::from_secs(20));
-    pic.tick();
-    pic.tick();
-    pic.tick();
+//     ic_cdk::println!("UTILITY TOKENS NOW ARE: {utility_token}");
+// }
 
-    pic.upgrade_canister(
-        alice_individual_template_canister_id,
-        individual_template_wasm_bytes.clone(),
-        individual_template_args_bytes,
-        None,
-    )
-    .unwrap();
-
-    // assert the result from the post ugprade hook.
-
-    let utility_token = pic
-        .update_call(
-            alice_individual_template_canister_id,
-            alice_principal_id,
-            "get_utility_token_balance",
-            candid::encode_one(()).unwrap(),
-        )
-        .map(|reply_payload| {
-            let balance: u64 = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_utility_token_balance failed\n"),
-            };
-            balance
-        })
-        .unwrap();
-
-    ic_cdk::println!("UTILITY TOKENS NOW ARE: {utility_token}");
-}
-
-#[cfg(feature = "excessive_tokens")]
-#[test]
-fn test_migrate_excessive_tokens_no_change() {}
+// #[cfg(feature = "excessive_tokens")]
+// #[test]
+// fn test_migrate_excessive_tokens_no_change() {}

@@ -1,10 +1,7 @@
 use crate::{data_model::CanisterData, CANISTER_DATA};
-use ic_cdk_macros::query;
 use shared_utils::{
     canister_specific::post_cache::types::arg::NsfwFilter,
-    common::types::top_posts::post_score_index_item::{
-        PostScoreIndexItem, PostScoreIndexItemV1, PostStatus,
-    },
+    common::types::top_posts::post_score_index_item::{PostScoreIndexItemV1, PostStatus},
     pagination::{self, PaginationError},
     types::canister_specific::post_cache::error_types::TopPostsFetchError,
 };
@@ -58,7 +55,7 @@ fn get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed_c
             true
         };
 
-        let status_filter = if let Some(status) = status.clone() {
+        let status_filter = if let Some(status) = status {
             post_item.status == status
         } else {
             true
@@ -85,7 +82,7 @@ fn get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed_c
 
     Ok(all_posts
         .iter()
-        .filter(|&post_item| filter_fn(&post_item, nsfw.clone()))
+        .filter(|&post_item| filter_fn(post_item, nsfw.clone()))
         .skip(from_inclusive_index as usize)
         .take(limit as usize)
         .cloned()

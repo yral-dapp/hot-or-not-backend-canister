@@ -1,7 +1,3 @@
-use shared_utils::common::types::known_principal::KnownPrincipalType;
-
-use crate::CANISTER_DATA;
-
 // For feed_filter_upgrade_test
 // #[ic_cdk::update]
 // #[candid::candid_method(update)]

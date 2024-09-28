@@ -1,33 +1,14 @@
 use candid::{CandidType, Principal};
-use ic_cdk::api::{management_canister::provisional::CanisterSettings, time};
-use ic_ledger_types::{AccountIdentifier, BlockIndex, Tokens, DEFAULT_SUBACCOUNT};
-use pocket_ic::{PocketIc, PocketIcBuilder, WasmResult};
+use ic_ledger_types::{BlockIndex, Tokens};
+use pocket_ic::WasmResult;
 use serde::{Deserialize, Serialize};
-use shared_utils::{
-    canister_specific::{
-        individual_user_template,
-        platform_orchestrator::{self, types::args::PlatformOrchestratorInitArgs},
-        post_cache::types::arg::PostCacheInitArgs,
-    },
-    common::{
-        types::{
-            known_principal::{KnownPrincipalMap, KnownPrincipalType},
-            wasm::WasmType,
-        },
-        utils::system_time,
-    },
-    constant::{NNS_CYCLE_MINTING_CANISTER, NNS_LEDGER_CANISTER_ID},
-};
+use shared_utils::common::types::known_principal::KnownPrincipalType;
 use std::{
     collections::{HashMap, HashSet},
     time::SystemTime,
 };
 use test_utils::setup::{
-    env::pocket_ic_env::get_new_pocket_ic_env,
-    test_constants::{
-        get_global_super_admin_principal_id, get_mock_user_alice_canister_id,
-        get_mock_user_alice_principal_id, v1::CANISTER_INITIAL_CYCLES_FOR_SPAWNING_CANISTERS,
-    },
+    env::pocket_ic_env::get_new_pocket_ic_env, test_constants::get_mock_user_alice_principal_id,
 };
 
 pub type CanisterId = Principal;
@@ -53,12 +34,6 @@ pub struct Config {
 pub struct UpgradeArgs {
     pub max_transactions_per_request: Option<u64>,
     pub change_index_id: Option<ChangeIndexId>,
-}
-
-#[derive(CandidType, Serialize)]
-enum LedgerArgs {
-    Init(Config),
-    Upgrade(Option<UpgradeArgs>),
 }
 
 #[derive(CandidType)]
@@ -133,7 +108,7 @@ fn when_subnet_known_principal_is_updated_it_is_reflected_in_individual_canister
         })
         .unwrap();
 
-    for i in 0..50 {
+    for _ in 0..50 {
         pocket_ic.tick();
     }
 

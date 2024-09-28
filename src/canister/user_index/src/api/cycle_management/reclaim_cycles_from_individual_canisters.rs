@@ -11,11 +11,13 @@ fn reclaim_cycles_from_individual_canisters() {
 
 async fn impl_reclaim_cycles_from_individual_canisters_and_send_to_plaform_orchestrator() {
     let canister_ids = CANISTER_DATA.with_borrow(|canister_data| {
-        canister_data.user_principal_id_to_canister_id_map.clone().into_values()
+        canister_data
+            .user_principal_id_to_canister_id_map
+            .clone()
+            .into_values()
     });
 
-    let relcaim_cycles_from_canister_futures = canister_ids.map(|canister_id| {
-        call::<_ , ()>(canister_id, "return_cycles_to_user_index_canister", ())
-    });
+    let relcaim_cycles_from_canister_futures = canister_ids
+        .map(|canister_id| call::<_, ()>(canister_id, "return_cycles_to_user_index_canister", ()));
     run_task_concurrently(relcaim_cycles_from_canister_futures, 10, |_| {}, || false).await;
 }

@@ -11,7 +11,7 @@ mod test {
     use shared_utils::{
         canister_specific::individual_user_template::types::{
             configuration::IndividualUserConfiguration,
-            follow::{FollowData, FollowEntryDetail, FollowList},
+            follow::FollowEntryDetail,
             hot_or_not::{
                 AggregateStats, BetDetails, BetDirection, BetOutcomeForBetMaker, BetPayout,
                 GlobalBetId, GlobalRoomId, PlacedBetDetail, RoomBetPossibleOutcomes, RoomDetailsV1,
@@ -21,15 +21,11 @@ mod test {
             post::{FeedScore, PostViewStatistics},
             profile::{UserProfile, UserProfileGlobalStats},
             session::SessionType,
-            token::TokenBalance,
         },
         common::types::{
             app_primitive_type::PostId,
             known_principal::KnownPrincipalType,
-            top_posts::{
-                post_score_index::PostScoreIndex,
-                post_score_index_item::{PostScoreIndexItem, PostStatus},
-            },
+            top_posts::post_score_index_item::{PostScoreIndexItem, PostStatus},
             utility_token::token_event::{MintEvent, TokenEvent},
             version_details::VersionDetails,
         },
@@ -42,7 +38,6 @@ mod test {
             HotOrNotDetailsForSnapshot, PostForSnapshot, PostScoreIndexForSnapshot,
             TokenBalanceForSnapshot,
         },
-        api::well_known_principal::get_well_known_principal_value,
         data_model::CanisterData,
     };
 
@@ -183,11 +178,11 @@ mod test {
 
         let canister_data_snapshot = CanisterDataForSnapshot {
             all_created_posts: created_posts,
-            room_details_map: room_details_map,
-            bet_details_map: bet_details_map,
-            post_principal_map: post_principal_map,
-            slot_details_map: slot_details_map,
-            all_hot_or_not_bets_placed: all_hot_or_not_bets_placed,
+            room_details_map,
+            bet_details_map,
+            post_principal_map,
+            slot_details_map,
+            all_hot_or_not_bets_placed,
             configuration: IndividualUserConfiguration {
                 url_to_send_canister_metrics_to: Some("dsfsd".to_string()),
             },
@@ -201,7 +196,7 @@ mod test {
                     members: follow_members,
                 },
             },
-            known_principal_ids: known_principal_ids,
+            known_principal_ids,
             my_token_balance: TokenBalanceForSnapshot {
                 utility_token_balance: 100,
                 utility_token_transaction_history: utility_history,
@@ -239,13 +234,12 @@ mod test {
         };
 
         let serde_str = serde_json::to_string(&canister_data_snapshot);
-        assert_eq!(serde_str.is_ok(), true);
+        assert!(serde_str.is_ok());
 
-        let canister_data_snapshot: CanisterDataForSnapshot =
+        let _canister_data_snapshot: CanisterDataForSnapshot =
             serde_json::from_str(serde_str.unwrap().as_str()).unwrap();
 
-        let canister_data = CanisterData::from(canister_data_snapshot);
-
+        let _canister_data = CanisterData::from(canister_data_snapshot);
         // println!("canister_data: {:?}", canister_data.all_created_posts);
     }
 }

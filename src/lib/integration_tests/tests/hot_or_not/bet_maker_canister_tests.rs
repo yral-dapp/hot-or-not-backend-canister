@@ -81,7 +81,7 @@ fn when_bet_maker_places_bet_on_a_post_it_is_assigned_a_slot_id_and_the_outcome_
         })
         .unwrap();
 
-    for i in 0..50 {
+    for _ in 0..50 {
         pocket_ic.tick();
     }
 
@@ -276,10 +276,7 @@ fn when_bet_maker_places_bet_on_a_post_it_is_assigned_a_slot_id_and_the_outcome_
     if let BettingStatus::BettingOpen { ongoing_slot, .. } = bet_status {
         assert_eq!(ongoing_slot, 4)
     } else {
-        assert!(
-            false,
-            "Betting Status should be open and ongoing_slot should be 4"
-        )
+        panic!("Betting Status should be open and ongoing_slot should be 4")
     }
     /**************************************/
 
@@ -314,17 +311,14 @@ fn when_bet_maker_places_bet_on_a_post_it_is_assigned_a_slot_id_and_the_outcome_
     if let BettingStatus::BettingOpen { ongoing_slot, .. } = bet_status {
         assert_eq!(ongoing_slot, 10)
     } else {
-        assert!(
-            false,
-            "Betting Status should be open and ongoing_slot should be 10"
-        )
+        panic!("Betting Status should be open and ongoing_slot should be 10")
     }
     charlie_winnings += 40;
 
     /********************************/
 
     /****** 11th Slot Post 0 *************/
-    pocket_ic.advance_time(Duration::from_secs(1 * 60 * 60));
+    pocket_ic.advance_time(Duration::from_secs(60 * 60));
     pocket_ic.tick();
 
     let dan_bet_arg = PlaceBetArg {
@@ -354,10 +348,7 @@ fn when_bet_maker_places_bet_on_a_post_it_is_assigned_a_slot_id_and_the_outcome_
     if let BettingStatus::BettingOpen { ongoing_slot, .. } = bet_status {
         assert_eq!(ongoing_slot, 11)
     } else {
-        assert!(
-            false,
-            "Betting Status should be open and ongoing_slot should be 10"
-        )
+        panic!("Betting Status should be open and ongoing_slot should be 10")
     }
 
     pocket_ic.advance_time(Duration::from_secs(20 * 60));
@@ -390,10 +381,7 @@ fn when_bet_maker_places_bet_on_a_post_it_is_assigned_a_slot_id_and_the_outcome_
     if let BettingStatus::BettingOpen { ongoing_slot, .. } = bet_status {
         assert_eq!(ongoing_slot, 11)
     } else {
-        assert!(
-            false,
-            "Betting Status should be open and ongoing_slot should be 10"
-        )
+        panic!("Betting Status should be open and ongoing_slot should be 10")
     }
 
     pocket_ic.advance_time(Duration::from_secs(20 * 60));
@@ -426,10 +414,7 @@ fn when_bet_maker_places_bet_on_a_post_it_is_assigned_a_slot_id_and_the_outcome_
     if let BettingStatus::BettingOpen { ongoing_slot, .. } = bet_status {
         assert_eq!(ongoing_slot, 11)
     } else {
-        assert!(
-            false,
-            "Betting Status should be open and ongoing_slot should be 10"
-        )
+        panic!("Betting Status should be open and ongoing_slot should be 10")
     }
 
     for _ in 0..10 {

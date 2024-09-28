@@ -36,11 +36,11 @@ pub fn send_update_post_cache(post_id: &u64) {
             .unwrap()
     });
 
-    if home_feed_index_score_item.is_some() {
+    if let Some(home_feed_index_score_item) = home_feed_index_score_item {
         let _ = call::notify(
             post_cache_canister_principal_id,
             "update_post_home_feed",
-            (home_feed_index_score_item.unwrap(),),
+            (home_feed_index_score_item,),
         );
     }
 
@@ -52,11 +52,11 @@ pub fn send_update_post_cache(post_id: &u64) {
         );
     }
 
-    if hot_or_not_index_score_item.is_some() {
+    if let Some(hot_or_not_index_score_item) = hot_or_not_index_score_item {
         let _ = call::notify(
             post_cache_canister_principal_id,
             "update_post_yral_feed",
-            (hot_or_not_index_score_item.unwrap(),),
+            (hot_or_not_index_score_item,),
         );
     }
 }
@@ -71,7 +71,6 @@ pub fn update_local_cache_get_items(
     if !all_posts.contains_key(&post_id) {
         return (None, None);
     }
-    let mut home_feed_index_score_item: Option<PostScoreIndexItemV1> = None;
     let mut hot_or_not_index_score_item: Option<PostScoreIndexItemV1> = None;
 
     let mut post_to_synchronise = all_posts.get(&post_id).unwrap().clone();
@@ -80,7 +79,7 @@ pub fn update_local_cache_get_items(
 
     let current_home_feed_score = post_to_synchronise.home_feed_score.current_score;
 
-    home_feed_index_score_item = Some(PostScoreIndexItemV1 {
+    let home_feed_index_score_item = Some(PostScoreIndexItemV1 {
         post_id: post_to_synchronise.id,
         score: current_home_feed_score,
         publisher_canister_id: canisters_own_principal_id,

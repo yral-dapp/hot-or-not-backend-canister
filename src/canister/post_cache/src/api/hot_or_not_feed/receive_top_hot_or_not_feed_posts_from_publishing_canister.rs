@@ -1,11 +1,9 @@
 use ic_cdk_macros::update;
-use shared_utils::common::types::top_posts::post_score_index_item::{
-    PostScoreIndexItem, PostScoreIndexItemV1,
-};
+use shared_utils::common::types::top_posts::post_score_index_item::PostScoreIndexItemV1;
 
 use crate::{
     api::feed::trigger_update_indexes::{
-        self, trigger_reconcile_scores, trigger_update_hot_or_not_index,
+        trigger_reconcile_scores, trigger_update_hot_or_not_index,
     },
     data_model::CanisterData,
     CANISTER_DATA,

@@ -1,15 +1,12 @@
-use candid::{CandidType, Deserialize, Principal};
+use candid::{CandidType, Deserialize};
 use serde::Serialize;
-use serde_json_any_key::*;
 use std::{
     collections::{
-        btree_map::{self, Iter},
+        btree_map::{self},
         BTreeMap, HashMap,
     },
-    iter::{Chain, Rev},
-    slice,
-    time::{Duration, SystemTime},
-    vec,
+    iter::Rev,
+    slice, vec,
 };
 
 use crate::common::types::top_posts::post_score_index_item::PostScoreIndexItem;
@@ -45,7 +42,7 @@ impl PostScoreIndex {
         // insert the item into the sorted index
         self.items_sorted_by_score
             .entry(item_score)
-            .or_insert(vec![])
+            .or_default()
             .push(item.clone());
     }
 

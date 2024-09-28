@@ -9,12 +9,8 @@ async fn update_restart_timers_hon_game() -> Result<String, String> {
         .with_borrow(|canister_data| canister_data.all_subnet_orchestrator_canisters_list.clone());
 
     for subnet_orchestrator in subnet_orchestrator_list {
-        let result: CallResult<()> = call(
-            subnet_orchestrator,
-            "update_restart_timers_hon_game",
-            (),
-        )
-        .await;
+        let result: CallResult<()> =
+            call(subnet_orchestrator, "update_restart_timers_hon_game", ()).await;
         result.map_err(|e| {
             format!(
                 "failed to call update_restart_timers_hon_game for {} {}",

@@ -6,6 +6,8 @@ use crate::CANISTER_DATA;
 #[query]
 fn get_session_type() -> Result<SessionType, String> {
     CANISTER_DATA.with_borrow(|canister_data| {
-        canister_data.session_type.ok_or(String::from("Canister has not been assigned yet"))
+        canister_data
+            .session_type
+            .ok_or(String::from("Canister has not been assigned yet"))
     })
 }

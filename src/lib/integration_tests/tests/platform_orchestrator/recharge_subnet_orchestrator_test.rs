@@ -1,4 +1,4 @@
-use candid::{Decode, Principal};
+use candid::Principal;
 use pocket_ic::WasmResult;
 use shared_utils::{
     common::types::known_principal::KnownPrincipalType,

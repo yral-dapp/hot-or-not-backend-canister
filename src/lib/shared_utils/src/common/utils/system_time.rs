@@ -1,9 +1,6 @@
 use ic_cdk::api;
 use std::time::SystemTime;
-use std::{
-    cell::RefCell,
-    time::{Duration, UNIX_EPOCH},
-};
+use std::time::{Duration, UNIX_EPOCH};
 
 pub type SystemTimeProvider = dyn Fn() -> SystemTime;
 
@@ -27,7 +24,7 @@ pub mod mock_time {
     use std::cell::RefCell;
 
     thread_local! {
-        static MOCK_TIME: RefCell<Option<SystemTime>> = RefCell::new(None);
+        static MOCK_TIME: RefCell<Option<SystemTime>> = const { RefCell::new(None) };
     }
 
     pub fn get_current_system_time() -> SystemTime {

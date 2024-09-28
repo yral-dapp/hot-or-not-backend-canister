@@ -35,11 +35,11 @@ use crate::{util::cycles::request_cycles_from_subnet_orchestrator, CANISTER_DATA
 
 #[update]
 pub async fn settle_neurons_fund_participation(
-    request: SettleNeuronsFundParticipationRequest,
+    _request: SettleNeuronsFundParticipationRequest,
 ) -> SettleNeuronsFundParticipationResponse {
     let response = Ok(NeuronsFundSnapshot::empty());
-    let intermediate = SettleNeuronsFundParticipationResponse::from(response);
-    SettleNeuronsFundParticipationResponse::from(intermediate)
+
+    SettleNeuronsFundParticipationResponse::from(response)
 }
 
 async fn create_empty_canister(
@@ -97,7 +97,7 @@ async fn deploy_cdao_sns(
         return Err(CdaoDeployError::Unauthenticated);
     };
 
-    let (registered, limit_hit) = CANISTER_DATA.with(|cdata| {
+    let (_registered, limit_hit) = CANISTER_DATA.with(|cdata| {
         let cdata = cdata.borrow();
         let registered = matches!(cdata.session_type, Some(SessionType::RegisteredSession));
         (registered, cdata.cdao_canisters.len() == CDAO_TOKEN_LIMIT)
@@ -110,7 +110,7 @@ async fn deploy_cdao_sns(
     // Alloting 0.5T more to the user canister to be on safer side while deploying canisters
     request_cycles_from_subnet_orchestrator(6 * USER_SNS_CANISTER_INITIAL_CYCLES)
         .await
-        .map_err(|e| CdaoDeployError::CycleError(e))?;
+        .map_err(CdaoDeployError::CycleError)?;
 
     let creation_arg = CreateCanisterArgument {
         settings: Some(CanisterSettings {

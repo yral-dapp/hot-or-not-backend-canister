@@ -1,7 +1,5 @@
 use ic_cdk_macros::update;
-use shared_utils::common::types::top_posts::post_score_index_item::{
-    PostScoreIndexItem, PostScoreIndexItemV1,
-};
+use shared_utils::common::types::top_posts::post_score_index_item::PostScoreIndexItemV1;
 
 use crate::{data_model::CanisterData, CANISTER_DATA};
 

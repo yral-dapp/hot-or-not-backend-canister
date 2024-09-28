@@ -56,7 +56,7 @@ fn create_new_namespace() {
         })
         .unwrap();
 
-    for i in 0..50 {
+    for _ in 0..50 {
         pocket_ic.tick();
     }
 

@@ -57,7 +57,7 @@ pub fn provision_new_available_and_backup_canisters_on_signup_if_required() {
         })
         .unwrap();
 
-    for i in 0..50 {
+    for _ in 0..50 {
         pocket_ic.tick();
     }
 
@@ -100,7 +100,7 @@ pub fn provision_new_available_and_backup_canisters_on_signup_if_required() {
 
     assert_eq!(subnet_backup_canister_cnt, 20);
 
-    let alice_canister_id = pocket_ic
+    let _alice_canister_id = pocket_ic
         .update_call(
             subnet_orchestrator_canister_id,
             alice_prinicpal_id,
@@ -140,7 +140,7 @@ pub fn provision_new_available_and_backup_canisters_on_signup_if_required() {
 
     assert_eq!(subnet_available_canister_cnt, 9);
 
-    let bob_canister_id = pocket_ic
+    let _bob_canister_id = pocket_ic
         .update_call(
             subnet_orchestrator_canister_id,
             bob_principal_id,
@@ -181,7 +181,7 @@ pub fn provision_new_available_and_backup_canisters_on_signup_if_required() {
 
     assert_eq!(subnet_available_canister_cnt, 8);
 
-    let lucy_canister_id = pocket_ic
+    let _lucy_canister_id = pocket_ic
         .update_call(
             subnet_orchestrator_canister_id,
             lucy_principal_id,
@@ -222,7 +222,7 @@ pub fn provision_new_available_and_backup_canisters_on_signup_if_required() {
 
     assert_eq!(subnet_available_canister_cnt, 7);
 
-    let dan_canister_id = pocket_ic
+    let _dan_canister_id = pocket_ic
         .update_call(
             subnet_orchestrator_canister_id,
             dan_principal_id,
@@ -263,7 +263,7 @@ pub fn provision_new_available_and_backup_canisters_on_signup_if_required() {
 
     assert_eq!(subnet_available_canister_cnt, 6);
 
-    let tom_canister_id = pocket_ic
+    let _tom_canister_id = pocket_ic
         .update_call(
             subnet_orchestrator_canister_id,
             tom_principal_id,
@@ -321,7 +321,7 @@ pub fn provision_new_available_and_backup_canisters_on_signup_if_required() {
 
     assert_eq!(subnet_backup_canister_cnt, 20);
 
-    let charlie_canister_id = pocket_ic
+    let _charlie_canister_id = pocket_ic
         .update_call(
             subnet_orchestrator_canister_id,
             charlie_global_admin,

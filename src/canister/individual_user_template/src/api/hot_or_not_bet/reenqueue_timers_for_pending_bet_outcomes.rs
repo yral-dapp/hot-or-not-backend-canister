@@ -4,7 +4,7 @@ use ic_cdk_macros::update;
 // use rand::Rng;
 use shared_utils::{
     canister_specific::individual_user_template::types::hot_or_not::{
-        GlobalRoomId, RoomBetPossibleOutcomes, SlotId, DURATION_OF_EACH_SLOT_IN_SECONDS,
+        GlobalRoomId, RoomBetPossibleOutcomes,
     },
     common::utils::permissions::is_caller_controller_or_global_admin,
     common::utils::system_time,

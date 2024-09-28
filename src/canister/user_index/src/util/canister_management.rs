@@ -6,9 +6,8 @@ use ic_cdk::{
         canister_balance128,
         management_canister::{
             main::{
-                self, canister_info, canister_status, start_canister, stop_canister,
-                CanisterInfoRequest, CanisterInstallMode, CreateCanisterArgument,
-                InstallCodeArgument, WasmModule,
+                self, canister_status, start_canister, stop_canister, CanisterInstallMode,
+                CreateCanisterArgument, InstallCodeArgument, WasmModule,
             },
             provisional::{CanisterIdRecord, CanisterSettings},
         },
@@ -17,9 +16,7 @@ use ic_cdk::{
 };
 use serde::{Deserialize, Serialize};
 use shared_utils::{
-    canister_specific::{
-        individual_user_template::types::arg::IndividualUserTemplateInitArgs, platform_orchestrator,
-    },
+    canister_specific::individual_user_template::types::arg::IndividualUserTemplateInitArgs,
     common::types::known_principal::KnownPrincipalType,
     constant::{
         INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT, SUBNET_ORCHESTRATOR_CANISTER_CYCLES_THRESHOLD,
@@ -171,10 +168,7 @@ pub async fn upgrade_individual_user_canister(
     arg: IndividualUserTemplateInitArgs,
     individual_user_wasm: Vec<u8>,
 ) -> Result<(), (RejectionCode, String)> {
-    stop_canister(CanisterIdRecord {
-        canister_id: canister_id.clone(),
-    })
-    .await?;
+    stop_canister(CanisterIdRecord { canister_id }).await?;
     let serialized_arg =
         candid::encode_args((arg,)).expect("Failed to serialize the install argument.");
 
@@ -214,7 +208,7 @@ pub async fn recharge_canister_if_below_threshold(canister_id: &Principal) -> Re
 
             Ok(())
         }
-        Err(e) => {
+        Err(_) => {
             recharge_canister(canister_id, INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT).await?;
             Ok(())
         }

@@ -25,7 +25,7 @@ fn update_post_home_feed_impl(post: PostScoreIndexItemV1, canister_data: &mut Ca
         .item_presence_index;
 
     let global_id = (post.publisher_canister_id, post.post_id);
-    if let Some(_) = item_prescence_index.get(&global_id) {
+    if item_prescence_index.get(&global_id).is_some() {
         if post.status == PostStatus::BannedDueToUserReporting {
             canister_data
                 .posts_index_sorted_by_home_feed_score_v1
@@ -87,7 +87,7 @@ mod tests {
             iter_posts[0].publisher_canister_id,
             Principal::from_text("aaaaa-aa").unwrap()
         );
-        assert_eq!(iter_posts[0].is_nsfw, true);
+        assert!(iter_posts[0].is_nsfw);
         assert_eq!(iter_posts[0].status, PostStatus::ReadyToView);
         assert_eq!(iter_posts[0].created_at, Some(created_at_now));
     }

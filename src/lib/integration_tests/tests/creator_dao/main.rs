@@ -38,8 +38,8 @@ use test_utils::setup::{
     },
 };
 
-pub const ICP_LEDGER_CANISTER_ID: &'static str = "ryjl3-tyaaa-aaaaa-aaaba-cai";
-pub const ICP_INDEX_CANISTER_ID: &'static str = "qhbym-qaaaa-aaaaa-aaafq-cai";
+pub const ICP_LEDGER_CANISTER_ID: &str = "ryjl3-tyaaa-aaaaa-aaaba-cai";
+pub const ICP_INDEX_CANISTER_ID: &str = "qhbym-qaaaa-aaaaa-aaafq-cai";
 
 #[derive(CandidType, Deserialize, PartialEq, Eq, Hash, Serialize, Clone)]
 struct Wasm {
@@ -155,7 +155,7 @@ fn creator_dao_tests() {
         })
         .unwrap();
 
-    for i in 0..50 {
+    for _ in 0..50 {
         pocket_ic.tick();
     }
 
@@ -335,7 +335,7 @@ fn creator_dao_tests() {
         .update_call(
             sns_wasm_w_canister_id,
             Principal::anonymous(),
-            "get_latest_sns_version_pretty".into(),
+            "get_latest_sns_version_pretty",
             candid::encode_one(()).unwrap(),
         )
         .map(|res| {
@@ -438,7 +438,7 @@ fn creator_dao_tests() {
             alice_canister_id,
             alice_principal,
             "deploy_cdao_sns",
-            candid::encode_args((sns_init_args, 300 as u64)).unwrap(),
+            candid::encode_args((sns_init_args, 300_u64)).unwrap(),
         )
         .map(|res| {
             let response: Result<DeployedCdaoCanisters, CdaoDeployError> = match res {
@@ -458,7 +458,7 @@ fn creator_dao_tests() {
             alice_canister_id,
             alice_principal,
             "get_well_known_principal_value",
-            candid::encode_one((KnownPrincipalType::CanisterIdSnsWasm)).unwrap(),
+            candid::encode_one(KnownPrincipalType::CanisterIdSnsWasm).unwrap(),
         )
         .map(|res| {
             let response: Option<Principal> = match res {
@@ -509,12 +509,9 @@ fn creator_dao_tests() {
             "icrc1_total_supply",
             candid::encode_one(()).unwrap(),
         )
-        .map(|res| {
-            let response = match res {
-                WasmResult::Reply(payload) => Decode!(&payload, Nat).unwrap(),
-                _ => panic!("\n🛑 get requester principals canister id failed\n"),
-            };
-            response
+        .map(|res| match res {
+            WasmResult::Reply(payload) => Decode!(&payload, Nat).unwrap(),
+            _ => panic!("\n🛑 get requester principals canister id failed\n"),
         })
         .unwrap();
     ic_cdk::println!("🧪 Result: {:?}", res);
@@ -531,12 +528,9 @@ fn creator_dao_tests() {
             })
             .unwrap(),
         )
-        .map(|res| {
-            let response = match res {
-                WasmResult::Reply(payload) => Decode!(&payload, Nat).unwrap(),
-                _ => panic!("\n🛑 get requester principals canister id failed\n"),
-            };
-            response
+        .map(|res| match res {
+            WasmResult::Reply(payload) => Decode!(&payload, Nat).unwrap(),
+            _ => panic!("\n🛑 get requester principals canister id failed\n"),
         })
         .unwrap();
     ic_cdk::println!("🧪 Result: {:?}", res);
@@ -565,8 +559,8 @@ fn creator_dao_tests() {
     let subaccount = Subaccount::from(&PrincipalId(super_admin));
     let transfer_args = types::Transaction {
         memo: Some(vec![0]),
-        amount: Nat::from(1000000 as u64),
-        fee: Some(Nat::from(0 as u64)),
+        amount: Nat::from(1000000_u64),
+        fee: Some(Nat::from(0_u64)),
         from_subaccount: None,
         to: types::Recipient {
             owner: swap_canister,
@@ -626,12 +620,9 @@ fn creator_dao_tests() {
             "get_init",
             candid::encode_one(GetInitRequest {}).unwrap(),
         )
-        .map(|res| {
-            let response = match res {
-                WasmResult::Reply(payload) => Decode!(&payload, GetInitResponse).unwrap(),
-                _ => panic!("\n🛑 get requester principals canister id failed\n"),
-            };
-            response
+        .map(|res| match res {
+            WasmResult::Reply(payload) => Decode!(&payload, GetInitResponse).unwrap(),
+            _ => panic!("\n🛑 get requester principals canister id failed\n"),
         })
         .unwrap();
     ic_cdk::println!("🧪 Result: {:?}", res);
@@ -709,12 +700,9 @@ fn creator_dao_tests() {
             })
             .unwrap(),
         )
-        .map(|res| {
-            let response = match res {
-                WasmResult::Reply(payload) => Decode!(&payload, Nat).unwrap(),
-                _ => panic!("\n🛑 get requester principals canister id failed\n"),
-            };
-            response
+        .map(|res| match res {
+            WasmResult::Reply(payload) => Decode!(&payload, Nat).unwrap(),
+            _ => panic!("\n🛑 get requester principals canister id failed\n"),
         })
         .unwrap();
     ic_cdk::println!("🧪 SNS token Balance of alice: {:?}", res);

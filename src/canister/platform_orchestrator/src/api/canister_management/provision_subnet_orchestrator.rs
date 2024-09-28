@@ -1,27 +1,21 @@
 use candid::{CandidType, Principal};
 use ic_cdk::{
     api::{
-        self, call, is_controller,
+        self, call,
         management_canister::{
             main::{self, CanisterInstallMode, InstallCodeArgument},
             provisional::CanisterSettings,
         },
     },
-    call, caller, id,
+    call, id,
 };
 use ic_cdk_macros::update;
 use serde::{Deserialize, Serialize};
 use shared_utils::{
-    canister_specific::{
-        post_cache::types::arg::PostCacheInitArgs, user_index::types::args::UserIndexInitArgs,
-    },
-    common::types::{
-        known_principal::{KnownPrincipalMap, KnownPrincipalType},
-        wasm::WasmType,
-    },
+    canister_specific::user_index::types::args::UserIndexInitArgs,
+    common::types::{known_principal::KnownPrincipalType, wasm::WasmType},
     constant::{
-        GLOBAL_SUPER_ADMIN_USER_ID, INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT,
-        NNS_CYCLE_MINTING_CANISTER, POST_CACHE_CANISTER_CYCLES_RECHARGE_AMOUMT,
+        GLOBAL_SUPER_ADMIN_USER_ID, NNS_CYCLE_MINTING_CANISTER,
         SUBNET_ORCHESTRATOR_CANISTER_INITIAL_CYCLES, YRAL_POST_CACHE_CANISTER_ID,
     },
 };
@@ -29,6 +23,7 @@ use std::{str::FromStr, vec};
 
 use crate::{guard::is_caller::is_caller_global_admin_or_controller, CANISTER_DATA};
 
+#[allow(dead_code)]
 #[derive(CandidType, Serialize)]
 enum SubnetType {
     Filter(Option<String>),

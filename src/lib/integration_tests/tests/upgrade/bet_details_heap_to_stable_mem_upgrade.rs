@@ -32,7 +32,7 @@ fn bet_details_heap_to_stable_mem_upgrade() {
     use std::time::SystemTime;
 
     use shared_utils::canister_specific::individual_user_template::types::ml_data::{
-        SuccessHistoryItem, SuccessHistoryItemV1, WatchHistoryItem,
+        SuccessHistoryItemV1, WatchHistoryItem,
     };
 
     let pic = PocketIc::new();
@@ -186,7 +186,7 @@ fn bet_details_heap_to_stable_mem_upgrade() {
         .unwrap();
 
     // Topup Alice's account
-    let reward = pic.update_call(
+    let _reward = pic.update_call(
         alice_individual_template_canister_id,
         admin_principal_id,
         "get_rewarded_for_signing_up",
@@ -194,7 +194,7 @@ fn bet_details_heap_to_stable_mem_upgrade() {
     );
 
     // Top up Bob's account
-    let reward = pic.update_call(
+    let _reward = pic.update_call(
         bob_individual_template_canister_id,
         admin_principal_id,
         "get_rewarded_for_signing_up",
@@ -202,7 +202,7 @@ fn bet_details_heap_to_stable_mem_upgrade() {
     );
 
     // Top up Dan's account
-    let reward = pic.update_call(
+    let _reward = pic.update_call(
         dan_individual_template_canister_id,
         admin_principal_id,
         "get_rewarded_for_signing_up",
@@ -500,7 +500,7 @@ fn bet_details_heap_to_stable_mem_upgrade() {
         bet_amount: 50,
         bet_direction: BetDirection::Hot,
     };
-    let bet_status = pic
+    let _bet_status = pic
         .update_call(
             alice_individual_template_canister_id,
             alice_principal_id,
@@ -524,7 +524,7 @@ fn bet_details_heap_to_stable_mem_upgrade() {
         bet_amount: 50,
         bet_direction: BetDirection::Not,
     };
-    let bet_status = pic
+    let _bet_status = pic
         .update_call(
             dan_individual_template_canister_id,
             dan_principal_id,
@@ -583,7 +583,7 @@ fn bet_details_heap_to_stable_mem_upgrade() {
     // Test watch history
 
     // Alice watches post 1
-    let watch_history = pic
+    let _watch_history = pic
         .update_call(
             alice_individual_template_canister_id,
             admin_principal_id,
@@ -607,7 +607,7 @@ fn bet_details_heap_to_stable_mem_upgrade() {
         .unwrap();
 
     // Alice watches post 2
-    let watch_history = pic
+    let _watch_history = pic
         .update_call(
             alice_individual_template_canister_id,
             admin_principal_id,
@@ -631,7 +631,7 @@ fn bet_details_heap_to_stable_mem_upgrade() {
         .unwrap();
 
     // Alice watches post 3
-    let watch_history = pic
+    let _watch_history = pic
         .update_call(
             alice_individual_template_canister_id,
             admin_principal_id,
@@ -655,7 +655,7 @@ fn bet_details_heap_to_stable_mem_upgrade() {
         .unwrap();
 
     // Alice call update_success_history
-    let success_history = pic
+    let _success_history = pic
         .update_call(
             alice_individual_template_canister_id,
             admin_principal_id,
@@ -680,7 +680,7 @@ fn bet_details_heap_to_stable_mem_upgrade() {
         .unwrap();
 
     // Alice call update_success_history
-    let success_history = pic
+    let _success_history = pic
         .update_call(
             alice_individual_template_canister_id,
             admin_principal_id,

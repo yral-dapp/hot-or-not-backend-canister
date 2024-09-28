@@ -4,7 +4,7 @@ use shared_utils::{
     canister_specific::individual_user_template::types::{
         hot_or_not::{
             BetDetails, BetDirection, BetOutcomeForBetMaker, BetPayout, GlobalBetId, GlobalRoomId,
-            RoomBetPossibleOutcomes, RoomDetailsV1, SlotDetails, StablePrincipal,
+            RoomBetPossibleOutcomes, RoomDetailsV1, StablePrincipal,
         },
         post::Post,
     },
@@ -77,9 +77,8 @@ pub fn inform_participants_of_outcome(
         .range(start_global_room_id..end_global_room_id)
         .collect::<Vec<_>>();
 
-    room_details.iter().for_each(|(groomid, room_detail)| {
-        let mut room_detail = room_detail.clone();
-        let room_id = groomid.2;
+    room_details.iter().for_each(|(_groomid, room_detail)| {
+        let room_detail = room_detail.clone();
 
         let start_global_bet_id = GlobalBetId(start_global_room_id, StablePrincipal::default());
         let end_global_bet_id = GlobalBetId(end_global_room_id, StablePrincipal::default());
@@ -127,7 +126,7 @@ fn recharge_indvidual_canister_using_subnet_orchestrator_if_needed(
     subnet_orchestrator_canister_id: Option<Principal>,
 ) {
     ic_cdk::spawn(async move {
-        recieve_cycles_from_subnet_orchestrator(subnet_orchestrator_canister_id).await;
+        _ = recieve_cycles_from_subnet_orchestrator(subnet_orchestrator_canister_id).await;
     });
 }
 

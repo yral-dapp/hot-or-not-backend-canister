@@ -1,13 +1,7 @@
 use candid::Principal;
-use ic_cdk::{
-    api::{
-        is_controller,
-        management_canister::{
-            main::{deposit_cycles, CanisterInstallMode, InstallCodeArgument},
-            provisional::CanisterIdRecord,
-        },
-    },
-    caller,
+use ic_cdk::api::management_canister::{
+    main::{deposit_cycles, CanisterInstallMode, InstallCodeArgument},
+    provisional::CanisterIdRecord,
 };
 use ic_cdk_macros::update;
 use shared_utils::{
@@ -84,7 +78,7 @@ async fn upgrade_individual_canisters(upgrade_arg: UpgradeCanisterArg) {
             (upgrade_arg.version.clone(), upgrade_arg.wasm_blob.clone()),
         )
         .await
-        .map_err(|e| format!("Failed to start upgrades on {}", subnet_orchestrator));
+        .map_err(|_| format!("Failed to start upgrades on {}", subnet_orchestrator));
 
         match res {
             Ok(_) => {}
@@ -134,7 +128,7 @@ async fn upgrade_subnet_canisters(upgrade_arg: UpgradeCanisterArg) {
 
     let result_callback = |canister_upgrade_result: Result<Principal, (Principal, String)>| {
         match canister_upgrade_result {
-            Ok(canister_id) => {}
+            Ok(_) => {}
             Err((canister_id, err)) => {
                 CANISTER_DATA.with_borrow_mut(|canister_data| {
                     canister_data

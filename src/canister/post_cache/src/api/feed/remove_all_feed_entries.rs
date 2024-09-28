@@ -3,7 +3,7 @@ use shared_utils::common::types::{
     known_principal::KnownPrincipalType,
     top_posts::{
         post_score_home_index::PostScoreHomeIndex,
-        post_score_hot_or_not_index::PostScoreHotOrNotIndex, post_score_index::PostScoreIndex,
+        post_score_hot_or_not_index::PostScoreHotOrNotIndex,
     },
 };
 
@@ -41,7 +41,7 @@ fn remove_all_feed_entries_impl(canister_data: &mut CanisterData) {
 
 #[cfg(test)]
 mod test {
-    use std::{alloc::System, time::SystemTime};
+    use std::time::SystemTime;
 
     use shared_utils::common::types::top_posts::post_score_index_item::{
         PostScoreIndexItemV1, PostStatus,

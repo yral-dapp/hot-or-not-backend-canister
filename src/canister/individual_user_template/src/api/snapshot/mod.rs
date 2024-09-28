@@ -1,5 +1,4 @@
 use std::{
-    borrow::Borrow,
     collections::{BTreeMap, BTreeSet, HashMap, HashSet},
     time::SystemTime,
 };
@@ -13,9 +12,8 @@ use shared_utils::{
         configuration::IndividualUserConfiguration,
         follow::{FollowData, FollowEntryDetail, FollowEntryId, FollowList},
         hot_or_not::{
-            AggregateStats, BetDetails, BetMaker, BetMakerPrincipal, GlobalBetId, GlobalRoomId,
-            HotOrNotDetails, PlacedBetDetail, RoomDetailsV1, RoomId, SlotDetailsV1, SlotId,
-            StablePrincipal,
+            AggregateStats, BetDetails, GlobalBetId, GlobalRoomId, HotOrNotDetails,
+            PlacedBetDetail, RoomDetailsV1, SlotDetailsV1, SlotId, StablePrincipal,
         },
         migration::MigrationInfo,
         post::{FeedScore, Post, PostViewStatistics},
@@ -154,7 +152,7 @@ impl From<&CanisterData> for CanisterDataForSnapshot {
                 is_nsfw: v.is_nsfw,
             };
 
-            all_created_posts.insert(k.clone(), post_details);
+            all_created_posts.insert(*k, post_details);
         });
 
         let mut room_details_map: BTreeMap<GlobalRoomId, RoomDetailsV1> = BTreeMap::new();
@@ -169,7 +167,7 @@ impl From<&CanisterData> for CanisterDataForSnapshot {
 
         let mut post_principal_map: BTreeMap<(PostId, StablePrincipal), ()> = BTreeMap::new();
         canister_data.post_principal_map.iter().for_each(|(k, v)| {
-            post_principal_map.insert(k, v.clone());
+            post_principal_map.insert(k, v);
         });
 
         let mut slot_details_map: BTreeMap<(PostId, SlotId), SlotDetailsV1> = BTreeMap::new();
@@ -268,11 +266,11 @@ impl From<CanisterDataForSnapshot> for CanisterData {
                 share_count: v.share_count,
                 view_stats: v.view_stats.clone(),
                 home_feed_score: v.home_feed_score.clone(),
-                hot_or_not_details: hot_or_not_details,
+                hot_or_not_details,
                 is_nsfw: v.is_nsfw,
             };
 
-            all_created_posts.insert(k.clone(), post_details);
+            all_created_posts.insert(*k, post_details);
         });
 
         let mut room_details_map = _default_room_details();
@@ -286,8 +284,8 @@ impl From<CanisterDataForSnapshot> for CanisterData {
         });
 
         let mut post_principal_map = _default_post_principal_map();
-        canister_data.post_principal_map.iter().for_each(|(k, v)| {
-            post_principal_map.insert(k.clone(), v.clone());
+        canister_data.post_principal_map.iter().for_each(|(k, _)| {
+            post_principal_map.insert(k.clone(), ());
         });
 
         let mut slot_details_map = _default_slot_details_map();

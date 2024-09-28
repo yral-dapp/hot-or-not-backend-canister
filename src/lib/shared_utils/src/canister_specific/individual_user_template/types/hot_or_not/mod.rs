@@ -114,7 +114,7 @@ impl Default for SlotDetailsV1 {
     }
 }
 
-const MAX_SLOT_DETAILS_VALUE_SIZE: u32 = 100 as u32;
+const MAX_SLOT_DETAILS_VALUE_SIZE: u32 = 100_u32;
 
 impl Storable for SlotDetailsV1 {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
@@ -138,7 +138,7 @@ pub struct RoomDetailsV1 {
     pub total_hot_bets: u64,
     pub total_not_bets: u64,
 }
-const MAX_ROOM_DETAILS_VALUE_SIZE: u32 = 100 as u32;
+const MAX_ROOM_DETAILS_VALUE_SIZE: u32 = 100_u32;
 
 impl Storable for RoomDetailsV1 {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
@@ -164,7 +164,7 @@ pub struct BetDetails {
     pub payout: BetPayout,
     pub bet_maker_canister_id: CanisterId,
 }
-const MAX_BET_DETAILS_VALUE_SIZE: u32 = 200 as u32;
+const MAX_BET_DETAILS_VALUE_SIZE: u32 = 200_u32;
 
 impl Storable for BetDetails {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
@@ -379,7 +379,7 @@ impl Post {
             VirtualMemory<DefaultMemoryImpl>,
         >,
     ) -> BettingStatus {
-        let betting_status = match current_time_when_request_being_made
+        match current_time_when_request_being_made
             .duration_since(self.created_at)
             .unwrap()
             .as_secs()
@@ -406,10 +406,8 @@ impl Post {
 
                 let global_room_id = GlobalRoomId(self.id, currently_ongoing_slot, active_room_id);
 
-                let room_details = room_details_map
-                    .get(&global_room_id)
-                    .unwrap_or_default();
-                    // .unwrap_or(temp_room_details_default);
+                let room_details = room_details_map.get(&global_room_id).unwrap_or_default();
+                // .unwrap_or(temp_room_details_default);
 
                 let number_of_participants =
                     (room_details.total_hot_bets + room_details.total_not_bets) as u8;
@@ -433,9 +431,7 @@ impl Post {
             }
             // * contest is over
             _ => BettingStatus::BettingClosed,
-        };
-
-        betting_status
+        }
     }
 
     // pub fn has_this_principal_already_bet_on_this_post(
@@ -586,6 +582,7 @@ impl Post {
     //     }
     // }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn place_hot_or_not_bet_v1(
         &mut self,
         bet_maker_principal_id: &Principal,
@@ -688,12 +685,12 @@ impl Post {
 
                 room_details_map.insert(global_room_id, room_detail);
                 if global_room_id.2 != ongoing_room {
-                slot_details_map.insert(
-                    (self.id, ongoing_slot),
-                    SlotDetailsV1 {
-                        active_room_id: global_room_id.2,
-                    },
-                );
+                    slot_details_map.insert(
+                        (self.id, ongoing_slot),
+                        SlotDetailsV1 {
+                            active_room_id: global_room_id.2,
+                        },
+                    );
                 }
 
                 self.hot_or_not_details = Some(hot_or_not_details);
@@ -2045,12 +2042,13 @@ pub mod test_hot_or_not {
     //         });
     // }
 
-    pub fn setup_room_and_bet_details_map() -> (
+    type RoomAndBetDetailsMaps = (
         ic_stable_structures::btreemap::BTreeMap<GlobalRoomId, RoomDetailsV1, Memory>,
         ic_stable_structures::btreemap::BTreeMap<GlobalBetId, BetDetails, Memory>,
         ic_stable_structures::btreemap::BTreeMap<(PostId, StablePrincipal), (), Memory>,
         ic_stable_structures::btreemap::BTreeMap<(PostId, SlotId), SlotDetailsV1, Memory>,
-    ) {
+    );
+    pub fn setup_room_and_bet_details_map() -> RoomAndBetDetailsMaps {
         const ROOM_DETAILS_MEMORY: MemoryId = MemoryId::new(0);
         const BET_DETAILS_MEMORY: MemoryId = MemoryId::new(1);
         const POST_PRINCIPAL_MEMORY: MemoryId = MemoryId::new(3);

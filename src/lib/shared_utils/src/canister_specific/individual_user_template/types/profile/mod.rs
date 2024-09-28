@@ -30,7 +30,7 @@ pub struct UserProfileDetailsForFrontend {
     pub profile_stats: UserProfileGlobalStats,
     pub lifetime_earnings: u64,
     pub unique_user_name: Option<String>,
-    pub referrer_details: Option<UserCanisterDetails>
+    pub referrer_details: Option<UserCanisterDetails>,
 }
 
 #[derive(CandidType, Deserialize, Debug, PartialEq, Eq)]
@@ -44,7 +44,7 @@ pub struct UserProfileDetailsForFrontendV2 {
     pub lifetime_earnings: u64,
     pub unique_user_name: Option<String>,
     pub referrer_details: Option<UserCanisterDetails>,
-    pub migration_info: MigrationInfo
+    pub migration_info: MigrationInfo,
 }
 
 #[derive(CandidType, Deserialize, Clone, Copy, Debug, Default, Serialize, PartialEq, Eq)]

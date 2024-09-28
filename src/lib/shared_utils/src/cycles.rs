@@ -17,19 +17,15 @@ pub fn get_cycles_reserved_in_freezing_threshold(
 }
 
 pub fn get_execution_cost_per_ingress_message() -> u128 {
-    let res = BASE_COST_FOR_EXECUTION
+    BASE_COST_FOR_EXECUTION
         + ((ASSUMED_NUMBER_OF_INSTRUCTIONS_PER_INGRESS_CALL
             * COST_PER_BILLION_INSTRUCTION_EXECUTED)
-            / 1_000_000_000);
-
-    res
+            / 1_000_000_000)
 }
 
 pub fn get_cycles_required_per_ingress_message_reception() -> u128 {
-    let res = BASE_COST_FOR_INGRESS_MESSAGE
-        + (ASSUMED_BYTES_PER_INGRESS_CALL * COST_PER_BYTE_FOR_INGRESS_MESSAGE);
-
-    res
+    BASE_COST_FOR_INGRESS_MESSAGE
+        + (ASSUMED_BYTES_PER_INGRESS_CALL * COST_PER_BYTE_FOR_INGRESS_MESSAGE)
 }
 
 pub fn calculate_cost_for_canister_per_day(idle_cycles_burned_per_day: u128) -> u128 {

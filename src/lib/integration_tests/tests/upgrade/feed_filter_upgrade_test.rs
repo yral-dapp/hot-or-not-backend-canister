@@ -1,12 +1,11 @@
-use std::{collections::HashMap, thread, time::Duration};
+use std::{collections::HashMap, time::Duration};
 
 use candid::{encode_one, CandidType, Deserialize};
 use pocket_ic::{PocketIc, WasmResult};
 use shared_utils::{
     canister_specific::{
         individual_user_template::types::{
-            arg::IndividualUserTemplateInitArgs,
-            post::{PostDetailsForFrontend, PostDetailsFromFrontend},
+            arg::IndividualUserTemplateInitArgs, post::PostDetailsFromFrontend,
         },
         post_cache::types::arg::PostCacheInitArgs,
     },
@@ -124,7 +123,7 @@ fn feed_filter_upgrade_test() {
         video_uid: "abcd#1234".to_string(),
         creator_consent_for_inclusion_in_hot_or_not: true,
     };
-    let res = pic
+    let _res = pic
         .update_call(
             alice_individual_template_canister_id,
             alice_principal_id,
@@ -147,7 +146,7 @@ fn feed_filter_upgrade_test() {
         video_uid: "abcd#12345".to_string(),
         creator_consent_for_inclusion_in_hot_or_not: true,
     };
-    let res = pic
+    let _res = pic
         .update_call(
             alice_individual_template_canister_id,
             alice_principal_id,
@@ -172,7 +171,7 @@ fn feed_filter_upgrade_test() {
         video_uid: "abcd#1234bob".to_string(),
         creator_consent_for_inclusion_in_hot_or_not: true,
     };
-    let res = pic
+    let _res = pic
         .update_call(
             bob_individual_template_canister_id,
             bob_principal_id,
@@ -195,7 +194,7 @@ fn feed_filter_upgrade_test() {
         video_uid: "abcd#1234bob2".to_string(),
         creator_consent_for_inclusion_in_hot_or_not: true,
     };
-    let res = pic
+    let _res = pic
         .update_call(
             bob_individual_template_canister_id,
             bob_principal_id,
@@ -217,7 +216,7 @@ fn feed_filter_upgrade_test() {
             post_cache_canister_id,
             bob_principal_id,
             "get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed",
-            candid::encode_args((0 as u64, 10 as u64)).unwrap(),
+            candid::encode_args((0_u64, 10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let posts: Result<Vec<PostScoreIndexItem>, TopPostsFetchError> = match reply_payload {
@@ -278,25 +277,25 @@ fn feed_filter_upgrade_test() {
     }
 
     // Delete the post
-    let res = pic.update_call(
+    let _res = pic.update_call(
         bob_individual_template_canister_id,
         admin_principal_id,
         "delete_post_temp",
-        encode_one(1 as u64).unwrap(),
+        encode_one(1_u64).unwrap(),
     );
 
     // Check if post is deleted
 
-    let res = pic
+    let _res = pic
         .query_call(
             bob_individual_template_canister_id,
             bob_principal_id,
             "get_individual_post_details_by_id",
-            encode_one(1 as u64).unwrap(),
+            encode_one(1_u64).unwrap(),
         )
         .map(|reply_payload| {
-            let post: Result<_, String> = match reply_payload {
-                WasmResult::Reply(payload) => panic!("\n🛑 Expected get_post to fail\n"),
+            let _post: Result<_, String> = match reply_payload {
+                WasmResult::Reply(_payload) => panic!("\n🛑 Expected get_post to fail\n"),
                 _ => Ok(()),
             };
         });
@@ -307,7 +306,7 @@ fn feed_filter_upgrade_test() {
             post_cache_canister_id,
             bob_principal_id,
             "get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed",
-            candid::encode_args((0 as u64, 10 as u64)).unwrap(),
+            candid::encode_args((0_u64, 10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let posts: Result<Vec<PostScoreIndexItem>, TopPostsFetchError> = match reply_payload {
@@ -355,7 +354,7 @@ fn feed_filter_upgrade_test() {
             post_cache_canister_id,
             bob_principal_id,
             "get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed",
-            candid::encode_args((0 as u64, 10 as u64)).unwrap(),
+            candid::encode_args((0_u64, 10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let posts: Result<Vec<PostScoreIndexItem>, TopPostsFetchError> = match reply_payload {
@@ -379,7 +378,7 @@ fn feed_filter_upgrade_test() {
             post_cache_canister_id,
             bob_principal_id,
             "get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed_cursor",
-            candid::encode_args((0 as u64, 10 as u64)).unwrap(),
+            candid::encode_args((0_u64, 10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let posts: Result<Vec<PostScoreIndexItem>, TopPostsFetchError> = match reply_payload {
@@ -402,7 +401,7 @@ fn feed_filter_upgrade_test() {
             post_cache_canister_id,
             bob_principal_id,
             "get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed_cursor",
-            candid::encode_args((0 as u64, 10 as u64)).unwrap(),
+            candid::encode_args((0_u64, 10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let posts: Result<Vec<PostScoreIndexItemV1>, TopPostsFetchError> = match reply_payload {
@@ -418,7 +417,7 @@ fn feed_filter_upgrade_test() {
     assert_eq!(posts[0].post_id, 0);
     assert_eq!(posts[1].post_id, 1);
     assert_eq!(posts[2].post_id, 0);
-    assert_eq!(posts[2].is_nsfw, true);
+    assert!(posts[2].is_nsfw);
 
     // Bob creates a post
 
@@ -429,7 +428,7 @@ fn feed_filter_upgrade_test() {
         video_uid: "abcd#1234bob2".to_string(),
         creator_consent_for_inclusion_in_hot_or_not: true,
     };
-    let res = pic
+    let _res = pic
         .update_call(
             bob_individual_template_canister_id,
             bob_principal_id,
@@ -451,7 +450,7 @@ fn feed_filter_upgrade_test() {
             post_cache_canister_id,
             bob_principal_id,
             "get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed_cursor",
-            candid::encode_args((0 as u64, 10 as u64)).unwrap(),
+            candid::encode_args((0_u64, 10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let posts: Result<Vec<PostScoreIndexItemV1>, TopPostsFetchError> = match reply_payload {
@@ -475,7 +474,7 @@ fn feed_filter_upgrade_test() {
             post_cache_canister_id,
             bob_principal_id,
             "get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed",
-            candid::encode_args((0 as u64, 10 as u64)).unwrap(),
+            candid::encode_args((0_u64, 10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let posts: Result<Vec<PostScoreIndexItem>, TopPostsFetchError> = match reply_payload {
@@ -499,7 +498,7 @@ fn feed_filter_upgrade_test() {
             post_cache_canister_id,
             bob_principal_id,
             "get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed",
-            candid::encode_args((0 as u64, 10 as u64)).unwrap(),
+            candid::encode_args((0_u64, 10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let posts: Result<Vec<PostScoreIndexItem>, TopPostsFetchError> = match reply_payload {

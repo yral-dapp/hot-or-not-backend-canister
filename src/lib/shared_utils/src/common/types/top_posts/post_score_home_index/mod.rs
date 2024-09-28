@@ -2,13 +2,11 @@ use candid::{CandidType, Deserialize};
 use serde::Serialize;
 use std::{
     collections::{btree_map::Iter, BTreeMap, HashMap},
-    iter::{Chain, Rev},
-    slice,
-    time::{Duration, SystemTime},
-    vec,
+    iter::Rev,
+    slice, vec,
 };
 
-use super::{post_score_index_item::PostScoreIndexItemV1, CreatedAt, GlobalPostId, Score};
+use super::{post_score_index_item::PostScoreIndexItemV1, GlobalPostId, Score};
 
 #[derive(Default, Debug, Clone, CandidType, Deserialize, Serialize)]
 pub struct PostScoreHomeIndex {
@@ -32,10 +30,7 @@ impl PostScoreHomeIndex {
 
         // insert the item into the sorted index, nsfw, time and sorted and latest sorted indexes
 
-        let score_index_entry = self
-            .items_sorted_by_score
-            .entry(item_score)
-            .or_insert_with(Vec::new);
+        let score_index_entry = self.items_sorted_by_score.entry(item_score).or_default();
         score_index_entry.push(item_presence_index_entry);
     }
 
@@ -119,6 +114,7 @@ mod tests {
     use candid::Principal;
 
     use crate::common::types::top_posts::post_score_index_item::PostStatus;
+    use std::time::{Duration, SystemTime};
 
     use super::*;
 

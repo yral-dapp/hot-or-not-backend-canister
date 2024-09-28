@@ -14,16 +14,10 @@ pub async fn request_cycles_from_subnet_orchestrator(amount: u128) -> Result<(),
         })
         .ok_or("Subnet Orchestrator Canister Id not found".to_owned())?;
 
-    let result = call::<_, (Result<(), String>,)>(
-        subnet_orchestrator_canister_id,
-        "request_cycles",
-        (amount,),
-    )
-    .await
-    .map_err(|e| e.1)?
-    .0;
-
-    result
+    call::<_, (Result<(), String>,)>(subnet_orchestrator_canister_id, "request_cycles", (amount,))
+        .await
+        .map_err(|e| e.1)?
+        .0
 }
 
 pub async fn recieve_cycles_from_subnet_orchestrator(

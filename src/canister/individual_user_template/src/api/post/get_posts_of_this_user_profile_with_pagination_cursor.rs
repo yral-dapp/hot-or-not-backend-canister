@@ -63,7 +63,7 @@ fn get_posts_of_this_user_profile_with_pagination_cursor_impl(
         .rev()
         .skip(from_inclusive_index as usize)
         .take(limit as usize)
-        .map(|(id, post)| {
+        .map(|(_id, post)| {
             let profile = &canister_data.profile;
             let followers = &canister_data.principals_that_follow_me;
             let following = &canister_data.principals_i_follow;
@@ -93,20 +93,17 @@ fn get_posts_of_this_user_profile_with_pagination_cursor_impl(
     Ok(res_posts)
 }
 
+#[cfg(test)]
 mod test {
-    use std::{
-        collections::{BTreeMap, HashSet},
-        time::SystemTime,
-    };
-
-    use shared_utils::{
-        canister_specific::individual_user_template::types::post::{
-            FeedScore, Post, PostViewStatistics,
-        },
-        common::types::top_posts::post_score_index_item::PostStatus,
-    };
-
-    use super::*;
+    use crate::CanisterData;
+    use candid::Principal;
+    use shared_utils::canister_specific::individual_user_template::types::post::FeedScore;
+    use shared_utils::canister_specific::individual_user_template::types::post::Post;
+    use shared_utils::canister_specific::individual_user_template::types::post::PostViewStatistics;
+    use shared_utils::common::types::top_posts::post_score_index_item::PostStatus;
+    use std::collections::BTreeMap;
+    use std::collections::HashSet;
+    use std::time::SystemTime;
 
     #[test]
     fn test_get_posts_of_this_user_profile_with_pagination_cursor_impl() {

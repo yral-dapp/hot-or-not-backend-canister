@@ -3,9 +3,7 @@ use serde::Serialize;
 use std::{
     collections::{btree_map::Iter, BTreeMap, HashMap},
     iter::{Chain, Rev},
-    slice,
-    time::{Duration, SystemTime},
-    vec,
+    slice, vec,
 };
 
 use crate::common::utils::system_time::get_current_system_time;
@@ -47,28 +45,19 @@ impl PostScoreHotOrNotIndex {
                 let latest_score_index_entry = self
                     .items_latest_sorted_by_score
                     .entry(item_score)
-                    .or_insert_with(Vec::new);
+                    .or_default();
                 latest_score_index_entry.push(item_presence_index_entry);
             } else {
-                let score_index_entry = self
-                    .items_sorted_by_score
-                    .entry(item_score)
-                    .or_insert_with(Vec::new);
+                let score_index_entry = self.items_sorted_by_score.entry(item_score).or_default();
                 score_index_entry.push(item_presence_index_entry);
             }
         } else {
-            let score_index_entry = self
-                .items_sorted_by_score
-                .entry(item_score)
-                .or_insert_with(Vec::new);
+            let score_index_entry = self.items_sorted_by_score.entry(item_score).or_default();
             score_index_entry.push(item_presence_index_entry);
         }
 
         if let Some(created_at) = item.created_at {
-            let time_index_entry = self
-                .item_time_index
-                .entry(created_at)
-                .or_insert_with(Vec::new);
+            let time_index_entry = self.item_time_index.entry(created_at).or_default();
             time_index_entry.push(item_presence_index_entry);
         }
     }
@@ -130,9 +119,12 @@ impl PostScoreHotOrNotIndex {
     }
 }
 
+type PostScoreHotOrNotIndexIteratorInner<'a> =
+    Chain<Rev<Iter<'a, Score, Vec<GlobalPostId>>>, Rev<Iter<'a, Score, Vec<GlobalPostId>>>>;
+
 pub struct PostScoreHotOrNotIndexIterator<'a> {
     id_to_item: &'a HashMap<GlobalPostId, PostScoreIndexItemV1>,
-    inner: Chain<Rev<Iter<'a, Score, Vec<GlobalPostId>>>, Rev<Iter<'a, Score, Vec<GlobalPostId>>>>,
+    inner: PostScoreHotOrNotIndexIteratorInner<'a>,
     current_vec: Option<slice::Iter<'a, GlobalPostId>>,
 }
 
@@ -181,6 +173,7 @@ mod tests {
     use candid::Principal;
 
     use crate::common::types::top_posts::post_score_index_item::PostStatus;
+    use std::time::{Duration, SystemTime};
 
     use super::*;
 

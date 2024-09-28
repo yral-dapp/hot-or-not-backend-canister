@@ -18,7 +18,7 @@ pub fn metrics() -> String {
         _ => "authenticated".to_string(),
     };
 
-    vec![
+    [
         format!(
             "cycle_balance{{type=\"{}\"}} {} {}",
             canister_type,

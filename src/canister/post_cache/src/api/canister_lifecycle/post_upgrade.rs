@@ -8,10 +8,7 @@ use shared_utils::{
         post_cache::types::arg::PostCacheInitArgs,
     },
     common::{
-        types::{
-            top_posts::{post_score_home_index, post_score_index_item::PostScoreIndexItemV1},
-            version_details::VersionDetails,
-        },
+        types::top_posts::post_score_index_item::PostScoreIndexItemV1,
         utils::stable_memory_serializer_deserializer,
     },
 };

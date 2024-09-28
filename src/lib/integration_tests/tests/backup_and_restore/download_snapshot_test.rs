@@ -185,7 +185,7 @@ fn download_snapshot_test() {
         .unwrap();
 
     // Top up Bob's account
-    let reward = pic.update_call(
+    let _reward = pic.update_call(
         bob_individual_template_canister_id,
         admin_principal_id,
         "get_rewarded_for_signing_up",
@@ -193,7 +193,7 @@ fn download_snapshot_test() {
     );
 
     // Top up Dan's account
-    let reward = pic.update_call(
+    let _reward = pic.update_call(
         dan_individual_template_canister_id,
         admin_principal_id,
         "get_rewarded_for_signing_up",
@@ -334,7 +334,7 @@ fn download_snapshot_test() {
             bet_status.unwrap()
         })
         .unwrap();
-    assert_eq!(res, true);
+    assert!(res);
 
     // Alice follows Dan
     let follow_arg = FolloweeArg {
@@ -356,7 +356,7 @@ fn download_snapshot_test() {
             bet_status.unwrap()
         })
         .unwrap();
-    assert_eq!(res, true);
+    assert!(res);
 
     // Bob follows Alice
     let follow_arg = FolloweeArg {
@@ -378,7 +378,7 @@ fn download_snapshot_test() {
             bet_status.unwrap()
         })
         .unwrap();
-    assert_eq!(res, true);
+    assert!(res);
 
     // Bob follows Dan
     let follow_arg = FolloweeArg {
@@ -400,7 +400,7 @@ fn download_snapshot_test() {
             bet_status.unwrap()
         })
         .unwrap();
-    assert_eq!(res, true);
+    assert!(res);
 
     // Dan follows Alice
     let follow_arg = FolloweeArg {
@@ -422,7 +422,7 @@ fn download_snapshot_test() {
             bet_status.unwrap()
         })
         .unwrap();
-    assert_eq!(res, true);
+    assert!(res);
 
     // Dan follows Bob
     let follow_arg = FolloweeArg {
@@ -444,7 +444,7 @@ fn download_snapshot_test() {
             bet_status.unwrap()
         })
         .unwrap();
-    assert_eq!(res, true);
+    assert!(res);
 
     // Upgrade canister
 
@@ -568,11 +568,11 @@ fn download_snapshot_test() {
     // Download Snapshots
     //
     let mut alice_snapshot = vec![];
-    let CHUNK_SIZE = 50;
-    let num_iters = (alice_snap_len as f64 / CHUNK_SIZE as f64).ceil() as u32;
+    let chunk_size = 50;
+    let num_iters = (alice_snap_len as f64 / chunk_size as f64).ceil() as u32;
     for i in 0..num_iters {
-        let start = i * CHUNK_SIZE;
-        let mut end = (i + 1) * CHUNK_SIZE;
+        let start = i * chunk_size;
+        let mut end = (i + 1) * chunk_size;
         if end > alice_snap_len {
             end = alice_snap_len;
         }
@@ -603,7 +603,7 @@ fn download_snapshot_test() {
             bob_individual_template_canister_id,
             reclaim_principal_id,
             "download_snapshot",
-            candid::encode_args((0 as u64, bob_snap_len as u64)).unwrap(),
+            candid::encode_args((0_u64, bob_snap_len as u64)).unwrap(),
         )
         .map(|reply_payload| {
             let payload: Vec<u8> = match reply_payload {
@@ -621,7 +621,7 @@ fn download_snapshot_test() {
             dan_individual_template_canister_id,
             reclaim_principal_id,
             "download_snapshot",
-            candid::encode_args((0 as u64, dan_snap_len as u64)).unwrap(),
+            candid::encode_args((0_u64, dan_snap_len as u64)).unwrap(),
         )
         .map(|reply_payload| {
             let payload: Vec<u8> = match reply_payload {
@@ -635,28 +635,26 @@ fn download_snapshot_test() {
 
     // Clear snapshot
 
-    let res = pic
-        .update_call(
-            alice_individual_template_canister_id,
-            reclaim_principal_id,
-            "clear_snapshot",
-            candid::encode_args(()).unwrap(),
-        )
-        .map(|reply_payload| {
-            let payload: _ = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 place_bet failed\n"),
-            };
-            payload
-        })
-        .unwrap();
+    pic.update_call(
+        alice_individual_template_canister_id,
+        reclaim_principal_id,
+        "clear_snapshot",
+        candid::encode_args(()).unwrap(),
+    )
+    .map(|reply_payload| {
+        match reply_payload {
+            WasmResult::Reply(payload) => candid::decode_one::<()>(&payload).unwrap(),
+            _ => panic!("\n🛑 place_bet failed\n"),
+        };
+    })
+    .unwrap();
 
     let res = pic
         .update_call(
             alice_individual_template_canister_id,
             reclaim_principal_id,
             "download_snapshot",
-            candid::encode_args((0 as u64, 10 as u64)).unwrap(),
+            candid::encode_args((0_u64, 10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let payload: Vec<u8> = match reply_payload {
@@ -665,7 +663,7 @@ fn download_snapshot_test() {
             };
             payload
         });
-    assert_eq!(res.is_err(), true);
+    assert!(res.is_err());
 
     // Query Alice canister for info
 
@@ -691,7 +689,7 @@ fn download_snapshot_test() {
             alice_individual_template_canister_id,
             alice_principal_id,
             "get_posts_of_this_user_profile_with_pagination",
-            candid::encode_args((0 as u64, 5 as u64)).unwrap(),
+            candid::encode_args((0_u64, 5_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let profile: Result<Vec<PostDetailsForFrontend>, GetPostsOfUserProfileError> =
@@ -709,7 +707,7 @@ fn download_snapshot_test() {
             bob_individual_template_canister_id,
             bob_principal_id,
             "get_hot_or_not_bets_placed_by_this_profile_with_pagination",
-            candid::encode_args((0 as usize,)).unwrap(),
+            candid::encode_args((0_usize,)).unwrap(),
         )
         .map(|reply_payload| {
             let profile: Vec<PlacedBetDetail> = match reply_payload {
@@ -726,7 +724,7 @@ fn download_snapshot_test() {
             alice_individual_template_canister_id,
             alice_principal_id,
             "get_hot_or_not_bet_details_for_this_post",
-            candid::encode_args((0 as usize,)).unwrap(),
+            candid::encode_args((0_usize,)).unwrap(),
         )
         .map(|reply_payload| {
             let profile: BettingStatus = match reply_payload {
@@ -743,7 +741,7 @@ fn download_snapshot_test() {
             alice_individual_template_canister_id,
             alice_principal_id,
             "get_hot_or_not_bet_details_for_this_post",
-            candid::encode_args((1 as usize,)).unwrap(),
+            candid::encode_args((1_usize,)).unwrap(),
         )
         .map(|reply_payload| {
             let profile: BettingStatus = match reply_payload {
@@ -760,7 +758,7 @@ fn download_snapshot_test() {
             alice_individual_template_canister_id,
             alice_principal_id,
             "get_principals_this_profile_follows_paginated",
-            candid::encode_args((0 as usize,)).unwrap(),
+            candid::encode_args((0_usize,)).unwrap(),
         )
         .map(|reply_payload| {
             let profile: Vec<(FollowEntryId, FollowEntryDetail)> = match reply_payload {
@@ -777,7 +775,7 @@ fn download_snapshot_test() {
             alice_individual_template_canister_id,
             alice_principal_id,
             "get_principals_that_follow_this_profile_paginated",
-            candid::encode_args((0 as usize,)).unwrap(),
+            candid::encode_args((0_usize,)).unwrap(),
         )
         .map(|reply_payload| {
             let profile: Vec<(FollowEntryId, FollowEntryDetail)> = match reply_payload {
@@ -794,7 +792,7 @@ fn download_snapshot_test() {
             alice_individual_template_canister_id,
             alice_principal_id,
             "get_user_utility_token_transaction_history_with_pagination",
-            candid::encode_args((0 as u64, 5 as u64)).unwrap(),
+            candid::encode_args((0_u64, 5_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let profile: Result<
@@ -845,23 +843,23 @@ fn download_snapshot_test() {
 
     // Stop canisters
 
-    let res = match pic.stop_canister(alice_individual_template_canister_id, None) {
+    match pic.stop_canister(alice_individual_template_canister_id, None) {
         Ok(_) => println!("Alice stopped"),
         Err(e) => println!("Alice stop error: {:?}", e),
     };
 
-    let res = match pic.stop_canister(bob_individual_template_canister_id, None) {
+    match pic.stop_canister(bob_individual_template_canister_id, None) {
         Ok(_) => println!("Bob stopped"),
         Err(e) => println!("Bob stop error: {:?}", e),
     };
 
-    let res = match pic.stop_canister(dan_individual_template_canister_id, None) {
+    match pic.stop_canister(dan_individual_template_canister_id, None) {
         Ok(_) => println!("Dan stopped"),
         Err(e) => println!("Dan stop error: {:?}", e),
     };
 
     // Init 2nd gen canisters
-    /// Alice 2
+    // Alice 2
     let alice2_individual_template_canister_id = pic.create_canister();
     pic.add_cycles(alice2_individual_template_canister_id, 2_000_000_000_000);
 
@@ -881,7 +879,7 @@ fn download_snapshot_test() {
         None,
     );
 
-    /// Bob 2
+    // Bob 2
     let bob2_individual_template_canister_id = pic.create_canister();
     pic.add_cycles(bob2_individual_template_canister_id, 2_000_000_000_000);
 
@@ -901,7 +899,7 @@ fn download_snapshot_test() {
         None,
     );
 
-    /// Dan 2
+    // Dan 2
     let dan2_individual_template_canister_id = pic.create_canister();
     pic.add_cycles(dan2_individual_template_canister_id, 2_000_000_000_000);
 
@@ -928,7 +926,7 @@ fn download_snapshot_test() {
             alice2_individual_template_canister_id,
             alice_principal_id,
             "get_posts_of_this_user_profile_with_pagination",
-            candid::encode_args((0 as u64, 5 as u64)).unwrap(),
+            candid::encode_args((0_u64, 5_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let profile: Result<Vec<PostDetailsForFrontend>, GetPostsOfUserProfileError> =
@@ -946,7 +944,7 @@ fn download_snapshot_test() {
             bob2_individual_template_canister_id,
             bob_principal_id,
             "get_hot_or_not_bets_placed_by_this_profile_with_pagination",
-            candid::encode_args((0 as usize,)).unwrap(),
+            candid::encode_args((0_usize,)).unwrap(),
         )
         .map(|reply_payload| {
             let profile: Vec<PlacedBetDetail> = match reply_payload {
@@ -960,103 +958,91 @@ fn download_snapshot_test() {
 
     // Restore state
 
-    let res = pic
-        .update_call(
-            alice2_individual_template_canister_id,
-            reclaim_principal_id,
-            "receive_and_save_snaphot",
-            candid::encode_args((0 as u64, alice_snapshot)).unwrap(),
-        )
-        .map(|reply_payload| {
-            let payload: _ = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 place_bet failed\n"),
-            };
-            payload
-        })
-        .unwrap();
+    pic.update_call(
+        alice2_individual_template_canister_id,
+        reclaim_principal_id,
+        "receive_and_save_snaphot",
+        candid::encode_args((0_u64, alice_snapshot)).unwrap(),
+    )
+    .map(|reply_payload| {
+        match reply_payload {
+            WasmResult::Reply(payload) => candid::decode_one::<()>(&payload).unwrap(),
+            _ => panic!("\n🛑 place_bet failed\n"),
+        };
+    })
+    .unwrap();
 
-    let res = pic
-        .update_call(
-            bob2_individual_template_canister_id,
-            reclaim_principal_id,
-            "receive_and_save_snaphot",
-            candid::encode_args((0 as u64, bob_snapshot)).unwrap(),
-        )
-        .map(|reply_payload| {
-            let payload: _ = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 place_bet failed\n"),
-            };
-            payload
-        })
-        .unwrap();
+    pic.update_call(
+        bob2_individual_template_canister_id,
+        reclaim_principal_id,
+        "receive_and_save_snaphot",
+        candid::encode_args((0_u64, bob_snapshot)).unwrap(),
+    )
+    .map(|reply_payload| {
+        match reply_payload {
+            WasmResult::Reply(payload) => candid::decode_one::<()>(&payload).unwrap(),
+            _ => panic!("\n🛑 place_bet failed\n"),
+        };
+    })
+    .unwrap();
 
-    let res = pic
-        .update_call(
-            dan2_individual_template_canister_id,
-            reclaim_principal_id,
-            "receive_and_save_snaphot",
-            candid::encode_args((0 as u64, dan_snapshot)).unwrap(),
-        )
-        .map(|reply_payload| {
-            let payload: _ = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 place_bet failed\n"),
-            };
-            payload
-        })
-        .unwrap();
+    pic.update_call(
+        dan2_individual_template_canister_id,
+        reclaim_principal_id,
+        "receive_and_save_snaphot",
+        candid::encode_args((0_u64, dan_snapshot)).unwrap(),
+    )
+    .map(|reply_payload| {
+        match reply_payload {
+            WasmResult::Reply(payload) => candid::decode_one::<()>(&payload).unwrap(),
+            _ => panic!("\n🛑 place_bet failed\n"),
+        };
+    })
+    .unwrap();
 
     // Load snapshots
 
-    let res = pic
-        .update_call(
-            alice2_individual_template_canister_id,
-            reclaim_principal_id,
-            "load_snapshot",
-            candid::encode_args((alice_snap_len as u64,)).unwrap(),
-        )
-        .map(|reply_payload| {
-            let payload: _ = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 place_bet failed\n"),
-            };
-            payload
-        })
-        .unwrap();
+    pic.update_call(
+        alice2_individual_template_canister_id,
+        reclaim_principal_id,
+        "load_snapshot",
+        candid::encode_args((alice_snap_len as u64,)).unwrap(),
+    )
+    .map(|reply_payload| {
+        match reply_payload {
+            WasmResult::Reply(payload) => candid::decode_one::<()>(&payload).unwrap(),
+            _ => panic!("\n🛑 place_bet failed\n"),
+        };
+    })
+    .unwrap();
 
-    let res = pic
-        .update_call(
-            bob2_individual_template_canister_id,
-            reclaim_principal_id,
-            "load_snapshot",
-            candid::encode_args((bob_snap_len as u64,)).unwrap(),
-        )
-        .map(|reply_payload| {
-            let payload: _ = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 place_bet failed\n"),
-            };
-            payload
-        })
-        .unwrap();
+    pic.update_call(
+        bob2_individual_template_canister_id,
+        reclaim_principal_id,
+        "load_snapshot",
+        candid::encode_args((bob_snap_len as u64,)).unwrap(),
+    )
+    .map(|reply_payload| {
+        match reply_payload {
+            WasmResult::Reply(payload) => candid::decode_one::<()>(&payload).unwrap(),
+            _ => panic!("\n🛑 place_bet failed\n"),
+        };
+    })
+    .unwrap();
 
-    let res = pic
-        .update_call(
-            dan2_individual_template_canister_id,
-            reclaim_principal_id,
-            "load_snapshot",
-            candid::encode_args((dan_snap_len as u64,)).unwrap(),
-        )
-        .map(|reply_payload| {
-            let payload: _ = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 place_bet failed\n"),
-            };
-            payload
-        })
-        .unwrap();
+    pic.update_call(
+        dan2_individual_template_canister_id,
+        reclaim_principal_id,
+        "load_snapshot",
+        candid::encode_args((dan_snap_len as u64,)).unwrap(),
+    )
+    .map(|reply_payload| {
+        match reply_payload {
+            WasmResult::Reply(payload) => candid::decode_one::<()>(&payload).unwrap(),
+            _ => panic!("\n🛑 place_bet failed\n"),
+        };
+    })
+    .unwrap();
 
     // Query Alice canister for info
 
@@ -1083,7 +1069,7 @@ fn download_snapshot_test() {
             alice2_individual_template_canister_id,
             alice_principal_id,
             "get_posts_of_this_user_profile_with_pagination",
-            candid::encode_args((0 as u64, 5 as u64)).unwrap(),
+            candid::encode_args((0_u64, 5_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let profile: Result<Vec<PostDetailsForFrontend>, GetPostsOfUserProfileError> =
@@ -1102,7 +1088,7 @@ fn download_snapshot_test() {
             bob2_individual_template_canister_id,
             bob_principal_id,
             "get_hot_or_not_bets_placed_by_this_profile_with_pagination",
-            candid::encode_args((0 as usize,)).unwrap(),
+            candid::encode_args((0_usize,)).unwrap(),
         )
         .map(|reply_payload| {
             let profile: Vec<PlacedBetDetail> = match reply_payload {
@@ -1120,7 +1106,7 @@ fn download_snapshot_test() {
             alice2_individual_template_canister_id,
             alice_principal_id,
             "get_hot_or_not_bet_details_for_this_post",
-            candid::encode_args((0 as usize,)).unwrap(),
+            candid::encode_args((0_usize,)).unwrap(),
         )
         .map(|reply_payload| {
             let profile: BettingStatus = match reply_payload {
@@ -1138,7 +1124,7 @@ fn download_snapshot_test() {
             alice2_individual_template_canister_id,
             alice_principal_id,
             "get_hot_or_not_bet_details_for_this_post",
-            candid::encode_args((1 as usize,)).unwrap(),
+            candid::encode_args((1_usize,)).unwrap(),
         )
         .map(|reply_payload| {
             let profile: BettingStatus = match reply_payload {
@@ -1156,7 +1142,7 @@ fn download_snapshot_test() {
             alice2_individual_template_canister_id,
             alice_principal_id,
             "get_principals_this_profile_follows_paginated",
-            candid::encode_args((0 as usize,)).unwrap(),
+            candid::encode_args((0_usize,)).unwrap(),
         )
         .map(|reply_payload| {
             let profile: Vec<(FollowEntryId, FollowEntryDetail)> = match reply_payload {
@@ -1174,7 +1160,7 @@ fn download_snapshot_test() {
             alice2_individual_template_canister_id,
             alice_principal_id,
             "get_principals_that_follow_this_profile_paginated",
-            candid::encode_args((0 as usize,)).unwrap(),
+            candid::encode_args((0_usize,)).unwrap(),
         )
         .map(|reply_payload| {
             let profile: Vec<(FollowEntryId, FollowEntryDetail)> = match reply_payload {
@@ -1192,7 +1178,7 @@ fn download_snapshot_test() {
             alice2_individual_template_canister_id,
             alice_principal_id,
             "get_user_utility_token_transaction_history_with_pagination",
-            candid::encode_args((0 as u64, 5 as u64)).unwrap(),
+            candid::encode_args((0_u64, 5_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let profile: Result<

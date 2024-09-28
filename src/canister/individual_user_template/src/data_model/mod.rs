@@ -14,21 +14,19 @@ use shared_utils::{
         device_id::DeviceIdentity,
         follow::FollowData,
         hot_or_not::{
-            BetDetails, GlobalBetId, GlobalRoomId, PlacedBetDetail, RoomDetailsV1, RoomId,
-            SlotDetailsV1, SlotId, StablePrincipal,
+            BetDetails, GlobalBetId, GlobalRoomId, PlacedBetDetail, RoomDetailsV1, SlotDetailsV1,
+            SlotId, StablePrincipal,
         },
         migration::MigrationInfo,
         ml_data::{MLFeedCacheItem, SuccessHistoryItem, SuccessHistoryItemV1, WatchHistoryItem},
-        post::{FeedScore, Post, PostViewStatistics},
+        post::Post,
         profile::UserProfile,
         session::SessionType,
         token::TokenBalance,
     },
     common::types::{
-        app_primitive_type::PostId,
-        known_principal::KnownPrincipalMap,
-        top_posts::{post_score_index::PostScoreIndex, post_score_index_item::PostStatus},
-        version_details::VersionDetails,
+        app_primitive_type::PostId, known_principal::KnownPrincipalMap,
+        top_posts::post_score_index::PostScoreIndex, version_details::VersionDetails,
     },
 };
 

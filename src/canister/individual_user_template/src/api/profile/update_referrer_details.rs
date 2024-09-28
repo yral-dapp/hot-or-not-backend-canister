@@ -1,8 +1,7 @@
 use ic_cdk::{call, caller};
 use ic_cdk_macros::update;
 use shared_utils::canister_specific::individual_user_template::types::{
-    profile::{self, UserCanisterDetails},
-    session::SessionType,
+    profile::UserCanisterDetails, session::SessionType,
 };
 
 use crate::{

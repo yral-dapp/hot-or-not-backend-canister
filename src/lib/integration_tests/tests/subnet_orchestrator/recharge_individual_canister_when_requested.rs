@@ -12,11 +12,6 @@ fn recharge_individual_canister_when_requested() {
 
     let alice_principal = get_mock_user_alice_principal_id();
     let bob_princpal = get_mock_user_bob_principal_id();
-    let mut bob_winnigs = 0_u64;
-    let mut charlie_winnings = 0_u64;
-    let mut dan_winnings = 0_u64;
-    let mut lucy_winnings = 0_u64;
-    let mut tom_winnigns = 0_u64;
 
     let platform_orchestrator_canister_id = known_principal_map
         .get(&KnownPrincipalType::CanisterIdPlatformOrchestrator)
@@ -62,7 +57,7 @@ fn recharge_individual_canister_when_requested() {
         })
         .unwrap();
 
-    for i in 0..50 {
+    for _ in 0..50 {
         pocket_ic.tick();
     }
 

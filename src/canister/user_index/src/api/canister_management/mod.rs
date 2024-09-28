@@ -5,7 +5,7 @@ use ic_cdk::{
         call::CallResult,
         is_controller,
         management_canister::{
-            main::{canister_status, CanisterInstallMode, CanisterStatusResponse},
+            main::{canister_status, CanisterStatusResponse},
             provisional::CanisterIdRecord,
         },
     },
@@ -14,20 +14,14 @@ use ic_cdk::{
 use ic_cdk_macros::{query, update};
 use shared_utils::{
     canister_specific::{
-        individual_user_template::types::{
-            arg::IndividualUserTemplateInitArgs, session::SessionType,
-        },
-        user_index::types::RecycleStatus,
+        individual_user_template::types::session::SessionType, user_index::types::RecycleStatus,
     },
     common::{
         types::{
             known_principal::KnownPrincipalType,
             wasm::{CanisterWasm, WasmType},
         },
-        utils::{
-            permissions::is_reclaim_canister_id, system_time::get_current_system_time,
-            task::run_task_concurrently,
-        },
+        utils::{permissions::is_reclaim_canister_id, system_time::get_current_system_time},
     },
 };
 
@@ -65,7 +59,7 @@ pub async fn set_permission_to_upgrade_individual_canisters(flag: bool) -> Strin
             .borrow_mut()
             .allow_upgrades_for_individual_canisters = flag;
     });
-    return "Success".to_string();
+    "Success".to_string()
 }
 
 #[query]

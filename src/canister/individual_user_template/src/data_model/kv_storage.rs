@@ -5,18 +5,12 @@ use crate::CANISTER_DATA;
 use super::memory::{
     get_kv_storage_namespace_key_value_memory, get_kv_storage_namespace_memory, Memory,
 };
-use candid::{CandidType, Decode, Encode, Principal};
-use ic_cdk::api::time;
+use candid::Principal;
 use ic_stable_structures::{storable::Bound, StableBTreeMap, Storable};
 use serde::{Deserialize, Serialize};
-use shared_utils::{
-    canister_specific::individual_user_template::types::kv_storage::{
-        NamespaceErrors, NamespaceForFrontend,
-    },
-    common::types::app_primitive_type::PostId,
+use shared_utils::canister_specific::individual_user_template::types::kv_storage::{
+    NamespaceErrors, NamespaceForFrontend,
 };
-
-type NamespaceId = u64;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Namespace {

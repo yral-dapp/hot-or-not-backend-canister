@@ -170,7 +170,7 @@ impl Post {
             description: self.description.clone(),
             hashtags: self.hashtags.clone(),
             video_uid: self.video_uid.clone(),
-            status: self.status.clone(),
+            status: self.status,
             total_view_count: self.view_stats.total_view_count,
             like_count: self.likes.len() as u64,
             is_nsfw: self.is_nsfw,
@@ -413,7 +413,7 @@ impl Post {
 
 #[cfg(test)]
 mod test {
-    use std::{fs::File, time::Instant};
+    use std::time::SystemTime;
 
     use crate::canister_specific::individual_user_template::types::hot_or_not::{
         test_hot_or_not::setup_room_and_bet_details_map, BetDirection,

@@ -89,7 +89,7 @@ pub fn get_new_pocket_ic_env() -> (PocketIc, KnownPrincipalMap) {
         candid::encode_one(platform_orchestrator_init_args).unwrap(),
         Some(super_admin),
     );
-    for i in 0..30 {
+    for _ in 0..30 {
         pocket_ic.tick()
     }
     pocket_ic
@@ -160,7 +160,7 @@ pub fn get_new_pocket_ic_env() -> (PocketIc, KnownPrincipalMap) {
         CANISTER_INITIAL_CYCLES_FOR_SPAWNING_CANISTERS,
     );
     let cycles_minting_canister_init_args = CyclesMintingCanisterInitPayload {
-        ledger_canister_id: ledger_canister_id,
+        ledger_canister_id,
         governance_canister_id: CanisterId::anonymous(),
         minting_account_id: Some(minting_account.to_string()),
         last_purged_notification: Some(0),
@@ -186,7 +186,7 @@ pub fn get_new_pocket_ic_env() -> (PocketIc, KnownPrincipalMap) {
         )
         .unwrap();
 
-    for i in 0..50 {
+    for _ in 0..50 {
         pocket_ic.tick();
     }
 

@@ -18,7 +18,7 @@ use shared_utils::{
 };
 use test_utils::setup::test_constants::{
     get_mock_user_alice_principal_id, get_mock_user_bob_principal_id,
-    get_mock_user_charlie_principal_id, get_mock_user_dan_principal_id,
+    get_mock_user_charlie_principal_id,
 };
 
 const POST_CACHE_WASM_PATH: &str =
@@ -99,7 +99,7 @@ fn hot_or_not_timely_update_test() {
         video_uid: "abcd#1234".to_string(),
         creator_consent_for_inclusion_in_hot_or_not: true,
     };
-    let res = pic
+    let _res = pic
         .update_call(
             alice_individual_template_canister_id,
             alice_principal_id,
@@ -122,7 +122,7 @@ fn hot_or_not_timely_update_test() {
         video_uid: "abcd#12345".to_string(),
         creator_consent_for_inclusion_in_hot_or_not: true,
     };
-    let res = pic
+    let _res = pic
         .update_call(
             alice_individual_template_canister_id,
             alice_principal_id,
@@ -148,7 +148,7 @@ fn hot_or_not_timely_update_test() {
         video_uid: "abcd#123456".to_string(),
         creator_consent_for_inclusion_in_hot_or_not: true,
     };
-    let res = pic
+    let _res = pic
         .update_call(
             alice_individual_template_canister_id,
             alice_principal_id,
@@ -172,7 +172,7 @@ fn hot_or_not_timely_update_test() {
             post_cache_canister_id,
             bob_principal_id,
             "get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed_cursor",
-            candid::encode_args((0 as u64, 10 as u64)).unwrap(),
+            candid::encode_args((0_u64, 10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let posts: Result<Vec<PostScoreIndexItemV1>, TopPostsFetchError> = match reply_payload {
@@ -195,7 +195,7 @@ fn hot_or_not_timely_update_test() {
             post_cache_canister_id,
             bob_principal_id,
             "get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed_cursor",
-            candid::encode_args((0 as u64, 10 as u64)).unwrap(),
+            candid::encode_args((0_u64, 10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let posts: Result<Vec<PostScoreIndexItemV1>, TopPostsFetchError> = match reply_payload {
@@ -215,29 +215,28 @@ fn hot_or_not_timely_update_test() {
     // Update to redytoview
     // Alice updates the post to ready to view
 
-    let res = pic
-        .update_call(
-            alice_individual_template_canister_id,
-            admin_principal_id,
-            "update_post_as_ready_to_view",
-            candid::encode_args((0 as u64,)).unwrap(),
-        )
-        .map(|reply_payload| {
-            let _ = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 update_post_status failed\n"),
-            };
-        })
-        .unwrap();
+    pic.update_call(
+        alice_individual_template_canister_id,
+        admin_principal_id,
+        "update_post_as_ready_to_view",
+        candid::encode_args((0_u64,)).unwrap(),
+    )
+    .map(|reply_payload| {
+        match reply_payload {
+            WasmResult::Reply(payload) => candid::decode_one::<()>(&payload).unwrap(),
+            _ => panic!("\n🛑 update_post_status failed\n"),
+        };
+    })
+    .unwrap();
 
     // Get post details
 
-    let res = pic
+    let _res = pic
         .query_call(
             alice_individual_template_canister_id,
             admin_principal_id,
             "get_entire_individual_post_detail_by_id",
-            candid::encode_args((0 as u64,)).unwrap(),
+            candid::encode_args((0_u64,)).unwrap(),
         )
         .map(|reply_payload| {
             let post: Result<Post, String> = match reply_payload {
@@ -254,7 +253,7 @@ fn hot_or_not_timely_update_test() {
             post_cache_canister_id,
             bob_principal_id,
             "get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed_cursor",
-            candid::encode_args((0 as u64, 10 as u64)).unwrap(),
+            candid::encode_args((0_u64, 10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let posts: Result<Vec<PostScoreIndexItemV1>, TopPostsFetchError> = match reply_payload {

@@ -15,11 +15,11 @@ pub mod configuration;
 pub mod memory;
 
 const fn _default_true() -> bool {
-    return true;
+    true
 }
 
 fn _default_vec_principal() -> HashSet<Principal> {
-    return HashSet::new();
+    HashSet::new()
 }
 
 #[derive(Serialize, Deserialize)]

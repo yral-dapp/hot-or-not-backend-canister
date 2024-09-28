@@ -53,10 +53,10 @@ async fn update_subnet_known_principal(
     know_principal_type: KnownPrincipalType,
     value: Principal,
 ) -> Result<String, String> {
-    call(
+    call::<_, ()>(
         subnet_id,
         "update_well_known_principal",
-        (know_principal_type.clone(), value),
+        (know_principal_type, value),
     )
     .await
     .map_err(|e| e.1)?;

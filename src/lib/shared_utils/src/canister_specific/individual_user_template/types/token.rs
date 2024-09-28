@@ -2,7 +2,6 @@ use std::collections::BTreeMap;
 
 use candid::{CandidType, Deserialize};
 use serde::Serialize;
-use serde_json_any_key::*;
 
 use crate::common::types::utility_token::token_event::{
     HotOrNotOutcomePayoutEvent, MintEvent, StakeEvent, TokenEvent,

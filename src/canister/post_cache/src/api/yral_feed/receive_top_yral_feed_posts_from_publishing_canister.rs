@@ -1,12 +1,8 @@
 use ic_cdk_macros::update;
-use shared_utils::common::types::top_posts::post_score_index_item::{
-    PostScoreIndexItem, PostScoreIndexItemV1,
-};
+use shared_utils::common::types::top_posts::post_score_index_item::PostScoreIndexItemV1;
 
 use crate::{
-    api::feed::trigger_update_indexes::{
-        self, trigger_reconcile_scores, trigger_update_yral_index,
-    },
+    api::feed::trigger_update_indexes::{trigger_reconcile_scores, trigger_update_yral_index},
     data_model::CanisterData,
     CANISTER_DATA,
 };
@@ -104,9 +100,6 @@ mod test {
         let posts_index_sorted_by_yral_feed_score =
             &canister_data.posts_index_sorted_by_yral_feed_score;
 
-        assert_eq!(
-            posts_index_sorted_by_yral_feed_score.iter().count(),
-            3
-        );
+        assert_eq!(posts_index_sorted_by_yral_feed_score.iter().count(), 3);
     }
 }

@@ -25,7 +25,7 @@ fn update_post_hot_or_not_feed_impl(post: PostScoreIndexItemV1, canister_data: &
         .item_presence_index;
 
     let global_id = (post.publisher_canister_id, post.post_id);
-    if let Some(_) = item_prescence_index.get(&global_id) {
+    if item_prescence_index.get(&global_id).is_some() {
         if post.status == PostStatus::BannedDueToUserReporting {
             canister_data
                 .posts_index_sorted_by_hot_or_not_feed_score_v1

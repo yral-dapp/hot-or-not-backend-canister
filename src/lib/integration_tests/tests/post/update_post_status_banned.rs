@@ -5,8 +5,7 @@ use pocket_ic::{PocketIc, WasmResult};
 use shared_utils::{
     canister_specific::{
         individual_user_template::types::{
-            arg::IndividualUserTemplateInitArgs,
-            post::{Post, PostDetailsFromFrontend},
+            arg::IndividualUserTemplateInitArgs, post::PostDetailsFromFrontend,
         },
         post_cache::types::arg::PostCacheInitArgs,
     },
@@ -106,7 +105,7 @@ fn update_post_status_banned() {
         video_uid: "abcd#1234".to_string(),
         creator_consent_for_inclusion_in_hot_or_not: true,
     };
-    let res = pic
+    let _res = pic
         .update_call(
             alice_individual_template_canister_id,
             alice_principal_id,
@@ -129,7 +128,7 @@ fn update_post_status_banned() {
         video_uid: "abcd#12345".to_string(),
         creator_consent_for_inclusion_in_hot_or_not: true,
     };
-    let res = pic
+    let _res = pic
         .update_call(
             alice_individual_template_canister_id,
             alice_principal_id,
@@ -158,7 +157,7 @@ fn update_post_status_banned() {
         video_uid: "abcd#123456".to_string(),
         creator_consent_for_inclusion_in_hot_or_not: true,
     };
-    let res = pic
+    let _res = pic
         .update_call(
             alice_individual_template_canister_id,
             alice_principal_id,
@@ -177,48 +176,45 @@ fn update_post_status_banned() {
     // Update to redytoview
     // Alice updates the post to ready to view
 
-    let res = pic
-        .update_call(
-            alice_individual_template_canister_id,
-            admin_principal_id,
-            "update_post_as_ready_to_view",
-            candid::encode_args((0 as u64,)).unwrap(),
-        )
-        .map(|reply_payload| {
-            let _ = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 update_post_status failed\n"),
-            };
-        })
-        .unwrap();
-    let res = pic
-        .update_call(
-            alice_individual_template_canister_id,
-            admin_principal_id,
-            "update_post_as_ready_to_view",
-            candid::encode_args((1 as u64,)).unwrap(),
-        )
-        .map(|reply_payload| {
-            let _ = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 update_post_status failed\n"),
-            };
-        })
-        .unwrap();
-    let res = pic
-        .update_call(
-            alice_individual_template_canister_id,
-            admin_principal_id,
-            "update_post_as_ready_to_view",
-            candid::encode_args((2 as u64,)).unwrap(),
-        )
-        .map(|reply_payload| {
-            let _ = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 update_post_status failed\n"),
-            };
-        })
-        .unwrap();
+    pic.update_call(
+        alice_individual_template_canister_id,
+        admin_principal_id,
+        "update_post_as_ready_to_view",
+        candid::encode_args((0_u64,)).unwrap(),
+    )
+    .map(|reply_payload| {
+        match reply_payload {
+            WasmResult::Reply(payload) => candid::decode_one::<()>(&payload).unwrap(),
+            _ => panic!("\n🛑 update_post_status failed\n"),
+        };
+    })
+    .unwrap();
+    pic.update_call(
+        alice_individual_template_canister_id,
+        admin_principal_id,
+        "update_post_as_ready_to_view",
+        candid::encode_args((1_u64,)).unwrap(),
+    )
+    .map(|reply_payload| {
+        match reply_payload {
+            WasmResult::Reply(payload) => candid::decode_one::<()>(&payload).unwrap(),
+            _ => panic!("\n🛑 update_post_status failed\n"),
+        };
+    })
+    .unwrap();
+    pic.update_call(
+        alice_individual_template_canister_id,
+        admin_principal_id,
+        "update_post_as_ready_to_view",
+        candid::encode_args((2_u64,)).unwrap(),
+    )
+    .map(|reply_payload| {
+        match reply_payload {
+            WasmResult::Reply(payload) => candid::decode_one::<()>(&payload).unwrap(),
+            _ => panic!("\n🛑 update_post_status failed\n"),
+        };
+    })
+    .unwrap();
 
     // Call post cache canister to get the home feed posts
     let res = pic
@@ -226,7 +222,7 @@ fn update_post_status_banned() {
             post_cache_canister_id,
             bob_principal_id,
             "get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed_cursor",
-            candid::encode_args((0 as u64, 10 as u64)).unwrap(),
+            candid::encode_args((0_u64, 10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let posts: Result<Vec<PostScoreIndexItemV1>, TopPostsFetchError> = match reply_payload {
@@ -249,7 +245,7 @@ fn update_post_status_banned() {
             post_cache_canister_id,
             bob_principal_id,
             "get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed_cursor",
-            candid::encode_args((0 as u64, 10 as u64)).unwrap(),
+            candid::encode_args((0_u64, 10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let posts: Result<Vec<PostScoreIndexItemV1>, TopPostsFetchError> = match reply_payload {
@@ -270,16 +266,16 @@ fn update_post_status_banned() {
     // assert_eq!(posts[2].status, PostStatus::ReadyToView);
 
     // Call update_post_status on Alice canister
-    let res = pic
+    let _res = pic
         .update_call(
             alice_individual_template_canister_id,
             admin_principal_id,
             "update_post_status",
-            candid::encode_args((0 as u64, PostStatus::BannedDueToUserReporting)).unwrap(),
+            candid::encode_args((0_u64, PostStatus::BannedDueToUserReporting)).unwrap(),
         )
         .map(|reply_payload| {
-            let _ = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+            match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one::<()>(&payload).unwrap(),
                 _ => panic!("\n🛑 update_post_status failed\n"),
             };
         });
@@ -292,7 +288,7 @@ fn update_post_status_banned() {
             post_cache_canister_id,
             bob_principal_id,
             "get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed_cursor",
-            candid::encode_args((0 as u64, 10 as u64)).unwrap(),
+            candid::encode_args((0_u64, 10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let posts: Result<Vec<PostScoreIndexItemV1>, TopPostsFetchError> = match reply_payload {
@@ -314,7 +310,7 @@ fn update_post_status_banned() {
             post_cache_canister_id,
             bob_principal_id,
             "get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed_cursor",
-            candid::encode_args((0 as u64, 10 as u64)).unwrap(),
+            candid::encode_args((0_u64, 10_u64)).unwrap(),
         )
         .map(|reply_payload| {
             let posts: Result<Vec<PostScoreIndexItemV1>, TopPostsFetchError> = match reply_payload {

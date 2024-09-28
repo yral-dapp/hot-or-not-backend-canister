@@ -83,13 +83,7 @@ impl Ord for PostScoreIndexItem {
 
 impl PartialOrd for PostScoreIndexItem {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        match other.publisher_canister_id.cmp(&self.publisher_canister_id) {
-            Ordering::Equal => match other.post_id.cmp(&self.post_id) {
-                Ordering::Equal => Some(Ordering::Equal),
-                _ => Some(other.score.cmp(&self.score)),
-            },
-            _ => Some(other.score.cmp(&self.score)),
-        }
+        Some(self.cmp(other))
     }
 }
 

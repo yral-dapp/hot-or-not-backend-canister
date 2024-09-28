@@ -7,7 +7,7 @@ use crate::{data_model::CanisterData, CANISTER_DATA};
 /// #### Access Control
 /// Only the user whose profile details are stored in this canister can add the device identity.
 #[update]
-fn add_device_id(identity_token: String) -> Result<bool, (String)> {
+fn add_device_id(identity_token: String) -> Result<bool, String> {
     // * access control
     let current_caller = ic_cdk::caller();
     let my_principal_id = CANISTER_DATA
@@ -31,7 +31,7 @@ fn add_device_id(identity_token: String) -> Result<bool, (String)> {
     if response {
         Ok(true)
     } else {
-        Err(("Failed to add device id.".to_string()))
+        Err("Failed to add device id.".to_string())
     }
 }
 

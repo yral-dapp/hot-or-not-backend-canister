@@ -41,8 +41,7 @@ pub fn trigger_update_hot_or_not_index() {
                 .take_while(|(&created_at, _)| {
                     now.duration_since(created_at).unwrap_or_default() >= LATEST_POSTS_WINDOW
                 })
-                .map(|(_, post_ids)| post_ids)
-                .flatten()
+                .flat_map(|(_, post_ids)| post_ids)
                 .cloned()
                 .map(|post_id| {
                     canister_data
@@ -100,8 +99,7 @@ pub fn trigger_update_yral_index() {
                 .take_while(|(&created_at, _)| {
                     now.duration_since(created_at).unwrap_or_default() >= LATEST_POSTS_WINDOW
                 })
-                .map(|(_, post_ids)| post_ids)
-                .flatten()
+                .flat_map(|(_, post_ids)| post_ids)
                 .cloned()
                 .map(|post_id| {
                     canister_data
@@ -153,7 +151,7 @@ pub fn trigger_reconcile_scores() {
                 .posts_index_sorted_by_home_feed_score_v1
                 .iter()
                 .take(RECONCILE_SCORES_UPTO)
-                .map(|post| (post.publisher_canister_id.clone(), post.post_id))
+                .map(|post| (post.publisher_canister_id, post.post_id))
                 .collect::<Vec<(Principal, u64)>>()
         });
         // Change (Principal, u64) to HashMap with Principal as key and Vec<u64> as value
@@ -184,7 +182,7 @@ pub fn trigger_reconcile_scores() {
                 .posts_index_sorted_by_hot_or_not_feed_score_v1
                 .iter()
                 .take(RECONCILE_SCORES_UPTO)
-                .map(|post| (post.publisher_canister_id.clone(), post.post_id))
+                .map(|post| (post.publisher_canister_id, post.post_id))
                 .collect::<Vec<(Principal, u64)>>()
         });
         // Change (Principal, u64) to HashMap with Principal as key and Vec<u64> as value
@@ -205,7 +203,7 @@ pub fn trigger_reconcile_scores() {
                 .posts_index_sorted_by_yral_feed_score
                 .iter()
                 .take(RECONCILE_SCORES_UPTO)
-                .map(|post| (post.publisher_canister_id.clone(), post.post_id))
+                .map(|post| (post.publisher_canister_id, post.post_id))
                 .collect::<Vec<(Principal, u64)>>()
         });
         // Change (Principal, u64) to HashMap with Principal as key and Vec<u64> as value

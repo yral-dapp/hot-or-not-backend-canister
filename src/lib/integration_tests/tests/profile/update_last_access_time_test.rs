@@ -1,11 +1,8 @@
 use candid::Principal;
 use ic_test_state_machine_client::WasmResult;
 use shared_utils::{
-    canister_specific::individual_user_template::types::{
-        profile::UserProfileDetailsForFrontend, session::SessionType,
-    },
+    canister_specific::individual_user_template::types::session::SessionType,
     common::types::known_principal::KnownPrincipalType,
-    constant::GLOBAL_SUPER_ADMIN_USER_ID,
 };
 use test_utils::setup::{
     env::v1::{get_initialized_env_with_provisioned_known_canisters, get_new_state_machine},

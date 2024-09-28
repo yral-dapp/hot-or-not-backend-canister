@@ -1,5 +1,3 @@
-use std::{future::Future, pin::Pin};
-
 use candid::{CandidType, Principal};
 use ic_cdk_macros::update;
 use serde::{Deserialize, Serialize};
@@ -10,11 +8,8 @@ use shared_utils::{
 
 use super::canister_management::{
     provision_subnet_orchestrator::provision_subnet_orchestrator_canister,
-    remove_subnet_orchestrator_from_available_list::{
-        self, remove_subnet_orchestrators_from_available_list,
-    },
-    upgrade_canisters_in_network::{self, upgrade_canisters_in_network},
-    upload_wasms::upload_wasms,
+    remove_subnet_orchestrator_from_available_list::remove_subnet_orchestrators_from_available_list,
+    upgrade_canisters_in_network::upgrade_canisters_in_network, upload_wasms::upload_wasms,
 };
 
 #[derive(CandidType, Serialize, Deserialize)]

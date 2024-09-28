@@ -6,7 +6,7 @@ fn get_path(url: &str) -> Option<&str> {
     url.split('?').next()
 }
 
-fn retrieve(path: &str, body: Vec<u8>) -> Option<Vec<u8>> {
+fn retrieve(path: &str, _body: Vec<u8>) -> Option<Vec<u8>> {
     match path {
         "/metrics" => Some(metrics().as_bytes().to_vec()),
         _ => None,

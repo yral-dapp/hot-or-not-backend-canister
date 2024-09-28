@@ -22,8 +22,7 @@ fn get_well_known_principal_value_impl(
 #[cfg(test)]
 mod test {
     use test_utils::setup::test_constants::{
-        get_mock_canister_id_post_cache,
-        get_mock_canister_id_user_index,
+        get_mock_canister_id_post_cache, get_mock_canister_id_user_index,
     };
 
     use crate::data_model::CanisterData;

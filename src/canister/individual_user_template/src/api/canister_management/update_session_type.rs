@@ -1,6 +1,3 @@
-use std::borrow::Borrow;
-
-use ic_cdk::{caller, id, notify};
 use ic_cdk_macros::update;
 use shared_utils::{
     canister_specific::individual_user_template::types::session::SessionType,

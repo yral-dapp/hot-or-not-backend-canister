@@ -1,8 +1,4 @@
-use std::borrow::Cow;
-
-use candid::{candid_method, types::principal, CandidType};
 use ic_cdk::api;
-use serde::Deserialize;
 use shared_utils::common::{
     types::http::{HeaderField, HttpRequest, HttpResponse},
     utils::{get_heap_memory_size, get_stable_memory_size},
@@ -17,7 +13,7 @@ fn metrics() -> String {
     let timestamp = api::time() / 1000000;
     let canister_type = "platform_orchestrator";
 
-    vec![
+    [
         format!(
             "cycle_balance{{type=\"{}\"}} {} {}",
             canister_type,
@@ -40,7 +36,7 @@ fn metrics() -> String {
         )
         .as_str(),
     ]
-    .connect("\n")
+    .join("\n")
 }
 
 fn retrieve(path: &str) -> Option<Vec<u8>> {

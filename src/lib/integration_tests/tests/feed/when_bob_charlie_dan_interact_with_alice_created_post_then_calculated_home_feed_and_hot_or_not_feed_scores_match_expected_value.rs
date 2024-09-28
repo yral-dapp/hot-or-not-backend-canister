@@ -175,7 +175,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
 
     assert_eq!(returned_posts.len(), 1);
 
-    let returned_post = returned_posts.get(0).unwrap();
+    let returned_post = returned_posts.first().unwrap();
     assert_eq!(returned_post.post_id, newly_created_post_id);
     assert_eq!(returned_post.score, 3000);
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
@@ -198,7 +198,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
 
     assert_eq!(returned_posts.len(), 1);
 
-    let returned_post = returned_posts.get(0).unwrap();
+    let returned_post = returned_posts.first().unwrap();
     assert_eq!(returned_post.post_id, newly_created_post_id);
     assert_eq!(returned_post.score, 3000);
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
@@ -240,7 +240,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
 
     assert_eq!(returned_posts.len(), 1);
 
-    let returned_post = returned_posts.get(0).unwrap();
+    let returned_post = returned_posts.first().unwrap();
     assert_eq!(returned_post.post_id, newly_created_post_id);
     assert_eq!(returned_post.score, 4_840);
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
@@ -263,7 +263,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
 
     assert_eq!(returned_posts.len(), 1);
 
-    let returned_post = returned_posts.get(0).unwrap();
+    let returned_post = returned_posts.first().unwrap();
     assert_eq!(returned_post.post_id, newly_created_post_id);
     assert_eq!(returned_post.score, 4_840);
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
@@ -305,7 +305,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
 
     assert_eq!(returned_posts.len(), 1);
 
-    let returned_post = returned_posts.get(0).unwrap();
+    let returned_post = returned_posts.first().unwrap();
     assert_eq!(returned_post.post_id, newly_created_post_id);
     assert_eq!(returned_post.score, 6_840);
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
@@ -328,7 +328,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
 
     assert_eq!(returned_posts.len(), 1);
 
-    let returned_post = returned_posts.get(0).unwrap();
+    let returned_post = returned_posts.first().unwrap();
     assert_eq!(returned_post.post_id, newly_created_post_id);
     assert_eq!(returned_post.score, 6_840);
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
@@ -388,7 +388,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
 
     assert_eq!(returned_posts.len(), 1);
 
-    let returned_post = returned_posts.get(0).unwrap();
+    let returned_post = returned_posts.first().unwrap();
     assert_eq!(returned_post.post_id, newly_created_post_id);
     assert_eq!(returned_post.score, 7_840);
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
@@ -411,7 +411,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
 
     assert_eq!(returned_posts.len(), 1);
 
-    let returned_post = returned_posts.get(0).unwrap();
+    let returned_post = returned_posts.first().unwrap();
     assert_eq!(returned_post.post_id, newly_created_post_id);
     assert_eq!(returned_post.score, 6_840);
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
@@ -453,7 +453,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
 
     assert_eq!(returned_posts.len(), 1);
 
-    let returned_post = returned_posts.get(0).unwrap();
+    let returned_post = returned_posts.first().unwrap();
     assert_eq!(returned_post.post_id, newly_created_post_id);
     assert_eq!(returned_post.score, 6_549);
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
@@ -476,7 +476,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
 
     assert_eq!(returned_posts.len(), 1);
 
-    let returned_post = returned_posts.get(0).unwrap();
+    let returned_post = returned_posts.first().unwrap();
     assert_eq!(returned_post.post_id, newly_created_post_id);
     assert_eq!(returned_post.score, 5_549);
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
@@ -535,7 +535,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
 
     assert_eq!(returned_posts.len(), 1);
 
-    let returned_post = returned_posts.get(0).unwrap();
+    let returned_post = returned_posts.first().unwrap();
     assert_eq!(returned_post.post_id, newly_created_post_id);
     assert_eq!(returned_post.score, 6_049);
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
@@ -558,7 +558,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
 
     assert_eq!(returned_posts.len(), 1);
 
-    let returned_post = returned_posts.get(0).unwrap();
+    let returned_post = returned_posts.first().unwrap();
     assert_eq!(returned_post.post_id, newly_created_post_id);
     assert_eq!(returned_post.score, 7_549);
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
@@ -600,7 +600,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
 
     assert_eq!(returned_posts.len(), 1);
 
-    let returned_post = returned_posts.get(0).unwrap();
+    let returned_post = returned_posts.first().unwrap();
     assert_eq!(returned_post.post_id, newly_created_post_id);
     assert_eq!(returned_post.score, 5_642);
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
@@ -623,7 +623,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
 
     assert_eq!(returned_posts.len(), 1);
 
-    let returned_post = returned_posts.get(0).unwrap();
+    let returned_post = returned_posts.first().unwrap();
     assert_eq!(returned_post.post_id, newly_created_post_id);
     assert_eq!(returned_post.score, 7_142);
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
@@ -665,7 +665,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
 
     assert_eq!(returned_posts.len(), 1);
 
-    let returned_post = returned_posts.get(0).unwrap();
+    let returned_post = returned_posts.first().unwrap();
     assert_eq!(returned_post.post_id, newly_created_post_id);
     assert_eq!(returned_post.score, 6_267);
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
@@ -688,7 +688,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
 
     assert_eq!(returned_posts.len(), 1);
 
-    let returned_post = returned_posts.get(0).unwrap();
+    let returned_post = returned_posts.first().unwrap();
     assert_eq!(returned_post.post_id, newly_created_post_id);
     assert_eq!(returned_post.score, 7_767);
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
@@ -730,7 +730,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
 
     assert_eq!(returned_posts.len(), 1);
 
-    let returned_post = returned_posts.get(0).unwrap();
+    let returned_post = returned_posts.first().unwrap();
     assert_eq!(returned_post.post_id, newly_created_post_id);
     assert_eq!(returned_post.score, 12_517);
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
@@ -753,7 +753,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
 
     assert_eq!(returned_posts.len(), 1);
 
-    let returned_post = returned_posts.get(0).unwrap();
+    let returned_post = returned_posts.first().unwrap();
     assert_eq!(returned_post.post_id, newly_created_post_id);
     assert_eq!(returned_post.score, 14_017);
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
@@ -812,7 +812,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
 
     assert_eq!(returned_posts.len(), 1);
 
-    let returned_post = returned_posts.get(0).unwrap();
+    let returned_post = returned_posts.first().unwrap();
     assert_eq!(returned_post.post_id, newly_created_post_id);
     assert_eq!(returned_post.score, 12_683);
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
@@ -835,7 +835,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
 
     assert_eq!(returned_posts.len(), 1);
 
-    let returned_post = returned_posts.get(0).unwrap();
+    let returned_post = returned_posts.first().unwrap();
     assert_eq!(returned_post.post_id, newly_created_post_id);
     assert_eq!(returned_post.score, 13_353);
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
@@ -877,7 +877,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
 
     assert_eq!(returned_posts.len(), 1);
 
-    let returned_post = returned_posts.get(0).unwrap();
+    let returned_post = returned_posts.first().unwrap();
     assert_eq!(returned_post.post_id, newly_created_post_id);
     assert_eq!(returned_post.score, 9_810);
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
@@ -900,7 +900,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
 
     assert_eq!(returned_posts.len(), 1);
 
-    let returned_post = returned_posts.get(0).unwrap();
+    let returned_post = returned_posts.first().unwrap();
     assert_eq!(returned_post.post_id, newly_created_post_id);
     assert_eq!(returned_post.score, 10_480);
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
@@ -942,7 +942,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
 
     assert_eq!(returned_posts.len(), 1);
 
-    let returned_post = returned_posts.get(0).unwrap();
+    let returned_post = returned_posts.first().unwrap();
     assert_eq!(returned_post.post_id, newly_created_post_id);
     assert_eq!(returned_post.score, 15_366);
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
@@ -965,7 +965,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
 
     assert_eq!(returned_posts.len(), 1);
 
-    let returned_post = returned_posts.get(0).unwrap();
+    let returned_post = returned_posts.first().unwrap();
     assert_eq!(returned_post.post_id, newly_created_post_id);
     assert_eq!(returned_post.score, 16_036);
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);

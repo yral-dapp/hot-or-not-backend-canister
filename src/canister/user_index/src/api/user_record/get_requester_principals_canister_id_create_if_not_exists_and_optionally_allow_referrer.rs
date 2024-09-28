@@ -56,7 +56,10 @@ async fn get_requester_principals_canister_id_create_if_not_exists() -> Result<P
     }
 }
 
-#[deprecated(note = "use get_requester_principals_canister_id_create_if_not_exists instead")]
+#[cfg_attr(
+    not(clippy),
+    deprecated(note = "use get_requester_principals_canister_id_create_if_not_exists instead")
+)]
 #[update]
 async fn get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer(
 ) -> Principal {
@@ -105,8 +108,8 @@ async fn new_user_signup(user_id: Principal) -> Result<Principal, String> {
             .cloned()
     });
 
-    if user_canister_id.is_some() {
-        return Ok(user_canister_id.unwrap());
+    if let Some(user_canister_id) = user_canister_id {
+        return Ok(user_canister_id);
     }
 
     let canister_id_res = CANISTER_DATA
@@ -121,9 +124,13 @@ async fn new_user_signup(user_id: Principal) -> Result<Principal, String> {
     let response = match canister_id_res {
         Ok(canister_id) => {
             //Set owner of canister as this principal
-            call::call(canister_id, "update_profile_owner", (user_id,))
-                .await
-                .map_err(|e| e.1)?;
+            _ = call::call::<_, (Result<(), String>,)>(
+                canister_id,
+                "update_profile_owner",
+                (user_id,),
+            )
+            .await
+            .map_err(|e| e.1)?;
             CANISTER_DATA.with_borrow_mut(|canister_data| {
                 canister_data
                     .user_principal_id_to_canister_id_map
@@ -131,7 +138,7 @@ async fn new_user_signup(user_id: Principal) -> Result<Principal, String> {
             });
 
             //update session type for the user
-            call::call(
+            _ = call::call::<_, (Result<String, String>,)>(
                 canister_id,
                 "update_session_type",
                 (SessionType::AnonymousSession,),
@@ -259,10 +266,7 @@ async fn provision_new_available_canisters(individual_user_template_canister_was
 }
 
 async fn provision_new_backup_canisters(canister_count: u64) {
-    let create_canister_futures = (0..canister_count).map(|_| {
-        let future = create_empty_user_canister();
-        future
-    });
+    let create_canister_futures = (0..canister_count).map(|_| create_empty_user_canister());
 
     let result_callback = |canister_id: Principal| {
         CANISTER_DATA.with_borrow_mut(|canister_data| {

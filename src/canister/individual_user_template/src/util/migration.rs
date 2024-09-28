@@ -1,9 +1,7 @@
-use std::{borrow::BorrowMut, collections::BTreeMap, error::Error};
-
 use candid::Principal;
 use ic_cdk::{
     api::management_canister::main::{canister_info, CanisterInfoRequest},
-    call, caller, id,
+    call, id,
 };
 use shared_utils::{
     canister_specific::individual_user_template::types::{
@@ -17,10 +15,7 @@ use shared_utils::{
     },
 };
 
-use crate::{
-    api::post::add_post_v2::{self, add_post_to_memory},
-    CANISTER_DATA,
-};
+use crate::{api::post::add_post_v2::add_post_to_memory, CANISTER_DATA};
 
 #[derive(PartialEq, Clone, Copy)]
 pub enum SubnetType {
@@ -152,7 +147,7 @@ impl IndividualUser {
 
     async fn transfer_tokens(
         &self,
-        caller: Principal,
+        _caller: Principal,
         to_individual_user: IndividualUser,
     ) -> Result<(), MigrationErrors> {
         let token =
@@ -248,7 +243,7 @@ async fn transfer_posts_task(profile_principal: Principal, to_individual_user: I
     let post_chunks = posts.chunks(10);
 
     for posts in post_chunks {
-        let transfer_res: Result<(Result<(), MigrationErrors>,), MigrationErrors> = call(
+        let _transfer_res: Result<(Result<(), MigrationErrors>,), MigrationErrors> = call(
             to_individual_user.canister_id,
             "receive_data_from_hotornot",
             (profile_principal, 0_u64, posts.to_vec()),

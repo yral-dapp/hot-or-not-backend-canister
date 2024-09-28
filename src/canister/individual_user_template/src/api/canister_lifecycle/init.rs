@@ -51,8 +51,8 @@ pub fn send_canister_metrics() {
 mod test {
     use shared_utils::common::types::known_principal::{KnownPrincipalMap, KnownPrincipalType};
     use test_utils::setup::test_constants::{
-        get_global_super_admin_principal_id,
-        get_mock_canister_id_user_index, get_mock_user_alice_principal_id,
+        get_global_super_admin_principal_id, get_mock_canister_id_user_index,
+        get_mock_user_alice_principal_id,
     };
 
     use super::*;
@@ -78,7 +78,7 @@ mod test {
             url_to_send_canister_metrics_to: Some(
                 "http://metrics-url.com/receive-metrics".to_string(),
             ),
-            version: String::from("v1.0.0")
+            version: String::from("v1.0.0"),
         };
         let mut data = CanisterData::default();
 

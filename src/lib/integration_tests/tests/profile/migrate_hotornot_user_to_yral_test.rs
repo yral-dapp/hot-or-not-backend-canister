@@ -578,8 +578,6 @@ fn test_when_user_tries_to_misuse_to_recieve_tokens_and_posts() {
         pocket_ic.tick();
     }
 
-    let post_cache_canister_id = Principal::anonymous();
-
     pocket_ic
         .update_call(
             platform_canister_id,

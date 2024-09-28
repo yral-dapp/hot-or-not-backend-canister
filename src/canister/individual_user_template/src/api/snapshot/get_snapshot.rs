@@ -1,13 +1,6 @@
-use crate::{
-    data_model::memory::{self, MEMORY_MANAGER},
-    CANISTER_DATA, SNAPSHOT_DATA,
-};
-use candid::Principal;
-use ic_cdk::api::stable;
+use crate::{CANISTER_DATA, SNAPSHOT_DATA};
 use ic_cdk_macros::{query, update};
-use ic_stable_structures::{memory_manager::MemoryId, writer::Writer, Memory};
 use shared_utils::common::utils::permissions::is_reclaim_canister_id;
-use shared_utils::constant::RECLAIM_CANISTER_PRINCIPAL_ID;
 
 use super::CanisterDataForSnapshot;
 
@@ -59,7 +52,7 @@ fn receive_and_save_snaphot(offset: u64, state_bytes: Vec<u8>) {
 }
 
 #[update(guard = "is_reclaim_canister_id")]
-fn load_snapshot(length: u64) {
+fn load_snapshot(_length: u64) {
     let state_bytes =
         SNAPSHOT_DATA.with(|snapshot_data_ref_cell| snapshot_data_ref_cell.borrow().clone());
 

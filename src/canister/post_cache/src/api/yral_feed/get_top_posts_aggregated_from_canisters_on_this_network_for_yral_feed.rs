@@ -1,10 +1,7 @@
 use crate::{data_model::CanisterData, CANISTER_DATA};
-use ic_cdk_macros::query;
 use shared_utils::{
     canister_specific::post_cache::types::arg::NsfwFilter,
-    common::types::top_posts::post_score_index_item::{
-        PostScoreIndexItem, PostScoreIndexItemV1, PostStatus,
-    },
+    common::types::top_posts::post_score_index_item::{PostScoreIndexItemV1, PostStatus},
     pagination::{self, PaginationError},
     types::canister_specific::post_cache::error_types::TopPostsFetchError,
 };
@@ -58,7 +55,7 @@ fn get_top_posts_aggregated_from_canisters_on_this_network_for_yral_feed_cursor_
             true
         };
 
-        let status_filter = if let Some(status) = status.clone() {
+        let status_filter = if let Some(status) = status {
             post_item.status == status
         } else {
             true
@@ -85,7 +82,7 @@ fn get_top_posts_aggregated_from_canisters_on_this_network_for_yral_feed_cursor_
 
     Ok(all_posts
         .iter()
-        .filter(|&post_item| filter_fn(&post_item, nsfw.clone()))
+        .filter(|&post_item| filter_fn(post_item, nsfw.clone()))
         .skip(from_inclusive_index as usize)
         .take(limit as usize)
         .cloned()
@@ -99,8 +96,7 @@ mod test {
     use super::*;
 
     #[test]
-    fn test_get_top_posts_aggregated_from_canisters_on_this_network_for_yral_feed_cursor_impl(
-    ) {
+    fn test_get_top_posts_aggregated_from_canisters_on_this_network_for_yral_feed_cursor_impl() {
         let mut canister_data = CanisterData::default();
         let created_at_now = std::time::SystemTime::now();
         let created_at_earlier = created_at_now - std::time::Duration::from_secs(48 * 60 * 60 + 1);
