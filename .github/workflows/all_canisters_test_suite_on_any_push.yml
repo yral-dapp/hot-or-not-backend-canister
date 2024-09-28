@@ -67,3 +67,7 @@ jobs:
         env:
           POCKET_IC_BIN: ${{ github.workspace }}/pocket-ic
         run: nix-shell --run "cargo test"
+      - name: Run clippy
+        run: nix-shell --run "cargo clippy --all-features -- -Dwarnings --no-deps"
+      - name: Run cargofmt
+        run: nix-shell --run "cargo fmt --check"
