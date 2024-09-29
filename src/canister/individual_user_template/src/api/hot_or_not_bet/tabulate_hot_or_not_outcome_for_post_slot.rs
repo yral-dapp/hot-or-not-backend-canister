@@ -13,11 +13,6 @@ pub fn tabulate_hot_or_not_outcome_for_post_slot(post_id: u64, slot_id: u8) {
     ic_cdk::println!("Computing outcome for post:{post_id} and slot:{slot_id} ");
 
     CANISTER_DATA.with_borrow_mut(|canister_data| {
-        let subnet_orchestrator_canister_id = canister_data
-            .known_principal_ids
-            .get(&KnownPrincipalType::CanisterIdUserIndex)
-            .copied();
-
         let current_time = system_time::get_current_system_time_from_ic();
         let this_canister_id = ic_cdk::id();
 
@@ -157,5 +152,5 @@ async fn receive_bet_winnings_when_distributed(
                 .bet_details_map
                 .insert(global_bet_id, bet_detail);
         });
-    })
+    });
 }

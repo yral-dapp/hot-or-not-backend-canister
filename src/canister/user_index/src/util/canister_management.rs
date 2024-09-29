@@ -206,8 +206,7 @@ pub async fn recharge_canister_if_below_threshold(canister_id: &Principal) -> Re
             let individual_canister_current_balance =
                 u128::try_from(individual_canister_status.cycles.0).map_err(|e| e.to_string())?;
             if individual_canister_current_balance < threshold_balance {
-                let mut recharge_amount = recharge_amount - individual_canister_current_balance;
-                recharge_amount = u128::min(1_000_000_000_000, recharge_amount);
+                let recharge_amount = recharge_amount - individual_canister_current_balance;
                 check_and_request_cycles_from_platform_orchestrator().await?;
                 recharge_canister(canister_id, recharge_amount).await?;
             }
