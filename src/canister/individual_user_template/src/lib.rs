@@ -32,12 +32,15 @@ use shared_utils::{
         cdao::DeployedCdaoCanisters,
         session::SessionType,
     },
-    common::types::{
-        app_primitive_type::PostId,
-        http::{HttpRequest, HttpResponse},
-        known_principal::KnownPrincipalType,
-        top_posts::post_score_index_item::PostStatus,
-        utility_token::token_event::TokenEvent,
+    common::{
+        participant_crypto::ProofOfParticipation,
+        types::{
+            app_primitive_type::PostId,
+            http::{HttpRequest, HttpResponse},
+            known_principal::KnownPrincipalType,
+            top_posts::post_score_index_item::PostStatus,
+            utility_token::token_event::TokenEvent,
+        }
     },
     types::canister_specific::individual_user_template::error_types::{
         GetUserUtilityTokenTransactionHistoryError, UpdateProfileSetUniqueUsernameError,
