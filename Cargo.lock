@@ -5476,6 +5476,7 @@ version = "0.1.0"
 dependencies = [
  "candid",
  "ciborium",
+ "ed25519-dalek",
  "futures",
  "ic-cdk 0.15.1",
  "ic-cdk-timers",
