@@ -161,19 +161,28 @@ impl ProofOfParticipation {
 
     /// Verify that the caller is a YRAL canister
     pub async fn verify_caller_is_participant<M: Memory, Store: PoPStore<M>>(&self, store: &'static LocalPoPStore<Store>) -> Result<(), String> {
-        let platform_orchestrator = store.with_borrow(|s| s.platform_orchestrator());
-        let canister = ic_cdk::caller();
-
-        let mut parent = PubKeyCache::get_or_init_public_key(store, platform_orchestrator).await?;
-        for proof in &self.chain {
-            proof.verify(&parent)?;
-            if proof.principal == canister {
-                return Ok(())
-            }
-            parent = PubKeyCache::get_or_init_public_key(store, proof.principal).await?;
+        #[cfg(feature = "local")]
+        {
+            // Hack: Always pass on local testing node
+            // a proper implementation requires deploying platform orchestrator locally
+            Ok(())
         }
+        #[cfg(not(feature = "local"))]
+        {
+            let platform_orchestrator = store.with_borrow(|s| s.platform_orchestrator());
+            let canister = ic_cdk::caller();
 
-        Err("invalid proof".to_string())
+            let mut parent = PubKeyCache::get_or_init_public_key(store, platform_orchestrator).await?;
+            for proof in &self.chain {
+                proof.verify(&parent)?;
+                if proof.principal == canister {
+                    return Ok(())
+                }
+                parent = PubKeyCache::get_or_init_public_key(store, proof.principal).await?;
+            }
+
+            Err("invalid proof".to_string())
+        }
     }
 }
 

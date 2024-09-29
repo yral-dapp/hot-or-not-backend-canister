@@ -26,6 +26,9 @@ fn init_impl(init_args: IndividualUserTemplateInitArgs, data: &mut CanisterData)
 
     data.version_details.version_number = init_args.upgrade_version_number.unwrap_or_default();
     data.version_details.version = init_args.version;
+    if let Some(pop) = init_args.proof_of_participation {
+        data.proof_of_participation = Some(pop);
+    }
 }
 
 #[cfg(test)]
@@ -60,6 +63,7 @@ mod test {
                 "http://metrics-url.com/receive-metrics".to_string(),
             ),
             version: String::from("v1.0.0"),
+            proof_of_participation: None,
         };
         let mut data = CanisterData::default();
 

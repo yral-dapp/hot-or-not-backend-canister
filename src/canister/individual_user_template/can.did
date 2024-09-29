@@ -164,6 +164,7 @@ type IndividualUserCreatorDaoEntry = record {
   individual_profile_id : principal;
 };
 type IndividualUserTemplateInitArgs = record {
+  proof_of_participation : opt ProofOfParticipation;
   known_principal_ids : opt vec record { KnownPrincipalType; principal };
   version : text;
   url_to_send_canister_metrics_to : opt text;
@@ -347,6 +348,8 @@ type PostViewStatistics = record {
   threshold_view_count : nat64;
 };
 type Principals = record { principals : vec principal };
+type ProofOfChild = record { "principal" : principal; signature : blob };
+type ProofOfParticipation = record { chain : vec ProofOfChild };
 type RejectionCode = variant {
   NoError;
   CanisterError;

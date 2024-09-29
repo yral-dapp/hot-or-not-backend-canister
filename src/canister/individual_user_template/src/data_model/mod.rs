@@ -5,7 +5,7 @@ use std::{
 
 use candid::{Deserialize, Principal};
 use ic_cdk::api::management_canister::provisional::CanisterId;
-use memory::{get_success_history_memory, get_token_list_memory, get_watch_history_memory};
+use memory::{get_pubkey_cache_memory, get_success_history_memory, get_token_list_memory, get_watch_history_memory};
 use serde::Serialize;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
@@ -26,12 +26,12 @@ use shared_utils::{
         session::SessionType,
         token::TokenBalance,
     },
-    common::types::{
+    common::{participant_crypto::{PoPStore, ProofOfParticipation, PubKeyCache}, types::{
         app_primitive_type::PostId,
-        known_principal::KnownPrincipalMap,
+        known_principal::{KnownPrincipalMap, KnownPrincipalType},
         top_posts::{post_score_index::PostScoreIndex, post_score_index_item::PostStatus},
         version_details::VersionDetails,
-    },
+    }},
 };
 
 use self::memory::{
@@ -95,6 +95,9 @@ pub struct CanisterData {
     pub token_roots: ic_stable_structures::btreemap::BTreeMap<Principal, (), Memory>,
     #[serde(default)]
     pub ml_data: MLData,
+    pub proof_of_participation: Option<ProofOfParticipation>,
+    #[serde(skip, default = "_default_pubkey_cache")]
+    pub pubkey_cache: PubKeyCache<Memory>,
 }
 
 pub fn _default_room_details(
@@ -137,6 +140,10 @@ pub fn _default_success_history_v1(
     ic_stable_structures::btreemap::BTreeMap::init(get_success_history_memory())
 }
 
+pub fn _default_pubkey_cache() -> PubKeyCache<Memory> {
+    PubKeyCache::init(get_pubkey_cache_memory())
+}
+
 impl Default for CanisterData {
     fn default() -> Self {
         Self {
@@ -168,6 +175,22 @@ impl Default for CanisterData {
             cdao_canisters: Vec::new(),
             token_roots: _default_token_list(),
             ml_data: MLData::default(),
+            proof_of_participation: None,
+            pubkey_cache: _default_pubkey_cache(),
         }
+    }
+}
+
+impl PoPStore<Memory> for CanisterData {
+    fn pubkey_cache(&self) -> &PubKeyCache<Memory> {
+        &self.pubkey_cache
+    }
+
+    fn pubkey_cache_mut(&mut self) -> &mut PubKeyCache<Memory> {
+        &mut self.pubkey_cache
+    }
+
+    fn platform_orchestrator(&self) -> Principal {
+        self.known_principal_ids[&KnownPrincipalType::CanisterIdPlatformOrchestrator]
     }
 }
