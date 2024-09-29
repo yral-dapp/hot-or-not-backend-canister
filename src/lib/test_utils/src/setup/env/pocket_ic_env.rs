@@ -42,6 +42,7 @@ struct AuthorizedSubnetWorks {
 pub fn get_new_pocket_ic_env() -> (PocketIc, KnownPrincipalMap) {
     let pocket_ic = PocketIcBuilder::new()
         .with_nns_subnet()
+        .with_ii_subnet() // enables tSchnorr
         .with_application_subnet()
         .with_application_subnet()
         .with_system_subnet()

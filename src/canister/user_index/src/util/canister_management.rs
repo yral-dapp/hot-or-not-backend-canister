@@ -91,6 +91,10 @@ pub async fn install_canister_wasm(
     let configuration = CANISTER_DATA
         .with(|canister_data_ref_cell| canister_data_ref_cell.borrow().configuration.clone());
 
+    let mut proof_of_participation = CANISTER_DATA.with_borrow(|cdata| cdata.proof_of_participation.clone());
+    if let Some(pop) = proof_of_participation {
+        proof_of_participation = Some(pop.derive_for_child(canister_id).await.unwrap());
+    }
     let individual_user_tempalate_init_args = IndividualUserTemplateInitArgs {
         profile_owner,
         known_principal_ids: Some(CANISTER_DATA.with(|canister_data_ref_cell| {
@@ -103,6 +107,7 @@ pub async fn install_canister_wasm(
         upgrade_version_number: Some(0),
         version,
         url_to_send_canister_metrics_to: Some(configuration.url_to_send_canister_metrics_to),
+        proof_of_participation,
     };
 
     // * encode argument for user canister init lifecycle method
@@ -131,6 +136,10 @@ pub async fn reinstall_canister_wasm(
     let configuration = CANISTER_DATA
         .with(|canister_data_ref_cell| canister_data_ref_cell.borrow().configuration.clone());
 
+    let mut proof_of_participation = CANISTER_DATA.with_borrow(|cdata| cdata.proof_of_participation.clone());
+    if let Some(pop) = proof_of_participation {
+        proof_of_participation = Some(pop.derive_for_child(canister_id).await?);
+    }
     let individual_user_tempalate_init_args = IndividualUserTemplateInitArgs {
         profile_owner,
         known_principal_ids: Some(CANISTER_DATA.with(|canister_data_ref_cell| {
@@ -143,6 +152,7 @@ pub async fn reinstall_canister_wasm(
         upgrade_version_number: Some(0),
         version,
         url_to_send_canister_metrics_to: Some(configuration.url_to_send_canister_metrics_to),
+        proof_of_participation,
     };
 
     // * encode argument for user canister init lifecycle method

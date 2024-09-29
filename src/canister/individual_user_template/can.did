@@ -153,6 +153,7 @@ type IdealMatchedParticipationFunction = record {
   serialized_representation : opt text;
 };
 type IndividualUserTemplateInitArgs = record {
+  proof_of_participation : opt ProofOfParticipation;
   known_principal_ids : opt vec record { KnownPrincipalType; principal };
   version : text;
   url_to_send_canister_metrics_to : opt text;
@@ -334,6 +335,8 @@ type PostViewStatistics = record {
   average_watch_percentage : nat8;
   threshold_view_count : nat64;
 };
+type ProofOfChild = record { "principal" : principal; signature : blob };
+type ProofOfParticipation = record { chain : vec ProofOfChild };
 type RejectionCode = variant {
   NoError;
   CanisterError;
