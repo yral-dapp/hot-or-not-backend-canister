@@ -5,12 +5,13 @@ use api::{
     follow::update_profiles_that_follow_me_toggle_list_with_specified_profile::FollowerArg,
     profile::update_profile_display_details::UpdateProfileDetailsError,
 };
-use candid::{Principal, Nat};
+use candid::Principal;
 use data_model::CanisterData;
 use ic_cdk::api::management_canister::provisional::CanisterId;
 use ic_cdk_macros::export_candid;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
+        airdrop::{AirdropMember, TokenClaim},
         arg::{FolloweeArg, IndividualUserTemplateInitArgs, PlaceBetArg},
         device_id::DeviceIdentity,
         error::{
@@ -48,7 +49,6 @@ use shared_utils::{
     pagination::PaginationError,
 };
 use ic_sns_init::pb::v1::SnsInitPayload;
-use icrc_ledger_types::icrc1::transfer::Memo;
 use ic_nns_governance::pb::v1::{SettleNeuronsFundParticipationRequest, SettleNeuronsFundParticipationResponse};
 
 mod api;

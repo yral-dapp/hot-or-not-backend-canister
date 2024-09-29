@@ -14,6 +14,7 @@ use ic_sns_swap::pb::v1::{
     NewSaleTicketResponse, RefreshBuyerTokensRequest, RefreshBuyerTokensResponse,
 };
 use sha2::{Digest, Sha256};
+use test_utils::setup::env::pocket_ic_env::execute_update_no_res;
 use std::time::{Duration, UNIX_EPOCH};
 use std::{collections::HashMap, fmt::Debug, str::FromStr, time::SystemTime, vec};
 
@@ -433,7 +434,7 @@ fn creator_dao_tests() {
         )),
     };
 
-    let res = pocket_ic
+    let deploy_res = pocket_ic
         .update_call(
             alice_canister_id,
             alice_principal,
@@ -450,8 +451,9 @@ fn creator_dao_tests() {
             };
             response
         })
+        .unwrap()
         .unwrap();
-    ic_cdk::println!("🧪 Result: {:?}", res);
+    ic_cdk::println!("🧪 Result: {:?}", deploy_res);
 
     let res = pocket_ic
         .query_call(
@@ -725,6 +727,14 @@ fn creator_dao_tests() {
     let alice_canister_final_cycle_balance = pocket_ic.cycle_balance(alice_canister_id);
 
     assert!(alice_canister_final_cycle_balance > alice_initial_cycle_balance);
+
+    execute_update_no_res(
+        &pocket_ic,
+        alice_principal,
+        alice_canister_id,
+        "distribute_newly_created_token_to_token_chain",
+        &deploy_res
+    );
 
     assert!(res == expected_balance);
 }

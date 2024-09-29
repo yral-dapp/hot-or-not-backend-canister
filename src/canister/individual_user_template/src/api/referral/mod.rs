@@ -1,8 +1,10 @@
 use candid::Principal;
 use ic_cdk::{notify, update};
-use shared_utils::{canister_specific::individual_user_template::types::session::SessionType, common::{participant_crypto::ProofOfParticipation, types::utility_token::token_event::{MintEvent, TokenEvent}, utils::system_time}};
+use shared_utils::{canister_specific::individual_user_template::types::{airdrop::AirdropMember, session::SessionType}, common::{participant_crypto::ProofOfParticipation, types::utility_token::token_event::{MintEvent, TokenEvent}, utils::system_time}};
 
 use crate::{api::canister_management::update_last_access_time::update_last_canister_functionality_access_time, CANISTER_DATA};
+
+use super::airdrop::add_user_to_airdrop_chain_inner;
 
 pub(crate) fn coyn_token_reward_for_referral(referrer: Principal, referree: Principal) {
     let current_time = system_time::get_current_system_time_from_ic();
@@ -67,6 +69,15 @@ pub async fn receive_reward_for_being_referred() -> Result<(), String> {
 
     coyn_token_reward_for_referral(referrer_details.profile_owner, user_principal);
 
+    let referrer_member = AirdropMember {
+        user_canister: referrer_details.user_canister_id,
+        user_principal: referrer_details.profile_owner,
+    };
+    CANISTER_DATA.with_borrow_mut(|cdata| {
+        cdata.airdrop.parent = Some(referrer_member);
+    });
+    add_user_to_airdrop_chain_inner(referrer_member).await;
+
     // Rollback if the notification fails
     notify(
         referrer_details.user_canister_id,
@@ -87,6 +98,26 @@ pub async fn receive_reward_for_referring(pop: ProofOfParticipation, referree_pr
     };
 
     coyn_token_reward_for_referral(profile_owner, referree_principal);
+
+    let referree_canister = ic_cdk::caller();
+    add_user_to_airdrop_chain_inner(AirdropMember {
+        user_principal: referree_principal,
+        user_canister: referree_canister,
+    }).await;
+
+    let Some(parent) = CANISTER_DATA.with_borrow(|cdata| cdata.airdrop.parent) else {
+        return Ok(())
+    };
+
+    let Some(pop) = CANISTER_DATA.with_borrow(|cdata| cdata.proof_of_participation.clone()) else {
+        return Err("method is not available right now".into());
+    };
+
+    notify(
+        parent.user_canister,
+        "add_user_to_airdrop_chain",
+        (pop, referree_canister)
+    ).unwrap();
 
     Ok(())
 }

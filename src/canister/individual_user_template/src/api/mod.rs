@@ -15,3 +15,4 @@ pub mod well_known_principal;
 pub mod cdao;
 pub mod device_id_management;
 pub mod referral;
+pub mod airdrop;
