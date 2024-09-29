@@ -3,6 +3,7 @@ use std::{
     time::SystemTime,
 };
 
+use airdrop::AirdropData;
 use candid::{Deserialize, Principal};
 use ic_cdk::api::management_canister::provisional::CanisterId;
 use memory::{get_pubkey_cache_memory, get_success_history_memory, get_token_list_memory, get_watch_history_memory};
@@ -43,6 +44,7 @@ use kv_storage::AppStorage;
 
 pub mod kv_storage;
 pub mod memory;
+pub mod airdrop;
 
 #[derive(Deserialize, Serialize)]
 pub struct CanisterData {
@@ -98,6 +100,8 @@ pub struct CanisterData {
     pub proof_of_participation: Option<ProofOfParticipation>,
     #[serde(skip, default = "_default_pubkey_cache")]
     pub pubkey_cache: PubKeyCache<Memory>,
+    #[serde(default)]
+    pub airdrop: AirdropData,
 }
 
 pub fn _default_room_details(
@@ -177,6 +181,7 @@ impl Default for CanisterData {
             ml_data: MLData::default(),
             proof_of_participation: None,
             pubkey_cache: _default_pubkey_cache(),
+            airdrop: AirdropData::default(),
         }
     }
 }
