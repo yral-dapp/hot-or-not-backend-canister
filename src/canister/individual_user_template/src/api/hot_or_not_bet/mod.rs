@@ -1,4 +1,5 @@
 pub mod bet_on_currently_viewing_hot_or_not_post;
+pub mod get_bet_details_for_a_user_on_a_post;
 pub mod get_hot_or_not_bet_details_for_this_post;
 pub mod get_hot_or_not_bets_placed_by_this_profile_with_pagination;
 pub mod get_individual_hot_or_not_bet_placed_by_this_profile;

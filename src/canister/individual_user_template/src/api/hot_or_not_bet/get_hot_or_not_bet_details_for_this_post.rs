@@ -12,34 +12,6 @@ use crate::{
     data_model::CanisterData, CANISTER_DATA,
 };
 
-// #[ic_cdk::query]
-// #[candid::candid_method(query)]
-// fn get_hot_or_not_bet_details_for_this_post_old(post_id: u64) -> BettingStatus {
-//     let request_maker = ic_cdk::caller();
-
-//     CANISTER_DATA.with(|canister_data_ref_cell| {
-//         get_hot_or_not_bet_details_for_this_post_impl_old(
-//             &canister_data_ref_cell.borrow(),
-//             &system_time::get_current_system_time_from_ic(),
-//             &request_maker,
-//             post_id,
-//         )
-//     })
-// }
-
-// fn get_hot_or_not_bet_details_for_this_post_impl_old(
-//     canister_data: &CanisterData,
-//     current_time: &SystemTime,
-//     request_maker: &Principal,
-//     post_id: u64,
-// ) -> BettingStatus {
-//     canister_data
-//         .all_created_posts
-//         .get(&post_id)
-//         .unwrap()
-//         .get_hot_or_not_betting_status_for_this_post(current_time, request_maker)
-// }
-
 #[query]
 fn get_hot_or_not_bet_details_for_this_post(post_id: u64) -> BettingStatus {
     let request_maker = ic_cdk::caller();
@@ -109,6 +81,7 @@ mod test {
                 view_stats: PostViewStatistics::default(),
                 home_feed_score: FeedScore::default(),
                 hot_or_not_details: Some(HotOrNotDetails::default()),
+                slots_left_to_be_computed: Default::default(),
             },
         );
 
