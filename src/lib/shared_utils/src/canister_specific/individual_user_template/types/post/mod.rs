@@ -31,6 +31,8 @@ pub struct Post {
     pub hot_or_not_details: Option<HotOrNotDetails>,
     #[serde(default)]
     pub is_nsfw: bool,
+    #[serde(default)]
+    pub slots_left_to_be_computed: HashSet<SlotId>,
 }
 
 #[derive(CandidType, Clone, Deserialize, Debug, Serialize)]
@@ -224,6 +226,7 @@ impl Post {
             },
             home_feed_score: FeedScore::default(),
             hot_or_not_details: Some(HotOrNotDetails::default()),
+            slots_left_to_be_computed: (1..=48).collect(), // 48 slots
         }
     }
 

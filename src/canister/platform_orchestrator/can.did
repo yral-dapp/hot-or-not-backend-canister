@@ -83,6 +83,8 @@ service : (PlatformOrchestratorInitArgs) -> {
   get_subnets_upgrade_status_report : () -> (SubnetUpgradeReport) query;
   get_version : () -> (text) query;
   http_request : (HttpRequest) -> (HttpResponse) query;
+  make_individual_canister_logs_private : (principal) -> (Result_1);
+  make_individual_canister_logs_public : (principal) -> (Result_1);
   make_subnet_orchestrator_logs_private : (principal) -> (Result_1);
   make_subnet_orchestrator_logs_public : (principal) -> (Result_1);
   platform_orchestrator_generic_function : (

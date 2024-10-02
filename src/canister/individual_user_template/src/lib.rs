@@ -9,17 +9,22 @@ use candid::Principal;
 use data_model::CanisterData;
 use ic_cdk::api::management_canister::provisional::CanisterId;
 use ic_cdk_macros::export_candid;
+use ic_nns_governance::pb::v1::{
+    SettleNeuronsFundParticipationRequest, SettleNeuronsFundParticipationResponse,
+};
+use ic_sns_init::pb::v1::SnsInitPayload;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
         airdrop::{AirdropMember, TokenClaim},
         arg::{FolloweeArg, IndividualUserTemplateInitArgs, PlaceBetArg},
+        cdao::DeployedCdaoCanisters,
         device_id::DeviceIdentity,
         error::{
-            BetOnCurrentlyViewingPostError, FollowAnotherUserProfileError,
-            GetPostsOfUserProfileError, CdaoDeployError, CdaoTokenError,
+            BetOnCurrentlyViewingPostError, CdaoDeployError, CdaoTokenError,
+            FollowAnotherUserProfileError, GetPostsOfUserProfileError,
         },
         follow::{FollowEntryDetail, FollowEntryId},
-        hot_or_not::{BetOutcomeForBetMaker, BettingStatus, PlacedBetDetail},
+        hot_or_not::{BetDetails, BetOutcomeForBetMaker, BettingStatus, PlacedBetDetail},
         kv_storage::{NamespaceErrors, NamespaceForFrontend},
         migration::MigrationErrors,
         ml_data::{MLFeedCacheItem, SuccessHistoryItemV1, WatchHistoryItem},
@@ -27,10 +32,9 @@ use shared_utils::{
             Post, PostDetailsForFrontend, PostDetailsFromFrontend, PostViewDetailsFromFrontend,
         },
         profile::{
-            UserCanisterDetails, UserProfile, UserProfileDetailsForFrontend,
+            UserCanisterDetails, UserProfileDetailsForFrontend,
             UserProfileDetailsForFrontendV2, UserProfileUpdateDetailsFromFrontend,
         },
-        cdao::DeployedCdaoCanisters,
         session::SessionType,
     },
     common::{
@@ -43,13 +47,11 @@ use shared_utils::{
             utility_token::token_event::TokenEvent,
         }
     },
+    pagination::PaginationError,
     types::canister_specific::individual_user_template::error_types::{
         GetUserUtilityTokenTransactionHistoryError, UpdateProfileSetUniqueUsernameError,
     },
-    pagination::PaginationError,
 };
-use ic_sns_init::pb::v1::SnsInitPayload;
-use ic_nns_governance::pb::v1::{SettleNeuronsFundParticipationRequest, SettleNeuronsFundParticipationResponse};
 
 mod api;
 pub mod data_model;
