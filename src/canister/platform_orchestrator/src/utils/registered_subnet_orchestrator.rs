@@ -76,4 +76,34 @@ impl RegisteredSubnetOrchestrator {
         .await
         .map_err(|e| e.1)
     }
+
+    pub async fn make_individual_canister_logs_public(
+        &self,
+        individual_canister_id: Principal,
+    ) -> Result<(), String> {
+        let (res,) = ic_cdk::call(
+            self.canister_id,
+            "make_individual_canister_logs_public",
+            (individual_canister_id,),
+        )
+        .await
+        .map_err(|e| e.1)?;
+
+        res
+    }
+
+    pub async fn make_individual_canister_logs_private(
+        &self,
+        individual_canister_id: Principal,
+    ) -> Result<(), String> {
+        let (res,) = ic_cdk::call(
+            self.canister_id,
+            "make_individual_canister_logs_private",
+            (individual_canister_id,),
+        )
+        .await
+        .map_err(|e| e.1)?;
+
+        res
+    }
 }
