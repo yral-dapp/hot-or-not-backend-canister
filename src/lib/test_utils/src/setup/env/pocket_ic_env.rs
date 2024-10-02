@@ -247,6 +247,19 @@ pub fn execute_update_no_res<P: CandidType>(
     }
 }
 
+pub fn execute_update_no_res_multi<P: ArgumentEncoder>(
+    pic: &PocketIc,
+    sender: Principal,
+    canister_id: CanisterId,
+    method: &str,
+    payload: P,
+) {
+    let res = pic.update_call(canister_id, sender, method, candid::encode_args(payload).unwrap());
+    if let WasmResult::Reject(error) = res.unwrap() {
+        panic!("{error}");
+    }
+}
+
 fn unwrap_res<R: CandidType + for<'x> Deserialize<'x>>(response: Result<WasmResult, UserError>) -> R {
     match response.unwrap() {
         WasmResult::Reply(bytes) => candid::decode_one(&bytes).unwrap(),
