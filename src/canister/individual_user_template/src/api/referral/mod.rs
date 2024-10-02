@@ -100,10 +100,11 @@ pub async fn receive_reward_for_referring(pop: ProofOfParticipation, referree_pr
     coyn_token_reward_for_referral(profile_owner, referree_principal);
 
     let referree_canister = ic_cdk::caller();
-    add_user_to_airdrop_chain_inner(AirdropMember {
+    let member = AirdropMember {
         user_principal: referree_principal,
-        user_canister: referree_canister,
-    }).await;
+        user_canister: referree_canister
+    };
+    add_user_to_airdrop_chain_inner(member).await;
 
     let Some(parent) = CANISTER_DATA.with_borrow(|cdata| cdata.airdrop.parent) else {
         return Ok(())
@@ -116,7 +117,7 @@ pub async fn receive_reward_for_referring(pop: ProofOfParticipation, referree_pr
     notify(
         parent.user_canister,
         "add_user_to_airdrop_chain",
-        (pop, referree_canister)
+        (pop, member)
     ).unwrap();
 
     Ok(())

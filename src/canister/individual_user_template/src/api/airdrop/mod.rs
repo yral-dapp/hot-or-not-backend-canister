@@ -12,6 +12,20 @@ use super::cdao::token::transfer_canister_token_to_user_principal;
 pub async fn add_user_to_airdrop_chain(pop: ProofOfParticipation, member: AirdropMember) -> Result<(), String> {
     pop.verify_caller_is_participant(&CANISTER_DATA).await?;
 
+    let (pop, parent) = CANISTER_DATA.with_borrow(|cdata|
+        Ok::<_, String>((
+            cdata.proof_of_participation.clone().ok_or("not available")?,
+            cdata.airdrop.parent,
+        ))
+    )?;
+    if let Some(parent) = parent {
+        notify(
+            parent.user_canister,
+            "add_user_to_airdrop_chain",
+            (pop, member)
+        ).unwrap();
+    }
+
     add_user_to_airdrop_chain_inner(member).await;
 
     Ok(())
@@ -105,7 +119,7 @@ async fn receive_token_claim(pop: ProofOfParticipation, token_claim: TokenClaim)
 
     let (pop, user_principal) = CANISTER_DATA.with_borrow(|cdata| {
         Ok::<_, String>((
-            cdata.proof_of_participation.clone(),
+            cdata.proof_of_participation.clone().ok_or_else(|| "canister is not ready".to_string())?,
             cdata.profile.principal_id.ok_or_else(|| "canister is not ready".to_string())?,
         ))
     })?;
@@ -130,18 +144,6 @@ async fn receive_token_claim(pop: ProofOfParticipation, token_claim: TokenClaim)
 
 #[update]
 async fn redeem_token_claim(pop: ProofOfParticipation, target_principal: Principal, token_claim: TokenClaim) -> Result<(), String> {
-    let caller_canister = ic_cdk::caller();
-    let is_part_of_token_chain = CANISTER_DATA.with_borrow(|cdata| {
-        cdata.airdrop.token_chain.contains_key(&AirdropMember {
-            user_canister: caller_canister,
-            user_principal: target_principal,
-        })
-    });
-
-    if is_part_of_token_chain {
-        return Err("token already sent".to_string());
-    }
-
     pop.verify_caller_is_participant(&CANISTER_DATA).await?;
 
     transfer_canister_token_to_user_principal(
