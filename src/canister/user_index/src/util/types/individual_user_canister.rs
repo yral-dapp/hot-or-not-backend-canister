@@ -1,6 +1,13 @@
 use candid::Principal;
-use ic_cdk::api::management_canister::main::{canister_status, deposit_cycles, CanisterIdRecord};
-use shared_utils::cycles::calculate_recharge_and_threshold_cycles_for_canister;
+use ic_cdk::api::management_canister::main::{
+    canister_status, deposit_cycles, update_settings, CanisterIdRecord, CanisterSettings,
+    LogVisibility, UpdateSettingsArgument,
+};
+use ic_stable_structures::Log;
+use shared_utils::{
+    canister_specific::platform_orchestrator::types::args::UpgradeCanisterArg,
+    cycles::calculate_recharge_and_threshold_cycles_for_canister,
+};
 
 use crate::CANISTER_DATA;
 
@@ -56,5 +63,29 @@ impl IndividualUserCanister {
         }
 
         Ok(())
+    }
+
+    pub async fn make_individual_canister_logs_public(&self) -> Result<(), String> {
+        update_settings(UpdateSettingsArgument {
+            canister_id: self.canister_id,
+            settings: CanisterSettings {
+                log_visibility: Some(LogVisibility::Public),
+                ..Default::default()
+            },
+        })
+        .await
+        .map_err(|e| e.1)
+    }
+
+    pub async fn make_indvidual_canister_logs_private(&self) -> Result<(), String> {
+        update_settings(UpdateSettingsArgument {
+            canister_id: self.canister_id,
+            settings: CanisterSettings {
+                log_visibility: Some(LogVisibility::Controllers),
+                ..Default::default()
+            },
+        })
+        .await
+        .map_err(|e| e.1)
     }
 }
