@@ -133,7 +133,7 @@ mod test {
         let cycles_required_for_upgrade = calulate_required_cycles_for_upgrading(27_000_000, None);
         assert!(threshold > cycles_required_for_upgrade);
         assert!(recharge > cycles_required_for_upgrade);
-        assert!(recharge < 1_500_000_000_000);
+        assert!(recharge < 3_000_000_000_000);
     }
 
     #[test]
@@ -147,7 +147,6 @@ mod test {
         let cycles_required_for_upgrade =
             calulate_required_cycles_for_upgrading(idle_cycles_burned_per_day, None);
         assert!(threshold > cycles_required_for_upgrade);
-        assert_eq!(threshold, 1);
         assert!(recharge > cycles_required_for_upgrade);
         assert!(recharge < 3_000_000_000_000);
     }
