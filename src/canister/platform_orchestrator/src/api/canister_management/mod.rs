@@ -2,6 +2,7 @@ use ic_cdk_macros::query;
 
 use crate::CANISTER_DATA;
 
+pub mod deregister_subnet_orchestrator;
 mod get_all_available_subnet_orchestrators;
 mod get_all_subnet_orchestrators;
 mod get_last_subnet_upgrade_status;
@@ -13,6 +14,7 @@ mod populate_known_principal_for_all_subnet;
 pub mod provision_empty_canisters_in_a_subnet;
 pub mod provision_subnet_orchestrator;
 mod recharge_subnet_orchestrator;
+pub mod register_new_subnet_orhestrator;
 mod reinstall_yral_post_cache_canister;
 pub mod remove_subnet_orchestrator_from_available_list;
 pub mod report_subnet_upgrade_status;

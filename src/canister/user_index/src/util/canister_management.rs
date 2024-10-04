@@ -25,7 +25,7 @@ use shared_utils::{
         EMPTY_CANISTER_RECHARGE_AMOUNT, INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT,
         SUBNET_ORCHESTRATOR_CANISTER_CYCLES_THRESHOLD,
     },
-    cycles::calculate_recharge_and_threshold_cycles_for_canister,
+    cycles::calculate_threshold_and_recharge_cycles_for_canister,
 };
 
 use crate::CANISTER_DATA;
@@ -222,9 +222,12 @@ pub async fn recharge_canister_if_below_threshold(canister_id: &Principal) -> Re
             let idle_cycles_burned_per_day =
                 u128::try_from(individual_canister_status.idle_cycles_burned_per_day.0)
                     .map_err(|e| e.to_string())?;
+            let reserved_cycles = u128::try_from(individual_canister_status.reserved_cycles.0)
+                .map_err(|e| e.to_string())?;
             let (threshold_balance, recharge_amount) =
-                calculate_recharge_and_threshold_cycles_for_canister(
+                calculate_threshold_and_recharge_cycles_for_canister(
                     idle_cycles_burned_per_day,
+                    reserved_cycles,
                     None,
                 );
             let individual_canister_current_balance =
