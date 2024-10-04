@@ -106,4 +106,14 @@ impl RegisteredSubnetOrchestrator {
 
         res
     }
+
+    pub async fn provision_empty_canisters(&self, number_of_canisters: u64) -> Result<(), String> {
+        ic_cdk::call::<_, ()>(
+            self.canister_id,
+            "provision_empty_canisters",
+            (number_of_canisters,),
+        )
+        .await
+        .map_err(|e| e.1)
+    }
 }
