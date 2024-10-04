@@ -42,6 +42,7 @@ pub mod get_subnet_available_capacity;
 pub mod get_subnet_backup_capacity;
 pub mod make_individual_canister_logs_private;
 pub mod make_individual_canister_logs_public;
+pub mod provision_empty_canisters;
 pub mod recharge_individual_user_canister;
 pub mod recycle_canisters;
 pub mod request_cycles;

@@ -91,6 +91,7 @@ service : (PlatformOrchestratorInitArgs) -> {
       PlatformOrchestratorGenericArgumentType,
     ) -> (PlatformOrchestratorGenericResultType);
   populate_known_principal_for_all_subnet : () -> ();
+  provision_empty_canisters_in_a_subnet : (principal, nat64) -> (Result_1);
   provision_subnet_orchestrator_canister : (principal) -> (Result_2);
   recharge_subnet_orchestrator : () -> (Result_1);
   reinstall_yral_post_cache_canister : () -> ();

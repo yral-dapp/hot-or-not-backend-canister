@@ -10,6 +10,7 @@ mod global_admin;
 mod known_principal;
 pub mod logging;
 mod populate_known_principal_for_all_subnet;
+pub mod provision_empty_canisters_in_a_subnet;
 pub mod provision_subnet_orchestrator;
 mod recharge_subnet_orchestrator;
 mod reinstall_yral_post_cache_canister;
