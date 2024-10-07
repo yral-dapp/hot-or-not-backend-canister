@@ -1066,6 +1066,8 @@ fn hotornot_game_simulation_test_2() {
         })
         .unwrap();
 
+    pic.add_cycles(last_individual_template_canister_id, 2_000_000_000_000); //recharge by 2T cycles
+
     // All 500 users bet on the post
 
     for i in 1..=110 {

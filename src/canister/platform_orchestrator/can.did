@@ -72,6 +72,7 @@ type WasmType = variant {
 service : (PlatformOrchestratorInitArgs) -> {
   add_principal_as_global_admin : (principal) -> ();
   deposit_cycles_to_canister : (principal, nat) -> (Result);
+  deregister_subnet_orchestrator : (principal, bool) -> ();
   get_all_available_subnet_orchestrators : () -> (vec principal) query;
   get_all_global_admins : () -> (vec principal) query;
   get_all_subnet_orchestrators : () -> (vec principal) query;
@@ -91,8 +92,10 @@ service : (PlatformOrchestratorInitArgs) -> {
       PlatformOrchestratorGenericArgumentType,
     ) -> (PlatformOrchestratorGenericResultType);
   populate_known_principal_for_all_subnet : () -> ();
+  provision_empty_canisters_in_a_subnet : (principal, nat64) -> (Result_1);
   provision_subnet_orchestrator_canister : (principal) -> (Result_2);
   recharge_subnet_orchestrator : () -> (Result_1);
+  register_new_subnet_orchestrator : (principal, bool) -> (Result_1);
   reinstall_yral_post_cache_canister : () -> ();
   remove_principal_from_global_admins : (principal) -> ();
   remove_subnet_orchestrators_from_available_list : (principal) -> (Result);
