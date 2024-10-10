@@ -116,4 +116,34 @@ impl RegisteredSubnetOrchestrator {
         .await
         .map_err(|e| e.1)
     }
+
+    pub async fn upgrade_individual_canisters_in_subnet_with_latest_wasm(
+        &self,
+    ) -> Result<(), String> {
+        let individual_canister_wasm = CANISTER_DATA
+            .with_borrow(|canister_data| canister_data.wasms.get(&WasmType::IndividualUserWasm))
+            .unwrap();
+        self.deposit_cycles().await?;
+
+        let res: Result<(String,), String> = ic_cdk::call(
+            self.canister_id,
+            "start_upgrades_for_individual_canisters",
+            (
+                individual_canister_wasm.version.clone(),
+                individual_canister_wasm.wasm_blob.clone(),
+            ),
+        )
+        .await
+        .map_err(|e| {
+            format!(
+                "Failed to start upgrades on {}. Error {}",
+                self.canister_id, e.1
+            )
+        });
+
+        match res {
+            Ok((_str,)) => Ok(()),
+            Err(e) => Err(e),
+        }
+    }
 }
