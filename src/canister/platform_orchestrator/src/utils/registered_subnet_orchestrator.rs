@@ -3,7 +3,9 @@ use ic_cdk::api::management_canister::main::{
     canister_status, deposit_cycles, update_settings, CanisterIdRecord, CanisterSettings,
     LogVisibility, UpdateSettingsArgument,
 };
-use shared_utils::constant::SUBNET_ORCHESTRATOR_CANISTER_CYCLES_THRESHOLD;
+use shared_utils::{
+    common::types::wasm::WasmType, constant::SUBNET_ORCHESTRATOR_CANISTER_CYCLES_THRESHOLD,
+};
 
 use crate::CANISTER_DATA;
 
