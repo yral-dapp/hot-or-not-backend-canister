@@ -3,7 +3,6 @@ use ic_stable_structures::{storable::Bound, StableBTreeMap, StableLog, Storable}
 use std::{
     borrow::Cow,
     collections::HashSet,
-    hash::Hash,
     time::{SystemTime, UNIX_EPOCH},
 };
 
