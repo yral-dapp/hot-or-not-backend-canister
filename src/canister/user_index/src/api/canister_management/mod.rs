@@ -36,6 +36,7 @@ use crate::{
     CANISTER_DATA,
 };
 
+pub mod allot_empty_canister;
 pub mod create_pool_of_available_canisters;
 pub mod get_last_broadcast_call_status;
 pub mod get_subnet_available_capacity;
