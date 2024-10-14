@@ -7,18 +7,23 @@ use shared_utils::{
         individual_user_template::types::{
             arg::{IndividualUserTemplateInitArgs, PlaceBetArg},
             error::BetOnCurrentlyViewingPostError,
-            hot_or_not::{BetDirection, BettingStatus, PlacedBetDetail},
-            post::PostDetailsFromFrontend,
+            hot_or_not::{
+                BetDetails, BetDirection, BetMakerInformedStatus, BetPayout, BettingStatus,
+                PlacedBetDetail,
+            },
+            post::{PostDetailsForFrontend, PostDetailsFromFrontend},
             profile::UserProfileDetailsForFrontend,
         },
         post_cache::types::arg::PostCacheInitArgs,
     },
-    common::types::known_principal::KnownPrincipalType,
+    common::types::known_principal::{self, KnownPrincipalType},
 };
-use test_utils::setup::test_constants::{
-    get_global_super_admin_principal_id, get_mock_user_alice_principal_id,
-    get_mock_user_bob_principal_id, get_mock_user_charlie_principal_id,
-    get_mock_user_dan_principal_id,
+use test_utils::setup::{
+    env::pocket_ic_env::get_new_pocket_ic_env,
+    test_constants::{
+        get_mock_user_alice_principal_id, get_mock_user_bob_principal_id,
+        get_mock_user_charlie_principal_id, get_mock_user_dan_principal_id,
+    },
 };
 
 const INDIVIDUAL_TEMPLATE_WASM_PATH: &str =
@@ -947,70 +952,60 @@ fn hotornot_game_simulation_test() {
 }
 
 #[test]
-#[ignore]
 fn hotornot_game_simulation_test_2() {
-    let pic = PocketIc::new();
-    let admin_principal_id = get_global_super_admin_principal_id();
+    let (pic, known_principals) = get_new_pocket_ic_env();
 
-    let post_cache_canister_id = pic.create_canister();
-    pic.add_cycles(post_cache_canister_id, 2_000_000_000_000);
+    let platform_canister_id = known_principals
+        .get(&KnownPrincipalType::CanisterIdPlatformOrchestrator)
+        .cloned()
+        .unwrap();
 
-    let mut known_prinicipal_values = HashMap::new();
-    known_prinicipal_values.insert(
-        KnownPrincipalType::CanisterIdPostCache,
-        post_cache_canister_id,
-    );
-    known_prinicipal_values.insert(
-        KnownPrincipalType::UserIdGlobalSuperAdmin,
-        admin_principal_id,
-    );
-    known_prinicipal_values.insert(KnownPrincipalType::CanisterIdUserIndex, admin_principal_id);
+    let global_admin = known_principals
+        .get(&KnownPrincipalType::UserIdGlobalSuperAdmin)
+        .cloned()
+        .unwrap();
 
-    let post_cache_wasm_bytes = post_cache_canister_wasm();
-    let post_cache_args = PostCacheInitArgs {
-        known_principal_ids: Some(known_prinicipal_values.clone()),
-        upgrade_version_number: Some(1),
-        version: "1".to_string(),
-    };
-    let post_cache_args_bytes = encode_one(post_cache_args).unwrap();
-    pic.install_canister(
-        post_cache_canister_id,
-        post_cache_wasm_bytes,
-        post_cache_args_bytes,
-        None,
-    );
+    let application_subnets = pic.topology().get_app_subnets();
 
-    // Individual template canisters
-    let individual_template_wasm_bytes = individual_template_canister_wasm();
+    let subnet_orchestrator_canister_id = pic
+        .update_call(
+            platform_canister_id,
+            global_admin,
+            "provision_subnet_orchestrator_canister",
+            candid::encode_one(application_subnets[0]).unwrap(),
+        )
+        .map(|res| {
+            let canister_id_result: Result<Principal, String> = match res {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("Canister call failed"),
+            };
+            canister_id_result.unwrap()
+        })
+        .unwrap();
+
+    for _ in 0..50 {
+        pic.tick()
+    }
 
     // Init N canisters
     let mut individual_template_canister_ids = vec![];
     for i in 1..=111 {
-        let individual_template_canister_id = pic.create_canister();
-        pic.add_cycles(individual_template_canister_id, 2_000_000_000_000);
-
-        let individual_template_args = IndividualUserTemplateInitArgs {
-            known_principal_ids: Some(known_prinicipal_values.clone()),
-            profile_owner: Some(Principal::self_authenticating((i as usize).to_ne_bytes())),
-            upgrade_version_number: None,
-            url_to_send_canister_metrics_to: None,
-            version: "1".to_string(),
-        };
-        let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
-
-        pic.install_canister(
-            individual_template_canister_id,
-            individual_template_wasm_bytes.clone(),
-            individual_template_args_bytes,
-            None,
-        );
-
-        let reward = pic.update_call(
-            individual_template_canister_id,
-            admin_principal_id,
-            "get_rewarded_for_signing_up",
-            encode_one(()).unwrap(),
-        );
+        let individual_template_canister_id = pic
+            .update_call(
+                subnet_orchestrator_canister_id,
+                Principal::self_authenticating((i as usize).to_ne_bytes()),
+                "get_requester_principals_canister_id_create_if_not_exists",
+                candid::encode_one(()).unwrap(),
+            )
+            .map(|reply_payload| {
+                let response: Result<Principal, String> = match reply_payload {
+                    WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                    _ => panic!("\n🛑 get requester principals canister id failed\n"),
+                };
+                response
+            })
+            .unwrap()
+            .unwrap();
 
         individual_template_canister_ids.push(individual_template_canister_id);
 
@@ -1051,21 +1046,43 @@ fn hotornot_game_simulation_test_2() {
         })
         .unwrap();
 
+    let post_used_for_betting = pic
+        .query_call(
+            last_individual_template_canister_id,
+            Principal::anonymous(),
+            "get_individual_post_details_by_id",
+            candid::encode_args((res1,)).unwrap(),
+        )
+        .map(|reply_payload| {
+            let post_details: PostDetailsForFrontend = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 get_individual_post_details_by_id failed\n"),
+            };
+            post_details
+        })
+        .unwrap();
+
+    pic.add_cycles(last_individual_template_canister_id, 2_000_000_000_000); //recharge by 2T cycles
+
     // All 500 users bet on the post
 
     for i in 1..=110 {
-        let bob_place_bet_arg = PlaceBetArg {
+        let place_bet_arg = PlaceBetArg {
             post_canister_id: last_individual_template_canister_id,
-            post_id: res1,
+            post_id: post_used_for_betting.id,
             bet_amount: 100,
             bet_direction: BetDirection::Hot,
         };
+
+        let individual_user_principal = Principal::self_authenticating((i as usize).to_ne_bytes());
+        let individual_user_canister = individual_template_canister_ids[i - 1];
+
         let bet_status = pic
             .update_call(
-                individual_template_canister_ids[i - 1],
-                Principal::self_authenticating((i as usize).to_ne_bytes()),
+                individual_user_canister,
+                individual_user_principal,
                 "bet_on_currently_viewing_post",
-                encode_one(bob_place_bet_arg).unwrap(),
+                encode_one(place_bet_arg).unwrap(),
             )
             .map(|reply_payload| {
                 let bet_status: Result<BettingStatus, BetOnCurrentlyViewingPostError> =
@@ -1076,15 +1093,51 @@ fn hotornot_game_simulation_test_2() {
                 bet_status.unwrap()
             })
             .unwrap();
+
+        assert_eq!(
+            bet_status,
+            BettingStatus::BettingOpen {
+                started_at: post_used_for_betting.created_at,
+                number_of_participants: if i <= 100 { i as u8 } else { (i % 100) as u8 },
+                ongoing_slot: 1,
+                ongoing_room: if i > 100 { 2 } else { 1 },
+                has_this_user_participated_in_this_post: Some(true)
+            },
+            "bet status failed for {i}"
+        );
+
+        let token_balance = pic
+            .query_call(
+                individual_user_canister,
+                individual_user_principal,
+                "get_utility_token_balance",
+                encode_one(()).unwrap(),
+            )
+            .map(|reply_payload| {
+                let token_balance: u64 = match reply_payload {
+                    WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                    _ => panic!("\n🛑 get_token_balance failed\n"),
+                };
+                token_balance
+            })
+            .unwrap();
+        assert_eq!(token_balance, 900);
+
         // ic_cdk::println!("Bet status: {:?}", bet_status);
         if i % 10 == 0 {
             println!("Betted for {} users", i);
         }
+        pic.tick();
+        pic.tick();
     }
 
     // Forward timer
-    pic.advance_time(Duration::from_secs(60 * 60));
-    pic.tick();
+    pic.advance_time(Duration::from_secs(65 * 60));
+    for _ in 0..20 {
+        pic.tick();
+    }
+
+    let post_creator_cycle_balance = pic.cycle_balance(last_individual_template_canister_id);
 
     // Check rewards
 
@@ -1141,7 +1194,6 @@ fn hotornot_game_simulation_test_2() {
             })
             .unwrap();
         assert_eq!(rewards.lifetime_earnings, 1080);
-        // println!("Rewards for user {}: {:?}", i, rewards.lifetime_earnings);
 
         let token_balance = pic
             .query_call(

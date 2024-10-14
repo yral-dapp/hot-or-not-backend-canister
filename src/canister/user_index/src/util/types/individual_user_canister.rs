@@ -1,6 +1,13 @@
 use candid::Principal;
-use ic_cdk::api::management_canister::main::{canister_status, deposit_cycles, CanisterIdRecord};
-use shared_utils::cycles::calculate_recharge_and_threshold_cycles_for_canister;
+use ic_cdk::api::management_canister::main::{
+    canister_status, deposit_cycles, update_settings, CanisterIdRecord, CanisterSettings,
+    LogVisibility, UpdateSettingsArgument,
+};
+use ic_stable_structures::Log;
+use shared_utils::{
+    canister_specific::platform_orchestrator::types::args::UpgradeCanisterArg,
+    cycles::calculate_threshold_and_recharge_cycles_for_canister,
+};
 
 use crate::CANISTER_DATA;
 
@@ -38,11 +45,16 @@ impl IndividualUserCanister {
         let idle_cycles_burned_in_a_day =
             u128::try_from(user_canister_status.idle_cycles_burned_per_day.0)
                 .map_err(|e| e.to_string())?;
+        let reserved_cycles =
+            u128::try_from(user_canister_status.reserved_cycles.0).map_err(|e| e.to_string())?;
         let current_user_canister_balance =
             u128::try_from(user_canister_status.cycles.0).map_err(|e| e.to_string())?;
 
-        let (threeshold, recharge_amount) =
-            calculate_recharge_and_threshold_cycles_for_canister(idle_cycles_burned_in_a_day, None);
+        let (threeshold, recharge_amount) = calculate_threshold_and_recharge_cycles_for_canister(
+            idle_cycles_burned_in_a_day,
+            reserved_cycles,
+            None,
+        );
 
         if current_user_canister_balance <= threeshold {
             return deposit_cycles(
@@ -56,5 +68,29 @@ impl IndividualUserCanister {
         }
 
         Ok(())
+    }
+
+    pub async fn make_individual_canister_logs_public(&self) -> Result<(), String> {
+        update_settings(UpdateSettingsArgument {
+            canister_id: self.canister_id,
+            settings: CanisterSettings {
+                log_visibility: Some(LogVisibility::Public),
+                ..Default::default()
+            },
+        })
+        .await
+        .map_err(|e| e.1)
+    }
+
+    pub async fn make_indvidual_canister_logs_private(&self) -> Result<(), String> {
+        update_settings(UpdateSettingsArgument {
+            canister_id: self.canister_id,
+            settings: CanisterSettings {
+                log_visibility: Some(LogVisibility::Controllers),
+                ..Default::default()
+            },
+        })
+        .await
+        .map_err(|e| e.1)
     }
 }

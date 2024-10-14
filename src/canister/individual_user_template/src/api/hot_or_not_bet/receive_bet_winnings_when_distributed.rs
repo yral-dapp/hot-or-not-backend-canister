@@ -18,6 +18,12 @@ fn receive_bet_winnings_when_distributed(post_id: PostId, outcome: BetOutcomeFor
     let post_creator_canister_id = ic_cdk::caller();
     let current_time = system_time::get_current_system_time_from_ic();
 
+    ic_cdk::println!(
+        "Recieved bet outcome from canister {} for post {}",
+        post_creator_canister_id.to_string(),
+        post_id
+    );
+
     if !CANISTER_DATA.with(|canister_data_ref_cell| {
         canister_data_ref_cell
             .borrow()

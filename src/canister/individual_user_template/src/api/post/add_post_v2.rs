@@ -12,6 +12,9 @@ use crate::{
         hot_or_not_bet::tabulate_hot_or_not_outcome_for_post_slot::tabulate_hot_or_not_outcome_for_post_slot,
     },
     data_model::CanisterData,
+    util::cycles::{
+        recieve_cycles_from_subnet_orchestrator, request_cycles_from_subnet_orchestrator,
+    },
     CANISTER_DATA,
 };
 
@@ -50,16 +53,14 @@ fn add_post_v2(post_details: PostDetailsFromFrontend) -> Result<u64, String> {
         ic_cdk_timers::set_timer(
             Duration::from_secs(slot_number as u64 * 60 * 60),
             move || {
-                CANISTER_DATA.with(|canister_data_ref_cell| {
-                    tabulate_hot_or_not_outcome_for_post_slot(
-                        &mut canister_data_ref_cell.borrow_mut(),
-                        post_id,
-                        slot_number,
-                    );
-                });
+                tabulate_hot_or_not_outcome_for_post_slot(post_id, slot_number);
             },
         );
     });
+
+    ic_cdk::spawn(async {
+        let _res = recieve_cycles_from_subnet_orchestrator().await;
+    }); // 100B additional cycles for computing
 
     Ok(post_id)
 }

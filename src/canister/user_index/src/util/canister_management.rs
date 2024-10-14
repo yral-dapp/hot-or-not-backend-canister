@@ -20,11 +20,12 @@ use shared_utils::{
     canister_specific::{
         individual_user_template::types::arg::IndividualUserTemplateInitArgs, platform_orchestrator,
     },
-    common::types::known_principal::KnownPrincipalType,
+    common::{types::known_principal::KnownPrincipalType, utils::task::run_task_concurrently},
     constant::{
-        INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT, SUBNET_ORCHESTRATOR_CANISTER_CYCLES_THRESHOLD,
+        EMPTY_CANISTER_RECHARGE_AMOUNT, INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT,
+        SUBNET_ORCHESTRATOR_CANISTER_CYCLES_THRESHOLD,
     },
-    cycles::calculate_recharge_and_threshold_cycles_for_canister,
+    cycles::calculate_threshold_and_recharge_cycles_for_canister,
 };
 
 use crate::CANISTER_DATA;
@@ -72,14 +73,37 @@ pub async fn create_empty_user_canister() -> Principal {
     let _ = check_and_request_cycles_from_platform_orchestrator().await;
 
     // * provisioned canister
-    let canister_id: Principal =
-        main::create_canister(arg, INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT)
-            .await
-            .unwrap()
-            .0
-            .canister_id;
+    let canister_id: Principal = main::create_canister(arg, EMPTY_CANISTER_RECHARGE_AMOUNT)
+        .await
+        .unwrap()
+        .0
+        .canister_id;
 
     canister_id
+}
+
+pub async fn provision_number_of_empty_canisters(
+    number_of_canisters: u64,
+    breaking_condition: impl Fn() -> bool,
+) {
+    let create_canister_futures = (0..number_of_canisters).map(|_| {
+        let future = create_empty_user_canister();
+        future
+    });
+
+    let result_callback = |canister_id: Principal| {
+        CANISTER_DATA.with_borrow_mut(|canister_data| {
+            canister_data.backup_canister_pool.insert(canister_id)
+        });
+    };
+
+    run_task_concurrently(
+        create_canister_futures.into_iter(),
+        10,
+        result_callback,
+        breaking_condition,
+    )
+    .await;
 }
 
 pub async fn install_canister_wasm(
@@ -198,16 +222,18 @@ pub async fn recharge_canister_if_below_threshold(canister_id: &Principal) -> Re
             let idle_cycles_burned_per_day =
                 u128::try_from(individual_canister_status.idle_cycles_burned_per_day.0)
                     .map_err(|e| e.to_string())?;
+            let reserved_cycles = u128::try_from(individual_canister_status.reserved_cycles.0)
+                .map_err(|e| e.to_string())?;
             let (threshold_balance, recharge_amount) =
-                calculate_recharge_and_threshold_cycles_for_canister(
+                calculate_threshold_and_recharge_cycles_for_canister(
                     idle_cycles_burned_per_day,
+                    reserved_cycles,
                     None,
                 );
             let individual_canister_current_balance =
                 u128::try_from(individual_canister_status.cycles.0).map_err(|e| e.to_string())?;
             if individual_canister_current_balance < threshold_balance {
-                let mut recharge_amount = recharge_amount - individual_canister_current_balance;
-                recharge_amount = u128::min(1_000_000_000_000, recharge_amount);
+                let recharge_amount = recharge_amount - individual_canister_current_balance;
                 check_and_request_cycles_from_platform_orchestrator().await?;
                 recharge_canister(canister_id, recharge_amount).await?;
             }

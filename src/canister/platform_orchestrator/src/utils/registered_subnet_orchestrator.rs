@@ -1,8 +1,9 @@
 use candid::Principal;
 use ic_cdk::api::management_canister::main::{
-    deposit_cycles, update_settings, CanisterIdRecord, CanisterSettings, LogVisibility,
-    UpdateSettingsArgument,
+    canister_status, deposit_cycles, update_settings, CanisterIdRecord, CanisterSettings,
+    LogVisibility, UpdateSettingsArgument,
 };
+use shared_utils::constant::SUBNET_ORCHESTRATOR_CANISTER_CYCLES_THRESHOLD;
 
 use crate::CANISTER_DATA;
 
@@ -29,12 +30,24 @@ impl RegisteredSubnetOrchestrator {
         self.canister_id
     }
 
-    pub async fn deposit_cycles(&self, cycles: u128) -> Result<(), String> {
+    pub async fn deposit_cycles(&self) -> Result<(), String> {
+        let (subnet_orchestrator_status_res,) = canister_status(CanisterIdRecord {
+            canister_id: self.canister_id,
+        })
+        .await
+        .map_err(|e| e.1)?;
+
+        let subnet_orchestrator_cycles = subnet_orchestrator_status_res.cycles;
+
+        if subnet_orchestrator_cycles > SUBNET_ORCHESTRATOR_CANISTER_CYCLES_THRESHOLD {
+            return Ok(());
+        }
+
         deposit_cycles(
             CanisterIdRecord {
                 canister_id: self.canister_id,
             },
-            cycles,
+            SUBNET_ORCHESTRATOR_CANISTER_CYCLES_THRESHOLD,
         )
         .await
         .map_err(|e| e.1)
@@ -60,6 +73,46 @@ impl RegisteredSubnetOrchestrator {
                 ..Default::default()
             },
         })
+        .await
+        .map_err(|e| e.1)
+    }
+
+    pub async fn make_individual_canister_logs_public(
+        &self,
+        individual_canister_id: Principal,
+    ) -> Result<(), String> {
+        let (res,) = ic_cdk::call(
+            self.canister_id,
+            "make_individual_canister_logs_public",
+            (individual_canister_id,),
+        )
+        .await
+        .map_err(|e| e.1)?;
+
+        res
+    }
+
+    pub async fn make_individual_canister_logs_private(
+        &self,
+        individual_canister_id: Principal,
+    ) -> Result<(), String> {
+        let (res,) = ic_cdk::call(
+            self.canister_id,
+            "make_individual_canister_logs_private",
+            (individual_canister_id,),
+        )
+        .await
+        .map_err(|e| e.1)?;
+
+        res
+    }
+
+    pub async fn provision_empty_canisters(&self, number_of_canisters: u64) -> Result<(), String> {
+        ic_cdk::call::<_, ()>(
+            self.canister_id,
+            "provision_empty_canisters",
+            (number_of_canisters,),
+        )
         .await
         .map_err(|e| e.1)
     }

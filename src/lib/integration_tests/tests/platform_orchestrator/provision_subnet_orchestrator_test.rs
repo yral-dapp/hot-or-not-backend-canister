@@ -55,7 +55,7 @@ fn provision_subnet_orchestrator_canister() {
         })
         .unwrap();
 
-    for i in 0..50 {
+    for i in 0..110 {
         pocket_ic.tick();
     }
 
@@ -124,7 +124,7 @@ fn provision_subnet_orchestrator_canister() {
         .unwrap()
         .unwrap();
 
-    for i in 0..50 {
+    for i in 0..150 {
         pocket_ic.tick();
     }
 
