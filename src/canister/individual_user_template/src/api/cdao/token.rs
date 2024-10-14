@@ -2,7 +2,7 @@ use candid::{Nat, Principal};
 use ic_cdk::{query, update};
 use ic_sns_root::pb::v1::{ListSnsCanistersRequest, ListSnsCanistersResponse};
 use icrc_ledger_types::icrc1::{account::Account, transfer::{Memo, TransferArg, TransferError}};
-use shared_utils::{canister_specific::individual_user_template::types::error::CdaoTokenError, pagination::{self, PaginationError}};
+use shared_utils::{canister_specific::individual_user_template::types::{error::CdaoTokenError, profile::UserProfileDetailsForFrontendV2}, pagination::{self, PaginationError}};
 
 use crate::CANISTER_DATA;
 
@@ -84,11 +84,16 @@ fn claim_airdrop(token_root: Principal){
     })
 }
 #[update]
-async fn request_airdrop(token_root: Principal, memo: Option<Memo>, amount: Nat) ->  Result<(), CdaoTokenError>{
+async fn request_airdrop(token_root: Principal, memo: Option<Memo>, amount: Nat, user_canister: Principal) ->  Result<(), CdaoTokenError>{
     let current_caller = ic_cdk::caller();
-    let (already_claimed,): (bool,) = ic_cdk::call(current_caller, "is_airdrop_claimed", (token_root,)).await?;
+    let (profile_info,): (UserProfileDetailsForFrontendV2, ) = ic_cdk::call(user_canister, "get_profile_details_v2", ()).await?;
+
+    if profile_info.principal_id != current_caller{
+        return Err(CdaoTokenError::Unauthenticated);
+    }
+    let (already_claimed,): (bool,) = ic_cdk::call(user_canister, "is_airdrop_claimed", (token_root,)).await?;
     if already_claimed{
-        return Ok(())
+        return Err(CdaoTokenError::AirdropAlreadyClaimed)
     }
     let res: (ListSnsCanistersResponse,) = ic_cdk::call(token_root, "list_sns_canisters", (ListSnsCanistersRequest {},)).await?;
     let ledger = res.0.ledger.ok_or(CdaoTokenError::InvalidRoot)?;
@@ -105,7 +110,7 @@ async fn request_airdrop(token_root: Principal, memo: Option<Memo>, amount: Nat)
     let transfer_res: (Result<Nat, TransferError>,) = ic_cdk::call(ledger.into(), "icrc1_transfer", (transfer_args,)).await?;
     transfer_res.0.map_err(CdaoTokenError::Transfer)?;
 
-    let _:((),) = ic_cdk::call(current_caller, "claim_airdrop", (token_root,)).await?;
+    let _:((),) = ic_cdk::call(user_canister, "claim_airdrop", (token_root,)).await?;
     Ok(())
 }
 #[query]
