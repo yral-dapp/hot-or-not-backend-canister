@@ -362,9 +362,9 @@ type Result_17 = variant { Ok : vec text; Err : NamespaceErrors };
 type Result_18 = variant { Ok : vec record { nat64; nat8 }; Err : text };
 type Result_19 = variant { Ok; Err : MigrationErrors };
 type Result_2 = variant { Ok : bool; Err : CdaoTokenError };
-type Result_20 = variant { Committed : Committed; Aborted : record {} };
-type Result_21 = variant { Ok : Ok; Err : GovernanceError };
-type Result_22 = variant { Ok; Err : CdaoTokenError };
+type Result_20 = variant { Ok; Err : CdaoTokenError };
+type Result_21 = variant { Committed : Committed; Aborted : record {} };
+type Result_22 = variant { Ok : Ok; Err : GovernanceError };
 type Result_23 = variant { Ok : text; Err : text };
 type Result_24 = variant {
   Ok : UserProfileDetailsForFrontend;
@@ -392,10 +392,10 @@ type RoomDetails = record {
 };
 type SessionType = variant { AnonymousSession; RegisteredSession };
 type SettleNeuronsFundParticipationRequest = record {
-  result : opt Result_20;
+  result : opt Result_21;
   nns_proposal_id : opt nat64;
 };
-type SettleNeuronsFundParticipationResponse = record { result : opt Result_21 };
+type SettleNeuronsFundParticipationResponse = record { result : opt Result_22 };
 type SlotDetails = record { room_details : vec record { nat64; RoomDetails } };
 type SnsInitPayload = record {
   url : opt text;
@@ -548,6 +548,7 @@ service : (IndividualUserTemplateInitArgs) -> {
   check_and_update_scores_and_share_with_post_cache_if_difference_beyond_threshold : (
       vec nat64,
     ) -> ();
+  claim_airdrop : (principal) -> ();
   clear_snapshot : () -> ();
   create_a_namespace : (text) -> (Result_4);
   delete_key_value_pair : (nat64, text) -> (Result_5);
@@ -604,6 +605,7 @@ service : (IndividualUserTemplateInitArgs) -> {
       opt principal,
     ) query;
   http_request : (HttpRequest) -> (HttpResponse) query;
+  is_airdrop_claimed : (principal) -> (bool) query;
   list_namespace_keys : (nat64) -> (Result_17) query;
   list_namespaces : (nat64, nat64) -> (vec NamespaceForFrontend) query;
   load_snapshot : (nat64) -> ();
@@ -613,13 +615,14 @@ service : (IndividualUserTemplateInitArgs) -> {
   receive_bet_from_bet_makers_canister : (PlaceBetArg, principal) -> (Result_3);
   receive_bet_winnings_when_distributed : (nat64, BetOutcomeForBetMaker) -> ();
   receive_data_from_hotornot : (principal, nat64, vec Post) -> (Result_19);
+  request_airdrop : (principal, opt blob, nat) -> (Result_20);
   return_cycles_to_user_index_canister : (opt nat) -> ();
   save_snapshot_json : () -> (nat32);
   settle_neurons_fund_participation : (
       SettleNeuronsFundParticipationRequest,
     ) -> (SettleNeuronsFundParticipationResponse);
   transfer_token_to_user_canister : (principal, principal, opt blob, nat) -> (
-      Result_22,
+      Result_20,
     );
   transfer_tokens_and_posts : (principal, principal) -> (Result_19);
   update_last_access_time : () -> (Result_23);
