@@ -4,6 +4,9 @@ type AggregateStats = record {
   total_number_of_hot_bets : nat64;
 };
 type AirdropDistribution = record { airdrop_neurons : vec NeuronDistribution };
+type AirdropInfo = record {
+  principals_who_successfully_claimed : vec record { principal; ClaimStatus };
+};
 type BetDetails = record {
   bet_direction : BetDirection;
   bet_maker_canister_id : principal;
@@ -50,7 +53,6 @@ type CdaoDeployError = variant {
 };
 type CdaoTokenError = variant {
   NoBalance;
-  AirdropAlreadyClaimed;
   InvalidRoot;
   CallError : record { RejectionCode; text };
   Transfer : TransferError;
@@ -65,6 +67,7 @@ type CfParticipant = record {
   hotkey_principal : text;
   cf_neurons : vec CfNeuron;
 };
+type ClaimStatus = variant { Unclaimed; Claiming; Claimed };
 type Committed = record {
   total_direct_participation_icp_e8s : opt nat64;
   total_neurons_fund_participation_icp_e8s : opt nat64;
@@ -73,6 +76,7 @@ type Committed = record {
 type Countries = record { iso_codes : vec text };
 type DappCanisters = record { canisters : vec Canister };
 type DeployedCdaoCanisters = record {
+  airdrop_info : AirdropInfo;
   root : principal;
   swap : principal;
   ledger : principal;
@@ -553,7 +557,6 @@ service : (IndividualUserTemplateInitArgs) -> {
   check_and_update_scores_and_share_with_post_cache_if_difference_beyond_threshold : (
       vec nat64,
     ) -> ();
-  claim_airdrop : (principal) -> ();
   clear_snapshot : () -> ();
   create_a_namespace : (text) -> (Result_4);
   delete_key_value_pair : (nat64, text) -> (Result_5);
@@ -611,7 +614,6 @@ service : (IndividualUserTemplateInitArgs) -> {
       opt principal,
     ) query;
   http_request : (HttpRequest) -> (HttpResponse) query;
-  is_airdrop_claimed : (principal) -> (bool) query;
   list_namespace_keys : (nat64) -> (Result_18) query;
   list_namespaces : (nat64, nat64) -> (vec NamespaceForFrontend) query;
   load_snapshot : (nat64) -> ();

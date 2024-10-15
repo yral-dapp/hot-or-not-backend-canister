@@ -2,7 +2,7 @@ use candid::{Nat, Principal};
 use ic_cdk::{query, update};
 use ic_sns_root::pb::v1::{ListSnsCanistersRequest, ListSnsCanistersResponse};
 use icrc_ledger_types::icrc1::{account::Account, transfer::{Memo, TransferArg, TransferError}};
-use shared_utils::{canister_specific::individual_user_template::types::{error::CdaoTokenError, profile::UserProfileDetailsForFrontendV2}, pagination::{self, PaginationError}};
+use shared_utils::{canister_specific::individual_user_template::types::{cdao::DeployedCdaoCanisters, error::CdaoTokenError, profile::UserProfileDetailsForFrontendV2, token}, pagination::{self, PaginationError}};
 
 use crate::CANISTER_DATA;
 
@@ -68,51 +68,7 @@ async fn transfer_token_to_user_canister(token_root: Principal, target_canister:
 
     Ok(())
 }
-#[query]
-fn is_airdrop_claimed(token_root: Principal) -> bool{
-    CANISTER_DATA.with(|cdata|{
-        let cdata = cdata.borrow();
-        cdata.airdrop_claimed.get(&token_root).is_some()
-    })
-}
 
-#[update]
-fn claim_airdrop(token_root: Principal){
-    CANISTER_DATA.with(|cdata|{
-        let mut cdata = cdata.borrow_mut();
-        cdata.airdrop_claimed.insert(token_root, ());
-    })
-}
-#[update]
-async fn request_airdrop(token_root: Principal, memo: Option<Memo>, amount: Nat, user_canister: Principal) ->  Result<(), CdaoTokenError>{
-    let current_caller = ic_cdk::caller();
-    let (profile_info,): (UserProfileDetailsForFrontendV2, ) = ic_cdk::call(user_canister, "get_profile_details_v2", ()).await?;
-
-    if profile_info.principal_id != current_caller{
-        return Err(CdaoTokenError::Unauthenticated);
-    }
-    let (already_claimed,): (bool,) = ic_cdk::call(user_canister, "is_airdrop_claimed", (token_root,)).await?;
-    if already_claimed{
-        return Err(CdaoTokenError::AirdropAlreadyClaimed)
-    }
-    let res: (ListSnsCanistersResponse,) = ic_cdk::call(token_root, "list_sns_canisters", (ListSnsCanistersRequest {},)).await?;
-    let ledger = res.0.ledger.ok_or(CdaoTokenError::InvalidRoot)?;
-
-    let transfer_args = TransferArg {
-        from_subaccount: None,
-        to: Account { owner: current_caller, subaccount: None },
-        fee: None,
-        created_at_time: None,
-        memo,
-        amount,
-    };
-
-    let transfer_res: (Result<Nat, TransferError>,) = ic_cdk::call(ledger.into(), "icrc1_transfer", (transfer_args,)).await?;
-    transfer_res.0.map_err(CdaoTokenError::Transfer)?;
-
-    let _:((),) = ic_cdk::call(user_canister, "claim_airdrop", (token_root,)).await?;
-    Ok(())
-}
 #[query]
 fn get_token_roots_of_this_user_with_pagination_cursor(from_inclusive_index: u64, limit: u64) -> Result<Vec<Principal>, PaginationError> {
     CANISTER_DATA.with_borrow(|cdata| {

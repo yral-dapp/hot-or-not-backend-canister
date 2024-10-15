@@ -495,7 +495,7 @@ fn creator_dao_tests() {
     }
 
     assert!(res.len() == 1);
-    let res = res[0];
+    let res = res[0].clone();
     let swap_canister = res.swap;
     let gov_canister = res.governance;
     let ledger_canister = res.ledger;

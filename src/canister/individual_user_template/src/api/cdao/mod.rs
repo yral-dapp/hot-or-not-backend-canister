@@ -1,6 +1,6 @@
 mod token;
-
-use std::collections::VecDeque;
+mod airdrop;
+use std::collections::{HashMap, HashSet, VecDeque};
 
 use candid::{Encode, Principal};
 use futures::{
@@ -25,7 +25,7 @@ use ic_nns_governance::pb::v1::{
 use shared_utils::{
     canister_specific::individual_user_template::{
         consts::CDAO_TOKEN_LIMIT,
-        types::{cdao::DeployedCdaoCanisters, error::CdaoDeployError, session::SessionType},
+        types::{cdao::{AirdropInfo, DeployedCdaoCanisters}, error::CdaoDeployError, session::SessionType},
     },
     common::types::known_principal::KnownPrincipalType,
     constant::{NNS_LEDGER_CANISTER_ID, USER_SNS_CANISTER_INITIAL_CYCLES},
@@ -255,10 +255,11 @@ async fn deploy_cdao_sns(
         root: root.0,
         swap: swap.0,
         index: index.0,
+        airdrop_info: AirdropInfo { principals_who_successfully_claimed: HashMap::new() },
     };
     CANISTER_DATA.with(|cdata| {
         let mut cdata = cdata.borrow_mut();
-        cdata.cdao_canisters.push(deployed_cans);
+        cdata.cdao_canisters.push(deployed_cans.clone());
         cdata.token_roots.insert(root.0, ());
     });
 
