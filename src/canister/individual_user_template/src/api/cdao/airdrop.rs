@@ -17,7 +17,7 @@ async fn request_airdrop(token_root: Principal, memo: Option<Memo>, amount: Nat,
     }
 
     if !is_airdrop_unclaimed(token_root, &current_caller)? {// assertion is checked here
-        return Ok(());
+        return Err(CdaoTokenError::AlreadyClaimedAirdrop);
     }
 
     let amount = amount.min(1000u32.into());

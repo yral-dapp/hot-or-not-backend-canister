@@ -41,7 +41,7 @@ impl AirdropInfo {
     }
 
     pub fn is_airdrop_unclaimed(&self, user_id: &Principal) -> bool{
-        matches!(self.get_claim_status(user_id), Ok(ClaimStatus::Unclaimed))
+        matches!(self.get_claim_status(user_id), Ok(ClaimStatus::Unclaimed) | Err(_))
     }
 
     fn set_claim_status_or_insert_with_claim_status_if_not_exist(

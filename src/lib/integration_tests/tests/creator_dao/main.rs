@@ -1185,6 +1185,24 @@ ic_cdk::println!("🧪 SNS token Balance of alice: {:?}", res);
     ic_cdk::println!("🧪 Result: {:?}", res);
     assert!(res.unwrap().is_err());
 
+    let deployed_cdao = pocket_ic
+    .query_call(
+        alice_canister_id,
+        alice_principal,
+        "deployed_cdao_canisters",
+        candid::encode_one(()).unwrap(),
+    )
+    .map(|res| {
+        let response: Vec<DeployedCdaoCanisters> = match res {
+            WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+            _ => panic!("\n🛑 get requester principals canister id failed\n"),
+        };
+        response
+    })
+    .unwrap();
+    ic_cdk::println!("🧪 Result: {:?}", res);
+
+    
     let res = pocket_ic
     .query_call(
         deployed_cdao[0].ledger,
