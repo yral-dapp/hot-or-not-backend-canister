@@ -1169,7 +1169,7 @@ ic_cdk::println!("🧪 SNS token Balance of alice: {:?}", res);
         });
     ic_cdk::println!("🧪 Result: {:?}", res);
     assert!(res.is_ok());
-    let res = pocket_ic
+    let res: Result<Result<(), CdaoTokenError>, pocket_ic::UserError> = pocket_ic
     .update_call(
         alice_canister_id,
          bob,
@@ -1183,7 +1183,7 @@ ic_cdk::println!("🧪 SNS token Balance of alice: {:?}", res);
         response
     });
     ic_cdk::println!("🧪 Result: {:?}", res);
-    assert!(res.is_err());
+    assert!(res.unwrap().is_err());
 
     let res = pocket_ic
     .query_call(
