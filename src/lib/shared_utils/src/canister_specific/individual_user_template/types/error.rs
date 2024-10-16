@@ -65,6 +65,8 @@ pub enum CdaoTokenError {
     NoBalance,
     CallError(RejectionCode, String),
     Unauthenticated,
+    CanisterPrincipalDoNotMatch,
+    UserDoesNotExist
 }
 
 impl From<(RejectionCode, String)> for CdaoTokenError {

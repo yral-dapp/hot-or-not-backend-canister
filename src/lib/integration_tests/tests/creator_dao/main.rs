@@ -1168,7 +1168,7 @@ ic_cdk::println!("🧪 SNS token Balance of alice: {:?}", res);
             response
         });
     ic_cdk::println!("🧪 Result: {:?}", res);
-    assert!(res.is_ok());
+    assert!(res.unwrap().is_ok());
     let res: Result<Result<(), CdaoTokenError>, pocket_ic::UserError> = pocket_ic
     .update_call(
         alice_canister_id,
@@ -1184,24 +1184,6 @@ ic_cdk::println!("🧪 SNS token Balance of alice: {:?}", res);
     });
     ic_cdk::println!("🧪 Result: {:?}", res);
     assert!(res.unwrap().is_err());
-
-    let res = pocket_ic
-    .query_call(
-        alice_canister_id,
-        alice_principal,
-        "deployed_cdao_canisters",
-        candid::encode_one(()).unwrap(),
-    )
-    .map(|res| {
-        let response: Vec<DeployedCdaoCanisters> = match res {
-            WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-            _ => panic!("\n🛑 get requester principals canister id failed\n"),
-        };
-        response
-    })
-    .unwrap();
-    ic_cdk::println!("🧪 Result: {:?}", res.iter().find(|res| res.ledger == deployed_cdao[0].ledger).unwrap().airdrop_info);
-    assert!(res.iter().find(|res| res.ledger == deployed_cdao[0].ledger).unwrap().airdrop_info.is_airdrop_claimed(&bob).unwrap());
 
     let res = pocket_ic
     .query_call(

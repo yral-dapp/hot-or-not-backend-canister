@@ -13,7 +13,7 @@ async fn request_airdrop(token_root: Principal, memo: Option<Memo>, amount: Nat,
     let profile_info = get_profile_info(user_canister).await?;
     
     if profile_info.principal_id != current_caller {
-        return Err(CdaoTokenError::Unauthenticated);
+        return Err(CdaoTokenError::CanisterPrincipalDoNotMatch);
     }
 
     if !is_airdrop_unclaimed(token_root, &current_caller)? {// assertion is checked here
@@ -63,7 +63,7 @@ fn is_airdrop_unclaimed(token_root: Principal, current_caller: &Principal) -> Re
     CANISTER_DATA.with_borrow(|cans_data| {
         cans_data.cdao_canisters.iter().find(|cdao| cdao.root == token_root)
             .map(|cdao| cdao.airdrop_info.is_airdrop_unclaimed(current_caller))
-    }).ok_or(CdaoTokenError::InvalidRoot)?.map_err(|_| CdaoTokenError::Unauthenticated)
+    }).ok_or(CdaoTokenError::InvalidRoot)
 }
 
 fn set_airdrop_claiming(token_root: Principal, current_caller: Principal) {
