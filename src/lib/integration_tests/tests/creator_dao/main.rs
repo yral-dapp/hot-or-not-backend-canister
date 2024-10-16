@@ -1244,4 +1244,6 @@ ic_cdk::println!("🧪 SNS token Balance of alice: {:?}", res);
     })
     .unwrap();
     ic_cdk::println!("🧪 SNS token Balance of bob: {:?}", alice_bal);
+
+    assert!(bob_bal == Nat::from(100u64));
 }
