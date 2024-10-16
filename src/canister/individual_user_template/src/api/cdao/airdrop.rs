@@ -71,7 +71,8 @@ fn set_airdrop_claiming(token_root: Principal, current_caller: Principal) {
         if let Some(cdao) = cans_data.cdao_canisters.iter_mut().find(|cdao| cdao.root == token_root) {
             cdao.airdrop_info.set_airdrop_claiming(current_caller)
         }
-    })
+    });
+    ic_cdk::println!("Setting airdrop claiming for user: {:?}", current_caller);
 }
 
 async fn get_ledger(token_root: Principal) -> Result<PrincipalId, CdaoTokenError> {

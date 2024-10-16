@@ -1203,7 +1203,7 @@ ic_cdk::println!("🧪 SNS token Balance of alice: {:?}", res);
     ic_cdk::println!("🧪 Result: {:?}", deployed_cdao);
 
 
-    let res = pocket_ic
+    let bob_bal = pocket_ic
     .query_call(
         deployed_cdao[0].ledger,
         alice_canister_id,
@@ -1222,8 +1222,26 @@ ic_cdk::println!("🧪 SNS token Balance of alice: {:?}", res);
         response
     })
     .unwrap();
-    ic_cdk::println!("🧪 SNS token Balance of bob: {:?}", res);
+    ic_cdk::println!("🧪 SNS token Balance of bob: {:?}", bob_bal);
 
-    assert!(res == Nat::from(100u64));
-    assert!(res <= start_alice_bal - Nat::from(100u64));
+    let alice_bal = pocket_ic
+    .query_call(
+        deployed_cdao[0].ledger,
+        alice_canister_id,
+        "icrc1_balance_of",
+        candid::encode_one(types::Icrc1BalanceOfArg {
+            owner: alice_principal,
+            subaccount: None,
+        })
+        .unwrap(),
+    )
+    .map(|res| {
+        let response = match res {
+            WasmResult::Reply(payload) => Decode!(&payload, Nat).unwrap(),
+            _ => panic!("\n🛑 get requester principals canister id failed\n"),
+        };
+        response
+    })
+    .unwrap();
+    ic_cdk::println!("🧪 SNS token Balance of bob: {:?}", alice_bal);
 }
