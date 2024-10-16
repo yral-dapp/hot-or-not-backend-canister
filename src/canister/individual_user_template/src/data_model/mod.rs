@@ -128,6 +128,7 @@ pub fn _default_token_list() -> ic_stable_structures::btreemap::BTreeMap<Princip
     ic_stable_structures::btreemap::BTreeMap::init(get_token_list_memory())
 }
 
+
 pub fn _default_success_history_v1(
 ) -> ic_stable_structures::btreemap::BTreeMap<SuccessHistoryItemV1, (), Memory> {
     ic_stable_structures::btreemap::BTreeMap::init(get_success_history_memory())
@@ -162,7 +163,7 @@ impl Default for CanisterData {
             device_identities: Vec::new(),
             ml_feed_cache: Vec::new(),
             cdao_canisters: Vec::new(),
-            token_roots: _default_token_list(),
+            token_roots: _default_token_list()
         }
     }
 }

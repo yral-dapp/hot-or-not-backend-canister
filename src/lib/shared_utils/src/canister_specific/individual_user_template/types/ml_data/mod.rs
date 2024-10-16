@@ -18,7 +18,7 @@ pub struct WatchHistoryItem {
     pub cf_video_id: String,
     pub percentage_watched: f32,
 }
-
+#[allow(clippy::derive_ord_xor_partial_ord)]
 impl Ord for WatchHistoryItem {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.viewed_at.cmp(&other.viewed_at)
@@ -50,7 +50,7 @@ pub struct SuccessHistoryItem {
     pub interacted_at: SystemTime,
     pub cf_video_id: String,
 }
-
+#[allow(clippy::derive_ord_xor_partial_ord)]
 impl Ord for SuccessHistoryItem {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.interacted_at.cmp(&other.interacted_at)
@@ -83,7 +83,7 @@ pub struct SuccessHistoryItemV1 {
     pub item_type: String,
     pub percentage_watched: f32,
 }
-
+#[allow(clippy::derive_ord_xor_partial_ord)]
 impl Ord for SuccessHistoryItemV1 {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.interacted_at.cmp(&other.interacted_at)
