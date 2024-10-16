@@ -48,7 +48,7 @@ async fn request_airdrop_internal(token_root: Principal, current_caller: Princip
     let balance = get_balance(ledger.into()).await?;
     
     if balance < amount {
-        return Ok(());
+        return Err(CdaoTokenError::NoBalance);
     }
 
     transfer_tokens(ledger.into(), current_caller, memo, amount).await?;

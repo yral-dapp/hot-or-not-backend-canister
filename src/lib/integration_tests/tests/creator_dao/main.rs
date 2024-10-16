@@ -1201,7 +1201,7 @@ ic_cdk::println!("🧪 SNS token Balance of alice: {:?}", res);
     })
     .unwrap();
     ic_cdk::println!("🧪 Result: {:?}", deployed_cdao);
-
+    assert!(deployed_cdao[0].airdrop_info.is_airdrop_claimed(&bob).unwrap());
 
     let bob_bal = pocket_ic
     .query_call(
