@@ -1152,8 +1152,32 @@ fn airdrop_tests(){
         response
     })
     .unwrap();
-ic_cdk::println!("🧪 SNS token Balance of alice: {:?}", res);
+ic_cdk::println!("🧪 SNS token Balance of alice: {:?}", start_alice_bal);
+    assert!(start_alice_bal > 0u32);
 
+    // simulating off-chain allocation (kinda)
+    let transfer_args = types::TransferArg {
+        from_subaccount: None,
+        to: types::Account { owner: alice_canister_id, subaccount: None },
+        fee: None,
+        created_at_time: None,
+        memo: None,
+        amount: 200u32.into(),
+    };
+    let transfer = pocket_ic.update_call(
+        deployed_cdao[0].ledger,
+         alice_principal, 
+         "icrc1_transfer",
+         Encode!(&transfer_args).unwrap()
+          ).map(|res| {
+            let response: types::TransferResult = match res {
+                WasmResult::Reply(payload) => Decode!(&payload, types::TransferResult).unwrap(),
+                _ => panic!("\n🛑 icrc1_transfer failed with: {:?}", res),
+            };
+            response
+        })
+        .unwrap();
+    ic_cdk::println!("🧪 Result: {:?}", transfer);
     let res = pocket_ic
         .update_call(
             alice_canister_id,
