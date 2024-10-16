@@ -37,8 +37,7 @@ async fn request_airdrop(token_root: Principal, memo: Option<Memo>, amount: Nat,
         });
     })?; // rollback to unclaimed if error
 
-    set_airdrop_claimed(token_root, current_caller); // can safely ignore error here assertion is already checked
-
+    set_airdrop_claimed(token_root, current_caller); 
     Ok(())
 }
 

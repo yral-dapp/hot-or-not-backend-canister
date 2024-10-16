@@ -774,7 +774,7 @@ fn creator_dao_tests() {
         .unwrap();
     ic_cdk::println!("🧪 Result: {:?}", transfer);
 
-
+    // claiming airdrop
     let res = pocket_ic
         .update_call(
             alice_canister_id,
@@ -789,7 +789,9 @@ fn creator_dao_tests() {
             response
         });
     ic_cdk::println!("🧪 Result: {:?}", res);
-    assert!(res.as_ref().unwrap().is_ok() && res.unwrap() == Ok(()));
+    assert!(res.as_ref().unwrap().is_ok());
+
+    // trying to claim the airdrop again
     let res: Result<Result<(), CdaoTokenError>, pocket_ic::UserError> = pocket_ic
     .update_call(
         alice_canister_id,
@@ -806,6 +808,7 @@ fn creator_dao_tests() {
     ic_cdk::println!("🧪 Result: {:?}", res);
     assert!(res.as_ref().unwrap().is_err() && res.unwrap() == Err(CdaoTokenError::AlreadyClaimedAirdrop));
 
+    // trying to claim the airdrop with the wrong canister id 
     let res: Result<Result<(), CdaoTokenError>, pocket_ic::UserError> = pocket_ic
     .update_call(
         alice_canister_id,
@@ -842,7 +845,7 @@ fn creator_dao_tests() {
 
     let bob_bal = pocket_ic
     .query_call(
-        deployed_cdao[0].ledger,
+        ledger_canister,
         alice_canister_id,
         "icrc1_balance_of",
         candid::encode_one(types::Icrc1BalanceOfArg {
@@ -852,35 +855,33 @@ fn creator_dao_tests() {
         .unwrap(),
     )
     .map(|res| {
-        let response = match res {
+        match res {
             WasmResult::Reply(payload) => Decode!(&payload, Nat).unwrap(),
-            _ => panic!("\n🛑 get requester principals canister id failed\n"),
-        };
-        response
+            _ => panic!("\n🛑 get bob principal bal failed\n"),
+        }
     })
     .unwrap();
-    ic_cdk::println!("🧪 SNS token Balance of bob: {:?}", bob_bal);
+    ic_cdk::println!("🧪 SNS token Balance of bob principal: {:?}", bob_bal);
 
     let alice_bal = pocket_ic
     .query_call(
-        deployed_cdao[0].ledger,
+        ledger_canister,
         alice_canister_id,
         "icrc1_balance_of",
         candid::encode_one(types::Icrc1BalanceOfArg {
-            owner: alice_principal,
+            owner: alice_canister_id,
             subaccount: None,
         })
         .unwrap(),
     )
     .map(|res| {
-        let response = match res {
+        match res {
             WasmResult::Reply(payload) => Decode!(&payload, Nat).unwrap(),
-            _ => panic!("\n🛑 get requester principals canister id failed\n"),
-        };
-        response
+            _ => panic!("\n🛑 get alice canister bal failed\n"),
+        }
     })
     .unwrap();
-    ic_cdk::println!("🧪 SNS token Balance of alice: {:?}", alice_bal);
+    ic_cdk::println!("🧪 SNS token Balance of alice canister: {:?}", alice_bal);
 
-    assert!(bob_bal == Nat::from(100u64));
+    assert!(bob_bal == 100u64);
 }
