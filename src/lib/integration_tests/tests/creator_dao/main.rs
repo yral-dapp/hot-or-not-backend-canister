@@ -805,7 +805,7 @@ fn airdrop_tests(){
         })
         .unwrap()
         .unwrap();
-    
+
     let alice_initial_cycle_balance = pocket_ic.cycle_balance(alice_canister_id);
 
     let sns_wasm_w_canister_wasm = include_bytes!("../../../../../wasms/sns-wasm-canister.wasm");
@@ -964,7 +964,7 @@ fn airdrop_tests(){
         .update_call(
             sns_wasm_w_canister_id,
             Principal::anonymous(),
-            "get_latest_sns_version_pretty",
+            "get_latest_sns_version_pretty".into(),
             candid::encode_one(()).unwrap(),
         )
         .map(|res| {
@@ -1098,23 +1098,265 @@ fn airdrop_tests(){
         })
         .unwrap();
     ic_cdk::println!("🧪 Result: {:?}", res.unwrap().to_string());
-    
-    let deployed_cdao = pocket_ic
-    .query_call(
-        alice_canister_id,
-        alice_principal,
-        "deployed_cdao_canisters",
-        candid::encode_one(()).unwrap(),
-    )
-    .map(|res| {
-        let response: Vec<DeployedCdaoCanisters> = match res {
-            WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-            _ => panic!("\n🛑 get requester principals canister id failed\n"),
-        };
-        response
-    })
-    .unwrap();
-    ic_cdk::println!("🧪 Result: {:?}", deployed_cdao);
+
+    let res = pocket_ic
+        .query_call(
+            alice_canister_id,
+            alice_principal,
+            "deployed_cdao_canisters",
+            candid::encode_one(()).unwrap(),
+        )
+        .map(|res| {
+            let response: Vec<DeployedCdaoCanisters> = match res {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 get requester principals canister id failed\n"),
+            };
+            response
+        })
+        .unwrap();
+    ic_cdk::println!("🧪 Result: {:?}", res);
+    for can in &res {
+        ic_cdk::println!("🧪 Gov Canister ID: {:?}", can.governance.to_string());
+        ic_cdk::println!("🧪 Ind Canister ID: {:?}", can.index.to_string());
+        ic_cdk::println!("🧪 Ldg Canister ID: {:?}", can.ledger.to_string());
+        ic_cdk::println!("🧪 Rrt Canister ID: {:?}", can.root.to_string());
+        ic_cdk::println!("🧪 Swp Canister ID: {:?}", can.swap.to_string());
+    }
+
+    assert!(res.len() == 1);
+    let res = res[0].clone();
+    let root_canister = res.root;
+    let swap_canister = res.swap;
+    let gov_canister = res.governance;
+    let ledger_canister = res.ledger;
+
+    ic_cdk::println!("🧪🧪🧪 Swap Canister ID: {:?}", swap_canister.to_string());
+
+    let res = pocket_ic
+        .query_call(
+            Principal::from_text(ICP_LEDGER_CANISTER_ID).unwrap(),
+            super_admin,
+            "icrc1_total_supply",
+            candid::encode_one(()).unwrap(),
+        )
+        .map(|res| {
+            let response = match res {
+                WasmResult::Reply(payload) => Decode!(&payload, Nat).unwrap(),
+                _ => panic!("\n🛑 get requester principals canister id failed\n"),
+            };
+            response
+        })
+        .unwrap();
+    ic_cdk::println!("🧪 Result: {:?}", res);
+
+    // check super admin icp balance
+    let res = pocket_ic
+        .query_call(
+            Principal::from_text(ICP_LEDGER_CANISTER_ID).unwrap(),
+            super_admin,
+            "icrc1_balance_of",
+            candid::encode_one(types::Icrc1BalanceOfArg {
+                owner: super_admin,
+                subaccount: None,
+            })
+            .unwrap(),
+        )
+        .map(|res| {
+            let response = match res {
+                WasmResult::Reply(payload) => Decode!(&payload, Nat).unwrap(),
+                _ => panic!("\n🛑 get requester principals canister id failed\n"),
+            };
+            response
+        })
+        .unwrap();
+    ic_cdk::println!("🧪 Result: {:?}", res);
+
+    let res = pocket_ic
+        .update_call(
+            swap_canister,
+            super_admin,
+            "new_sale_ticket",
+            candid::encode_one(NewSaleTicketRequest {
+                amount_icp_e8s: 1000000,
+                subaccount: None,
+            })
+            .unwrap(),
+        )
+        .map(|res| {
+            let response: NewSaleTicketResponse = match res {
+                WasmResult::Reply(payload) => Decode!(&payload, NewSaleTicketResponse).unwrap(),
+                _ => panic!("\n🛑 get requester principals canister id failed\n"),
+            };
+            response
+        })
+        .unwrap();
+    ic_cdk::println!("🧪 Result: {:?}", res);
+
+    let subaccount = Subaccount::from(&PrincipalId(super_admin));
+    let transfer_args = types::Transaction {
+        memo: Some(vec![0]),
+        amount: Nat::from(1000000 as u64),
+        fee: Some(Nat::from(0 as u64)),
+        from_subaccount: None,
+        to: types::Recipient {
+            owner: swap_canister,
+            subaccount: Some(subaccount.to_vec()),
+        },
+        created_at_time: None,
+    };
+    let res = pocket_ic
+        .update_call(
+            Principal::from_text(ICP_LEDGER_CANISTER_ID).unwrap(),
+            super_admin,
+            "icrc1_transfer",
+            Encode!(&transfer_args).unwrap(),
+        )
+        .map(|res| {
+            let response: types::TransferResult = match res {
+                WasmResult::Reply(payload) => Decode!(&payload, types::TransferResult).unwrap(),
+                _ => panic!("\n🛑 icrc1_transfer failed with: {:?}", res),
+            };
+            response
+        })
+        .unwrap();
+    ic_cdk::println!("🧪 Result: {:?}", res);
+
+    let res = pocket_ic
+        .update_call(
+            swap_canister,
+            super_admin,
+            "refresh_buyer_tokens",
+            candid::encode_one(RefreshBuyerTokensRequest {
+                buyer: super_admin.to_string(),
+                confirmation_text: Some("GET RICH QUICK".to_string()),
+            })
+            .unwrap(),
+        )
+        .map(|res| {
+            let response: RefreshBuyerTokensResponse = match res {
+                WasmResult::Reply(payload) => {
+                    Decode!(&payload, RefreshBuyerTokensResponse).unwrap()
+                }
+                _ => panic!("\n🛑 get requester principals canister id failed\n"),
+            };
+            response
+        })
+        .unwrap();
+    ic_cdk::println!("🧪 Result: {:?}", res);
+
+    pocket_ic.advance_time(Duration::from_secs(301));
+    for _ in 0..500 {
+        pocket_ic.tick();
+    }
+
+    let res = pocket_ic
+        .query_call(
+            swap_canister,
+            super_admin,
+            "get_init",
+            candid::encode_one(GetInitRequest {}).unwrap(),
+        )
+        .map(|res| {
+            let response = match res {
+                WasmResult::Reply(payload) => Decode!(&payload, GetInitResponse).unwrap(),
+                _ => panic!("\n🛑 get requester principals canister id failed\n"),
+            };
+            response
+        })
+        .unwrap();
+    ic_cdk::println!("🧪 Result: {:?}", res);
+
+    let res = pocket_ic
+        .update_call(
+            gov_canister,
+            super_admin,
+            "list_neurons",
+            candid::encode_one(ListNeurons {
+                of_principal: Some(PrincipalId(alice_principal)),
+                limit: 2,
+                start_page_at: None,
+            })
+            .unwrap(),
+        )
+        .map(|res| {
+            let response: ListNeuronsResponse = match res {
+                WasmResult::Reply(payload) => Decode!(&payload, ListNeuronsResponse).unwrap(),
+                _ => panic!("\n🛑 get requester principals canister id failed\n"),
+            };
+            response
+        })
+        .unwrap();
+    ic_cdk::println!("🧪 Result: {:?}", res);
+
+    let neurons = res.neurons;
+    let mut ix = 0;
+    if neurons[1].dissolve_state.is_some() {
+        if let Some(neuron::DissolveState::DissolveDelaySeconds(x)) =
+            neurons[1].dissolve_state.as_ref()
+        {
+            if *x == 0 {
+                ix = 1;
+            }
+        }
+    }
+    let neuron_id = neurons[ix].id.as_ref().unwrap().id.clone();
+    let amount = neurons[ix].cached_neuron_stake_e8s;
+    let manage_neuron_arg = ManageNeuron {
+        subaccount: neuron_id,
+        command: Some(manage_neuron::Command::Disburse(manage_neuron::Disburse {
+            to_account: Some(Account {
+                owner: Some(PrincipalId(alice_principal)),
+                subaccount: None,
+            }),
+            amount: Some(manage_neuron::disburse::Amount { e8s: amount }),
+        })),
+    };
+    let res = pocket_ic
+        .update_call(
+            gov_canister,
+            alice_principal,
+            "manage_neuron",
+            candid::encode_one(manage_neuron_arg).unwrap(),
+        )
+        .map(|res| {
+            let response: ManageNeuronResponse = match res {
+                WasmResult::Reply(payload) => Decode!(&payload, ManageNeuronResponse).unwrap(),
+                _ => panic!("\n🛑 get requester principals canister id failed\n"),
+            };
+            response
+        })
+        .unwrap();
+    ic_cdk::println!("🧪 Result: {:?}", res);
+
+    let res = pocket_ic
+        .query_call(
+            ledger_canister,
+            alice_principal,
+            "icrc1_balance_of",
+            candid::encode_one(types::Icrc1BalanceOfArg {
+                owner: alice_principal,
+                subaccount: None,
+            })
+            .unwrap(),
+        )
+        .map(|res| {
+            let response = match res {
+                WasmResult::Reply(payload) => Decode!(&payload, Nat).unwrap(),
+                _ => panic!("\n🛑 get requester principals canister id failed\n"),
+            };
+            response
+        })
+        .unwrap();
+    ic_cdk::println!("🧪 SNS token Balance of alice: {:?}", res);
+
+    let expected_balance = Nat::from(4_400_000 - tx_fee);
+    ic_cdk::println!("🧪 Expected Balance: {:?}", expected_balance);
+
+    let alice_canister_final_cycle_balance = pocket_ic.cycle_balance(alice_canister_id);
+
+    assert!(alice_canister_final_cycle_balance > alice_initial_cycle_balance);
+
+    assert!(res == expected_balance);
 
     let bob = get_mock_user_bob_principal_id();
     let bob_canister_id: Principal = pocket_ic
@@ -1133,27 +1375,6 @@ fn airdrop_tests(){
         })
         .unwrap()
         .unwrap();
-    let start_alice_bal = pocket_ic
-    .query_call(
-        deployed_cdao[0].ledger,
-        alice_principal,
-        "icrc1_balance_of",
-        candid::encode_one(types::Icrc1BalanceOfArg {
-            owner: alice_principal,
-            subaccount: None,
-        })
-        .unwrap(),
-    )
-    .map(|res| {
-        let response = match res {
-            WasmResult::Reply(payload) => Decode!(&payload, Nat).unwrap(),
-            _ => panic!("\n🛑 get requester principals canister id failed\n"),
-        };
-        response
-    })
-    .unwrap();
-ic_cdk::println!("🧪 SNS token Balance of alice: {:?}", start_alice_bal);
-    assert!(start_alice_bal > 0u32);
 
     // simulating off-chain allocation (kinda)
     let transfer_args = types::TransferArg {
@@ -1165,7 +1386,7 @@ ic_cdk::println!("🧪 SNS token Balance of alice: {:?}", start_alice_bal);
         amount: 200u32.into(),
     };
     let transfer = pocket_ic.update_call(
-        deployed_cdao[0].ledger,
+        ledger_canister,
          alice_principal, 
          "icrc1_transfer",
          Encode!(&transfer_args).unwrap()
@@ -1178,12 +1399,14 @@ ic_cdk::println!("🧪 SNS token Balance of alice: {:?}", start_alice_bal);
         })
         .unwrap();
     ic_cdk::println!("🧪 Result: {:?}", transfer);
+
+
     let res = pocket_ic
         .update_call(
             alice_canister_id,
              bob,
               "request_airdrop",
-               encode_args((deployed_cdao[0].root, None::<Memo>, Nat::from(100u64), bob_canister_id)).unwrap())
+               encode_args((root_canister, None::<Memo>, Nat::from(100u64), bob_canister_id)).unwrap())
         .map(|reply_payload|{
             let response: Result<(), CdaoTokenError> = match reply_payload {
                 WasmResult::Reply(payload) => Decode!(&payload, Result<(), CdaoTokenError>).unwrap(),
@@ -1198,7 +1421,7 @@ ic_cdk::println!("🧪 SNS token Balance of alice: {:?}", start_alice_bal);
         alice_canister_id,
          bob,
           "request_airdrop",
-           encode_args((deployed_cdao[0].root, None::<Memo>, Nat::from(100u64), bob_canister_id)).unwrap())
+           encode_args((root_canister, None::<Memo>, Nat::from(100u64), bob_canister_id)).unwrap())
     .map(|reply_payload|{
         let response: Result<(), CdaoTokenError> = match reply_payload {
             WasmResult::Reply(payload) => Decode!(&payload, Result<(), CdaoTokenError>).unwrap(),
