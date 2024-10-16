@@ -1509,5 +1509,4 @@ fn airdrop_tests(){
     ic_cdk::println!("🧪 SNS token Balance of alice: {:?}", alice_bal);
 
     assert!(bob_bal == Nat::from(100u64));
-    panic!()
 }
