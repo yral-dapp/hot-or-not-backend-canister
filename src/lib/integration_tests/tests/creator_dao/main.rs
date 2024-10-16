@@ -1200,8 +1200,8 @@ ic_cdk::println!("🧪 SNS token Balance of alice: {:?}", res);
         response
     })
     .unwrap();
-    ic_cdk::println!("🧪 Result: {:?}", res[0].airdrop_info);
-    assert!(res[0].airdrop_info.is_airdrop_claimed(&bob).unwrap());
+    ic_cdk::println!("🧪 Result: {:?}", res.iter().find(|res| res.ledger == deployed_cdao[0].ledger).unwrap().airdrop_info);
+    assert!(res.iter().find(|res| res.ledger == deployed_cdao[0].ledger).unwrap().airdrop_info.is_airdrop_claimed(&bob).unwrap());
 
     let res = pocket_ic
     .query_call(
