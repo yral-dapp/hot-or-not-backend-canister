@@ -1114,7 +1114,7 @@ fn airdrop_tests(){
         response
     })
     .unwrap();
-    ic_cdk::println!("🧪 Result: {:?}", res);
+    ic_cdk::println!("🧪 Result: {:?}", deployed_cdao);
 
     let bob = get_mock_user_bob_principal_id();
     let bob_canister_id: Principal = pocket_ic
@@ -1200,9 +1200,9 @@ ic_cdk::println!("🧪 SNS token Balance of alice: {:?}", res);
         response
     })
     .unwrap();
-    ic_cdk::println!("🧪 Result: {:?}", res);
+    ic_cdk::println!("🧪 Result: {:?}", deployed_cdao);
 
-    
+
     let res = pocket_ic
     .query_call(
         deployed_cdao[0].ledger,
