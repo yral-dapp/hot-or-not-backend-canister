@@ -53,9 +53,12 @@ type CdaoDeployError = variant {
 };
 type CdaoTokenError = variant {
   NoBalance;
+  CanisterPrincipalDoNotMatch;
+  AlreadyClaimedAirdrop;
   InvalidRoot;
   CallError : record { RejectionCode; text };
   Transfer : TransferError;
+  UserDoesNotExist;
   Unauthenticated;
 };
 type CfNeuron = record {

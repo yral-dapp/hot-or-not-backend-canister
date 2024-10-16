@@ -25,7 +25,7 @@ async fn request_airdrop(token_root: Principal, memo: Option<Memo>, amount: Nat,
         return Ok(());
     }
 
-    set_airdrop_claiming(token_root, current_caller); // can safely ignore error here assertion is already checked
+    set_airdrop_claiming(token_root, current_caller);
 
     request_airdrop_internal(token_root, current_caller, memo, amount).await.inspect(|_|{
         CANISTER_DATA.with_borrow_mut(|cans_data| {
