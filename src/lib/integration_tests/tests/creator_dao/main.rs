@@ -1415,7 +1415,7 @@ fn airdrop_tests(){
             response
         });
     ic_cdk::println!("🧪 Result: {:?}", res);
-    assert!(res.unwrap().is_ok());
+    assert!(res.as_ref().unwrap().is_ok() && res.unwrap() == Ok(()));
     let res: Result<Result<(), CdaoTokenError>, pocket_ic::UserError> = pocket_ic
     .update_call(
         alice_canister_id,
@@ -1430,7 +1430,23 @@ fn airdrop_tests(){
         response
     });
     ic_cdk::println!("🧪 Result: {:?}", res);
-    assert!(res.unwrap().is_err());
+    assert!(res.as_ref().unwrap().is_err() && res.unwrap() == Err(CdaoTokenError::AlreadyClaimedAirdrop));
+
+    let res: Result<Result<(), CdaoTokenError>, pocket_ic::UserError> = pocket_ic
+    .update_call(
+        alice_canister_id,
+         bob,
+          "request_airdrop",
+           encode_args((root_canister, None::<Memo>, Nat::from(100u64), Principal::anonymous())).unwrap())
+    .map(|reply_payload|{
+        let response: Result<(), CdaoTokenError> = match reply_payload {
+            WasmResult::Reply(payload) => Decode!(&payload, Result<(), CdaoTokenError>).unwrap(),
+            _ => panic!("\n🛑 get requester principals canister id failed\n"),
+        };
+        response
+    });
+    ic_cdk::println!("🧪 Result: {:?}", res);
+    assert!(res.as_ref().unwrap().is_err() && res.unwrap() == Err(CdaoTokenError::CanisterPrincipalDoNotMatch));
 
     let deployed_cdao = pocket_ic
     .query_call(
@@ -1490,7 +1506,7 @@ fn airdrop_tests(){
         response
     })
     .unwrap();
-    ic_cdk::println!("🧪 SNS token Balance of bob: {:?}", alice_bal);
+    ic_cdk::println!("🧪 SNS token Balance of alice: {:?}", alice_bal);
 
     assert!(bob_bal == Nat::from(100u64));
 }
