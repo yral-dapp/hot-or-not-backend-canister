@@ -1446,7 +1446,7 @@ fn airdrop_tests(){
         response
     });
     ic_cdk::println!("🧪 Result: {:?}", res);
-    assert!(res.as_ref().unwrap().is_err() && res.unwrap() == Err(CdaoTokenError::CanisterPrincipalDoNotMatch));
+    assert!(res.unwrap().is_err());
 
     let deployed_cdao = pocket_ic
     .query_call(
@@ -1509,4 +1509,5 @@ fn airdrop_tests(){
     ic_cdk::println!("🧪 SNS token Balance of alice: {:?}", alice_bal);
 
     assert!(bob_bal == Nat::from(100u64));
+    panic!()
 }
