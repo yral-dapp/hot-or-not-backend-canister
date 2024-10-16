@@ -90,3 +90,270 @@ pub enum ClaimStatus {
     Claimed,
     Claiming,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use candid::Principal;
+    use std::collections::HashMap;
+
+    fn mock_principal(id: &str) -> Principal {
+        Principal::from_slice(id.as_bytes())
+    }
+
+    #[test]
+    fn test_get_claim_status_existing_principal() {
+        // Arrange
+        let mut principals_map = HashMap::new();
+        let principal = mock_principal("user1");
+        principals_map.insert(principal, ClaimStatus::Claimed);
+        let airdrop_info = AirdropInfo {
+            principals_who_successfully_claimed: principals_map,
+        };
+
+        let status = airdrop_info.get_claim_status(&principal).unwrap();
+
+        assert_eq!(status, ClaimStatus::Claimed);
+    }
+
+    #[test]
+    fn test_get_claim_status_non_existing_principal() {
+        let principals_map = HashMap::new();
+        let airdrop_info = AirdropInfo {
+            principals_who_successfully_claimed: principals_map,
+        };
+        let principal = mock_principal("user2");
+
+        let result = airdrop_info.get_claim_status(&principal);
+
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err(),
+            format!("Principal {} not found", principal)
+        );
+    }
+
+    #[test]
+    fn test_is_airdrop_claimed_true() {
+        let mut principals_map = HashMap::new();
+        let principal = mock_principal("user3");
+        principals_map.insert(principal, ClaimStatus::Claimed);
+        let airdrop_info = AirdropInfo {
+            principals_who_successfully_claimed: principals_map,
+        };
+
+        let result = airdrop_info.is_airdrop_claimed(&principal).unwrap();
+
+        assert!(result);
+    }
+
+    #[test]
+    fn test_is_airdrop_claimed_false() {
+        let mut principals_map = HashMap::new();
+        let principal = mock_principal("user4");
+        principals_map.insert(principal, ClaimStatus::Claiming);
+        let airdrop_info = AirdropInfo {
+            principals_who_successfully_claimed: principals_map,
+        };
+
+        let result = airdrop_info.is_airdrop_claimed(&principal).unwrap();
+
+        assert!(!result);
+    }
+
+    #[test]
+    fn test_is_airdrop_claiming_true() {
+        let mut principals_map = HashMap::new();
+        let principal = mock_principal("user5");
+        principals_map.insert(principal, ClaimStatus::Claiming);
+        let airdrop_info = AirdropInfo {
+            principals_who_successfully_claimed: principals_map,
+        };
+
+        let result = airdrop_info.is_airdrop_claiming(&principal).unwrap();
+
+        assert!(result);
+    }
+
+    #[test]
+    fn test_is_airdrop_claiming_false() {
+        let mut principals_map = HashMap::new();
+        let principal = mock_principal("user6");
+        principals_map.insert(principal, ClaimStatus::Unclaimed);
+        let airdrop_info = AirdropInfo {
+            principals_who_successfully_claimed: principals_map,
+        };
+
+        let result = airdrop_info.is_airdrop_claiming(&principal).unwrap();
+
+        assert!(!result);
+    }
+
+    #[test]
+    fn test_is_airdrop_unclaimed_true() {
+        let mut principals_map = HashMap::new();
+        let principal = mock_principal("user7");
+        principals_map.insert(principal, ClaimStatus::Unclaimed);
+        let airdrop_info = AirdropInfo {
+            principals_who_successfully_claimed: principals_map,
+        };
+
+        let result = airdrop_info.is_airdrop_unclaimed(&principal).unwrap();
+
+        assert!(result);
+    }
+
+    #[test]
+    fn test_is_airdrop_unclaimed_false() {
+        let mut principals_map = HashMap::new();
+        let principal = mock_principal("user8");
+        principals_map.insert(principal, ClaimStatus::Claimed);
+        let airdrop_info = AirdropInfo {
+            principals_who_successfully_claimed: principals_map,
+        };
+
+        let result = airdrop_info.is_airdrop_unclaimed(&principal).unwrap();
+
+        assert!(!result);
+    }
+
+    #[test]
+    fn test_set_airdrop_claimed_new_principal() {
+        let mut airdrop_info = AirdropInfo {
+            principals_who_successfully_claimed: HashMap::new(),
+        };
+        let principal = mock_principal("user9");
+
+        airdrop_info.set_airdrop_claimed(principal);
+
+        // Assert
+        assert_eq!(
+            airdrop_info.principals_who_successfully_claimed.get(&principal),
+            Some(&ClaimStatus::Claimed)
+        );
+    }
+
+    #[test]
+    fn test_set_airdrop_claimed_existing_principal() {
+        let mut principals_map = HashMap::new();
+        let principal = mock_principal("user10");
+        principals_map.insert(principal, ClaimStatus::Unclaimed);
+        let mut airdrop_info = AirdropInfo {
+            principals_who_successfully_claimed: principals_map,
+        };
+
+        airdrop_info.set_airdrop_claimed(principal);
+
+        assert_eq!(
+            airdrop_info.principals_who_successfully_claimed.get(&principal),
+            Some(&ClaimStatus::Claimed)
+        );
+    }
+
+    #[test]
+    fn test_set_airdrop_claiming_new_principal() {
+        let mut airdrop_info = AirdropInfo {
+            principals_who_successfully_claimed: HashMap::new(),
+        };
+        let principal = mock_principal("user11");
+
+        airdrop_info.set_airdrop_claiming(principal);
+
+        assert_eq!(
+            airdrop_info.principals_who_successfully_claimed.get(&principal),
+            Some(&ClaimStatus::Claiming)
+        );
+    }
+
+    #[test]
+    fn test_set_airdrop_claiming_existing_principal() {
+        let mut principals_map = HashMap::new();
+        let principal = mock_principal("user12");
+        principals_map.insert(principal, ClaimStatus::Unclaimed);
+        let mut airdrop_info = AirdropInfo {
+            principals_who_successfully_claimed: principals_map,
+        };
+
+        airdrop_info.set_airdrop_claiming(principal);
+
+        assert_eq!(
+            airdrop_info.principals_who_successfully_claimed.get(&principal),
+            Some(&ClaimStatus::Claiming)
+        );
+    }
+
+    #[test]
+    fn test_set_airdrop_unclaimed_new_principal() {
+        let mut airdrop_info = AirdropInfo {
+            principals_who_successfully_claimed: HashMap::new(),
+        };
+        let principal = mock_principal("user13");
+
+        airdrop_info.set_airdrop_unclaimed(principal);
+
+        assert_eq!(
+            airdrop_info.principals_who_successfully_claimed.get(&principal),
+            Some(&ClaimStatus::Unclaimed)
+        );
+    }
+
+    #[test]
+    fn test_set_airdrop_unclaimed_existing_principal() {
+        let mut principals_map = HashMap::new();
+        let principal = mock_principal("user14");
+        principals_map.insert(principal, ClaimStatus::Claimed);
+        let mut airdrop_info = AirdropInfo {
+            principals_who_successfully_claimed: principals_map,
+        };
+
+        airdrop_info.set_airdrop_unclaimed(principal);
+
+        assert_eq!(
+            airdrop_info.principals_who_successfully_claimed.get(&principal),
+            Some(&ClaimStatus::Unclaimed)
+        );
+    }
+
+    #[test]
+    fn test_update_existing_principal_status() {
+        let mut principals_map = HashMap::new();
+        let principal = mock_principal("user15");
+        principals_map.insert(principal, ClaimStatus::Unclaimed);
+        let mut airdrop_info = AirdropInfo {
+            principals_who_successfully_claimed: principals_map,
+        };
+
+        airdrop_info.set_airdrop_claiming(principal);
+        airdrop_info.set_airdrop_claimed(principal);
+
+        // Assert
+        assert_eq!(
+            airdrop_info.principals_who_successfully_claimed.get(&principal),
+            Some(&ClaimStatus::Claimed)
+        );
+    }
+
+    #[test]
+    fn test_multiple_principals() {
+        // Arrange
+        let mut airdrop_info = AirdropInfo {
+            principals_who_successfully_claimed: HashMap::new(),
+        };
+        let principal1 = mock_principal("user16");
+        let principal2 = mock_principal("user17");
+
+        // Act
+        airdrop_info.set_airdrop_claimed(principal1.clone());
+        airdrop_info.set_airdrop_claiming(principal2.clone());
+
+        // Assert
+        assert_eq!(
+            airdrop_info.principals_who_successfully_claimed.get(&principal1),
+            Some(&ClaimStatus::Claimed)
+        );
+        assert_eq!(
+            airdrop_info.principals_who_successfully_claimed.get(&principal2),
+            Some(&ClaimStatus::Claiming)
+        );
+    }
+}
