@@ -100,6 +100,9 @@ service : (PlatformOrchestratorInitArgs) -> {
   remove_principal_from_global_admins : (principal) -> ();
   remove_subnet_orchestrators_from_available_list : (principal) -> (Result);
   report_subnet_upgrade_status : (UpgradeStatus) -> (Result_1);
+  set_reserved_cycle_limit_for_subnet_orchestrator : (principal, nat) -> (
+      Result_1,
+    );
   start_reclaiming_cycles_from_individual_canisters : () -> (Result);
   start_reclaiming_cycles_from_subnet_orchestrator_canister : () -> (text);
   stop_upgrades_for_individual_user_canisters : () -> (Result);
