@@ -13,10 +13,10 @@ jobs:
     name: Publish canister artifacts and send upgrade proposals
     runs-on: ubuntu-latest
     permissions:
-      packages: read
       contents: write
-    env:
-      NEURON_ID: 4de673e9cd7a1339afea6523a5f227d25e9d739ff52635ac86dbdb0447ae106a
+      packages: read
+    env: 
+      NEURON_ID: a990d55e65186d5b4f38912c9a10748bf2e6626fb582a2b1d6442e087db56b10
 
     steps:
       - name: Checkout repo
@@ -102,6 +102,7 @@ jobs:
 
             ${{ steps.changelog.outputs.changes }}
             " \
+
             --url 'https://yral.com' \
             --target-canister-id $CANISTER_ID \
             --wasm-path .dfx/ic/canisters/${CANISTER_NAME}/${CANISTER_NAME}.wasm.gz \
