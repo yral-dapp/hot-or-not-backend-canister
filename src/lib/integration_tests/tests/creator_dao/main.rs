@@ -15,7 +15,7 @@ use ic_sns_swap::pb::v1::{
     NewSaleTicketResponse, RefreshBuyerTokensRequest, RefreshBuyerTokensResponse,
 };
 use sha2::{Digest, Sha256};
-use shared_utils::canister_specific::individual_user_template::types::error::CdaoTokenError;
+use shared_utils::canister_specific::individual_user_template::types::error::{AirdropError, CdaoTokenError};
 use test_utils::setup::test_constants::get_mock_user_bob_principal_id;
 use std::time::{Duration, UNIX_EPOCH};
 use std::{collections::HashMap, fmt::Debug, str::FromStr, time::SystemTime, vec};
@@ -782,8 +782,8 @@ fn creator_dao_tests() {
               "request_airdrop",
                encode_args((root_canister, None::<Memo>, Nat::from(100u64), bob_canister_id)).unwrap())
         .map(|reply_payload|{
-            let response: Result<(), CdaoTokenError> = match reply_payload {
-                WasmResult::Reply(payload) => Decode!(&payload, Result<(), CdaoTokenError>).unwrap(),
+            let response: Result<(), AirdropError> = match reply_payload {
+                WasmResult::Reply(payload) => Decode!(&payload, Result<(), AirdropError>).unwrap(),
                 _ => panic!("\n🛑 get requester principals canister id failed\n"),
             };
             response
@@ -792,32 +792,32 @@ fn creator_dao_tests() {
     assert!(res.as_ref().unwrap().is_ok());
 
     // trying to claim the airdrop again
-    let res: Result<Result<(), CdaoTokenError>, pocket_ic::UserError> = pocket_ic
+    let res: Result<Result<(), AirdropError>, pocket_ic::UserError> = pocket_ic
     .update_call(
         alice_canister_id,
          bob,
           "request_airdrop",
            encode_args((root_canister, None::<Memo>, Nat::from(100u64), bob_canister_id)).unwrap())
     .map(|reply_payload|{
-        let response: Result<(), CdaoTokenError> = match reply_payload {
-            WasmResult::Reply(payload) => Decode!(&payload, Result<(), CdaoTokenError>).unwrap(),
+        let response: Result<(), AirdropError> = match reply_payload {
+            WasmResult::Reply(payload) => Decode!(&payload, Result<(), AirdropError>).unwrap(),
             _ => panic!("\n🛑 get requester principals canister id failed\n"),
         };
         response
     });
     ic_cdk::println!("🧪 Result: {:?}", res);
-    assert!(res.as_ref().unwrap().is_err() && res.unwrap() == Err(CdaoTokenError::AlreadyClaimedAirdrop));
+    assert!(res.as_ref().unwrap().is_err() && res.unwrap() == Err(AirdropError::AlreadyClaimedAirdrop));
 
     // trying to claim the airdrop with the wrong canister id 
-    let res: Result<Result<(), CdaoTokenError>, pocket_ic::UserError> = pocket_ic
+    let res: Result<Result<(), AirdropError>, pocket_ic::UserError> = pocket_ic
     .update_call(
         alice_canister_id,
          bob,
           "request_airdrop",
            encode_args((root_canister, None::<Memo>, Nat::from(100u64), Principal::anonymous())).unwrap())
     .map(|reply_payload|{
-        let response: Result<(), CdaoTokenError> = match reply_payload {
-            WasmResult::Reply(payload) => Decode!(&payload, Result<(), CdaoTokenError>).unwrap(),
+        let response: Result<(), AirdropError> = match reply_payload {
+            WasmResult::Reply(payload) => Decode!(&payload, Result<(), AirdropError>).unwrap(),
             _ => panic!("\n🛑 get requester principals canister id failed\n"),
         };
         response

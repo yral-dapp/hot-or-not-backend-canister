@@ -65,13 +65,27 @@ pub enum CdaoTokenError {
     NoBalance,
     CallError(RejectionCode, String),
     Unauthenticated,
-    CanisterPrincipalDoNotMatch,
-    UserDoesNotExist,
-    AlreadyClaimedAirdrop
 }
 
 impl From<(RejectionCode, String)> for CdaoTokenError {
     fn from(value: (RejectionCode, String)) -> Self {
         CdaoTokenError::CallError(value.0, value.1)
+    }
+}
+
+#[derive(CandidType, Deserialize, PartialEq, Eq, Debug)]
+pub enum AirdropError {
+    CanisterPrincipalDoNotMatch,
+    AlreadyClaimedAirdrop,
+    RequestedAmountTooLow,
+    NoBalance,
+    InvalidRoot,
+    CallError(RejectionCode, String),
+    Transfer(TransferError),
+}
+
+impl From<(RejectionCode, String)> for AirdropError {
+    fn from(value: (RejectionCode, String)) -> Self {
+        AirdropError::CallError(value.0, value.1)
     }
 }
