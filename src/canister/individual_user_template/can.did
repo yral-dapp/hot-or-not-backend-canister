@@ -4,6 +4,18 @@ type AggregateStats = record {
   total_number_of_hot_bets : nat64;
 };
 type AirdropDistribution = record { airdrop_neurons : vec NeuronDistribution };
+type AirdropError = variant {
+  NoBalance;
+  CanisterPrincipalDoNotMatch;
+  AlreadyClaimedAirdrop;
+  RequestedAmountTooLow;
+  InvalidRoot;
+  CallError : record { RejectionCode; text };
+  Transfer : TransferError;
+};
+type AirdropInfo = record {
+  principals_who_successfully_claimed : vec record { principal; ClaimStatus };
+};
 type BetDetails = record {
   bet_direction : BetDirection;
   bet_maker_canister_id : principal;
@@ -64,6 +76,7 @@ type CfParticipant = record {
   hotkey_principal : text;
   cf_neurons : vec CfNeuron;
 };
+type ClaimStatus = variant { Unclaimed; Claiming; Claimed };
 type Committed = record {
   total_direct_participation_icp_e8s : opt nat64;
   total_neurons_fund_participation_icp_e8s : opt nat64;
@@ -72,6 +85,7 @@ type Committed = record {
 type Countries = record { iso_codes : vec text };
 type DappCanisters = record { canisters : vec Canister };
 type DeployedCdaoCanisters = record {
+  airdrop_info : AirdropInfo;
   root : principal;
   swap : principal;
   ledger : principal;
@@ -366,16 +380,17 @@ type Result_18 = variant { Ok : vec text; Err : NamespaceErrors };
 type Result_19 = variant { Ok : vec record { nat64; nat8 }; Err : text };
 type Result_2 = variant { Ok : bool; Err : CdaoTokenError };
 type Result_20 = variant { Ok; Err : MigrationErrors };
-type Result_21 = variant { Committed : Committed; Aborted : record {} };
-type Result_22 = variant { Ok : Ok; Err : GovernanceError };
-type Result_23 = variant { Ok; Err : CdaoTokenError };
-type Result_24 = variant { Ok : text; Err : text };
-type Result_25 = variant {
+type Result_21 = variant { Ok; Err : AirdropError };
+type Result_22 = variant { Committed : Committed; Aborted : record {} };
+type Result_23 = variant { Ok : Ok; Err : GovernanceError };
+type Result_24 = variant { Ok; Err : CdaoTokenError };
+type Result_25 = variant { Ok : text; Err : text };
+type Result_26 = variant {
   Ok : UserProfileDetailsForFrontend;
   Err : UpdateProfileDetailsError;
 };
-type Result_26 = variant { Ok; Err : text };
-type Result_27 = variant { Ok; Err : UpdateProfileSetUniqueUsernameError };
+type Result_27 = variant { Ok; Err : text };
+type Result_28 = variant { Ok; Err : UpdateProfileSetUniqueUsernameError };
 type Result_3 = variant {
   Ok : BettingStatus;
   Err : BetOnCurrentlyViewingPostError;
@@ -396,10 +411,10 @@ type RoomDetails = record {
 };
 type SessionType = variant { AnonymousSession; RegisteredSession };
 type SettleNeuronsFundParticipationRequest = record {
-  result : opt Result_21;
+  result : opt Result_22;
   nns_proposal_id : opt nat64;
 };
-type SettleNeuronsFundParticipationResponse = record { result : opt Result_22 };
+type SettleNeuronsFundParticipationResponse = record { result : opt Result_23 };
 type SlotDetails = record { room_details : vec record { nat64; RoomDetails } };
 type SnsInitPayload = record {
   url : opt text;
@@ -618,38 +633,39 @@ service : (IndividualUserTemplateInitArgs) -> {
   receive_bet_from_bet_makers_canister : (PlaceBetArg, principal) -> (Result_3);
   receive_bet_winnings_when_distributed : (nat64, BetOutcomeForBetMaker) -> ();
   receive_data_from_hotornot : (principal, nat64, vec Post) -> (Result_20);
+  request_airdrop : (principal, opt blob, nat, principal) -> (Result_21);
   return_cycles_to_user_index_canister : (opt nat) -> ();
   save_snapshot_json : () -> (nat32);
   settle_neurons_fund_participation : (
       SettleNeuronsFundParticipationRequest,
     ) -> (SettleNeuronsFundParticipationResponse);
   transfer_token_to_user_canister : (principal, principal, opt blob, nat) -> (
-      Result_23,
+      Result_24,
     );
   transfer_tokens_and_posts : (principal, principal) -> (Result_20);
-  update_last_access_time : () -> (Result_24);
+  update_last_access_time : () -> (Result_25);
   update_last_canister_functionality_access_time : () -> ();
-  update_ml_feed_cache : (vec MLFeedCacheItem) -> (Result_24);
+  update_ml_feed_cache : (vec MLFeedCacheItem) -> (Result_25);
   update_post_add_view_details : (nat64, PostViewDetailsFromFrontend) -> ();
   update_post_as_ready_to_view : (nat64) -> ();
   update_post_increment_share_count : (nat64) -> (nat64);
   update_post_status : (nat64, PostStatus) -> ();
   update_post_toggle_like_status_by_caller : (nat64) -> (bool);
   update_profile_display_details : (UserProfileUpdateDetailsFromFrontend) -> (
-      Result_25,
+      Result_26,
     );
-  update_profile_owner : (opt principal) -> (Result_26);
-  update_profile_set_unique_username_once : (text) -> (Result_27);
+  update_profile_owner : (opt principal) -> (Result_27);
+  update_profile_set_unique_username_once : (text) -> (Result_28);
   update_profiles_i_follow_toggle_list_with_specified_profile : (
       FolloweeArg,
     ) -> (Result_8);
   update_profiles_that_follow_me_toggle_list_with_specified_profile : (
       FollowerArg,
     ) -> (Result_8);
-  update_referrer_details : (UserCanisterDetails) -> (Result_24);
-  update_session_type : (SessionType) -> (Result_24);
-  update_success_history : (SuccessHistoryItemV1) -> (Result_24);
-  update_watch_history : (WatchHistoryItem) -> (Result_24);
+  update_referrer_details : (UserCanisterDetails) -> (Result_25);
+  update_session_type : (SessionType) -> (Result_25);
+  update_success_history : (SuccessHistoryItemV1) -> (Result_25);
+  update_watch_history : (WatchHistoryItem) -> (Result_25);
   update_well_known_principal : (KnownPrincipalType, principal) -> ();
   write_key_value_pair : (nat64, text, text) -> (Result_5);
   write_multiple_key_value_pairs : (nat64, vec record { text; text }) -> (

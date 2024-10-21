@@ -2,7 +2,7 @@ use candid::{Nat, Principal};
 use ic_cdk::{query, update};
 use ic_sns_root::pb::v1::{ListSnsCanistersRequest, ListSnsCanistersResponse};
 use icrc_ledger_types::icrc1::{account::Account, transfer::{Memo, TransferArg, TransferError}};
-use shared_utils::{canister_specific::individual_user_template::types::error::CdaoTokenError, pagination::{self, PaginationError}};
+use shared_utils::{canister_specific::individual_user_template::types::{cdao::DeployedCdaoCanisters, error::CdaoTokenError, profile::UserProfileDetailsForFrontendV2, token}, pagination::{self, PaginationError}};
 
 use crate::CANISTER_DATA;
 
@@ -17,7 +17,6 @@ async fn add_token(root_canister: Principal) -> Result<bool, CdaoTokenError> {
     if token_added {
         return Ok(false);
     }
-
     let res: (ListSnsCanistersResponse,) = ic_cdk::call(root_canister, "list_sns_canisters", (ListSnsCanistersRequest {},)).await?;
     let cans = res.0;
     let ledger = cans.ledger.ok_or(CdaoTokenError::InvalidRoot)?;
@@ -30,7 +29,6 @@ async fn add_token(root_canister: Principal) -> Result<bool, CdaoTokenError> {
     if balance.0 == 0u32 {
         return Err(CdaoTokenError::NoBalance);
     }
-
     CANISTER_DATA.with(|cdata| {
         let mut cdata = cdata.borrow_mut();
         cdata.token_roots.insert(root_canister, ());
@@ -66,7 +64,7 @@ async fn transfer_token_to_user_canister(token_root: Principal, target_canister:
 
     let res: (Result<bool, CdaoTokenError>,) = ic_cdk::call(target_canister, "add_token", (token_root,)).await?;
     // Rollback transfer on failure
-    res.0.unwrap();
+    res.0.unwrap(); // atomic
 
     Ok(())
 }

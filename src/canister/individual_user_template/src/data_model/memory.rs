@@ -19,7 +19,6 @@ const KV_STORAGE_NAMESPACE_KEY_VALUE_MEMORY: MemoryId = MemoryId::new(6);
 const WATCH_HISTORY_MEMORY: MemoryId = MemoryId::new(7);
 const SUCCESS_HISTORY_MEMORY: MemoryId = MemoryId::new(8);
 const TOKEN_LIST_MEMORY: MemoryId = MemoryId::new(9);
-
 pub type Memory = VirtualMemory<DefaultMemoryImpl>;
 
 thread_local! {
