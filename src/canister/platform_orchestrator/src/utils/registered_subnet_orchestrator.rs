@@ -1,4 +1,4 @@
-use candid::Principal;
+use candid::{Nat, Principal};
 use ic_cdk::api::management_canister::main::{
     canister_status, deposit_cycles, update_settings, CanisterIdRecord, CanisterSettings,
     LogVisibility, UpdateSettingsArgument,
@@ -190,5 +190,17 @@ impl RegisteredSubnetOrchestrator {
             Ok((_str,)) => Ok(()),
             Err(e) => Err(e),
         }
+    }
+
+    pub async fn set_reserved_cycle_limit(&self, amount: u128) -> Result<(), String> {
+        update_settings(UpdateSettingsArgument {
+            canister_id: self.canister_id,
+            settings: CanisterSettings {
+                reserved_cycles_limit: Some(Nat::from(amount)),
+                ..Default::default()
+            },
+        })
+        .await
+        .map_err(|e| e.1)
     }
 }
