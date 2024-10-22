@@ -16,7 +16,7 @@ async fn request_airdrop(token_root: Principal, memo: Option<Memo>, amount: Nat,
         return Err(AirdropError::CanisterPrincipalDoNotMatch);
     }
 
-    if !is_airdrop_unclaimed(token_root, &current_caller)? {// assertion is checked here
+    if !is_airdrop_unclaimed(token_root, &current_caller)? {// assertion for token owner is checked here will return err if deployed sns cans not found
         return Err(AirdropError::AlreadyClaimedAirdrop);
     }
 
@@ -40,7 +40,6 @@ async fn request_airdrop(token_root: Principal, memo: Option<Memo>, amount: Nat,
     set_airdrop_claimed(token_root, current_caller); 
     Ok(())
 }
-
 
 async fn request_airdrop_internal(token_root: Principal, current_caller: Principal, memo: Option<Memo>, amount: Nat) -> Result<(), AirdropError> {
     let ledger = get_ledger(token_root).await?;
