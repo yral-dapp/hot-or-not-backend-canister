@@ -87,7 +87,7 @@ fn test_allot_empty_canisters_to_individual_canister() {
         .unwrap();
 
     for _ in 0..10 {
-        pocket_ic
+        let alloted_canister = pocket_ic
             .update_call(
                 subnet_orchestrator_canister_id,
                 alice_yral_canister_id,
@@ -105,6 +105,15 @@ fn test_allot_empty_canisters_to_individual_canister() {
             .unwrap();
 
         intial_subnet_backup_capacity -= 1;
+
+        let alloted_canister_status = pocket_ic
+            .canister_status(alloted_canister, Some(alice_yral_canister_id))
+            .unwrap();
+
+        assert!(alloted_canister_status
+            .settings
+            .controllers
+            .contains(&alice_yral_canister_id));
     }
 
     let final_backup_capacity = pocket_ic
