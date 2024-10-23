@@ -9,10 +9,15 @@ use futures::{
 };
 use ic_base_types::PrincipalId;
 use ic_cdk::{
-    api::management_canister::main::{
-        create_canister, install_code, update_settings, CanisterInstallMode, CanisterSettings,
-        CreateCanisterArgument, InstallCodeArgument, UpdateSettingsArgument,
-    }, notify, query, update
+    api::{
+        call::RejectionCode,
+        management_canister::main::{
+            deposit_cycles, install_code, update_settings, CanisterIdRecord,
+            CanisterInstallMode, CanisterSettings, InstallCodeArgument,
+            UpdateSettingsArgument,
+        },
+    },
+    notify, query, update,
 };
 use ic_sns_init::{pb::v1::SnsInitPayload, SnsCanisterIds};
 use ic_sns_wasm::pb::v1::{GetWasmRequest, GetWasmResponse};
@@ -31,7 +36,12 @@ use shared_utils::{
 };
 use token::transfer_canister_token_to_user_principal;
 
-use crate::{util::cycles::request_cycles_from_subnet_orchestrator, CANISTER_DATA};
+use crate::{
+    util::{
+        cycles::request_cycles_from_subnet_orchestrator, subnet_orchestrator::SubnetOrchestrator,
+    },
+    CANISTER_DATA,
+};
 
 use super::airdrop::is_balance_enough_for_airdrop;
 
@@ -42,13 +52,6 @@ pub async fn settle_neurons_fund_participation(
     let response = Ok(NeuronsFundSnapshot::empty());
     let intermediate = SettleNeuronsFundParticipationResponse::from(response);
     SettleNeuronsFundParticipationResponse::from(intermediate)
-}
-
-async fn create_empty_canister(
-    arg: CreateCanisterArgument,
-) -> Result<PrincipalId, CdaoDeployError> {
-    let can = create_canister(arg, USER_SNS_CANISTER_INITIAL_CYCLES).await?;
-    Ok(PrincipalId(can.0.canister_id))
 }
 
 async fn install_canister_wasm(
@@ -114,18 +117,35 @@ async fn deploy_cdao_sns(
         .await
         .map_err(|e| CdaoDeployError::CycleError(e))?;
 
-    let creation_arg = CreateCanisterArgument {
-        settings: Some(CanisterSettings {
-            controllers: Some(vec![ic_cdk::id()]),
-            ..Default::default()
-        }),
-    };
+    let subnet_orchestrator = SubnetOrchestrator::new()
+        .map_err(|e| CdaoDeployError::CallError(RejectionCode::CanisterError, e))?;
 
-    let canisters: Vec<_> = (0..5)
-        .map(|_| create_empty_canister(creation_arg.clone()))
+    let canister_ids: Vec<Principal> = (0..5)
+        .map(|_| subnet_orchestrator.get_empty_canister())
         .collect::<FuturesOrdered<_>>()
         .try_collect()
+        .await
+        .map_err(|e| CdaoDeployError::CallError(RejectionCode::CanisterError, e))?;
+
+    canister_ids
+        .iter()
+        .map(|canister_id| {
+            deposit_cycles(
+                CanisterIdRecord {
+                    canister_id: *canister_id,
+                },
+                USER_SNS_CANISTER_INITIAL_CYCLES,
+            )
+        })
+        .collect::<FuturesUnordered<_>>()
+        .try_collect()
         .await?;
+
+    let canisters: Vec<PrincipalId> = canister_ids
+        .into_iter()
+        .map(|canister_id| PrincipalId::from(canister_id))
+        .collect();
+
     let governance = canisters[0];
     let ledger = canisters[1];
     let root = canisters[2];

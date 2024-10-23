@@ -18,12 +18,14 @@ pub mod register_new_subnet_orhestrator;
 mod reinstall_yral_post_cache_canister;
 pub mod remove_subnet_orchestrator_from_available_list;
 pub mod report_subnet_upgrade_status;
+pub mod set_reserved_cycle_limit_for_subnet_orchestrator;
 mod stop_upgrades_for_individual_user_canisters;
 mod subnet_orchestrator_maxed_out;
 mod update_canisters_last_access_time;
 mod update_profile_owner_for_individual_users;
 pub mod update_timers_for_hon_game;
 pub mod upgrade_canisters_in_network;
+mod upgrade_individual_canisters_in_a_subnet_with_latest_wasm;
 mod upgrade_specific_individual_canister;
 pub mod upload_wasms;
 
