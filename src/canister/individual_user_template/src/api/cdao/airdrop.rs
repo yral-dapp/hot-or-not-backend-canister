@@ -1,6 +1,6 @@
 use candid::{Nat, Principal};
 use ic_base_types::PrincipalId;
-use ic_cdk::update;
+use ic_cdk_macros::update;
 use ic_sns_root::pb::v1::{ListSnsCanistersRequest, ListSnsCanistersResponse};
 use icrc_ledger_types::icrc1::{account::Account, transfer::{Memo, TransferArg, TransferError}};
 use shared_utils::canister_specific::individual_user_template::types::{error::AirdropError, profile::UserProfileDetailsForFrontendV2};
@@ -8,38 +8,68 @@ use shared_utils::canister_specific::individual_user_template::types::{error::Ai
 use crate::CANISTER_DATA;
 
 #[update]
-async fn request_airdrop(token_root: Principal, memo: Option<Memo>, amount: Nat, user_canister: Principal) -> Result<(), AirdropError> {
+async fn request_airdrop(
+    token_root: Principal,
+    memo: Option<Memo>,
+    amount: Nat,
+    user_canister: Principal,
+) -> Result<(), AirdropError> {
     let current_caller = ic_cdk::caller();
     let profile_info = get_profile_info(user_canister).await?;
-    
+
     if profile_info.principal_id != current_caller {
         return Err(AirdropError::CanisterPrincipalDoNotMatch);
     }
 
-    if !is_airdrop_unclaimed(token_root, &current_caller)? {// assertion for token owner is checked here will return err if deployed sns cans not found
+    if !is_airdrop_unclaimed(token_root, &current_caller)? {
         return Err(AirdropError::AlreadyClaimedAirdrop);
     }
 
     let amount = amount.min(1000u32.into());
     if amount < 100u32 {
-        return Err(AirdropError::RequestedAmountTooLow)
+        return Err(AirdropError::RequestedAmountTooLow);
     }
 
-    set_airdrop_claiming(token_root, current_caller);
+    let deployed_sns_index = CANISTER_DATA.with_borrow(|cans_data| {
+        cans_data
+            .cdao_canisters
+            .iter()
+            .position(|cdao| cdao.root == token_root)
+    });
 
-    request_airdrop_internal(token_root, current_caller, memo, amount).await.inspect(|_|{
-        CANISTER_DATA.with_borrow_mut(|cans_data| {
-            cans_data
-                .cdao_canisters
-                .iter_mut()
-                .find(|cdao| cdao.root == token_root)
-                .map(|cdao| cdao.airdrop_info.set_airdrop_unclaimed(current_caller)).unwrap(); // can safely unwrap updating the states for the airdrop for the user creates it in place if not exists
-        });
-    })?; // rollback to unclaimed if error
+    let deployed_sns_index = match deployed_sns_index {
+        Some(index) => index,
+        None => return Err(AirdropError::InvalidRoot),
+    };
 
-    set_airdrop_claimed(token_root, current_caller); 
-    Ok(())
+    CANISTER_DATA.with_borrow_mut(|cans_data| {
+        cans_data.cdao_canisters[deployed_sns_index]
+            .airdrop_info
+            .set_airdrop_claiming(current_caller);
+    });
+
+    let result = request_airdrop_internal(token_root, current_caller, memo, amount).await;
+
+    match result {
+        Ok(_) => {
+            CANISTER_DATA.with_borrow_mut(|cans_data| {
+                cans_data.cdao_canisters[deployed_sns_index]
+                    .airdrop_info
+                    .set_airdrop_claimed(current_caller);
+            });
+            Ok(())
+        }
+        Err(e) => {
+            CANISTER_DATA.with_borrow_mut(|cans_data| {
+                cans_data.cdao_canisters[deployed_sns_index]
+                    .airdrop_info
+                    .set_airdrop_unclaimed(current_caller);
+            });
+            Err(e)
+        }
+    }
 }
+
 
 async fn request_airdrop_internal(token_root: Principal, current_caller: Principal, memo: Option<Memo>, amount: Nat) -> Result<(), AirdropError> {
     let ledger = get_ledger(token_root).await?;
