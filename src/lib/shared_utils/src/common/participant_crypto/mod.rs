@@ -29,7 +29,7 @@ impl<M: Memory> PubKeyCache<M> {
         Self(StableBTreeMap::init(memory))
     }
 
-    async fn get_or_init_public_key<Store: PoPStore<M>>(store: &'static LocalPoPStore<Store>, principal: Principal) -> Result<VerifyingKey, String> {
+    async fn get_or_init_public_key<Store: ProofOfParticipationStore<M>>(store: &'static LocalPoPStore<Store>, principal: Principal) -> Result<VerifyingKey, String> {
         let maybe_pk = store.with_borrow(|store| {
             store.pubkey_cache().0.get(&principal)
         });
@@ -68,12 +68,12 @@ impl<M: Memory> PubKeyCache<M> {
 }
 
 #[derive(Serialize)]
-struct PoaMessage {
+struct ProofOfAuthorityMsg {
     prefix: &'static [u8],
     pub child: Principal,
 }
 
-impl PoaMessage {
+impl ProofOfAuthorityMsg {
     pub fn new(child: Principal) -> Self {
         Self {
             prefix: b"CHILD",
@@ -100,7 +100,7 @@ struct ProofOfChild {
 
 impl ProofOfChild {
     async fn new(child: Principal) -> Result<Self, String> {
-        let message = PoaMessage::new(child);
+        let message = ProofOfAuthorityMsg::new(child);
         let sign_args = ManagementCanisterSignatureRequest {
             message: message.serialize_cbor(),
             derivation_path: vec![],
@@ -126,7 +126,7 @@ impl ProofOfChild {
     }
 
     pub fn verify(&self, parent_key: &VerifyingKey) -> Result<(), String> {
-        let message = PoaMessage::new(self.principal);
+        let message = ProofOfAuthorityMsg::new(self.principal);
         let message_raw = message.serialize_cbor();
 
         let sig = Signature::from_slice(&self.signature).map_err(|_| "invalid proof".to_string())?;
@@ -160,7 +160,7 @@ impl ProofOfParticipation {
     }
 
     /// Verify that the caller is a YRAL canister
-    pub async fn verify_caller_is_participant<M: Memory, Store: PoPStore<M>>(&self, store: &'static LocalPoPStore<Store>) -> Result<(), String> {
+    pub async fn verify_caller_is_participant<M: Memory, Store: ProofOfParticipationStore<M>>(&self, store: &'static LocalPoPStore<Store>) -> Result<(), String> {
         #[cfg(feature = "local")]
         {
             // Hack: Always pass on local testing node
@@ -186,7 +186,7 @@ impl ProofOfParticipation {
     }
 }
 
-pub trait PoPStore<M: Memory> {
+pub trait ProofOfParticipationStore<M: Memory> {
     fn pubkey_cache(&self) -> &PubKeyCache<M>;
 
     fn pubkey_cache_mut(&mut self) -> &mut PubKeyCache<M>;
