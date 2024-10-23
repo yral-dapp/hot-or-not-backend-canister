@@ -15,7 +15,7 @@ use ic_nns_governance::pb::v1::{
 use ic_sns_init::pb::v1::SnsInitPayload;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
-        airdrop::{AirdropMember, TokenClaim},
+        airdrop::AirdropMember,
         arg::{FolloweeArg, IndividualUserTemplateInitArgs, PlaceBetArg},
         cdao::DeployedCdaoCanisters,
         device_id::DeviceIdentity,

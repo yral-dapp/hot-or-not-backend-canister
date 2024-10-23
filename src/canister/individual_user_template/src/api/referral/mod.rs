@@ -1,10 +1,11 @@
 use candid::Principal;
-use ic_cdk::{notify, update};
+use futures::{stream::FuturesUnordered, StreamExt};
+use ic_cdk::{call, notify, update};
 use shared_utils::{canister_specific::individual_user_template::types::{airdrop::AirdropMember, session::SessionType}, common::{participant_crypto::ProofOfParticipation, types::utility_token::token_event::{MintEvent, TokenEvent}, utils::system_time}};
 
 use crate::{api::canister_management::update_last_access_time::update_last_canister_functionality_access_time, CANISTER_DATA};
 
-use super::airdrop::add_user_to_airdrop_chain_inner;
+use super::airdrop::airdrop_tokens_to_user;
 
 pub(crate) fn coyn_token_reward_for_referral(referrer: Principal, referree: Principal) {
     let current_time = system_time::get_current_system_time_from_ic();
@@ -41,7 +42,7 @@ pub async fn receive_reward_for_being_referred() -> Result<(), String> {
             profile.principal_id,
             profile.referrer_details.clone(),
             cdata.session_type,
-            cdata.airdrop.parent.is_some()
+            !cdata.airdrop.parent_chain.is_empty()
         )
     });
 
@@ -69,14 +70,46 @@ pub async fn receive_reward_for_being_referred() -> Result<(), String> {
 
     coyn_token_reward_for_referral(referrer_details.profile_owner, user_principal);
 
+    let (mut parents,): (Vec<AirdropMember>,) = call(
+        referrer_details.user_canister_id,
+        "parent_airdrop_chain",
+        ()
+    ).await.expect("Invalid parent");
+
     let referrer_member = AirdropMember {
         user_canister: referrer_details.user_canister_id,
         user_principal: referrer_details.profile_owner,
     };
-    CANISTER_DATA.with_borrow_mut(|cdata| {
-        cdata.airdrop.parent = Some(referrer_member);
+    parents.push(referrer_member);
+
+    let my_tokens = CANISTER_DATA.with_borrow_mut(|cdata| {
+        cdata.airdrop.parent_chain = parents.clone();
+        cdata.airdrop.token_chain.extend(&parents);
+
+        cdata.cdao_canisters.clone() 
     });
-    add_user_to_airdrop_chain_inner(referrer_member).await;
+
+    let parents_c = parents.clone();
+    ic_cdk::spawn(async move {
+        let mut transfers = parents_c
+            .into_iter()
+            .map(|member| airdrop_tokens_to_user(member, &my_tokens))
+            .collect::<FuturesUnordered<_>>();
+
+        while transfers.next().await.is_some() {}
+    });
+
+    let me_airdrop = AirdropMember {
+        user_principal,
+        user_canister: ic_cdk::id(),
+    };
+    for parent in parents.iter() {
+        notify(
+            parent.user_canister,
+            "add_user_to_airdrop_chain",
+            (pop.clone(), me_airdrop)
+        ).unwrap()
+    }
 
     // Rollback if the notification fails
     notify(
@@ -98,27 +131,6 @@ pub async fn receive_reward_for_referring(pop: ProofOfParticipation, referree_pr
     };
 
     coyn_token_reward_for_referral(profile_owner, referree_principal);
-
-    let referree_canister = ic_cdk::caller();
-    let member = AirdropMember {
-        user_principal: referree_principal,
-        user_canister: referree_canister
-    };
-    add_user_to_airdrop_chain_inner(member).await;
-
-    let Some(parent) = CANISTER_DATA.with_borrow(|cdata| cdata.airdrop.parent) else {
-        return Ok(())
-    };
-
-    let Some(pop) = CANISTER_DATA.with_borrow(|cdata| cdata.proof_of_participation.clone()) else {
-        return Err("method is not available right now".into());
-    };
-
-    notify(
-        parent.user_canister,
-        "add_user_to_airdrop_chain",
-        (pop, member)
-    ).unwrap();
 
     Ok(())
 }

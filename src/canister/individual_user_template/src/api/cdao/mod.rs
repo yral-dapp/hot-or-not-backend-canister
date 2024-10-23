@@ -17,7 +17,7 @@ use ic_cdk::{
             UpdateSettingsArgument,
         },
     },
-    notify, query, update,
+    query, update,
 };
 use ic_sns_init::{pb::v1::SnsInitPayload, SnsCanisterIds};
 use ic_sns_wasm::pb::v1::{GetWasmRequest, GetWasmResponse};
@@ -29,7 +29,7 @@ use ic_nns_governance::pb::v1::{
 use shared_utils::{
     canister_specific::individual_user_template::{
         consts::CDAO_TOKEN_LIMIT,
-        types::{airdrop::TokenClaim, cdao::DeployedCdaoCanisters, error::CdaoDeployError, session::SessionType},
+        types::{cdao::DeployedCdaoCanisters, error::CdaoDeployError, session::SessionType},
     },
     common::types::known_principal::KnownPrincipalType,
     constant::{NNS_LEDGER_CANISTER_ID, USER_SNS_CANISTER_INITIAL_CYCLES},
@@ -300,44 +300,26 @@ async fn distribute_newly_created_token_to_token_chain(token: DeployedCdaoCanist
 
     let token_root = token.root;
     let token_ledger = token.ledger;
-    let (parent, token_chain, pop) = CANISTER_DATA.with_borrow(|cdata| {
-        Ok::<_, String>((
-            cdata.airdrop.parent,
-            cdata.airdrop.token_chain.clone(),
-            cdata.proof_of_participation.clone().ok_or_else(|| "method is not available right now".to_string())?,
-        ))
-    })?;
+    let token_chain = CANISTER_DATA.with_borrow(|cdata| {
+        cdata.airdrop.token_chain.clone()
+    });
     let amount = is_balance_enough_for_airdrop(token_ledger, token_chain.len())
         .await?
         .ok_or_else(move || "not token enough balance".to_string())?;
 
     for member in token_chain {
         let amount = amount.clone();
-        if Some(member) != parent {
-            ic_cdk::spawn(async move {
-                // ignore the result in case this fails
-                _ = transfer_canister_token_to_user_principal(
-                        token_root,
-                        token_ledger,
-                        member.user_principal,
-                        member.user_canister,
-                        None,
-                        amount,
-                    ).await;
-            });
-            continue;
-        }
-        let token_claim = TokenClaim {
-            sender_canister: ic_cdk::id(),
-            amount,
-            token_root,
-            token_ledger
-        };
-        notify(
-            member.user_canister,
-            "receive_token_claim",
-            (pop.clone(), token_claim)
-        ).unwrap();
+        ic_cdk::spawn(async move {
+            // ignore the result in case this fails
+            _ = transfer_canister_token_to_user_principal(
+                    token_root,
+                    token_ledger,
+                    member.user_principal,
+                    member.user_canister,
+                    None,
+                    amount,
+                ).await;
+        });
     }
 
     Ok(())

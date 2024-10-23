@@ -1,35 +1,19 @@
 use candid::{Nat, Principal};
 use futures::{future, stream::FuturesUnordered, StreamExt};
-use ic_cdk::{notify, update};
+use ic_cdk::{update, query};
 use icrc_ledger_types::icrc1::{account::Account, transfer::{TransferArg, TransferError}};
-use shared_utils::{canister_specific::individual_user_template::types::{airdrop::{AirdropMember, TokenClaim}, cdao::DeployedCdaoCanisters}, common::participant_crypto::ProofOfParticipation};
+use shared_utils::{canister_specific::individual_user_template::types::{airdrop::AirdropMember, cdao::DeployedCdaoCanisters}, common::participant_crypto::ProofOfParticipation};
 
 use crate::CANISTER_DATA;
-
-use super::cdao::token::transfer_canister_token_to_user_principal;
 
 #[update]
 pub async fn add_user_to_airdrop_chain(pop: ProofOfParticipation, member: AirdropMember) -> Result<(), String> {
     pop.verify_caller_is_participant(&CANISTER_DATA).await?;
-
-    let (pop, parent) = CANISTER_DATA.with_borrow(|cdata|
-        Ok::<_, String>((
-            cdata.proof_of_participation.clone().ok_or("not available")?,
-            cdata.airdrop.parent,
-        ))
-    )?;
-    if let Some(parent) = parent {
-        notify(
-            parent.user_canister,
-            "add_user_to_airdrop_chain",
-            (pop, member)
-        ).unwrap();
-    }
-
     add_user_to_airdrop_chain_inner(member).await;
 
     Ok(())
 }
+
 
 /// Returns the token amount to transfer for airdrop
 /// returns None if not enough tokens are available 
@@ -82,19 +66,24 @@ async fn transfer_token_for_airdrop(canisters: DeployedCdaoCanisters, member: Ai
 
 /// Add The user to the airdrop chain
 /// also airdrops all the created tokens to this user
-pub(crate) async fn add_user_to_airdrop_chain_inner(member: AirdropMember) {
-    let inserted_to_chain = CANISTER_DATA.with_borrow_mut(|cdata| {
+async fn add_user_to_airdrop_chain_inner(member: AirdropMember) {
+    let was_inserted = CANISTER_DATA.with_borrow_mut(|cdata| {
         cdata.airdrop.token_chain.insert(member)
     });
 
-    if !inserted_to_chain {
+    if !was_inserted {
         return;
     }
 
     let my_tokens = CANISTER_DATA.with_borrow(|cdata| cdata.cdao_canisters.clone());
-    let transferred_tokens = my_tokens
-        .into_iter()
-        .map(|canisters| transfer_token_for_airdrop(canisters, member))
+    airdrop_tokens_to_user(member, &my_tokens).await;
+}
+
+/// Airdrop all created tokens to this user
+pub(crate) async fn airdrop_tokens_to_user(member: AirdropMember, tokens: &[DeployedCdaoCanisters]) {
+    let transferred_tokens = tokens
+        .iter()
+        .map(|canisters| transfer_token_for_airdrop(*canisters, member))
         .collect::<FuturesUnordered<_>>()
         .filter_map(|res| {
             let Ok(Some(res)) = res else {
@@ -113,47 +102,7 @@ pub(crate) async fn add_user_to_airdrop_chain_inner(member: AirdropMember) {
     ).unwrap();
 }
 
-#[update]
-async fn receive_token_claim(pop: ProofOfParticipation, token_claim: TokenClaim) -> Result<(), String> {
-    pop.verify_caller_is_participant(&CANISTER_DATA).await?;
-
-    let (pop, user_principal) = CANISTER_DATA.with_borrow(|cdata| {
-        Ok::<_, String>((
-            cdata.proof_of_participation.clone().ok_or_else(|| "canister is not ready".to_string())?,
-            cdata.profile.principal_id.ok_or_else(|| "canister is not ready".to_string())?,
-        ))
-    })?;
-    notify(
-        token_claim.sender_canister,
-        "redeem_token_claim",
-        (pop.clone(), user_principal, token_claim.clone())
-    ).unwrap();
-
-    let Some(parent) = CANISTER_DATA.with_borrow(|cdata| cdata.airdrop.parent) else {
-        return Ok(());
-    };
-
-    notify(
-        parent.user_canister,
-        "receive_token_claim",
-        (pop, token_claim,)
-    ).unwrap();
-
-    Ok(())
-}
-
-#[update]
-async fn redeem_token_claim(pop: ProofOfParticipation, target_principal: Principal, token_claim: TokenClaim) -> Result<(), String> {
-    pop.verify_caller_is_participant(&CANISTER_DATA).await?;
-
-    transfer_canister_token_to_user_principal(
-        token_claim.token_root,
-        token_claim.token_ledger,
-        target_principal,
-        ic_cdk::caller(),
-        None,
-        token_claim.amount
-    ).await.map_err(|e| format!("transfer failed: {e:?}"))?;
-
-    Ok(())
+#[query]
+pub fn parent_airdrop_chain() -> Vec<AirdropMember> {
+    CANISTER_DATA.with_borrow(|cdata| cdata.airdrop.parent_chain.clone())
 }

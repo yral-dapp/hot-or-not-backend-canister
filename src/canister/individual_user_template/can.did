@@ -465,12 +465,6 @@ type SystemTime = record {
   nanos_since_epoch : nat32;
   secs_since_epoch : nat64;
 };
-type TokenClaim = record {
-  sender_canister : principal;
-  amount : nat;
-  token_ledger : principal;
-  token_root : principal;
-};
 type TokenEvent = variant {
   Stake : record {
     timestamp : SystemTime;
@@ -634,6 +628,7 @@ service : (IndividualUserTemplateInitArgs) -> {
   list_namespaces : (nat64, nat64) -> (vec NamespaceForFrontend) query;
   load_snapshot : (nat64) -> ();
   once_reenqueue_timers_for_pending_bet_outcomes : () -> (Result_20);
+  parent_airdrop_chain : () -> (vec AirdropMember) query;
   read_key_value_pair : (nat64, text) -> (Result_6) query;
   receive_and_save_snaphot : (nat64, blob) -> ();
   receive_bet_from_bet_makers_canister : (PlaceBetArg, principal) -> (Result_4);
@@ -641,10 +636,6 @@ service : (IndividualUserTemplateInitArgs) -> {
   receive_data_from_hotornot : (principal, nat64, vec Post) -> (Result_21);
   receive_reward_for_being_referred : () -> (Result_3);
   receive_reward_for_referring : (ProofOfParticipation, principal) -> (
-      Result_3,
-    );
-  receive_token_claim : (ProofOfParticipation, TokenClaim) -> (Result_3);
-  redeem_token_claim : (ProofOfParticipation, principal, TokenClaim) -> (
       Result_3,
     );
   return_cycles_to_user_index_canister : (opt nat) -> ();

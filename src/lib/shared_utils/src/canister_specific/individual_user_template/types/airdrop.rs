@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use candid::{CandidType, Nat, Principal};
+use candid::{CandidType, Principal};
 use ic_stable_structures::{storable::Bound, Storable};
 use serde::{Deserialize, Serialize};
 
@@ -25,12 +25,4 @@ impl Storable for AirdropMember {
         ciborium::from_reader(bytes.as_ref())
             .expect("Expected to deserialize AirdropMember")
     }
-}
-
-#[derive(Serialize, Deserialize, Clone, CandidType)]
-pub struct TokenClaim {
-    pub amount: Nat,
-    pub token_root: Principal,
-    pub token_ledger: Principal,
-    pub sender_canister: Principal,
 }
