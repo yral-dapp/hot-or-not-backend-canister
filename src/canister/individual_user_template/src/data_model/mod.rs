@@ -27,7 +27,7 @@ use shared_utils::{
         session::SessionType,
         token::TokenBalance,
     },
-    common::{participant_crypto::{PoPStore, ProofOfParticipation, PubKeyCache}, types::{
+    common::{participant_crypto::{ProofOfParticipationStore, ProofOfParticipation, PubKeyCache}, types::{
         app_primitive_type::PostId,
         known_principal::{KnownPrincipalMap, KnownPrincipalType},
         top_posts::{post_score_index::PostScoreIndex, post_score_index_item::PostStatus},
@@ -186,7 +186,7 @@ impl Default for CanisterData {
     }
 }
 
-impl PoPStore<Memory> for CanisterData {
+impl ProofOfParticipationStore<Memory> for CanisterData {
     fn pubkey_cache(&self) -> &PubKeyCache<Memory> {
         &self.pubkey_cache
     }
