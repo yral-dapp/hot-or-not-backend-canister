@@ -83,11 +83,11 @@ async fn transfer_token_for_airdrop(canisters: DeployedCdaoCanisters, member: Ai
 /// Add The user to the airdrop chain
 /// also airdrops all the created tokens to this user
 pub(crate) async fn add_user_to_airdrop_chain_inner(member: AirdropMember) {
-    let added = CANISTER_DATA.with_borrow_mut(|cdata| {
-        cdata.airdrop.token_chain.insert(member, ()).is_some()
+    let inserted_to_chain = CANISTER_DATA.with_borrow_mut(|cdata| {
+        cdata.airdrop.token_chain.insert(member)
     });
 
-    if added {
+    if !inserted_to_chain {
         return;
     }
 

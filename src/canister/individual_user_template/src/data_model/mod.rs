@@ -6,7 +6,7 @@ use std::{
 use airdrop::AirdropData;
 use candid::{Deserialize, Principal};
 use ic_cdk::api::management_canister::provisional::CanisterId;
-use memory::{get_pubkey_cache_memory, get_success_history_memory, get_token_list_memory, get_watch_history_memory};
+use memory::{get_success_history_memory, get_token_list_memory, get_watch_history_memory};
 use serde::Serialize;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
@@ -95,8 +95,8 @@ pub struct CanisterData {
     pub token_roots: ic_stable_structures::btreemap::BTreeMap<Principal, (), Memory>,
     #[serde(default)]
     pub proof_of_participation: Option<ProofOfParticipation>,
-    #[serde(skip, default = "_default_pubkey_cache")]
-    pub pubkey_cache: PubKeyCache<Memory>,
+    #[serde(default)]
+    pub pubkey_cache: PubKeyCache,
     #[serde(default)]
     pub airdrop: AirdropData,
 }
@@ -141,10 +141,6 @@ pub fn _default_success_history_v1(
     ic_stable_structures::btreemap::BTreeMap::init(get_success_history_memory())
 }
 
-pub fn _default_pubkey_cache() -> PubKeyCache<Memory> {
-    PubKeyCache::init(get_pubkey_cache_memory())
-}
-
 impl Default for CanisterData {
     fn default() -> Self {
         Self {
@@ -176,18 +172,18 @@ impl Default for CanisterData {
             cdao_canisters: Vec::new(),
             token_roots: _default_token_list(),
             proof_of_participation: None,
-            pubkey_cache: _default_pubkey_cache(),
+            pubkey_cache: PubKeyCache::default(),
             airdrop: AirdropData::default(),
         }
     }
 }
 
-impl ProofOfParticipationStore<Memory> for CanisterData {
-    fn pubkey_cache(&self) -> &PubKeyCache<Memory> {
+impl ProofOfParticipationStore for CanisterData {
+    fn pubkey_cache(&self) -> &PubKeyCache {
         &self.pubkey_cache
     }
 
-    fn pubkey_cache_mut(&mut self) -> &mut PubKeyCache<Memory> {
+    fn pubkey_cache_mut(&mut self) -> &mut PubKeyCache {
         &mut self.pubkey_cache
     }
 

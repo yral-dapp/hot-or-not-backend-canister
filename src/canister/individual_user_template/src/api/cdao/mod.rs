@@ -303,7 +303,7 @@ async fn distribute_newly_created_token_to_token_chain(token: DeployedCdaoCanist
     let (parent, token_chain, pop) = CANISTER_DATA.with_borrow(|cdata| {
         Ok::<_, String>((
             cdata.airdrop.parent,
-            cdata.airdrop.token_chain.iter().map(|(k, _)| k).collect::<Vec<_>>(),
+            cdata.airdrop.token_chain.clone(),
             cdata.proof_of_participation.clone().ok_or_else(|| "method is not available right now".to_string())?,
         ))
     })?;
