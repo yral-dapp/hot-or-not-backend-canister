@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
 
-use candid::{CandidType, Deserialize};
+use candid::{CandidType, Deserialize, Principal};
+use ic_sns_root::pb::v1::{ListSnsCanistersRequest, ListSnsCanistersResponse};
 use serde::Serialize;
 use serde_json_any_key::*;
 
@@ -99,6 +100,18 @@ fn get_earnings_amount_from_winnings_amount(winnings_amount: &u64) -> u64 {
     let bet_amount = comission_subtracted_bet_amount * 100
         / (100 - HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE);
     winnings_amount - bet_amount
+}
+
+#[derive(Default, Clone, Deserialize, CandidType, Debug, Serialize, PartialEq, PartialOrd, Ord, Eq)]
+pub struct ImportedToken{
+    pub index: Option<Principal>,
+    pub ledger: Option<Principal>
+}
+
+impl ImportedToken{
+    pub fn new(index: Option<Principal>, ledger: Option<Principal>) -> Self {
+        Self { index, ledger }
+    }
 }
 
 #[cfg(test)]

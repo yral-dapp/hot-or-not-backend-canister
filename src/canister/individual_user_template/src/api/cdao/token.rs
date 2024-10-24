@@ -2,7 +2,7 @@ use candid::{Nat, Principal};
 use ic_cdk::{query, update};
 use ic_sns_root::pb::v1::{ListSnsCanistersRequest, ListSnsCanistersResponse};
 use icrc_ledger_types::icrc1::{account::Account, transfer::{Memo, TransferArg, TransferError}};
-use shared_utils::{canister_specific::individual_user_template::types::{cdao::DeployedCdaoCanisters, error::CdaoTokenError, profile::UserProfileDetailsForFrontendV2, token}, pagination::{self, PaginationError}};
+use shared_utils::{canister_specific::individual_user_template::types::{cdao::DeployedCdaoCanisters, error::CdaoTokenError, profile::UserProfileDetailsForFrontendV2, token::{self, ImportedToken}}, pagination::{self, PaginationError}};
 
 use crate::CANISTER_DATA;
 
@@ -85,4 +85,17 @@ fn get_token_roots_of_this_user_with_pagination_cursor(from_inclusive_index: u64
             .collect();
         Ok(tokens)
     })
+}
+
+#[update]
+pub async fn import_token(root: Option<Principal>, index: Option<Principal>, ledger: Option<Principal>) -> Result<bool, CdaoTokenError>{
+    if let Some(token_root) = root {
+        CANISTER_DATA.with_borrow_mut(|cdata| {
+            Ok(cdata.token_roots.insert(token_root, ()).is_none()) // didnt use add_tokens because we dont want to go through the balance checks
+        })
+    } else {
+        CANISTER_DATA.with_borrow_mut(|cans_data|{
+            Ok(cans_data.imported_token_roots.insert(ImportedToken::new(index, ledger)))
+        })
+    }
 }

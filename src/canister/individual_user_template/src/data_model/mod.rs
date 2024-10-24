@@ -22,7 +22,7 @@ use shared_utils::{
         post::{FeedScore, Post, PostViewStatistics},
         profile::UserProfile,
         session::SessionType,
-        token::TokenBalance,
+        token::{ImportedToken, TokenBalance},
     },
     common::types::{
         app_primitive_type::PostId,
@@ -91,6 +91,7 @@ pub struct CanisterData {
     // list of root token canisters
     #[serde(skip, default = "_default_token_list")]
     pub token_roots: ic_stable_structures::btreemap::BTreeMap<Principal, (), Memory>,
+    pub imported_token_roots: BTreeSet<ImportedToken>,
 }
 
 pub fn _default_room_details(
@@ -163,7 +164,8 @@ impl Default for CanisterData {
             device_identities: Vec::new(),
             ml_feed_cache: Vec::new(),
             cdao_canisters: Vec::new(),
-            token_roots: _default_token_list()
+            token_roots: _default_token_list(),
+            imported_token_roots: BTreeSet::new(),
         }
     }
 }

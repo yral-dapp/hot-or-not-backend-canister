@@ -5221,6 +5221,7 @@ dependencies = [
  "futures",
  "ic-cdk 0.15.1",
  "ic-cdk-timers",
+ "ic-sns-root",
  "ic-stable-structures",
  "icrc-ledger-types 0.1.6",
  "pprof",
