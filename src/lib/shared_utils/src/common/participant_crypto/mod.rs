@@ -8,15 +8,22 @@ use ed25519_dalek::{Signature, VerifyingKey, Verifier};
 use types::{ManagementCanisterSchnorrPublicKeyReply, ManagementCanisterSchnorrPublicKeyRequest, ManagementCanisterSignatureReply, ManagementCanisterSignatureRequest, SchnorrAlgorithm, SchnorrKeyId};
 use serde::{Serialize, Deserialize};
 
-pub(crate) const THRESHOLD_SCHNORR_KEY: &str = {
-    #[cfg(feature = "local")]
-    {
-        "dfx_test_key"
+const fn is_local() -> bool {
+    let Some(network) = std::option_env!("DFX_NETWORK") else {
+        return true;
+    };
+
+    match network.as_bytes() {
+        b"ic" => false,
+        b"local" => true,
+        _ => panic!("unknown `DFX_NETWORK`"),
     }
-    #[cfg(not(feature = "local"))]
-    {
-        "key_1"
-    }
+}
+
+pub(crate) const THRESHOLD_SCHNORR_KEY: &str = if is_local() {
+    "dfx_test_key"
+} else {
+    "key_1"
 };
 
 pub(crate) type LocalPoPStore<Store> = LocalKey<RefCell<Store>>;
@@ -157,28 +164,25 @@ impl ProofOfParticipation {
 
     /// Verify that the caller is a YRAL canister
     pub async fn verify_caller_is_participant<Store: ProofOfParticipationStore>(&self, store: &'static LocalPoPStore<Store>) -> Result<(), String> {
-        #[cfg(feature = "local")]
-        {
+        if is_local() {
             // Hack: Always pass on local testing node
             // a proper implementation requires deploying platform orchestrator locally
-            Ok(())
+            return Ok(())
         }
-        #[cfg(not(feature = "local"))]
-        {
-            let platform_orchestrator = store.with_borrow(|s| s.platform_orchestrator());
-            let canister = ic_cdk::caller();
 
-            let mut parent = PubKeyCache::get_or_init_public_key(store, platform_orchestrator).await?;
-            for proof in &self.chain {
-                proof.verify(&parent)?;
-                if proof.principal == canister {
-                    return Ok(())
-                }
-                parent = PubKeyCache::get_or_init_public_key(store, proof.principal).await?;
+        let platform_orchestrator = store.with_borrow(|s| s.platform_orchestrator());
+        let canister = ic_cdk::caller();
+
+        let mut parent = PubKeyCache::get_or_init_public_key(store, platform_orchestrator).await?;
+        for proof in &self.chain {
+            proof.verify(&parent)?;
+            if proof.principal == canister {
+                return Ok(())
             }
-
-            Err("invalid proof".to_string())
+            parent = PubKeyCache::get_or_init_public_key(store, proof.principal).await?;
         }
+
+        Err("invalid proof".to_string())
     }
 }
 
