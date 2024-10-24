@@ -1,19 +1,19 @@
-mod token;
+pub(crate) mod token;
 
 use std::collections::VecDeque;
 
 use candid::{Encode, Principal};
 use futures::{
     stream::{FuturesOrdered, FuturesUnordered},
-    StreamExt, TryStreamExt,
+    TryStreamExt,
 };
 use ic_base_types::PrincipalId;
 use ic_cdk::{
     api::{
         call::RejectionCode,
         management_canister::main::{
-            create_canister, deposit_cycles, install_code, update_settings, CanisterIdRecord,
-            CanisterInstallMode, CanisterSettings, CreateCanisterArgument, InstallCodeArgument,
+            deposit_cycles, install_code, update_settings, CanisterIdRecord,
+            CanisterInstallMode, CanisterSettings, InstallCodeArgument,
             UpdateSettingsArgument,
         },
     },
@@ -34,6 +34,7 @@ use shared_utils::{
     common::types::known_principal::KnownPrincipalType,
     constant::{NNS_LEDGER_CANISTER_ID, USER_SNS_CANISTER_INITIAL_CYCLES},
 };
+use token::transfer_canister_token_to_user_principal;
 
 use crate::{
     util::{
@@ -41,6 +42,8 @@ use crate::{
     },
     CANISTER_DATA,
 };
+
+use super::airdrop::is_balance_enough_for_airdrop;
 
 #[update]
 pub async fn settle_neurons_fund_participation(
@@ -282,4 +285,42 @@ async fn deploy_cdao_sns(
     });
 
     Ok(deployed_cans)
+}
+
+/// Destributes the newly created to all users in the existing airdrop token chain
+/// this must be called right after tokens have been swapped to this user canister
+/// by the off-chain infrastructure
+#[update]
+async fn distribute_newly_created_token_to_token_chain(token: DeployedCdaoCanisters) -> Result<(), String> {
+    let caller = ic_cdk::caller();
+    let profile_owner = CANISTER_DATA.with_borrow(|cdata| cdata.profile.principal_id);
+    if Some(caller) != profile_owner {
+        return Err("unauthorized".into());
+    }
+
+    let token_root = token.root;
+    let token_ledger = token.ledger;
+    let token_chain = CANISTER_DATA.with_borrow(|cdata| {
+        cdata.airdrop.token_chain.clone()
+    });
+    let amount = is_balance_enough_for_airdrop(token_ledger, token_chain.len())
+        .await?
+        .ok_or_else(move || "not token enough balance".to_string())?;
+
+    for member in token_chain {
+        let amount = amount.clone();
+        ic_cdk::spawn(async move {
+            // ignore the result in case this fails
+            _ = transfer_canister_token_to_user_principal(
+                    token_root,
+                    token_ledger,
+                    member.user_principal,
+                    member.user_canister,
+                    None,
+                    amount,
+                ).await;
+        });
+    }
+
+    Ok(())
 }

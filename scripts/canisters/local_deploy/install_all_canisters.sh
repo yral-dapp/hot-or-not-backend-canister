@@ -27,16 +27,7 @@ dfx canister create --no-wallet post_cache
 dfx canister create --no-wallet user_index
 dfx canister create --no-wallet platform_orchestrator
 
-gzip_canister() {
-  gzip -f -1 ./target/wasm32-unknown-unknown/release/$1.wasm
-}
-
 scripts/candid_generator.sh
-
-gzip_canister individual_user_template
-gzip_canister user_index
-gzip_canister post_cache
-gzip_canister platform_orchestrator
 
 if [[ $skip_test != true ]]
 then
@@ -89,6 +80,9 @@ dfx canister install user_index --argument "(record {
       principal \"$(dfx identity get-principal)\";
       vec { variant { CanisterAdmin }; variant { CanisterController }; }
     };
+  };
+  proof_of_participation = opt record {
+    chain = vec {};
   };
   version= \"v1.0.0\"
 })"

@@ -66,6 +66,10 @@ fn save_upgrade_args_to_memory() {
                 .configuration
                 .url_to_send_canister_metrics_to = Some(url_to_send_canister_metrics_to);
         }
+
+        if let Some(pop) = upgrade_args.proof_of_participation {
+            canister_data_ref_cell.proof_of_participation = Some(pop);
+        }        
     });
 }
 

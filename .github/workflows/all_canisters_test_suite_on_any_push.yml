@@ -49,19 +49,19 @@ jobs:
         run: nix-shell --run "dfx stop"
       - name: Build platform_orchestrator canister
         run: |
-          nix-shell --run "dfx build platform_orchestrator"
+          nix-shell --run "dfx build platform_orchestrator --ic"
           gzip -f -1 ./target/wasm32-unknown-unknown/release/platform_orchestrator.wasm
       - name: Build individual_user_template canister
         run: |
-          nix-shell --run "dfx build individual_user_template"
+          nix-shell --run "dfx build individual_user_template --ic"
           gzip -f -1 ./target/wasm32-unknown-unknown/release/individual_user_template.wasm
       - name: Build user_index canister
         run: |
-          nix-shell --run "dfx build user_index"
+          nix-shell --run "dfx build user_index --ic"
           gzip -f -1 ./target/wasm32-unknown-unknown/release/user_index.wasm
       - name: Build post_cache canister
         run: |
-          nix-shell --run "dfx build post_cache"
+          nix-shell --run "dfx build post_cache --ic"
           gzip -f -1 ./target/wasm32-unknown-unknown/release/post_cache.wasm
       - name: Run canister test suite
         env:
