@@ -3,7 +3,7 @@ let
   rev = "1c3a28d84f970e7774af04372ade06399add182e";
   nixpkgs = fetchTarball "https://github.com/NixOS/nixpkgs/archive/${rev}.tar.gz";
   pkgs = import nixpkgs { };
-  dfx-env = import (builtins.fetchTarball "https://github.com/ninegua/ic-nix/releases/download/20240610/dfx-env.tar.gz") { version = "20240610"; inherit pkgs; };
+  dfx-env = import (builtins.fetchTarball "https://github.com/ninegua/ic-nix/releases/download/20240924/dfx-env.tar.gz") { version = "20240924"; inherit pkgs; };
 in
 dfx-env.overrideAttrs (old: {
   nativeBuildInputs = with pkgs; old.nativeBuildInputs ++
