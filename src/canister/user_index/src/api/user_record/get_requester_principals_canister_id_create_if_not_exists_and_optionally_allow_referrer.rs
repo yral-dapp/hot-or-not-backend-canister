@@ -228,6 +228,11 @@ async fn provision_new_available_canisters(individual_user_template_canister_was
 
             let canister_id = backup_pool_canister.next().unwrap();
 
+            // Remove the canister id from backup pool so no one else access it
+            CANISTER_DATA.with_borrow_mut(|canister_data| {
+                canister_data.backup_canister_pool.remove(&canister_id)
+            });
+
             async move {
                 let _ = check_and_request_cycles_from_platform_orchestrator().await;
                 //recharge backup canister if required
@@ -243,10 +248,15 @@ async fn provision_new_available_canisters(individual_user_template_canister_was
         })
     });
 
-    let result_callback = |canister_id: Principal| {
-        CANISTER_DATA.with_borrow_mut(|canister_data| {
-            canister_data.available_canisters.insert(canister_id);
-            canister_data.backup_canister_pool.remove(&canister_id);
+    let result_callback = |install_canister_wasm_result: Result<Principal, (Principal, String)>| {
+        CANISTER_DATA.with_borrow_mut(|canister_data| match install_canister_wasm_result {
+            Ok(canister_id) => {
+                canister_data.available_canisters.insert(canister_id);
+            }
+            Err(e) => {
+                canister_data.backup_canister_pool.insert(e.0);
+                ic_cdk::println!("Error installing wasm for canister {} {}", e.0, e.1);
+            }
         })
     };
 
