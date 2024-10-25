@@ -21,7 +21,7 @@ use shared_utils::{
         device_id::DeviceIdentity,
         error::{
             BetOnCurrentlyViewingPostError, CdaoDeployError, CdaoTokenError,
-            FollowAnotherUserProfileError, GetPostsOfUserProfileError,
+            FollowAnotherUserProfileError, GetPostsOfUserProfileError, AirdropError
         },
         follow::{FollowEntryDetail, FollowEntryId},
         hot_or_not::{BetDetails, BetOutcomeForBetMaker, BettingStatus, PlacedBetDetail},
