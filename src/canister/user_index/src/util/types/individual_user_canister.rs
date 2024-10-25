@@ -94,8 +94,8 @@ impl IndividualUserCanister {
         .map_err(|e| e.1)
     }
 
-    pub fn allot_empty_canister(&self) -> Result<Principal, String> {
-        CANISTER_DATA.with_borrow_mut(|canister_data| {
+    pub async fn allot_empty_canister(&self) -> Result<Principal, String> {
+        let alloted_canister_id_res = CANISTER_DATA.with_borrow_mut(|canister_data| {
             let Some(new_canister_id) = canister_data.backup_canister_pool.iter().next().copied()
             else {
                 return Err("No Backup Canisters Available".into());
@@ -104,6 +104,26 @@ impl IndividualUserCanister {
             canister_data.backup_canister_pool.remove(&new_canister_id);
 
             Ok(new_canister_id)
-        })
+        });
+
+        //try to update controller of the canister
+        if let Ok(canister_id) = alloted_canister_id_res {
+            update_settings(UpdateSettingsArgument {
+                canister_id,
+                settings: CanisterSettings {
+                    controllers: Some(vec![self.canister_id]),
+                    ..Default::default()
+                },
+            })
+            .await
+            .inspect_err(|_| {
+                CANISTER_DATA.with_borrow_mut(|canister_data| {
+                    canister_data.backup_canister_pool.insert(canister_id)
+                });
+            })
+            .map_err(|e| e.1)?;
+        }
+
+        alloted_canister_id_res
     }
 }

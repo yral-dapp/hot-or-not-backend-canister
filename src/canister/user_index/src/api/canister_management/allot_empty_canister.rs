@@ -19,22 +19,10 @@ use crate::{
 #[update]
 async fn allot_empty_canister() -> Result<Principal, String> {
     let registered_individual_canister = IndividualUserCanister::new(caller())?;
-    let result = registered_individual_canister.allot_empty_canister();
+    let result = registered_individual_canister.allot_empty_canister().await;
 
     let backup_canister_count =
         CANISTER_DATA.with_borrow(|canister_data| canister_data.backup_canister_pool.len() as u64);
-
-    if let Ok(canister_id) = result {
-        update_settings(UpdateSettingsArgument {
-            canister_id,
-            settings: CanisterSettings {
-                controllers: Some(vec![registered_individual_canister.canister_id]),
-                ..Default::default()
-            },
-        })
-        .await
-        .map_err(|e| e.1)?;
-    }
 
     if backup_canister_count < get_backup_individual_user_canister_threshold() {
         let number_of_canisters = get_backup_individual_user_canister_batch_size();
