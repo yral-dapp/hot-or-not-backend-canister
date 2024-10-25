@@ -7,6 +7,7 @@ use shared_utils::canister_specific::individual_user_template::types::{error::Ai
 
 use crate::CANISTER_DATA;
 
+// TODO: Add checks to verify if the user_canister is from our network of yral canisters
 #[update]
 async fn request_airdrop(token_root: Principal, memo: Option<Memo>, amount: Nat, user_canister: Principal) -> Result<(), AirdropError> {
     let current_caller = ic_cdk::caller();
