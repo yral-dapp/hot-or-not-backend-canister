@@ -111,7 +111,7 @@ pub async fn install_canister_wasm(
     profile_owner: Option<Principal>,
     version: String,
     wasm: Vec<u8>,
-) -> Principal {
+) -> Result<Principal, (Principal, String)> {
     let configuration = CANISTER_DATA
         .with(|canister_data_ref_cell| canister_data_ref_cell.borrow().configuration.clone());
 
@@ -146,9 +146,9 @@ pub async fn install_canister_wasm(
         arg,
     })
     .await
-    .unwrap();
+    .map_err(|e| (canister_id, e.1))?;
 
-    canister_id
+    Ok(canister_id)
 }
 
 pub async fn reinstall_canister_wasm(
