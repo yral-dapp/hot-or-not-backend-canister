@@ -33,6 +33,48 @@ Build and upgrade the canisters deployed. You can pass `-s` flag to skip the tes
 scripts/canisters/local_deploy/upgrade_all_canisters.sh [-s]
 ```
 
+
+## Testing Upgrades Locally
+Before pushing changes to canisters on mainnet we make sure the upgrade will run successfully. Right now there is no automated way to do it. To test it locally follow the steps.
+
+### Step 0
+Run clean dfx 
+
+```sh
+dfx start --clean --background
+```
+
+### Step 1
+Checkout to last git tag
+```sh
+git checkout vx.y.z
+```
+
+### Step 2
+Run install script to install last upgrade that ran successfully on mainnet
+```sh
+scripts/canisters/local_deploy/install_all_canisters.sh [-s]
+```
+
+### Step 3
+Checkout to the head of main branch that we need to deploy
+```sh
+git checkout main
+```
+
+### Step 4
+Run upgrade script to upgrade canistesr locally
+```sh
+scripts/canisters/local_deploy/upgrade_all_canisters.sh [-s]
+```
+
+### Step 5
+Check version for any of the individual canisters deployed locally. If version is greater than `v1.0.0` then the upgrades were successful.
+
+```sh
+dfx canister call <individual-canister-id> get_version
+```
+
 ## Mainnet Deployment
 
 ### Mainnet Deployment Checks
