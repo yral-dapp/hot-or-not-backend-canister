@@ -10,6 +10,7 @@ pub struct DeployedCdaoCanisters {
     pub root: Principal,
     pub swap: Principal,
     pub index: Principal,
+    
     #[serde(default)]
     pub airdrop_info: AirdropInfo,
 }
@@ -17,6 +18,7 @@ pub struct DeployedCdaoCanisters {
 #[derive(CandidType, PartialEq, Eq, Debug, Serialize, Deserialize, Clone, Default)]
 pub struct AirdropInfo {
     /// Maps each principal to their claim status
+    #[serde(default)]
     pub principals_who_successfully_claimed: HashMap<Principal, ClaimStatus>,
 }
 
