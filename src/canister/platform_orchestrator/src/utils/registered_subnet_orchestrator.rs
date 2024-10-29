@@ -1,7 +1,7 @@
 use candid::{Nat, Principal};
 use ic_cdk::api::management_canister::main::{
-    canister_status, deposit_cycles, update_settings, CanisterIdRecord, CanisterSettings,
-    LogVisibility, UpdateSettingsArgument,
+    canister_status, deposit_cycles, start_canister, update_settings, CanisterIdRecord,
+    CanisterSettings, LogVisibility, UpdateSettingsArgument,
 };
 use shared_utils::{
     common::types::wasm::WasmType, constant::SUBNET_ORCHESTRATOR_CANISTER_CYCLES_THRESHOLD,
@@ -71,6 +71,14 @@ impl RegisteredSubnetOrchestrator {
 
     pub fn get_canister_id(&self) -> Principal {
         self.canister_id
+    }
+
+    pub async fn start_canister(&self) -> Result<(), String> {
+        start_canister(CanisterIdRecord {
+            canister_id: self.canister_id,
+        })
+        .await
+        .map_err(|e| e.1)
     }
 
     pub async fn deposit_cycles(&self) -> Result<(), String> {

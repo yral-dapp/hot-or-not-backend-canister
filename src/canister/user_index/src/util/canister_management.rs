@@ -20,7 +20,10 @@ use shared_utils::{
     canister_specific::{
         individual_user_template::types::arg::IndividualUserTemplateInitArgs, platform_orchestrator,
     },
-    common::{types::known_principal::KnownPrincipalType, utils::task::run_task_concurrently},
+    common::{
+        types::known_principal::KnownPrincipalType,
+        utils::{task::run_task_concurrently, upgrade_canister::upgrade_canister_util},
+    },
     constant::{
         EMPTY_CANISTER_RECHARGE_AMOUNT, INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT,
         SUBNET_ORCHESTRATOR_CANISTER_CYCLES_THRESHOLD,
@@ -195,21 +198,17 @@ pub async fn upgrade_individual_user_canister(
     arg: IndividualUserTemplateInitArgs,
     individual_user_wasm: Vec<u8>,
 ) -> Result<(), (RejectionCode, String)> {
-    stop_canister(CanisterIdRecord {
-        canister_id: canister_id.clone(),
-    })
-    .await?;
     let serialized_arg =
         candid::encode_args((arg,)).expect("Failed to serialize the install argument.");
 
-    main::install_code(InstallCodeArgument {
+    let install_code_argument = InstallCodeArgument {
         mode: install_mode,
         canister_id,
         wasm_module: individual_user_wasm,
         arg: serialized_arg,
-    })
-    .await?;
-    start_canister(CanisterIdRecord { canister_id }).await
+    };
+
+    upgrade_canister_util(install_code_argument).await
 }
 
 pub async fn recharge_canister_if_below_threshold(canister_id: &Principal) -> Result<(), String> {
