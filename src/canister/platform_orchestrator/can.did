@@ -105,6 +105,7 @@ service : (PlatformOrchestratorInitArgs) -> {
     );
   start_reclaiming_cycles_from_individual_canisters : () -> (Result);
   start_reclaiming_cycles_from_subnet_orchestrator_canister : () -> (text);
+  start_subnet_orchestrator_canister : (principal) -> (Result_1);
   stop_upgrades_for_individual_user_canisters : () -> (Result);
   subnet_orchestrator_maxed_out : () -> ();
   update_canisters_last_functionality_access_time : () -> (Result);
