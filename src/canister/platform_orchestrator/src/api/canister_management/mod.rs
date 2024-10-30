@@ -19,6 +19,7 @@ mod reinstall_yral_post_cache_canister;
 pub mod remove_subnet_orchestrator_from_available_list;
 pub mod report_subnet_upgrade_status;
 pub mod set_reserved_cycle_limit_for_subnet_orchestrator;
+pub mod start_subnet_orchestrator_canister;
 mod stop_upgrades_for_individual_user_canisters;
 mod subnet_orchestrator_maxed_out;
 mod update_canisters_last_access_time;
