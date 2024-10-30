@@ -165,6 +165,7 @@ impl Default for CanisterData {
             ml_feed_cache: Vec::new(),
             cdao_canisters: Vec::new(),
             token_roots: _default_token_list(),
+            user_propensity: 0.0,
         }
     }
 }

@@ -612,6 +612,7 @@ service : (IndividualUserTemplateInitArgs) -> {
       Result_15,
     ) query;
   get_user_caniser_cycle_balance : () -> (nat) query;
+  get_user_propensity : () -> (float64) query;
   get_user_utility_token_transaction_history_with_pagination : (
       nat64,
       nat64,
@@ -665,6 +666,7 @@ service : (IndividualUserTemplateInitArgs) -> {
   update_referrer_details : (UserCanisterDetails) -> (Result_25);
   update_session_type : (SessionType) -> (Result_25);
   update_success_history : (SuccessHistoryItemV1) -> (Result_25);
+  update_user_propensity : (float64) -> (Result_25);
   update_watch_history : (WatchHistoryItem) -> (Result_25);
   update_well_known_principal : (KnownPrincipalType, principal) -> ();
   write_key_value_pair : (nat64, text, text) -> (Result_5);
