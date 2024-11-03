@@ -25,15 +25,13 @@ mod test {
 
     #[test]
     fn test_are_signups_enabled_impl() {
-        let mut canister_data = CanisterData {
-            configuration: Configuration {
+        let mut canister_data = CanisterData::default();
+        canister_data.configuration = Configuration {
                 known_principal_ids: HashMap::default(),
                 signups_open_on_this_subnet: true,
                 url_to_send_canister_metrics_to: String::from("http://example.com")
-            },
-            ..Default::default()
         };
-
+           
         assert!(are_signups_enabled_impl(&canister_data));
 
         canister_data.configuration.signups_open_on_this_subnet = false;

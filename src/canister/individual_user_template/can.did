@@ -348,7 +348,12 @@ type PostViewStatistics = record {
   threshold_view_count : nat64;
 };
 type Principals = record { principals : vec principal };
-type ProofOfChild = record { "principal" : principal; signature : blob };
+type ProofOfChild = record {
+  proof_of_inclusion : vec blob;
+  "principal" : principal;
+  children_proof : ProofOfChildren;
+};
+type ProofOfChildren = record { signature : blob; merkle_root : blob };
 type ProofOfParticipation = record { chain : vec ProofOfChild };
 type RejectionCode = variant {
   NoError;
