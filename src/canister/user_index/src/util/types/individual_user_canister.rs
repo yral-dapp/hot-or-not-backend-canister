@@ -96,12 +96,12 @@ impl IndividualUserCanister {
 
     pub async fn allot_empty_canister(&self) -> Result<Principal, String> {
         let alloted_canister_id_res = CANISTER_DATA.with_borrow_mut(|canister_data| {
-            let Some(new_canister_id) = canister_data.backup_canister_pool.iter().next().copied()
+            let Some(new_canister_id) = canister_data.backup_canisters().iter().next().copied()
             else {
                 return Err("No Backup Canisters Available".into());
             };
 
-            canister_data.backup_canister_pool.remove(&new_canister_id);
+            canister_data.remove_backup_canister(&new_canister_id);
 
             Ok(new_canister_id)
         });
@@ -118,7 +118,7 @@ impl IndividualUserCanister {
             .await
             .inspect_err(|_| {
                 CANISTER_DATA.with_borrow_mut(|canister_data| {
-                    canister_data.backup_canister_pool.insert(canister_id)
+                    canister_data.reinsert_backup_canister_due_to_failure(canister_id)
                 });
             })
             .map_err(|e| e.1)?;

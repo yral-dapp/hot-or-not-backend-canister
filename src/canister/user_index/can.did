@@ -59,7 +59,12 @@ type KnownPrincipalType = variant {
   UserIdGlobalSuperAdmin;
 };
 type LogVisibility = variant { controllers; public };
-type ProofOfChild = record { "principal" : principal; signature : blob };
+type ProofOfChild = record {
+  proof_of_inclusion : vec blob;
+  "principal" : principal;
+  children_proof : ProofOfChildren;
+};
+type ProofOfChildren = record { signature : blob; merkle_root : blob };
 type ProofOfParticipation = record { chain : vec ProofOfChild };
 type QueryStats = record {
   response_payload_bytes_total : nat;

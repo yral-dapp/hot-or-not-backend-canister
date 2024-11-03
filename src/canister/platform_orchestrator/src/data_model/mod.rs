@@ -13,7 +13,7 @@ use shared_utils::{
         args::UpgradeCanisterArg, well_known_principal::PlatformOrchestratorKnownPrincipal,
         SubnetUpgradeReport,
     },
-    common::types::wasm::{CanisterWasm, WasmType},
+    common::{participant_crypto::{merkle::ChildrenMerkle, ProofOfParticipationDeriverStore}, types::wasm::{CanisterWasm, WasmType}},
 };
 
 use self::memory::{
@@ -30,8 +30,8 @@ pub struct StateGuard {
 
 #[derive(Serialize, Deserialize)]
 pub struct CanisterData {
-    pub all_subnet_orchestrator_canisters_list: HashSet<Principal>,
-    pub all_post_cache_orchestrator_list: HashSet<Principal>,
+    all_subnet_orchestrator_canisters_list: HashSet<Principal>,
+    all_post_cache_orchestrator_list: HashSet<Principal>,
     pub subet_orchestrator_with_capacity_left: HashSet<Principal>,
     pub version_detail: VersionDetails,
     #[serde(skip, default = "_default_wasms")]
@@ -47,6 +47,8 @@ pub struct CanisterData {
     pub subnets_upgrade_report: SubnetUpgradeReport,
     #[serde(default)]
     pub state_guard: StateGuard,
+    #[serde(default)]
+    pub children_merkle: ChildrenMerkle,
 }
 
 fn _default_wasms() -> StableBTreeMap<WasmType, CanisterWasm, Memory> {
@@ -75,7 +77,52 @@ impl Default for CanisterData {
             platform_global_admins: Default::default(),
             subnets_upgrade_report: SubnetUpgradeReport::default(),
             state_guard: StateGuard::default(),
+            children_merkle: ChildrenMerkle::default(),
         }
+    }
+}
+
+impl CanisterData {
+    pub fn insert_subnet_orchestrator_and_post_cache(&mut self, subnet_orchestrator: Principal, post_cache: Principal) {
+        self.all_subnet_orchestrator_canisters_list.insert(subnet_orchestrator);
+        self.all_post_cache_orchestrator_list.insert(post_cache);
+        self.subet_orchestrator_with_capacity_left.insert(subnet_orchestrator);
+        self.children_merkle.insert_children([subnet_orchestrator, post_cache]);
+    }
+
+    pub fn insert_subnet_orchestrator(&mut self, subnet_orchestrator: Principal, provisioning_available: bool) {
+        self.all_subnet_orchestrator_canisters_list.insert(subnet_orchestrator);
+        if provisioning_available {
+            self.subet_orchestrator_with_capacity_left.insert(subnet_orchestrator);
+        }
+        self.children_merkle.insert_children([subnet_orchestrator]);
+    }
+
+    pub fn remove_subnet_orchestrator(&mut self, subnet_orchestrator: Principal, remove_it_completely: bool) {
+        self.subet_orchestrator_with_capacity_left.remove(&subnet_orchestrator);
+        if remove_it_completely {
+            self.all_subnet_orchestrator_canisters_list.remove(&subnet_orchestrator);
+            // WARN: does not revoke their Proof of Participation
+            self.children_merkle.remove_child(subnet_orchestrator);
+        }
+    }
+
+    pub fn subnet_orchestrators(&self) -> &HashSet<Principal> {
+        &self.all_subnet_orchestrator_canisters_list
+    }
+
+    pub fn post_cache_orchestrators(&self) -> &HashSet<Principal> {
+        &self.all_post_cache_orchestrator_list
+    }
+}
+
+impl ProofOfParticipationDeriverStore for CanisterData {
+    fn children_merkle(&self) -> &ChildrenMerkle {
+        &self.children_merkle
+    }
+
+    fn children_merkle_mut(&mut self) -> &mut ChildrenMerkle {
+        &mut self.children_merkle
     }
 }
 

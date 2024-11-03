@@ -75,7 +75,7 @@ async fn issue_update_known_principal_for_all_subnet(
 ) {
     let subnet_list: Vec<Principal> = CANISTER_DATA.with_borrow(|canister_data| {
         canister_data
-            .all_subnet_orchestrator_canisters_list
+            .subnet_orchestrators()
             .iter()
             .copied()
             .collect()

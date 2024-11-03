@@ -106,19 +106,14 @@ pub async fn provision_subnet_orchestrator_canister(
     );
 
     CANISTER_DATA.with_borrow_mut(|canister_data| {
-        canister_data
-            .all_post_cache_orchestrator_list
-            .insert(post_cache_canister_id);
-        canister_data
-            .all_subnet_orchestrator_canisters_list
-            .insert(subnet_orchestrator_canister_id);
-        canister_data
-            .subet_orchestrator_with_capacity_left
-            .insert(subnet_orchestrator_canister_id);
+        canister_data.insert_subnet_orchestrator_and_post_cache(
+            subnet_orchestrator_canister_id,
+            post_cache_canister_id
+        );
     });
 
     let mut proof_of_participation = ProofOfParticipation::new_for_root();
-    proof_of_participation = proof_of_participation.derive_for_child(subnet_orchestrator_canister_id).await.unwrap();
+    proof_of_participation = proof_of_participation.derive_for_child(&CANISTER_DATA, subnet_orchestrator_canister_id).await.unwrap();
     let user_index_init_arg = UserIndexInitArgs {
         known_principal_ids: Some(known_principal_map.clone()),
         access_control_map: None,

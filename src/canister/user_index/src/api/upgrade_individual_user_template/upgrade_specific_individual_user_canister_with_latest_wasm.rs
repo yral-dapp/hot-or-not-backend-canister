@@ -47,9 +47,14 @@ async fn upgrade_specific_individual_user_canister_with_latest_wasm(
             .unwrap()
     });
 
-    let mut proof_of_participation = CANISTER_DATA.with_borrow(|cdata| cdata.proof_of_participation.clone());
+    // TODO: remove this after upgrade is executed on all individual canisters
+    let mut proof_of_participation = CANISTER_DATA.with_borrow_mut(|cdata| {
+        cdata.children_merkle.insert_children([user_canister_id]);
+
+        cdata.proof_of_participation.clone()
+    });
     if let Some(pop) = proof_of_participation {
-        proof_of_participation = Some(pop.derive_for_child(user_canister_id).await.unwrap());
+        proof_of_participation = Some(pop.derive_for_child(&CANISTER_DATA, user_canister_id).await.unwrap());
     }
     match canister_management::upgrade_individual_user_canister(
         user_canister_id,

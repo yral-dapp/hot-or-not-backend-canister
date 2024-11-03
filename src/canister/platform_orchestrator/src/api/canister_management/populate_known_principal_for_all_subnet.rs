@@ -10,7 +10,7 @@ use crate::{guard::is_caller::is_caller_global_admin_or_controller, CANISTER_DAT
 #[update(guard = "is_caller_global_admin_or_controller")]
 async fn populate_known_principal_for_all_subnet() {
     let subnet_orchestrators: Vec<Principal> = CANISTER_DATA.with_borrow(|canister_data| {
-        canister_data.all_subnet_orchestrator_canisters_list.iter().copied().collect()
+        canister_data.subnet_orchestrators().iter().copied().collect()
     });
 
     for subnet_id in subnet_orchestrators {

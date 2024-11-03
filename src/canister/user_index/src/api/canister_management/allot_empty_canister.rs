@@ -22,13 +22,13 @@ async fn allot_empty_canister() -> Result<Principal, String> {
     let result = registered_individual_canister.allot_empty_canister().await;
 
     let backup_canister_count =
-        CANISTER_DATA.with_borrow(|canister_data| canister_data.backup_canister_pool.len() as u64);
+        CANISTER_DATA.with_borrow(|canister_data| canister_data.backup_canisters().len() as u64);
 
     if backup_canister_count < get_backup_individual_user_canister_threshold() {
         let number_of_canisters = get_backup_individual_user_canister_batch_size();
         let breaking_condition = || {
             CANISTER_DATA.with_borrow_mut(|canister_data| {
-                canister_data.backup_canister_pool.len() as u64
+                canister_data.backup_canisters().len() as u64
                     > get_backup_individual_user_canister_batch_size()
             })
         };

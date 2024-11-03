@@ -164,7 +164,7 @@ impl CDaoHarness {
             &application_subnets[1]
         ).unwrap();
 
-        for _ in 0..50 {
+        for _ in 0..1000 {
             pic.tick();
         }
 

@@ -1,10 +1,12 @@
 //! Utilities for creating and verifying proof that a given canister is a part of YRAL Backend canisters
 mod types;
+pub mod merkle;
 
 use std::{cell::RefCell, collections::HashMap, thread::LocalKey};
 
 use candid::{CandidType, Principal};
-use ed25519_dalek::{Signature, VerifyingKey, Verifier};
+use ed25519_compact::{Signature, PublicKey};
+use merkle::{ChildrenMerkle, ProofOfInclusion};
 use types::{ManagementCanisterSchnorrPublicKeyReply, ManagementCanisterSchnorrPublicKeyRequest, ManagementCanisterSignatureReply, ManagementCanisterSignatureRequest, SchnorrAlgorithm, SchnorrKeyId};
 use serde::{Serialize, Deserialize};
 
@@ -32,12 +34,12 @@ pub(crate) type LocalPoPStore<Store> = LocalKey<RefCell<Store>>;
 pub struct PubKeyCache(HashMap<Principal, Vec<u8>>);
 
 impl PubKeyCache {
-    async fn get_or_init_public_key<Store: ProofOfParticipationStore>(store: &'static LocalPoPStore<Store>, principal: Principal) -> Result<VerifyingKey, String> {
+    async fn get_or_init_public_key<Store: ProofOfParticipationStore>(store: &'static LocalPoPStore<Store>, principal: Principal) -> Result<PublicKey, String> {
         let maybe_pk = store.with_borrow(|store| {
             store.pubkey_cache().0.get(&principal).cloned()
         });
         if let Some(pk) = maybe_pk {
-            return VerifyingKey::try_from(pk.as_slice())
+            return PublicKey::from_slice(pk.as_slice())
                 .map_err(|_| "invalid public key".to_string())
         }
 
@@ -60,7 +62,7 @@ impl PubKeyCache {
             })?;
 
         let key = key_res.public_key;
-        let vk = VerifyingKey::try_from(key.as_slice())
+        let vk = PublicKey::from_slice(key.as_slice())
             .map_err(|_| "invalid public key".to_string())?;
         store.with_borrow_mut(|store| {
             store.pubkey_cache_mut().0.insert(principal, key.clone());
@@ -73,14 +75,14 @@ impl PubKeyCache {
 #[derive(Serialize)]
 struct ProofOfAuthorityMsg {
     prefix: &'static [u8],
-    pub child: Principal,
+    pub merkle_root: [u8; 32],
 }
 
 impl ProofOfAuthorityMsg {
-    pub fn new(child: Principal) -> Self {
+    pub fn new(merkle_root: [u8; 32]) -> Self {
         Self {
-            prefix: b"CHILD",
-            child,
+            prefix: b"CHILDREN",
+            merkle_root,
         }
     }
 
@@ -93,17 +95,16 @@ impl ProofOfAuthorityMsg {
     }
 }
 
-/// Proof that this canister id is a child of the parent canister 
+/// Proof that a given merkle tree contains children of the parent canister 
 #[derive(Clone, CandidType, Serialize, Deserialize)]
-struct ProofOfChild {
-    // Principal of the child
-    principal: Principal,
+struct ProofOfChildren {
+    merkle_root: [u8; 32],
     signature: Vec<u8>,
 }
 
-impl ProofOfChild {
-    async fn new(child: Principal) -> Result<Self, String> {
-        let message = ProofOfAuthorityMsg::new(child);
+impl ProofOfChildren {
+    async fn new(merkle_root: [u8; 32]) -> Result<Self, String> {
+        let message = ProofOfAuthorityMsg::new(merkle_root);
         let sign_args = ManagementCanisterSignatureRequest {
             message: message.serialize_cbor(),
             derivation_path: vec![],
@@ -123,18 +124,48 @@ impl ProofOfChild {
         .map_err(|(_, msg)| format!("unable to sign: {msg}"))?;
 
         Ok(Self {
-            principal: child,
+            merkle_root,
             signature: sig_res.signature,
         })
     }
 
-    pub fn verify(&self, parent_key: &VerifyingKey) -> Result<(), String> {
-        let message = ProofOfAuthorityMsg::new(self.principal);
+    pub fn verify(&self, parent_key: &PublicKey) -> Result<(), String> {
+        let message = ProofOfAuthorityMsg::new(self.merkle_root);
         let message_raw = message.serialize_cbor();
 
         let sig = Signature::from_slice(&self.signature).map_err(|_| "invalid proof".to_string())?;
 
         parent_key.verify(&message_raw, &sig).map_err(|_| "invalid proof".to_string())?;
+
+        Ok(())
+    }
+}
+
+// Proof that given canister id exists in the merkle tree containing the children of the parent canister
+#[derive(Clone, CandidType, Serialize, Deserialize)]
+struct ProofOfChild {
+    principal: Principal,
+    children_proof: ProofOfChildren,
+    proof_of_inclusion: ProofOfInclusion,
+}
+
+impl ProofOfChild {
+    pub fn new(children_proof: ProofOfChildren, principal: Principal, proof_of_inclusion: ProofOfInclusion) -> Self {
+        Self {
+            principal,
+            children_proof,
+            proof_of_inclusion,
+        }
+    }
+
+    pub fn verify(&self, parent_key: &PublicKey) -> Result<(), String> {
+        self.children_proof.verify(parent_key)?;
+
+        ChildrenMerkle::verify_proof_of_inclusion(
+            self.children_proof.merkle_root,
+            &self.proof_of_inclusion,
+            self.principal,
+        )?;
 
         Ok(())
     }
@@ -153,12 +184,34 @@ impl ProofOfParticipation {
         }
     } 
 
-    pub async fn derive_for_child(self, child: Principal) -> Result<Self, String> {
-        let mut chain = self.chain;
-        let proof = ProofOfChild::new(child).await?;
-        chain.push(proof);
-        Ok(Self {
-            chain,
+    pub async fn derive_for_child<Store: ProofOfParticipationDeriverStore>(&self, store: &'static LocalPoPStore<Store>, child: Principal) -> Result<ProofOfParticipation, String> {
+        let (proof_of_inclusion, maybe_poc) = store.with_borrow(|s| {
+            let children_merkle = s.children_merkle();
+            children_merkle.proof_of_inclusion(child)
+                .map(|poi| {
+                    (poi, children_merkle.proof_of_children.clone())
+                })
+        })?;
+        let poc = if let Some(poc) = maybe_poc {
+            poc
+        } else {
+            let root = store.with_borrow(|s| s.children_merkle().root);
+            let poc = ProofOfChildren::new(root).await?;
+            store.with_borrow_mut(|s| {
+                s.children_merkle_mut().proof_of_children = Some(poc.clone());
+            });
+            poc
+        };
+
+        let mut chain = self.chain.clone();
+        chain.push(ProofOfChild::new(
+            poc,
+            child,
+            proof_of_inclusion,
+        ));
+
+        Ok(ProofOfParticipation {
+            chain
         })
     }
 
@@ -192,4 +245,10 @@ pub trait ProofOfParticipationStore {
     fn pubkey_cache_mut(&mut self) -> &mut PubKeyCache;
 
     fn platform_orchestrator(&self) -> Principal;
+}
+
+pub trait ProofOfParticipationDeriverStore {
+    fn children_merkle(&self) -> &merkle::ChildrenMerkle;
+
+    fn children_merkle_mut(&mut self) -> &mut merkle::ChildrenMerkle;
 }
