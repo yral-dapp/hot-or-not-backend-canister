@@ -18,7 +18,9 @@ use shared_utils::{
             SlotDetailsV1, SlotId, StablePrincipal,
         },
         migration::MigrationInfo,
-        ml_data::{MLFeedCacheItem, SuccessHistoryItem, SuccessHistoryItemV1, WatchHistoryItem},
+        ml_data::{
+            MLData, MLFeedCacheItem, SuccessHistoryItem, SuccessHistoryItemV1, WatchHistoryItem,
+        },
         post::{FeedScore, Post, PostViewStatistics},
         profile::UserProfile,
         session::SessionType,
@@ -92,7 +94,7 @@ pub struct CanisterData {
     #[serde(skip, default = "_default_token_list")]
     pub token_roots: ic_stable_structures::btreemap::BTreeMap<Principal, (), Memory>,
     #[serde(default)]
-    pub user_propensity: f64,
+    pub ml_data: MLData,
 }
 
 pub fn _default_room_details(
@@ -165,7 +167,7 @@ impl Default for CanisterData {
             ml_feed_cache: Vec::new(),
             cdao_canisters: Vec::new(),
             token_roots: _default_token_list(),
-            user_propensity: 0.0,
+            ml_data: MLData::default(),
         }
     }
 }

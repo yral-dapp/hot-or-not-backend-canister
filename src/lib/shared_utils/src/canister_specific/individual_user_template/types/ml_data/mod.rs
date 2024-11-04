@@ -114,3 +114,8 @@ pub struct MLFeedCacheItem {
     pub video_id: String,
     pub creator_principal_id: Option<Principal>,
 }
+
+#[derive(Deserialize, Serialize, Clone, CandidType, Debug)]
+pub struct MLData {
+    pub user_propensity: f64,
+}

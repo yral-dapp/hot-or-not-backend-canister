@@ -12,7 +12,7 @@ fn update_user_propensity(user_propensity: f64) -> Result<String, String> {
     let _ = CANISTER_DATA.with(|canister_data| {
         let mut canister_data = canister_data.borrow_mut();
 
-        canister_data.user_propensity = user_propensity;
+        canister_data.ml_data.user_propensity = user_propensity;
     });
 
     Ok("Success".into())
@@ -23,6 +23,6 @@ fn get_user_propensity() -> f64 {
     CANISTER_DATA.with(|canister_data| {
         let canister_data = canister_data.borrow();
 
-        canister_data.user_propensity
+        canister_data.ml_data.user_propensity
     })
 }
