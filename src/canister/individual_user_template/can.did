@@ -636,6 +636,7 @@ service : (IndividualUserTemplateInitArgs) -> {
   request_airdrop : (principal, opt blob, nat, principal) -> (Result_21);
   return_cycles_to_user_index_canister : (opt nat) -> ();
   save_snapshot_json : () -> (nat32);
+  set_controller_as_subnet_orchestrator : (principal) -> ();
   settle_neurons_fund_participation : (
       SettleNeuronsFundParticipationRequest,
     ) -> (SettleNeuronsFundParticipationResponse);

@@ -1,7 +1,10 @@
 use std::time::SystemTime;
 
 use candid::Principal;
-use ic_cdk::{api::management_canister::main::CanisterInstallMode, call, notify};
+use ic_cdk::{
+    api::management_canister::main::{canister_info, CanisterInfoRequest, CanisterInstallMode},
+    call, notify,
+};
 
 use shared_utils::{
     canister_specific::{
@@ -156,6 +159,10 @@ async fn recharge_and_upgrade(
     version: String,
     individual_user_wasm: Vec<u8>,
 ) -> Result<(Principal, Principal), ((Principal, Principal), String)> {
+    check_controller_and_update_controller(user_canister_id)
+        .await
+        .map_err(|e| ((user_principal_id, user_canister_id), e))?;
+
     recharge_canister_if_below_threshold(&user_canister_id)
         .await
         .map_err(|e| ((user_principal_id, user_canister_id), e))?;
@@ -170,6 +177,31 @@ async fn recharge_and_upgrade(
     .map_err(|s| ((user_principal_id, user_canister_id), s))?;
 
     Ok((user_principal_id, user_canister_id))
+}
+
+async fn check_controller_and_update_controller(canister_id: Principal) -> Result<(), String> {
+    let (canister_info,) = canister_info(CanisterInfoRequest {
+        canister_id,
+        num_requested_changes: None,
+    })
+    .await
+    .map_err(|e| e.1)?;
+
+    if canister_info.controllers.contains(&ic_cdk::id()) {
+        return Ok(());
+    }
+
+    let (_canister_version,) = call::<_, (String,)>(canister_id, "get_version", ())
+        .await
+        .map_err(|e| e.1)?;
+
+    call::<_, ()>(
+        canister_info.controllers[0],
+        "set_controller_as_subnet_orchestrator",
+        (canister_id,),
+    )
+    .await
+    .map_err(|e| e.1)
 }
 
 async fn upgrade_user_canister(
