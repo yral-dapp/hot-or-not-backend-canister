@@ -723,7 +723,7 @@ fn creator_dao_tests() {
         .unwrap();
     ic_cdk::println!("🧪 SNS token Balance of alice: {:?}", res);
 
-    let expected_balance = Nat::from(4_400_000 - tx_fee);
+    let expected_balance = Nat::from(20_000_000_000 - tx_fee);
     ic_cdk::println!("🧪 Expected Balance: {:?}", expected_balance);
 
     let alice_canister_final_cycle_balance = pocket_ic.cycle_balance(alice_canister_id);
