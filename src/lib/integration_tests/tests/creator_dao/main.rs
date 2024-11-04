@@ -409,7 +409,7 @@ fn creator_dao_tests() {
                             controller: Some(
                                 PrincipalId::from_str(&alice_principal.to_string()).unwrap(),
                             ),
-                            stake_e8s: 20_000_000_000,
+                            stake_e8s: 60_000_000_000,
                             memo: 0,
                             dissolve_delay_seconds: 0,
                             vesting_period_seconds: None,
@@ -429,8 +429,8 @@ fn creator_dao_tests() {
                     total_e8s: 10_000_000,
                 }),
                 swap_distribution: Some(SwapDistribution {
-                    total_e8s: 25_000_000_000,
-                    initial_swap_amount_e8s: 25_000_000_000,
+                    total_e8s: 65_000_000_000,
+                    initial_swap_amount_e8s: 5_000_000,
                 }),
             },
         )),
@@ -723,7 +723,7 @@ fn creator_dao_tests() {
         .unwrap();
     ic_cdk::println!("🧪 SNS token Balance of alice: {:?}", res);
 
-    let expected_balance = Nat::from(20_000_000_000 - tx_fee);
+    let expected_balance = Nat::from(60_000_000_000 - tx_fee);
     ic_cdk::println!("🧪 Expected Balance: {:?}", expected_balance);
 
     let alice_canister_final_cycle_balance = pocket_ic.cycle_balance(alice_canister_id);
