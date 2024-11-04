@@ -731,7 +731,7 @@ fn creator_dao_tests() {
     assert!(alice_canister_final_cycle_balance > alice_initial_cycle_balance);
 
     assert!(res == expected_balance);
-
+    
     let bob = get_mock_user_bob_principal_id();
     let bob_canister_id: Principal = pocket_ic
         .update_call(
@@ -751,13 +751,21 @@ fn creator_dao_tests() {
         .unwrap();
 
     // simulating off-chain allocation (kinda)
+    let decimals = pocket_ic.query_call(ledger_canister, alice_canister_id, "icrc1_decimals", Encode!(&()).unwrap()).map(|res|{
+        let response: u8 = match res {
+            WasmResult::Reply(payload) => Decode!(&payload, u8).unwrap(),
+            _ => panic!("\n🛑 icrc1_transfer failed with: {:?}", res),
+        };
+        response
+    }).unwrap();
+
     let transfer_args = types::TransferArg {
         from_subaccount: None,
         to: types::Account { owner: alice_canister_id, subaccount: None },
         fee: None,
         created_at_time: None,
         memo: None,
-        amount: 200u32.into(),
+        amount: Nat::from(200u32) * 10u64.pow(decimals.into()),
     };
     let transfer = pocket_ic.update_call(
         ledger_canister,
@@ -780,7 +788,7 @@ fn creator_dao_tests() {
             alice_canister_id,
              bob,
               "request_airdrop",
-               encode_args((root_canister, None::<Memo>, Nat::from(100u64), bob_canister_id)).unwrap())
+               encode_args((root_canister, None::<Memo>, Nat::from(100u64) * 10u64.pow(decimals.into()), bob_canister_id)).unwrap())
         .map(|reply_payload|{
             let response: Result<(), AirdropError> = match reply_payload {
                 WasmResult::Reply(payload) => Decode!(&payload, Result<(), AirdropError>).unwrap(),
@@ -797,7 +805,7 @@ fn creator_dao_tests() {
         alice_canister_id,
          bob,
           "request_airdrop",
-           encode_args((root_canister, None::<Memo>, Nat::from(100u64), bob_canister_id)).unwrap())
+           encode_args((root_canister, None::<Memo>, Nat::from(100u64) * 10u64.pow(decimals.into()), bob_canister_id)).unwrap())
     .map(|reply_payload|{
         let response: Result<(), AirdropError> = match reply_payload {
             WasmResult::Reply(payload) => Decode!(&payload, Result<(), AirdropError>).unwrap(),
@@ -814,7 +822,7 @@ fn creator_dao_tests() {
         alice_canister_id,
          bob,
           "request_airdrop",
-           encode_args((root_canister, None::<Memo>, Nat::from(100u64), Principal::anonymous())).unwrap())
+           encode_args((root_canister, None::<Memo>, Nat::from(100u64) * 10u64.pow(decimals.into()), Principal::anonymous())).unwrap())
     .map(|reply_payload|{
         let response: Result<(), AirdropError> = match reply_payload {
             WasmResult::Reply(payload) => Decode!(&payload, Result<(), AirdropError>).unwrap(),
@@ -883,5 +891,5 @@ fn creator_dao_tests() {
     .unwrap();
     ic_cdk::println!("🧪 SNS token Balance of alice canister: {:?}", alice_bal);
 
-    assert!(bob_bal == 100u64);
+    assert!(bob_bal == Nat::from(100u64) * 10u64.pow(decimals.into()));
 }

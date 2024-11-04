@@ -21,8 +21,9 @@ async fn request_airdrop(token_root: Principal, memo: Option<Memo>, amount: Nat,
         return Err(AirdropError::AlreadyClaimedAirdrop);
     }
 
-    let amount = amount.min(1000u32.into());
-    if amount < 100u32 {
+    let decimals = get_decimals_from_token_root(token_root).await?;
+    let amount = amount.min(Nat::from(1000u32) * 10u64.pow(decimals.into())); 
+    if amount < 100u32.pow(decimals.into()) {
         return Err(AirdropError::RequestedAmountTooLow)
     }
 
@@ -40,6 +41,13 @@ async fn request_airdrop(token_root: Principal, memo: Option<Memo>, amount: Nat,
 
     set_airdrop_claimed(token_root, current_caller); 
     Ok(())
+}
+
+async fn get_decimals_from_token_root(token_root: Principal) -> Result<u8, AirdropError>{
+    let res: (ListSnsCanistersResponse,) = ic_cdk::call(token_root, "list_sns_canisters", (ListSnsCanistersRequest {},)).await?;
+
+    let decimals: (u8,) = ic_cdk::call(res.0.ledger.ok_or(AirdropError::InvalidRoot).map(|l| l.into())?, "icrc1_decimals", ()).await?;
+    Ok(decimals.0)
 }
 
 async fn request_airdrop_internal(token_root: Principal, current_caller: Principal, memo: Option<Memo>, amount: Nat) -> Result<(), AirdropError> {
