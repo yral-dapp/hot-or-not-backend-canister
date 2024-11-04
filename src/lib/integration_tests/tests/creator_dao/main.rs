@@ -409,7 +409,7 @@ fn creator_dao_tests() {
                             controller: Some(
                                 PrincipalId::from_str(&alice_principal.to_string()).unwrap(),
                             ),
-                            stake_e8s: 4_400_000,
+                            stake_e8s: 10_000_000_000,
                             memo: 0,
                             dissolve_delay_seconds: 0,
                             vesting_period_seconds: None,
@@ -418,7 +418,7 @@ fn creator_dao_tests() {
                             controller: Some(
                                 PrincipalId::from_str(&alice_principal.to_string()).unwrap(),
                             ),
-                            stake_e8s: 100_000,
+                            stake_e8s: 10_000_000_000,
                             memo: 1,
                             dissolve_delay_seconds: 2,
                             vesting_period_seconds: None,
