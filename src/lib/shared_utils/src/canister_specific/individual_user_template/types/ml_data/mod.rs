@@ -115,7 +115,7 @@ pub struct MLFeedCacheItem {
     pub creator_principal_id: Option<Principal>,
 }
 
-#[derive(Deserialize, Serialize, Clone, CandidType, Debug)]
+#[derive(Deserialize, Serialize, Clone, CandidType, Debug, Default)]
 pub struct MLData {
     pub user_propensity: f64,
 }
