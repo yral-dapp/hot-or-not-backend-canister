@@ -18,7 +18,9 @@ use shared_utils::{
             SlotDetailsV1, SlotId, StablePrincipal,
         },
         migration::MigrationInfo,
-        ml_data::{MLFeedCacheItem, SuccessHistoryItem, SuccessHistoryItemV1, WatchHistoryItem},
+        ml_data::{
+            MLData, MLFeedCacheItem, SuccessHistoryItem, SuccessHistoryItemV1, WatchHistoryItem,
+        },
         post::{FeedScore, Post, PostViewStatistics},
         profile::UserProfile,
         session::SessionType,
@@ -91,6 +93,8 @@ pub struct CanisterData {
     // list of root token canisters
     #[serde(skip, default = "_default_token_list")]
     pub token_roots: ic_stable_structures::btreemap::BTreeMap<Principal, (), Memory>,
+    #[serde(default)]
+    pub ml_data: MLData,
 }
 
 pub fn _default_room_details(
@@ -128,7 +132,6 @@ pub fn _default_token_list() -> ic_stable_structures::btreemap::BTreeMap<Princip
     ic_stable_structures::btreemap::BTreeMap::init(get_token_list_memory())
 }
 
-
 pub fn _default_success_history_v1(
 ) -> ic_stable_structures::btreemap::BTreeMap<SuccessHistoryItemV1, (), Memory> {
     ic_stable_structures::btreemap::BTreeMap::init(get_success_history_memory())
@@ -163,7 +166,8 @@ impl Default for CanisterData {
             device_identities: Vec::new(),
             ml_feed_cache: Vec::new(),
             cdao_canisters: Vec::new(),
-            token_roots: _default_token_list()
+            token_roots: _default_token_list(),
+            ml_data: MLData::default(),
         }
     }
 }
