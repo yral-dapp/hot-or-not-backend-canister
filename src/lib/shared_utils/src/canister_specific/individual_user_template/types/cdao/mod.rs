@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use candid::{CandidType, Principal};
 use serde::{Deserialize, Serialize};
 
-#[derive(CandidType, PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
+#[derive(CandidType, PartialEq, Debug, Serialize, Deserialize, Clone)]
 pub struct DeployedCdaoCanisters {
     pub governance: Principal,
     pub ledger: Principal,
@@ -13,6 +13,9 @@ pub struct DeployedCdaoCanisters {
     
     #[serde(default)]
     pub airdrop_info: AirdropInfo,
+
+    #[serde(default)]
+    pub last_swapped_price: Option<f64>
 }
 
 #[derive(CandidType, PartialEq, Eq, Debug, Serialize, Deserialize, Clone, Default)]

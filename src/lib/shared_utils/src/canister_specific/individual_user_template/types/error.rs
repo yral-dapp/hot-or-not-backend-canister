@@ -1,6 +1,6 @@
 use candid::{CandidType, Deserialize};
 use ic_cdk::api::call::RejectionCode;
-use icrc_ledger_types::{icrc1::transfer::TransferError, icrc2::approve::ApproveError};
+use icrc_ledger_types::{icrc1::transfer::TransferError, icrc2::{approve::ApproveError, transfer_from::TransferFromError}};
 
 #[derive(CandidType, Deserialize, PartialEq, Eq, Debug)]
 pub enum GetPostsOfUserProfileError {
@@ -97,6 +97,9 @@ pub enum SwapError{
     UnsupportedToken,
     CallError(RejectionCode, String),
     ApproveError(ApproveError),
+    IsNotTokenCreator,
+    NoController,
+    TransferFromError(TransferFromError)
 }
 impl From<(RejectionCode, String)> for SwapError {
     fn from(value: (RejectionCode, String)) -> Self {

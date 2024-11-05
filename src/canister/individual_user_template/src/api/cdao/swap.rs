@@ -1,10 +1,11 @@
 use candid::{CandidType, Nat, Principal};
-use ic_cdk::api::time;
-use ic_cdk_macros::update;
-use icrc_ledger_types::icrc2::approve::{ApproveArgs, ApproveError};
+use ic_cdk::api::{management_canister::main::CanisterInfoRequest, time};
+use ic_cdk_macros::{query, update};
+use icrc_ledger_types::icrc2::{approve::{ApproveArgs, ApproveError}, transfer_from::{TransferFromArgs, TransferFromError}};
 use serde::Deserialize;
-use serde_json::Value;
-use shared_utils::canister_specific::individual_user_template::types::error::SwapError;
+use shared_utils::canister_specific::individual_user_template::types::{cdao::DeployedCdaoCanisters, error::SwapError};
+
+use crate::CANISTER_DATA;
 
 #[update]
 pub async fn swap_request(token_pairs: TokenPairs) -> Result<(), SwapError>{
@@ -14,16 +15,19 @@ pub async fn swap_request(token_pairs: TokenPairs) -> Result<(), SwapError>{
         return Err(SwapError::UnsupportedToken);
     }
 
-    let start_time = time();
+    if CANISTER_DATA.with_borrow(|data| data.cdao_canisters.iter().find(|cdao| cdao.ledger == token_b.ledger).cloned()).is_none(){
+        return Err(SwapError::IsNotTokenCreator);
+    }
+
     let allocation_res: (Result<Nat, ApproveError>, ) = ic_cdk::call(token_a.ledger, "icrc2_approve", (ApproveArgs{
         from_subaccount: None,
         spender: ic_cdk::id().into(),
         amount: token_a.amt,
         expected_allowance: None,
         memo: None,
-        expires_at: Some(start_time + SWAP_REQUEST_EXPIRY),
+        expires_at: Some(time() + SWAP_REQUEST_EXPIRY),
         fee: None,
-        created_at_time: Some(start_time)
+        created_at_time: None
     }, )).await?;
 
     allocation_res.0.map_err(SwapError::ApproveError)?;
@@ -31,6 +35,144 @@ pub async fn swap_request(token_pairs: TokenPairs) -> Result<(), SwapError>{
     Ok(())
 }
 
+// Creator principal is the caller here
+#[update]
+pub async fn swap_request_action(op: SwapRequestActions) -> Result<(), SwapError>{
+    match op{
+        SwapRequestActions::Accept { token_a, token_b, requester } => {
+            let transfer_res: (Result<Nat, TransferFromError>, ) = ic_cdk::call(token_a.ledger, "icrc2_transfer_from", (TransferFromArgs{
+                from: requester.into(),
+                spender_subaccount: None,
+                to: ic_cdk::caller().into(),
+                amount: token_a.amt,
+                fee: None,
+                memo: None,
+                created_at_time: None
+            }, )).await?;
+            transfer_res.0.map_err(SwapError::TransferFromError)?;
+
+            let transfer_res: (Result<Nat, TransferFromError>, ) = ic_cdk::call(token_b.ledger, "icrc2_transfer_from", (TransferFromArgs{
+                from: ic_cdk::caller().into(),
+                spender_subaccount: None,
+                to: requester.into(),
+                amount: token_b.amt,
+                fee: None,
+                memo: None,
+                created_at_time: None
+            }, )).await?;
+            transfer_res.0.map_err(SwapError::TransferFromError)?;
+
+            let token_a_price = get_token_price(token_a.ledger).await?;
+            if let Some(price) = token_a_price{
+                CANISTER_DATA.with_borrow_mut(|data| {
+                    data.cdao_canisters.iter_mut().find(|cdao| cdao.ledger == token_b.ledger).map(|cdao| cdao.last_swapped_price = Some(price));
+                });
+            }
+            // Clear and send push notifs to both parties
+        },
+        SwapRequestActions::Reject { token_a, token_b, requester } => {
+            // Reject and send push notifs to both parties
+            // Cannot remove the approval as it is not possible to do so
+        }
+    }
+
+    Ok(())
+}
+
+async fn get_token_price(token_ledger: Principal) -> Result<Option<f64>, SwapError>{
+    let price: Result<(PriceData, ), _> = ic_cdk::call(Principal::from_text("moe7a-tiaaa-aaaag-qclfq-cai").unwrap(), "getToken", (token_ledger.to_text(), )).await;
+
+    match price{
+        Ok((price, )) => Ok(Some(price.price_usd)),
+        Err(_) => {
+            let owner_canister = get_token_owner_from_ledger(token_ledger).await?;
+            let price: (Option<f64>, ) = ic_cdk::call(owner_canister, "get_token_price_by_ledger", (token_ledger, )).await?;
+            Ok(price.0)
+        }
+    }
+}
+
+#[query]
+pub fn get_token_price_by_ledger(token_ledger: Principal) -> Result<Option<f64>, SwapError>{
+    CANISTER_DATA.with_borrow(|data| {
+        data.cdao_canisters.iter().find(|cdao| cdao.ledger == token_ledger).map(|cdao| cdao.last_swapped_price.clone()).ok_or(SwapError::NoController)
+    })
+}
+async fn get_token_owner_from_ledger(ledger: Principal) -> Result<Principal, SwapError>{
+    let res  = ic_cdk::api::management_canister::main::canister_info(CanisterInfoRequest{
+        canister_id: ledger,
+        num_requested_changes: None
+    }).await?.0;
+    for f in res.controllers.into_iter().filter(|f| f.to_text().ends_with("-cai")){
+        let res: Result<(Vec<DeployedCdaoCanisters>, ), _> = ic_cdk::call(f, "deployed_cdao_canisters", ()).await;
+
+        match res{
+            Ok((cdao, )) => {
+                if cdao.iter().any(|cdao| cdao.ledger == ledger){
+                    return Ok(f);
+                }
+            },
+            Err(_) => continue
+        };
+    }
+
+    Err(SwapError::NoController)
+}
+#[derive(CandidType, Deserialize, PartialEq, Debug)]
+pub struct PriceData{
+    id: Nat,
+    #[serde(rename = "volumeUSD1d")]
+    volume_usd_1d: f64,
+    #[serde(rename = "volumeUSD7d")]
+    volume_usd_7d: f64,
+    #[serde(rename = "totalVolumeUSD")]
+    total_volume_usd: f64,
+    name: String,
+    #[serde(rename = "volumeUSD")]
+    volume_usd: f64,
+    #[serde(rename = "feesUSD")]
+    fees_usd: f64,
+    #[serde(rename = "priceUSDChange")]
+    price_usd_change: f64,
+    address: String,
+    #[serde(rename = "txCount")]
+    tx_count: u64,
+    #[serde(rename = "priceUSD")]
+    price_usd: f64,
+    standard: String,
+    symbol: String
+}
+// Caller needs to be the requester principal
+pub async fn cancel_swap_request(token_pairs: TokenPairs) -> Result<(), SwapError>{
+    let TokenPairs{token_a, ..} = token_pairs;
+    let allocation_res: (Result<Nat, ApproveError>, ) = ic_cdk::call(token_a.ledger, "icrc2_approve", (ApproveArgs{
+        from_subaccount: None,
+        spender: ic_cdk::id().into(),
+        amount: 0u32.into(), // icrc2 docs revoking approval
+        expected_allowance: None,
+        memo: None,
+        expires_at: Some(time() + SWAP_REQUEST_EXPIRY),
+        fee: None,
+        created_at_time: None
+    }, )).await?;
+
+    allocation_res.0.map_err(SwapError::ApproveError)?;
+    Ok(())
+}
+
+#[derive(CandidType, Deserialize, PartialEq, Eq, Debug)]
+pub enum SwapRequestActions{
+    Accept{
+        token_a: SwapTokenData,
+        token_b: SwapTokenData,
+        requester: Principal
+    },
+    Reject{
+        token_a: SwapTokenData,
+        token_b: SwapTokenData,
+        requester: Principal
+    }
+}
 const SWAP_REQUEST_EXPIRY: u64 = 7 * 24 * 60 * 60 * 1_000_000_000; // 1 wk
 
 async fn is_icrc2_supported_token(token_ledger: Principal) -> Result<bool, SwapError>{
