@@ -23,7 +23,7 @@ async fn request_airdrop(token_root: Principal, memo: Option<Memo>, amount: Nat,
 
     let decimals = get_decimals_from_token_root(token_root).await?;
     let amount = amount.min(Nat::from(1000u32) * 10u64.pow(decimals.into())); 
-    if amount < 100u64.pow(decimals.into()) {
+    if amount < Nat::from(100u32) * 10u64.pow(decimals.into()) {
         return Err(AirdropError::RequestedAmountTooLow)
     }
 
