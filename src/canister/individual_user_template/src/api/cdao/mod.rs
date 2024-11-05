@@ -1,5 +1,6 @@
 mod token;
 mod airdrop;
+pub mod swap;
 use std::collections::{HashMap, HashSet, VecDeque};
 
 use candid::{Encode, Principal};

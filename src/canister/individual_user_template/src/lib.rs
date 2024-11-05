@@ -21,7 +21,7 @@ use shared_utils::{
         device_id::DeviceIdentity,
         error::{
             BetOnCurrentlyViewingPostError, CdaoDeployError, CdaoTokenError,
-            FollowAnotherUserProfileError, GetPostsOfUserProfileError, AirdropError
+            FollowAnotherUserProfileError, GetPostsOfUserProfileError, AirdropError, SwapError
         },
         follow::{FollowEntryDetail, FollowEntryId},
         hot_or_not::{BetDetails, BetOutcomeForBetMaker, BettingStatus, PlacedBetDetail},
@@ -48,13 +48,16 @@ use shared_utils::{
     types::canister_specific::individual_user_template::error_types::{
         GetUserUtilityTokenTransactionHistoryError, UpdateProfileSetUniqueUsernameError,
     },
+    
 };
+use crate::api::cdao::swap::TokenPairs;
 
 mod api;
 pub mod data_model;
 mod util;
 
 thread_local! {
+    
     static CANISTER_DATA: RefCell<CanisterData> = RefCell::default();
     static SNAPSHOT_DATA: RefCell<Vec<u8>> = RefCell::default();
 }
