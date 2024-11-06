@@ -948,7 +948,7 @@ fn creator_dao_tests() {
                     developer_neurons: vec![
                         NeuronDistribution {
                             controller: Some(
-                                PrincipalId::from_str(&alice_principal.to_string()).unwrap(),
+                                PrincipalId::from_str(&bob.to_string()).unwrap(),
                             ),
                             stake_e8s: 4_400_000,
                             memo: 0,
@@ -957,7 +957,7 @@ fn creator_dao_tests() {
                         },
                         NeuronDistribution {
                             controller: Some(
-                                PrincipalId::from_str(&alice_principal.to_string()).unwrap(),
+                                PrincipalId::from_str(&bob.to_string()).unwrap(),
                             ),
                             stake_e8s: 100_000,
                             memo: 1,
