@@ -2,7 +2,7 @@
 // You may want to manually adjust some of the types.
 #![allow(dead_code, unused_imports)]
 use candid::{self, CandidType, Decode, Deserialize, Encode, Nat, Principal};
-use ic_cdk::api::call::CallResult as Result;
+use ic_cdk::api::call::{CallResult as Result, RejectionCode};
 use serde_bytes;
 
 #[derive(CandidType, Deserialize)]
@@ -495,4 +495,34 @@ pub enum CustomTransferError {
     CreatedInFuture { ledger_time: u64 },
     TooOld,
     InsufficientFunds { balance: Nat },
+}
+
+#[derive(CandidType, Deserialize, PartialEq, Eq, Debug)]
+struct SupportedStandards{
+    name: String,
+    url: String
+}
+
+#[derive(CandidType, Deserialize, PartialEq, Eq, Debug)]
+pub struct SwapTokenData{
+    pub ledger: Principal,
+    pub amt: Nat
+}
+
+#[derive(CandidType, Deserialize, PartialEq, Eq, Debug)]
+pub struct TokenPairs{
+    pub token_a: SwapTokenData,
+    pub token_b: SwapTokenData
+}
+
+#[derive(CandidType, Deserialize, PartialEq, Eq, Debug)]
+pub enum SwapRequestActions{
+    Accept{
+        token_pairs: TokenPairs,
+        requester: Principal
+    },
+    Reject{
+        token_pairs: TokenPairs,
+        requester: Principal
+    }
 }
