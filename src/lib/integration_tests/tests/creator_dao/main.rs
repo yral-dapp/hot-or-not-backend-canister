@@ -893,192 +893,22 @@ fn creator_dao_tests() {
 
     let bob_initial_cycle_balance = pocket_ic.cycle_balance(bob_canister_id);
 
-    let sns_wasm_w_canister_wasm = include_bytes!("../../../../../wasms/sns-wasm-canister.wasm");
-    let sns_wasm_w_canister_id = Principal::from_text(SNS_WASM_W_PRINCIPAL_ID).unwrap();
-
-    let _ = pocket_ic.create_canister_with_id(
-        Some(super_admin),
-        None,
-        Principal::from_text(SNS_WASM_W_PRINCIPAL_ID).unwrap(),
-    );
-
-    let sns_wasm_canister_init_payload = SnsWasmCanisterInitPayload {
-        sns_subnet_ids: vec![],
-        access_controls_enabled: false,
-        allowed_principals: vec![],
-    };
-
-    pocket_ic.install_canister(
-        sns_wasm_w_canister_id,
-        sns_wasm_w_canister_wasm.to_vec(),
-        Encode!(&sns_wasm_canister_init_payload).unwrap(),
-        Some(super_admin),
-    );
-
-    let res = pocket_ic
-        .update_call(
-            sns_wasm_w_canister_id,
-            super_admin,
-            "add_wasm",
-            candid::encode_one(add_wasm(
-                include_bytes!("../../../../../wasms/root.wasm.gz"),
-                1,
-            ))
-            .unwrap(),
-        )
-        .map(|res| {
-            let response: AddWasmResultRecord = match res {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get requester principals canister id failed\n"),
-            };
-            response
-        })
-        .unwrap();
-    ic_cdk::println!("🧪 Result: {:?}", res);
-
-    let res = pocket_ic
-        .update_call(
-            sns_wasm_w_canister_id,
-            super_admin,
-            "add_wasm",
-            candid::encode_one(add_wasm(
-                include_bytes!("../../../../../wasms/governance.wasm.gz"),
-                2,
-            ))
-            .unwrap(),
-        )
-        .map(|res| {
-            let response: AddWasmResultRecord = match res {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get requester principals canister id failed\n"),
-            };
-            response
-        })
-        .unwrap();
-    ic_cdk::println!("🧪 Result: {:?}", res);
-
-    let res = pocket_ic
-        .update_call(
-            sns_wasm_w_canister_id,
-            super_admin,
-            "add_wasm",
-            candid::encode_one(add_wasm(
-                include_bytes!("../../../../../wasms/ledger.wasm.gz"),
-                3,
-            ))
-            .unwrap(),
-        )
-        .map(|res| {
-            let response: AddWasmResultRecord = match res {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get requester principals canister id failed\n"),
-            };
-            response
-        })
-        .unwrap();
-    ic_cdk::println!("🧪 Result: {:?}", res);
-
-    let res = pocket_ic
-        .update_call(
-            sns_wasm_w_canister_id,
-            super_admin,
-            "add_wasm",
-            candid::encode_one(add_wasm(
-                include_bytes!("../../../../../wasms/swap.wasm.gz"),
-                4,
-            ))
-            .unwrap(),
-        )
-        .map(|res| {
-            let response: AddWasmResultRecord = match res {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get requester principals canister id failed\n"),
-            };
-            response
-        })
-        .unwrap();
-    ic_cdk::println!("🧪 Result: {:?}", res);
-
-    let res = pocket_ic
-        .update_call(
-            sns_wasm_w_canister_id,
-            super_admin,
-            "add_wasm",
-            candid::encode_one(add_wasm(
-                include_bytes!("../../../../../wasms/archive.wasm.gz"),
-                5,
-            ))
-            .unwrap(),
-        )
-        .map(|res| {
-            let response: AddWasmResultRecord = match res {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get requester principals canister id failed\n"),
-            };
-            response
-        })
-        .unwrap();
-    ic_cdk::println!("🧪 Result: {:?}", res);
-
-    let res = pocket_ic
-        .update_call(
-            sns_wasm_w_canister_id,
-            super_admin,
-            "add_wasm",
-            candid::encode_one(add_wasm(
-                include_bytes!("../../../../../wasms/index.wasm.gz"),
-                6,
-            ))
-            .unwrap(),
-        )
-        .map(|res| {
-            let response: AddWasmResultRecord = match res {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get requester principals canister id failed\n"),
-            };
-            response
-        })
-        .unwrap();
-    ic_cdk::println!("🧪 Result: {:?}", res);
-
-    for _ in 0..50 {
-        pocket_ic.tick();
-    }
-
-    let res = pocket_ic
-        .update_call(
-            sns_wasm_w_canister_id,
-            Principal::anonymous(),
-            "get_latest_sns_version_pretty".into(),
-            candid::encode_one(()).unwrap(),
-        )
-        .map(|res| {
-            let response: HashMap<String, String> = match res {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get requester principals canister id failed\n"),
-            };
-            response
-        })
-        .unwrap();
-
-    ic_cdk::println!("🧪 HASHMAP {:?}", res);
-    assert_eq!(res.len(), 6);
     let start = SystemTime::now();
 
     let tx_fee = 1u64;
 
     let sns_init_args = SnsInitPayload {
-        confirmation_text: Some("GET RICH QUICK".to_string()),
+        confirmation_text: Some("GET RICH QUICK2".to_string()),
         transaction_fee_e8s: Some(tx_fee),
-        token_name: Some("Simulation Governance".to_string()),
-        token_symbol: Some("SIMG".to_string()),
+        token_name: Some("Simulation Governance2".to_string()),
+        token_symbol: Some("SIMG2".to_string()),
         proposal_reject_cost_e8s: Some(1u64),
         neuron_minimum_stake_e8s: Some(2u64),
         fallback_controller_principal_ids: vec![super_admin.to_string().clone()],
         logo: Some("data:image/png;base64,iVBORw0".to_string()),
-        url: Some("https://google.com".to_string()),
-        name: Some("Simulation Gov".to_string()),
-        description: Some("Simulation gov desc".to_string()),
+        url: Some("https://google.com2".to_string()),
+        name: Some("Simulation Gov2".to_string()),
+        description: Some("Simulation gov desc2".to_string()),
         neuron_minimum_dissolve_delay_to_vote_seconds: Some(1),
         initial_reward_rate_basis_points: Some(30u64),
         final_reward_rate_basis_points: Some(20u64),

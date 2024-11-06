@@ -183,3 +183,28 @@ pub struct TokenPairs{
     pub token_a: SwapTokenData,
     pub token_b: SwapTokenData
 }
+
+#[derive(CandidType, Deserialize, PartialEq, Debug)]
+pub struct PriceData{
+    id: Nat,
+    #[serde(rename = "volumeUSD1d")]
+    volume_usd_1d: f64,
+    #[serde(rename = "volumeUSD7d")]
+    volume_usd_7d: f64,
+    #[serde(rename = "totalVolumeUSD")]
+    total_volume_usd: f64,
+    name: String,
+    #[serde(rename = "volumeUSD")]
+    volume_usd: f64,
+    #[serde(rename = "feesUSD")]
+    fees_usd: f64,
+    #[serde(rename = "priceUSDChange")]
+    price_usd_change: f64,
+    address: String,
+    #[serde(rename = "txCount")]
+    tx_count: u64,
+    #[serde(rename = "priceUSD")]
+    price_usd: f64,
+    standard: String,
+    symbol: String
+}
