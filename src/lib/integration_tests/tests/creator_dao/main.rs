@@ -1143,7 +1143,7 @@ fn creator_dao_tests() {
             "refresh_buyer_tokens",
             candid::encode_one(RefreshBuyerTokensRequest {
                 buyer: super_admin.to_string(),
-                confirmation_text: Some("GET RICH QUICK".to_string()),
+                confirmation_text: Some("GET RICH QUICK2".to_string()),
             })
             .unwrap(),
         )
