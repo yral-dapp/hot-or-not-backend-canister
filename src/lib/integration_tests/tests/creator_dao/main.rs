@@ -1016,8 +1016,8 @@ fn creator_dao_tests() {
 
     let res = pocket_ic
         .query_call(
-            alice_canister_id,
-            alice_principal,
+            bob_canister_id,
+            bob,
             "deployed_cdao_canisters",
             candid::encode_one(()).unwrap(),
         )
