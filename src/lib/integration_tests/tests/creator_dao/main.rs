@@ -1245,7 +1245,7 @@ fn creator_dao_tests() {
 
     let res = pocket_ic
         .query_call(
-            ledger_canister,
+            bob_ledger_canister,
             bob,
             "icrc1_balance_of",
             candid::encode_one(types::Icrc1BalanceOfArg {
