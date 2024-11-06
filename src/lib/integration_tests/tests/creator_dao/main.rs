@@ -1187,7 +1187,7 @@ fn creator_dao_tests() {
             super_admin,
             "list_neurons",
             candid::encode_one(ListNeurons {
-                of_principal: Some(PrincipalId(alice_principal)),
+                of_principal: Some(PrincipalId(bob)),
                 limit: 2,
                 start_page_at: None,
             })
