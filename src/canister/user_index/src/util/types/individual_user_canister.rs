@@ -126,4 +126,16 @@ impl IndividualUserCanister {
 
         alloted_canister_id_res
     }
+
+    pub fn notify_to_upgrade_creator_dao_governance_canisters(
+        &self,
+        wasm_module: Vec<u8>,
+    ) -> Result<(), String> {
+        ic_cdk::notify::<_>(
+            self.canister_id,
+            "upgrade_creator_dao_governance_canisters",
+            (wasm_module,),
+        )
+        .map_err(|e| format!("Error: {:?}", e))
+    }
 }

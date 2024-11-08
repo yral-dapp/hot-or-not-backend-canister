@@ -24,6 +24,7 @@ futures = { workspace = true }
 ic-sns-init.workspace = true
 ic-sns-root.workspace = true
 ic-sns-wasm.workspace = true
+ic-sns-governance.workspace = true
 ic-nns-governance.workspace = true
 ic-base-types.workspace = true
 ic-nns-constants.workspace = true
