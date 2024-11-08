@@ -1,11 +1,44 @@
 use candid::{CandidType, Nat, Principal};
 use ic_cdk::api::{management_canister::main::CanisterInfoRequest, time};
 use ic_cdk_macros::{query, update};
-use icrc_ledger_types::icrc2::{approve::{ApproveArgs, ApproveError}, transfer_from::{TransferFromArgs, TransferFromError}};
+use icrc_ledger_types::icrc2::{allowance::{Allowance, AllowanceArgs}, approve::{ApproveArgs, ApproveError}, transfer_from::{TransferFromArgs, TransferFromError}};
 use serde::Deserialize;
-use shared_utils::canister_specific::individual_user_template::types::{cdao::DeployedCdaoCanisters, error::SwapError};
+use shared_utils::canister_specific::individual_user_template::types::{cdao::{DeployedCdaoCanisters, SwapRequestActions, TokenPairs}, error::SwapError};
 
 use crate::CANISTER_DATA;
+
+#[derive(CandidType, Deserialize, PartialEq, Eq, Debug)]
+struct SupportedStandards{
+    name: String,
+    url: String
+}
+
+#[derive(CandidType, Deserialize, PartialEq, Debug)]
+pub struct PriceData{
+    id: Nat,
+    #[serde(rename = "volumeUSD1d")]
+    volume_usd_1d: f64,
+    #[serde(rename = "volumeUSD7d")]
+    volume_usd_7d: f64,
+    #[serde(rename = "totalVolumeUSD")]
+    total_volume_usd: f64,
+    name: String,
+    #[serde(rename = "volumeUSD")]
+    volume_usd: f64,
+    #[serde(rename = "feesUSD")]
+    fees_usd: f64,
+    #[serde(rename = "priceUSDChange")]
+    price_usd_change: f64,
+    address: String,
+    #[serde(rename = "txCount")]
+    tx_count: u64,
+    #[serde(rename = "priceUSD")]
+    price_usd: f64,
+    standard: String,
+    symbol: String
+}
+
+const SWAP_REQUEST_EXPIRY: u64 = 7 * 24 * 60 * 60 * 1_000_000_000; // 1 wk
 
 #[update]
 pub async fn swap_request(token_pairs: TokenPairs) -> Result<(), SwapError>{
@@ -19,10 +52,12 @@ pub async fn swap_request(token_pairs: TokenPairs) -> Result<(), SwapError>{
         return Err(SwapError::IsNotTokenCreator);
     }
 
+    let previous_approval_amt = get_previous_approval_amount(ic_cdk::caller(), ic_cdk::id(), token_a.ledger).await?;
+
     let allocation_res: (Result<Nat, ApproveError>, ) = ic_cdk::call(token_a.ledger, "icrc2_approve", (ApproveArgs{
         from_subaccount: None,
         spender: ic_cdk::id().into(),
-        amount: token_a.amt,
+        amount: previous_approval_amt + token_a.amt,
         expected_allowance: None,
         memo: None,
         expires_at: Some(time() + SWAP_REQUEST_EXPIRY),
@@ -38,9 +73,13 @@ pub async fn swap_request(token_pairs: TokenPairs) -> Result<(), SwapError>{
 // Creator principal is the caller here
 #[update]
 pub async fn swap_request_action(op: SwapRequestActions) -> Result<(), SwapError>{
+    //auth
+
     match op{
         SwapRequestActions::Accept { token_pairs, requester } => {
             let TokenPairs{token_a, token_b} = token_pairs;
+            let token_a_price = get_token_price(token_a.ledger).await?;
+            
             let transfer_res: (Result<Nat, TransferFromError>, ) = ic_cdk::call(token_a.ledger, "icrc2_transfer_from", (TransferFromArgs{
                 from: requester.into(),
                 spender_subaccount: None,
@@ -63,7 +102,6 @@ pub async fn swap_request_action(op: SwapRequestActions) -> Result<(), SwapError
             }, )).await?;
             transfer_res.0.map_err(SwapError::TransferFromError)?;
 
-            let token_a_price = get_token_price(token_a.ledger).await?;
             if let Some(price) = token_a_price{
                 CANISTER_DATA.with_borrow_mut(|data| {
                     if let Some(cdao) = data.cdao_canisters.iter_mut().find(|cdao| cdao.ledger == token_b.ledger){
@@ -81,6 +119,35 @@ pub async fn swap_request_action(op: SwapRequestActions) -> Result<(), SwapError
     }
 
     Ok(())
+}
+
+#[update]
+pub async fn cancel_swap_request(token_pairs: TokenPairs) -> Result<(), SwapError>{
+    let TokenPairs{token_a, ..} = token_pairs;
+    let previous_approval_amt = get_previous_approval_amount(ic_cdk::caller(), ic_cdk::id(), token_a.ledger).await?;
+
+    let allocation_res: (Result<Nat, ApproveError>, ) = ic_cdk::call(token_a.ledger, "icrc2_approve", (ApproveArgs{
+        from_subaccount: None,
+        spender: ic_cdk::id().into(),
+        amount: previous_approval_amt - token_a.amt, // https://github.com/dfinity/ICRC-1/blob/main/standards/ICRC-2/README.md#alice-removes-her-allowance-for-canister-c
+        expected_allowance: None,
+        memo: None,
+        expires_at: Some(time() + SWAP_REQUEST_EXPIRY),
+        fee: None,
+        created_at_time: None
+    }, )).await?;
+
+    allocation_res.0.map_err(SwapError::ApproveError)?;
+    Ok(())
+}
+
+async fn get_previous_approval_amount(requester: Principal, spender: Principal, ledger: Principal) -> Result<Nat, SwapError>{
+    let previous_approval: (Allowance, ) = ic_cdk::call(ledger, "icrc2_allowance", (AllowanceArgs{
+        account: requester.into(),
+        spender: spender.into()
+    }, )).await?;
+
+    Ok(previous_approval.0.allowance)
 }
 
 async fn get_token_price(token_ledger: Principal) -> Result<Option<f64>, SwapError>{
@@ -128,83 +195,7 @@ async fn get_token_owner_from_ledger(ledger: Principal) -> Result<Principal, Swa
     Err(SwapError::NoController)
 }
 
-#[update]
-// Caller needs to be the requester principal
-pub async fn cancel_swap_request(token_pairs: TokenPairs) -> Result<(), SwapError>{
-    let TokenPairs{token_a, ..} = token_pairs;
-    let allocation_res: (Result<Nat, ApproveError>, ) = ic_cdk::call(token_a.ledger, "icrc2_approve", (ApproveArgs{
-        from_subaccount: None,
-        spender: ic_cdk::id().into(),
-        amount: 0u32.into(), // icrc2 docs revoking approval
-        expected_allowance: None,
-        memo: None,
-        expires_at: Some(time() + SWAP_REQUEST_EXPIRY),
-        fee: None,
-        created_at_time: None
-    }, )).await?;
-
-    allocation_res.0.map_err(SwapError::ApproveError)?;
-    Ok(())
-}
-
-#[derive(CandidType, Deserialize, PartialEq, Eq, Debug)]
-pub enum SwapRequestActions{
-    Accept{
-        token_pairs: TokenPairs,
-        requester: Principal
-    },
-    Reject{
-        token_pairs: TokenPairs,
-        requester: Principal
-    }
-}
-
-const SWAP_REQUEST_EXPIRY: u64 = 7 * 24 * 60 * 60 * 1_000_000_000; // 1 wk
-
 async fn is_icrc2_supported_token(token_ledger: Principal) -> Result<bool, SwapError>{
     let res: (Vec<SupportedStandards>, ) = ic_cdk::call(token_ledger, "icrc1_supported_standards", ()).await?;
     Ok(res.0.iter().any(|v| v.name == "ICRC2"))
-}
-
-#[derive(CandidType, Deserialize, PartialEq, Eq, Debug)]
-struct SupportedStandards{
-    name: String,
-    url: String
-}
-
-#[derive(CandidType, Deserialize, PartialEq, Eq, Debug)]
-pub struct SwapTokenData{
-    pub ledger: Principal,
-    pub amt: Nat
-}
-
-#[derive(CandidType, Deserialize, PartialEq, Eq, Debug)]
-pub struct TokenPairs{
-    pub token_a: SwapTokenData,
-    pub token_b: SwapTokenData
-}
-
-#[derive(CandidType, Deserialize, PartialEq, Debug)]
-pub struct PriceData{
-    id: Nat,
-    #[serde(rename = "volumeUSD1d")]
-    volume_usd_1d: f64,
-    #[serde(rename = "volumeUSD7d")]
-    volume_usd_7d: f64,
-    #[serde(rename = "totalVolumeUSD")]
-    total_volume_usd: f64,
-    name: String,
-    #[serde(rename = "volumeUSD")]
-    volume_usd: f64,
-    #[serde(rename = "feesUSD")]
-    fees_usd: f64,
-    #[serde(rename = "priceUSDChange")]
-    price_usd_change: f64,
-    address: String,
-    #[serde(rename = "txCount")]
-    tx_count: u64,
-    #[serde(rename = "priceUSD")]
-    price_usd: f64,
-    standard: String,
-    symbol: String
 }

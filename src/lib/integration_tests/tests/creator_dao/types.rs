@@ -496,33 +496,3 @@ pub enum CustomTransferError {
     TooOld,
     InsufficientFunds { balance: Nat },
 }
-
-#[derive(CandidType, Deserialize, PartialEq, Eq, Debug)]
-struct SupportedStandards{
-    name: String,
-    url: String
-}
-
-#[derive(CandidType, Deserialize, PartialEq, Eq, Debug)]
-pub struct SwapTokenData{
-    pub ledger: Principal,
-    pub amt: Nat
-}
-
-#[derive(CandidType, Deserialize, PartialEq, Eq, Debug)]
-pub struct TokenPairs{
-    pub token_a: SwapTokenData,
-    pub token_b: SwapTokenData
-}
-
-#[derive(CandidType, Deserialize, PartialEq, Eq, Debug)]
-pub enum SwapRequestActions{
-    Accept{
-        token_pairs: TokenPairs,
-        requester: Principal
-    },
-    Reject{
-        token_pairs: TokenPairs,
-        requester: Principal
-    }
-}

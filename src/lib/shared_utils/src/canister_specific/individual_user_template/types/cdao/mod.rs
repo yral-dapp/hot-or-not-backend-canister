@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use candid::{CandidType, Principal};
+use candid::{CandidType, Nat, Principal};
 use serde::{Deserialize, Serialize};
 
 #[derive(CandidType, PartialEq, Debug, Serialize, Deserialize, Clone)]
@@ -87,4 +87,28 @@ pub enum ClaimStatus {
     Unclaimed,
     Claimed,
     Claiming,
+}
+
+#[derive(CandidType, Deserialize, PartialEq, Eq, Debug)]
+pub struct SwapTokenData{
+    pub ledger: Principal,
+    pub amt: Nat
+}
+
+#[derive(CandidType, Deserialize, PartialEq, Eq, Debug)]
+pub struct TokenPairs{
+    pub token_a: SwapTokenData,
+    pub token_b: SwapTokenData
+}
+
+#[derive(CandidType, Deserialize, PartialEq, Eq, Debug)]
+pub enum SwapRequestActions{
+    Accept{
+        token_pairs: TokenPairs,
+        requester: Principal
+    },
+    Reject{
+        token_pairs: TokenPairs,
+        requester: Principal
+    }
 }

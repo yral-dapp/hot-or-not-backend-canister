@@ -15,9 +15,9 @@ use ic_sns_swap::pb::v1::{
     NewSaleTicketResponse, RefreshBuyerTokensRequest, RefreshBuyerTokensResponse,
 };
 use sha2::{Digest, Sha256};
+use shared_utils::canister_specific::individual_user_template::types::cdao::{SwapRequestActions, SwapTokenData, TokenPairs};
 use shared_utils::canister_specific::individual_user_template::types::error::{AirdropError, CdaoTokenError, SwapError};
 use test_utils::setup::test_constants::get_mock_user_bob_principal_id;
-use types::{SwapRequestActions, SwapTokenData, TokenPairs};
 use std::time::{Duration, UNIX_EPOCH};
 use std::{collections::HashMap, fmt::Debug, str::FromStr, time::SystemTime, vec};
 

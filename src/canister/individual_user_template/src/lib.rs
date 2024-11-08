@@ -17,7 +17,7 @@ use icrc_ledger_types::icrc1::transfer::Memo;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
         arg::{FolloweeArg, IndividualUserTemplateInitArgs, PlaceBetArg},
-        cdao::DeployedCdaoCanisters,
+        cdao::{DeployedCdaoCanisters, SwapRequestActions, TokenPairs},
         device_id::DeviceIdentity,
         error::{
             BetOnCurrentlyViewingPostError, CdaoDeployError, CdaoTokenError,
@@ -50,8 +50,6 @@ use shared_utils::{
     },
     
 };
-use crate::api::cdao::swap::TokenPairs;
-use crate::api::cdao::swap::SwapRequestActions;
 
 mod api;
 pub mod data_model;
