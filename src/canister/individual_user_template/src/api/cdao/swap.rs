@@ -5,7 +5,7 @@ use icrc_ledger_types::icrc2::{allowance::{Allowance, AllowanceArgs}, approve::{
 use serde::Deserialize;
 use shared_utils::canister_specific::individual_user_template::types::{cdao::{DeployedCdaoCanisters, SwapRequestActions, TokenPairs}, error::SwapError};
 
-use crate::CANISTER_DATA;
+use crate::{api::profile::get_profile_details_v2::{self, get_profile_details_v2}, CANISTER_DATA};
 
 #[derive(CandidType, Deserialize, PartialEq, Eq, Debug)]
 struct SupportedStandards{
@@ -74,7 +74,9 @@ pub async fn swap_request(token_pairs: TokenPairs) -> Result<(), SwapError>{
 #[update]
 pub async fn swap_request_action(op: SwapRequestActions) -> Result<(), SwapError>{
     //auth
-
+    if ic_cdk::caller() != get_profile_details_v2().principal_id{
+        return Err(SwapError::Unauthenticated);
+    }
     match op{
         SwapRequestActions::Accept { token_pairs, requester } => {
             let TokenPairs{token_a, token_b} = token_pairs;

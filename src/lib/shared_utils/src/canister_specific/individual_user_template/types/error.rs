@@ -95,6 +95,7 @@ pub enum SwapError{
     InvalidLedger,
     SwapAllocationExhausted,
     UnsupportedToken,
+    Unauthenticated,
     CallError(RejectionCode, String),
     ApproveError(ApproveError),
     IsNotTokenCreator,
