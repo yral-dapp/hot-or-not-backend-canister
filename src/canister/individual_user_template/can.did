@@ -67,15 +67,6 @@ type CdaoTokenError = variant {
   Transfer : TransferError;
   Unauthenticated;
 };
-type CfNeuron = record {
-  has_created_neuron_recipes : opt bool;
-  nns_neuron_id : nat64;
-  amount_icp_e8s : nat64;
-};
-type CfParticipant = record {
-  hotkey_principal : text;
-  cf_neurons : vec CfNeuron;
-};
 type ClaimStatus = variant { Unclaimed; Claiming; Claimed };
 type Committed = record {
   total_direct_participation_icp_e8s : opt nat64;
@@ -255,12 +246,12 @@ type NeuronDistribution = record {
   vesting_period_seconds : opt nat64;
 };
 type NeuronsFundNeuron = record {
-  hotkey_principal : opt text;
+  controller : opt principal;
+  hotkeys : opt Principals;
   is_capped : opt bool;
   nns_neuron_id : opt nat64;
   amount_icp_e8s : opt nat64;
 };
-type NeuronsFundParticipants = record { participants : vec CfParticipant };
 type NeuronsFundParticipationConstraints = record {
   coefficient_intervals : vec LinearScalingCoefficient;
   max_neurons_fund_participation_icp_e8s : opt nat64;
@@ -351,6 +342,7 @@ type PostViewStatistics = record {
   average_watch_percentage : nat8;
   threshold_view_count : nat64;
 };
+type Principals = record { principals : vec principal };
 type RejectionCode = variant {
   NoError;
   CanisterError;
@@ -444,7 +436,6 @@ type SnsInitPayload = record {
   transaction_fee_e8s : opt nat64;
   dapp_canisters : opt DappCanisters;
   neurons_fund_participation_constraints : opt NeuronsFundParticipationConstraints;
-  neurons_fund_participants : opt NeuronsFundParticipants;
   max_age_bonus_percentage : opt nat64;
   initial_token_distribution : opt InitialTokenDistribution;
   reward_rate_transition_duration_seconds : opt nat64;

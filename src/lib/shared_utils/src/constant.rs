@@ -44,17 +44,17 @@ pub const THRESHOLD_NUMBER_OF_DAYS_TO_KEEP_CANISTER_RUNNING: u128 = 1;
 pub const MAX_NUMBER_OF_DAYS_TO_KEEP_CANISTER_RUNNING: u128 = 7;
 
 pub const SNS_TOKEN_GOVERNANCE_MODULE_HASH: &'static str =
-    "3feb8ff7b47f53da83235e4c68676bb6db54df1e62df3681de9425ad5cf43be5";
+    "bc91fd7bc4d6c01ea814b12510a1ff8f4f74fcac9ab16248ad4af7cb98d9c69d";
 pub const SNS_TOKEN_LEDGER_MODULE_HASH: &'static str =
-    "e8942f56f9439b89b13bd8037f357126e24f1e7932cf03018243347505959fd4";
+    "3d808fa63a3d8ebd4510c0400aa078e99a31afaa0515f0b68778f929ce4b2a46";
 pub const SNS_TOKEN_ROOT_MODULE_HASH: &'static str =
-    "495e31370b14fa61c76bd1483c9f9ba66733793ee2963e8e44a231436a60bcc6";
+    "431cb333feb3f762f742b0dea58745633a2a2ca41075e9933183d850b4ddb259";
 pub const SNS_TOKEN_SWAP_MODULE_HASH: &'static str =
-    "3bb490d197b8cf2e7d9948bcb5d1fc46747a835294b3ffe47b882dbfa584555f";
+    "8313ac22d2ef0a0c1290a85b47f235cfa24ca2c96d095b8dbed5502483b9cd18";
 pub const SNS_TOKEN_INDEX_MODULE_HASH: &'static str =
-    "08ae5042c8e413716d04a08db886b8c6b01bb610b8197cdbe052c59538b924f0";
+    "67b5f0bf128e801adf4a959ea26c3c9ca0cd399940e169a26a2eb237899a94dd";
 pub const SNS_TOKEN_ARCHIVE_MODULE_HASH: &'static str =
-    "5c595c2adc7f6d9971298fee2fa666929711e73341192ab70804c783a0eee03f";
+    "317771544f0e828a60ad6efc97694c425c169c4d75d911ba592546912dba3116";
 pub fn get_backup_individual_user_canister_batch_size() -> u64 {
     match option_env!("DFX_NETWORK") {
         Some(val) => {
