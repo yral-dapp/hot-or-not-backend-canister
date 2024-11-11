@@ -30,6 +30,7 @@ serde_json = "1.0.113"
 ic-sns-init = { git = "https://github.com/dfinity/ic", rev = "tags/release-2024-05-29_23-02-base" }
 ic-sns-root = {  git = "https://github.com/dfinity/ic", rev = "tags/release-2024-05-29_23-02-base" }
 ic-sns-wasm = { git = "https://github.com/dfinity/ic", rev = "tags/release-2024-05-29_23-02-base" }
+ic-sns-governance = { git = "https://github.com/dfinity/ic", rev = "tags/release-2024-05-29_23-02-base" }
 ic-base-types = { git = "https://github.com/dfinity/ic", rev = "tags/release-2024-05-29_23-02-base" }
 ic-nns-constants = { git = "https://github.com/dfinity/ic", rev = "tags/release-2024-05-29_23-02-base" }
 ic-nns-governance = { git = "https://github.com/dfinity/ic", rev = "tags/release-2024-05-29_23-02-base" }
