@@ -32,9 +32,7 @@ ic-sns-root = {  git = "https://github.com/dfinity/ic", rev = "tags/release-2024
 ic-sns-wasm = { git = "https://github.com/dfinity/ic", rev = "tags/release-2024-05-29_23-02-base" }
 ic-base-types = { git = "https://github.com/dfinity/ic", rev = "tags/release-2024-05-29_23-02-base" }
 ic-nns-constants = { git = "https://github.com/dfinity/ic", rev = "tags/release-2024-05-29_23-02-base" }
-ic-nervous-system-proto = { git = "https://github.com/dfinity/ic", rev = "tags/release-2024-05-29_23-02-base" }
 ic-nns-governance = { git = "https://github.com/dfinity/ic", rev = "tags/release-2024-05-29_23-02-base" }
-ic-nervous-system-humanize = { git = "https://github.com/dfinity/ic", rev = "tags/release-2024-05-29_23-02-base" }
 ic-icrc1-ledger = { git = "https://github.com/dfinity/ic", rev = "tags/release-2024-05-29_23-02-base" }
 ic-icrc1-index-ng = { git = "https://github.com/dfinity/ic", rev = "tags/release-2024-05-29_23-02-base" }
 ic-icrc1-index = { git = "https://github.com/dfinity/ic", rev = "tags/release-2024-05-29_23-02-base" }
