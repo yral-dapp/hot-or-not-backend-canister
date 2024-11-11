@@ -17,16 +17,14 @@ use ic_sns_swap::pb::v1::{
 };
 use sha2::{Digest, Sha256};
 use shared_utils::canister_specific::individual_user_template::types::cdao::{SwapRequestActions, SwapTokenData, TokenPairs};
-use shared_utils::canister_specific::individual_user_template::types::error::{AirdropError, CdaoTokenError, SwapError};
+use shared_utils::canister_specific::individual_user_template::types::error::{AirdropError, SwapError};
 use test_utils::setup::test_constants::get_mock_user_bob_principal_id;
-use shared_utils::canister_specific::individual_user_template::types::error::AirdropError;
 use shared_utils::constant::{
     SNS_TOKEN_ARCHIVE_MODULE_HASH, SNS_TOKEN_GOVERNANCE_MODULE_HASH, SNS_TOKEN_INDEX_MODULE_HASH,
     SNS_TOKEN_LEDGER_MODULE_HASH, SNS_TOKEN_ROOT_MODULE_HASH, SNS_TOKEN_SWAP_MODULE_HASH,
 };
 use std::time::{Duration, UNIX_EPOCH};
 use std::{collections::HashMap, fmt::Debug, str::FromStr, time::SystemTime, vec};
-use test_utils::setup::test_constants::get_mock_user_bob_principal_id;
 
 use candid::{encode_args, CandidType, Decode, Encode, Nat, Principal};
 use ic_base_types::PrincipalId;

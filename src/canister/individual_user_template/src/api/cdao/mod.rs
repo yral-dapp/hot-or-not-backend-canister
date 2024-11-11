@@ -283,9 +283,6 @@ async fn deploy_cdao_sns(
         index: index.0,
         airdrop_info: AirdropInfo { principals_who_successfully_claimed: HashMap::new() },
         last_swapped_price: None,
-        airdrop_info: AirdropInfo {
-            principals_who_successfully_claimed: HashMap::new(),
-        },
     };
     CANISTER_DATA.with(|cdata| {
         let mut cdata = cdata.borrow_mut();
