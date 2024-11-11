@@ -21,8 +21,8 @@ async fn request_airdrop(token_root: Principal, memo: Option<Memo>, amount: Nat,
         return Err(AirdropError::AlreadyClaimedAirdrop);
     }
 
-    let amount = amount.min(1000u32.into());
-    if amount < 100u32 {
+    let amount = amount.min(100_000_000_000u64.into());  // 1000 * 10^8
+    if amount < 10_000_000_000u64 { // 100 * 10^8
         return Err(AirdropError::RequestedAmountTooLow)
     }
 

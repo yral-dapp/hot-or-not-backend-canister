@@ -414,7 +414,7 @@ fn creator_dao_tests() {
                             controller: Some(
                                 PrincipalId::from_str(&alice_principal.to_string()).unwrap(),
                             ),
-                            stake_e8s: 4_400_000,
+                            stake_e8s: 60_000_000_000,
                             memo: 0,
                             dissolve_delay_seconds: 0,
                             vesting_period_seconds: None,
@@ -434,7 +434,7 @@ fn creator_dao_tests() {
                     total_e8s: 10_000_000,
                 }),
                 swap_distribution: Some(SwapDistribution {
-                    total_e8s: 5_000_000,
+                    total_e8s: 65_000_000_000,
                     initial_swap_amount_e8s: 5_000_000,
                 }),
             },
@@ -728,7 +728,7 @@ fn creator_dao_tests() {
         .unwrap();
     ic_cdk::println!("🧪 SNS token Balance of alice: {:?}", res);
 
-    let expected_balance = Nat::from(4_400_000 - tx_fee);
+    let expected_balance = Nat::from(60_000_000_000 - tx_fee);
     ic_cdk::println!("🧪 Expected Balance: {:?}", expected_balance);
 
     let alice_canister_final_cycle_balance = pocket_ic.cycle_balance(alice_canister_id);
@@ -808,7 +808,6 @@ fn creator_dao_tests() {
         Some(deployed_sns_version)
     );
     //Upgrade Governance Canister and check the running version
-
     let bob = get_mock_user_bob_principal_id();
     let bob_canister_id: Principal = pocket_ic
         .update_call(
@@ -828,6 +827,14 @@ fn creator_dao_tests() {
         .unwrap();
 
     // simulating off-chain allocation (kinda)
+    let decimals = pocket_ic.query_call(ledger_canister, alice_canister_id, "icrc1_decimals", Encode!(&()).unwrap()).map(|res|{
+        let response: u8 = match res {
+            WasmResult::Reply(payload) => Decode!(&payload, u8).unwrap(),
+            _ => panic!("\n🛑 icrc1_transfer failed with: {:?}", res),
+        };
+        response
+    }).unwrap();
+
     let transfer_args = types::TransferArg {
         from_subaccount: None,
         to: types::Account {
@@ -837,7 +844,7 @@ fn creator_dao_tests() {
         fee: None,
         created_at_time: None,
         memo: None,
-        amount: 200u32.into(),
+        amount: Nat::from(200u32) * 10u64.pow(decimals.into()),
     };
     let transfer = pocket_ic
         .update_call(
@@ -860,17 +867,10 @@ fn creator_dao_tests() {
     let res = pocket_ic
         .update_call(
             alice_canister_id,
-            bob,
-            "request_airdrop",
-            encode_args((
-                root_canister,
-                None::<Memo>,
-                Nat::from(100u64),
-                bob_canister_id,
-            ))
-            .unwrap(),
-        )
-        .map(|reply_payload| {
+             bob,
+              "request_airdrop",
+               encode_args((root_canister, None::<Memo>, Nat::from(100u64) * 10u64.pow(decimals.into()), bob_canister_id)).unwrap())
+        .map(|reply_payload|{
             let response: Result<(), AirdropError> = match reply_payload {
                 WasmResult::Reply(payload) => Decode!(&payload, Result<(), AirdropError>).unwrap(),
                 _ => panic!("\n🛑 get requester principals canister id failed\n"),
@@ -882,25 +882,19 @@ fn creator_dao_tests() {
 
     // trying to claim the airdrop again
     let res: Result<Result<(), AirdropError>, pocket_ic::UserError> = pocket_ic
-        .update_call(
-            alice_canister_id,
-            bob,
-            "request_airdrop",
-            encode_args((
-                root_canister,
-                None::<Memo>,
-                Nat::from(100u64),
-                bob_canister_id,
-            ))
-            .unwrap(),
-        )
-        .map(|reply_payload| {
-            let response: Result<(), AirdropError> = match reply_payload {
-                WasmResult::Reply(payload) => Decode!(&payload, Result<(), AirdropError>).unwrap(),
-                _ => panic!("\n🛑 get requester principals canister id failed\n"),
-            };
-            response
-        });
+    .update_call(
+        alice_canister_id,
+         bob,
+          "request_airdrop",
+           encode_args((root_canister, None::<Memo>, Nat::from(100u64) * 10u64.pow(decimals.into()), bob_canister_id)).unwrap())
+    .map(|reply_payload|{
+        let response: Result<(), AirdropError> = match reply_payload {
+            WasmResult::Reply(payload) => Decode!(&payload, Result<(), AirdropError>).unwrap(),
+            _ => panic!("\n🛑 get requester principals canister id failed\n"),
+        };
+        response
+    });
+
     ic_cdk::println!("🧪 Result: {:?}", res);
     assert!(
         res.as_ref().unwrap().is_err() && res.unwrap() == Err(AirdropError::AlreadyClaimedAirdrop)
@@ -908,25 +902,19 @@ fn creator_dao_tests() {
 
     // trying to claim the airdrop with the wrong canister id
     let res: Result<Result<(), AirdropError>, pocket_ic::UserError> = pocket_ic
-        .update_call(
-            alice_canister_id,
-            bob,
-            "request_airdrop",
-            encode_args((
-                root_canister,
-                None::<Memo>,
-                Nat::from(100u64),
-                Principal::anonymous(),
-            ))
-            .unwrap(),
-        )
-        .map(|reply_payload| {
-            let response: Result<(), AirdropError> = match reply_payload {
-                WasmResult::Reply(payload) => Decode!(&payload, Result<(), AirdropError>).unwrap(),
-                _ => panic!("\n🛑 get requester principals canister id failed\n"),
-            };
-            response
-        });
+    .update_call(
+        alice_canister_id,
+         bob,
+          "request_airdrop",
+           encode_args((root_canister, None::<Memo>, Nat::from(100u64) * 10u64.pow(decimals.into()), Principal::anonymous())).unwrap())
+    .map(|reply_payload|{
+        let response: Result<(), AirdropError> = match reply_payload {
+            WasmResult::Reply(payload) => Decode!(&payload, Result<(), AirdropError>).unwrap(),
+            _ => panic!("\n🛑 get requester principals canister id failed\n"),
+        };
+        response
+    });
+
     ic_cdk::println!("🧪 Result: {:?}", res);
     assert!(res.unwrap().is_err());
 
@@ -987,5 +975,5 @@ fn creator_dao_tests() {
         .unwrap();
     ic_cdk::println!("🧪 SNS token Balance of alice canister: {:?}", alice_bal);
 
-    assert!(bob_bal == 100u64);
+    assert!(bob_bal == Nat::from(100u64) * 10u64.pow(decimals.into()));
 }
