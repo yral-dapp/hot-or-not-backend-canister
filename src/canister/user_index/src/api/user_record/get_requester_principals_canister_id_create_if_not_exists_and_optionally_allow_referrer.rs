@@ -110,8 +110,8 @@ async fn new_user_signup(user_id: Principal) -> Result<Principal, String> {
             .cloned()
     });
 
-    if user_canister_id.is_some() {
-        return Ok(user_canister_id.unwrap());
+    if let Some(user_canister_id) = user_canister_id {
+        return Ok(user_canister_id);
     }
 
     let canister_id_res = CANISTER_DATA
@@ -149,21 +149,13 @@ async fn new_user_signup(user_id: Principal) -> Result<Principal, String> {
         Err(e) => Err(e),
     };
 
-    let individual_user_canisters_cnt = CANISTER_DATA.with_borrow(|canister_data| {
-        canister_data.user_principal_id_to_canister_id_map.len() as u64
-    });
     let available_individual_user_canisters_cnt =
         CANISTER_DATA.with_borrow(|canister_data| canister_data.available_canisters.len() as u64);
     let backup_individual_user_canister_cnt =
         CANISTER_DATA.with_borrow(|canister_data| canister_data.backup_canister_pool.len() as u64);
-    let total_canister_provisioned_on_subnet = individual_user_canisters_cnt
-        + available_individual_user_canisters_cnt
-        + backup_individual_user_canister_cnt;
 
     // notify platform_orchestrator that this subnet has reached maximum capacity.
-    if response.is_err()
-        && individual_user_canisters_cnt > INDIVIDUAL_USER_CANISTER_SUBNET_MAX_CAPACITY
-    {
+    if available_individual_user_canisters_cnt == 0 && backup_individual_user_canister_cnt == 0 {
         let platform_orchestrator_canister_id = CANISTER_DATA.with_borrow(|canister_data| {
             *canister_data
                 .configuration
@@ -191,18 +183,6 @@ async fn new_user_signup(user_id: Principal) -> Result<Principal, String> {
         ic_cdk::spawn(provision_new_available_canisters(
             individual_user_template_canister_wasm,
         ));
-    }
-
-    let backup_individual_user_canister_batch_size =
-        get_backup_individual_user_canister_batch_size();
-    let backup_individual_user_canister_threshold = get_backup_individual_user_canister_threshold();
-    if total_canister_provisioned_on_subnet < INDIVIDUAL_USER_CANISTER_SUBNET_MAX_CAPACITY
-        && backup_individual_user_canister_cnt < backup_individual_user_canister_threshold
-    {
-        let new_canister_cnt = backup_individual_user_canister_batch_size.min(
-            INDIVIDUAL_USER_CANISTER_SUBNET_MAX_CAPACITY - total_canister_provisioned_on_subnet,
-        );
-        ic_cdk::spawn(provision_new_backup_canisters(new_canister_cnt));
     }
 
     response
@@ -237,13 +217,13 @@ async fn provision_new_available_canisters(individual_user_template_canister_was
                 let _ = check_and_request_cycles_from_platform_orchestrator().await;
                 //recharge backup canister if required
                 recharge_empty_canister_if_required(canister_id).await;
-                let future = install_canister_wasm(
+                install_canister_wasm(
                     canister_id,
                     None,
                     individual_user_template_canister_wasm_version,
                     individual_user_template_canister_wasm,
-                );
-                future.await
+                )
+                .await
             }
         })
     });
