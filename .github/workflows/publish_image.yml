@@ -18,6 +18,6 @@ jobs:
       - name: Build and publish docker image
         uses: macbre/push-to-ghcr@master
         with:
-          image_name: go-bazzinga/yral-backend-dev
+          image_name: yral-dapp/yral-backend-dev
           github_token: ${{ secrets.GITHUB_TOKEN }}
           image_tag: ${{ github.sha }}
