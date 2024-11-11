@@ -103,7 +103,6 @@ pub enum ClaimStatus {
     Claimed,
     Claiming,
 }
-<<<<<<< HEAD
 
 #[derive(CandidType, Deserialize, PartialEq, Eq, Debug)]
 pub struct SwapTokenData{
@@ -128,5 +127,3 @@ pub enum SwapRequestActions{
         requester: Principal
     }
 }
-=======
->>>>>>> 90197f776dae884a8404c02d9cfa50a66c54ad66
