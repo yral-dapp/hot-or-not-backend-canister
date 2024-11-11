@@ -1,9 +1,10 @@
 pub mod types;
 
 use ic_ledger_types::Memo;
+use ic_sns_governance::pb::v1::governance::Version;
 use ic_sns_governance::pb::v1::{
-    manage_neuron, neuron, Account, ListNeurons, ListNeuronsResponse, ManageNeuron,
-    ManageNeuronResponse,
+    manage_neuron, neuron, Account, GetRunningSnsVersionRequest, GetRunningSnsVersionResponse,
+    ListNeurons, ListNeuronsResponse, ManageNeuron, ManageNeuronResponse,
 };
 use ic_sns_init::pb::v1::{
     sns_init_payload::InitialTokenDistribution, AirdropDistribution, DeveloperDistribution,
@@ -15,10 +16,14 @@ use ic_sns_swap::pb::v1::{
     NewSaleTicketResponse, RefreshBuyerTokensRequest, RefreshBuyerTokensResponse,
 };
 use sha2::{Digest, Sha256};
-use shared_utils::canister_specific::individual_user_template::types::error::{AirdropError, CdaoTokenError};
-use test_utils::setup::test_constants::get_mock_user_bob_principal_id;
+use shared_utils::canister_specific::individual_user_template::types::error::AirdropError;
+use shared_utils::constant::{
+    SNS_TOKEN_ARCHIVE_MODULE_HASH, SNS_TOKEN_GOVERNANCE_MODULE_HASH, SNS_TOKEN_INDEX_MODULE_HASH,
+    SNS_TOKEN_LEDGER_MODULE_HASH, SNS_TOKEN_ROOT_MODULE_HASH, SNS_TOKEN_SWAP_MODULE_HASH,
+};
 use std::time::{Duration, UNIX_EPOCH};
 use std::{collections::HashMap, fmt::Debug, str::FromStr, time::SystemTime, vec};
+use test_utils::setup::test_constants::get_mock_user_bob_principal_id;
 
 use candid::{encode_args, CandidType, Decode, Encode, Nat, Principal};
 use ic_base_types::PrincipalId;
@@ -731,7 +736,78 @@ fn creator_dao_tests() {
     assert!(alice_canister_final_cycle_balance > alice_initial_cycle_balance);
 
     assert!(res == expected_balance);
-    
+
+    let sns_running_version = pocket_ic
+        .query_call(
+            gov_canister,
+            Principal::anonymous(),
+            "get_running_sns_version",
+            candid::encode_one(GetRunningSnsVersionRequest {}).unwrap(),
+        )
+        .map(|wasm_result| {
+            let result: GetRunningSnsVersionResponse = match wasm_result {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("Call to get version of sns failed"),
+            };
+            result
+        })
+        .unwrap();
+
+    assert!(sns_running_version.deployed_version.is_none());
+
+    let sns_governance_custom_wasm_to_include_version =
+        include_bytes!("../../../../../wasms/custom-governance-canister.wasm.gz");
+
+    pocket_ic
+        .update_call(
+            platform_canister_id,
+            charlie_global_admin,
+            "notify_all_individual_canisters_to_upgrade_creator_dao_governance_canisters",
+            candid::encode_args((sns_governance_custom_wasm_to_include_version.to_vec(),)).unwrap(),
+        )
+        .map(|wasm_result| match wasm_result {
+            WasmResult::Reply(payload) => {
+                candid::decode_one::<Result<(), String>>(&payload).unwrap()
+            }
+            WasmResult::Reject(e) => panic!("call to upgrade governance canister failed {}", e),
+        })
+        .unwrap()
+        .unwrap();
+
+    for _ in 0..10 {
+        pocket_ic.tick();
+    }
+
+    let sns_running_version = pocket_ic
+        .query_call(
+            gov_canister,
+            Principal::anonymous(),
+            "get_running_sns_version",
+            candid::encode_one(GetRunningSnsVersionRequest {}).unwrap(),
+        )
+        .map(|wasm_result| {
+            let result: GetRunningSnsVersionResponse = match wasm_result {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("Call to get version of sns failed"),
+            };
+            result
+        })
+        .unwrap();
+
+    let deployed_sns_version = Version {
+        governance_wasm_hash: hex::decode(SNS_TOKEN_GOVERNANCE_MODULE_HASH).unwrap(),
+        root_wasm_hash: hex::decode(SNS_TOKEN_ROOT_MODULE_HASH).unwrap(),
+        ledger_wasm_hash: hex::decode(SNS_TOKEN_LEDGER_MODULE_HASH).unwrap(),
+        swap_wasm_hash: hex::decode(SNS_TOKEN_SWAP_MODULE_HASH).unwrap(),
+        index_wasm_hash: hex::decode(SNS_TOKEN_INDEX_MODULE_HASH).unwrap(),
+        archive_wasm_hash: hex::decode(SNS_TOKEN_ARCHIVE_MODULE_HASH).unwrap(),
+    };
+
+    assert_eq!(
+        sns_running_version.deployed_version,
+        Some(deployed_sns_version)
+    );
+    //Upgrade Governance Canister and check the running version
     let bob = get_mock_user_bob_principal_id();
     let bob_canister_id: Principal = pocket_ic
         .update_call(
@@ -761,18 +837,23 @@ fn creator_dao_tests() {
 
     let transfer_args = types::TransferArg {
         from_subaccount: None,
-        to: types::Account { owner: alice_canister_id, subaccount: None },
+        to: types::Account {
+            owner: alice_canister_id,
+            subaccount: None,
+        },
         fee: None,
         created_at_time: None,
         memo: None,
         amount: Nat::from(200u32) * 10u64.pow(decimals.into()),
     };
-    let transfer = pocket_ic.update_call(
-        ledger_canister,
-         alice_principal, 
-         "icrc1_transfer",
-         Encode!(&transfer_args).unwrap()
-          ).map(|res| {
+    let transfer = pocket_ic
+        .update_call(
+            ledger_canister,
+            alice_principal,
+            "icrc1_transfer",
+            Encode!(&transfer_args).unwrap(),
+        )
+        .map(|res| {
             let response: types::TransferResult = match res {
                 WasmResult::Reply(payload) => Decode!(&payload, types::TransferResult).unwrap(),
                 _ => panic!("\n🛑 icrc1_transfer failed with: {:?}", res),
@@ -813,10 +894,13 @@ fn creator_dao_tests() {
         };
         response
     });
-    ic_cdk::println!("🧪 Result: {:?}", res);
-    assert!(res.as_ref().unwrap().is_err() && res.unwrap() == Err(AirdropError::AlreadyClaimedAirdrop));
 
-    // trying to claim the airdrop with the wrong canister id 
+    ic_cdk::println!("🧪 Result: {:?}", res);
+    assert!(
+        res.as_ref().unwrap().is_err() && res.unwrap() == Err(AirdropError::AlreadyClaimedAirdrop)
+    );
+
+    // trying to claim the airdrop with the wrong canister id
     let res: Result<Result<(), AirdropError>, pocket_ic::UserError> = pocket_ic
     .update_call(
         alice_canister_id,
@@ -830,65 +914,65 @@ fn creator_dao_tests() {
         };
         response
     });
+
     ic_cdk::println!("🧪 Result: {:?}", res);
     assert!(res.unwrap().is_err());
 
     let deployed_cdao = pocket_ic
-    .query_call(
-        alice_canister_id,
-        alice_principal,
-        "deployed_cdao_canisters",
-        candid::encode_one(()).unwrap(),
-    )
-    .map(|res| {
-        let response: Vec<DeployedCdaoCanisters> = match res {
-            WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-            _ => panic!("\n🛑 get requester principals canister id failed\n"),
-        };
-        response
-    })
-    .unwrap();
+        .query_call(
+            alice_canister_id,
+            alice_principal,
+            "deployed_cdao_canisters",
+            candid::encode_one(()).unwrap(),
+        )
+        .map(|res| {
+            let response: Vec<DeployedCdaoCanisters> = match res {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 get requester principals canister id failed\n"),
+            };
+            response
+        })
+        .unwrap();
     ic_cdk::println!("🧪 Result: {:?}", deployed_cdao);
-    assert!(deployed_cdao[0].airdrop_info.is_airdrop_claimed(&bob).unwrap());
+    assert!(deployed_cdao[0]
+        .airdrop_info
+        .is_airdrop_claimed(&bob)
+        .unwrap());
 
     let bob_bal = pocket_ic
-    .query_call(
-        ledger_canister,
-        alice_canister_id,
-        "icrc1_balance_of",
-        candid::encode_one(types::Icrc1BalanceOfArg {
-            owner: bob,
-            subaccount: None,
-        })
-        .unwrap(),
-    )
-    .map(|res| {
-        match res {
+        .query_call(
+            ledger_canister,
+            alice_canister_id,
+            "icrc1_balance_of",
+            candid::encode_one(types::Icrc1BalanceOfArg {
+                owner: bob,
+                subaccount: None,
+            })
+            .unwrap(),
+        )
+        .map(|res| match res {
             WasmResult::Reply(payload) => Decode!(&payload, Nat).unwrap(),
             _ => panic!("\n🛑 get bob principal bal failed\n"),
-        }
-    })
-    .unwrap();
+        })
+        .unwrap();
     ic_cdk::println!("🧪 SNS token Balance of bob principal: {:?}", bob_bal);
 
     let alice_bal = pocket_ic
-    .query_call(
-        ledger_canister,
-        alice_canister_id,
-        "icrc1_balance_of",
-        candid::encode_one(types::Icrc1BalanceOfArg {
-            owner: alice_canister_id,
-            subaccount: None,
-        })
-        .unwrap(),
-    )
-    .map(|res| {
-        match res {
+        .query_call(
+            ledger_canister,
+            alice_canister_id,
+            "icrc1_balance_of",
+            candid::encode_one(types::Icrc1BalanceOfArg {
+                owner: alice_canister_id,
+                subaccount: None,
+            })
+            .unwrap(),
+        )
+        .map(|res| match res {
             WasmResult::Reply(payload) => Decode!(&payload, Nat).unwrap(),
             _ => panic!("\n🛑 get alice canister bal failed\n"),
-        }
-    })
-    .unwrap();
+        })
+        .unwrap();
     ic_cdk::println!("🧪 SNS token Balance of alice canister: {:?}", alice_bal);
 
     assert!(bob_bal == Nat::from(100u64) * 10u64.pow(decimals.into()));

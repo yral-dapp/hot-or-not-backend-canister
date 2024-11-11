@@ -155,6 +155,13 @@ service : (UserIndexInitArgs) -> {
   issue_rewards_for_referral : (principal, principal, principal) -> (Result_1);
   make_individual_canister_logs_private : (principal) -> (Result_3);
   make_individual_canister_logs_public : (principal) -> (Result_3);
+  notify_all_individual_canisters_to_upgrade_creator_dao_governance_canisters : (
+      blob,
+    ) -> (Result_3);
+  notify_specific_individual_canister_to_upgrade_creator_dao_governance_canisters : (
+      principal,
+      blob,
+    ) -> (Result_3);
   provision_empty_canisters : (nat64) -> ();
   recharge_individual_user_canister : () -> (Result_3);
   reclaim_cycles_from_individual_canisters : () -> ();
