@@ -542,12 +542,16 @@ fn creator_dao_tests() {
         .map(|res| {
             let response = match res {
                 WasmResult::Reply(payload) => Decode!(&payload, Nat).unwrap(),
-                _ => panic!("\n🛑 get requester principals canister id failed\n"),
+                _ => panic!("\n🛑 icrc_1_balance_of call failed\n"),
             };
             response
         })
         .unwrap();
     ic_cdk::println!("🧪 Result: {:?}", res);
+
+    //
+    pocket_ic.advance_time(Duration::from_secs(200));
+    pocket_ic.tick();
 
     let res = pocket_ic
         .update_call(
@@ -689,6 +693,12 @@ fn creator_dao_tests() {
             amount: Some(manage_neuron::disburse::Amount { e8s: amount }),
         })),
     };
+
+    pocket_ic.advance_time(Duration::from_secs(10000));
+    for _ in 0..10 {
+        pocket_ic.tick();
+    }
+
     let res = pocket_ic
         .update_call(
             gov_canister,
@@ -720,7 +730,7 @@ fn creator_dao_tests() {
         .map(|res| {
             let response = match res {
                 WasmResult::Reply(payload) => Decode!(&payload, Nat).unwrap(),
-                _ => panic!("\n🛑 get requester principals canister id failed\n"),
+                _ => panic!("\n🛑 icrc1_balance_of failed \n"),
             };
             response
         })
