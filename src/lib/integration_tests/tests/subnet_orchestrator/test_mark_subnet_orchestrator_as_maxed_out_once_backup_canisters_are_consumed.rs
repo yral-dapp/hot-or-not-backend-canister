@@ -230,6 +230,10 @@ fn test_mark_subnet_orchestrator_as_maxed_out_once_backup_canisters_are_consumed
 
     assert_eq!(subnet_available_canister_cnt, 0);
 
+    for _ in 0..5 {
+        pocket_ic.tick();
+    }
+
     let subnet_backup_canister_cnt = pocket_ic
         .query_call(
             subnet_orchestrator_canister_id,
