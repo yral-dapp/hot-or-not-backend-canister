@@ -694,6 +694,11 @@ fn creator_dao_tests() {
         })),
     };
 
+    pocket_ic.advance_time(Duration::from_secs(250));
+    for _ in 0..10 {
+        pocket_ic.tick();
+    }
+
     let res = pocket_ic
         .update_call(
             gov_canister,
