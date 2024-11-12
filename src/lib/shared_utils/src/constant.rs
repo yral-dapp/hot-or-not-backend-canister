@@ -2,8 +2,8 @@ use std::cell::RefCell;
 
 use crate::common::types::known_principal::{KnownPrincipalMap, KnownPrincipalType};
 use candid::Principal;
-pub const INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT: u128 = 1_000_000_000_000; // 1T Cycles
-pub const EMPTY_CANISTER_RECHARGE_AMOUNT: u128 = 300_000_000_000; //0.3T Cycles
+pub const INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT: u128 = 1_500_000_000_000; // 1.5T Cycles
+pub const EMPTY_CANISTER_RECHARGE_AMOUNT: u128 = 700_000_000_000; //0.7T Cycles
 pub const CYCLES_THRESHOLD_TO_INITIATE_RECHARGE: u128 = 100_000_000_000; // 0.1T Cycles
 
 pub const SUBNET_ORCHESTRATOR_CANISTER_INITIAL_CYCLES: u128 = 2_500_000_000_000_000; //2.5kT Cycles
@@ -11,7 +11,7 @@ pub const SUBNET_ORCHESTRATOR_CANISTER_CYCLES_THRESHOLD: u128 = 1_000_000_000_00
 pub const POST_CACHE_CANISTER_CYCLES_RECHARGE_AMOUMT: u128 = 5_000_000_000_000; //5T Cycles
 pub const POST_CACHE_CANISTER_CYCLES_THRESHOLD: u128 = 2_000_000_000_000; //2T Cycles
 pub const USER_SNS_CANISTER_INITIAL_CYCLES: u128 = 500_000_000_000; //0.5T Cycles
-pub const PAGE_SIZE_RECHARGE_DIVIDER: u128 = 500; // 500 pages (recharge by page_size/page_size_recharge_divider * recharge_amout)
+pub const PAGE_SIZE_RECHARGE_DIVIDER: u128 = 500; // 500 pages (recharge by page_size/page_size_recharge_divider * recharge_amount)
 
 pub const MAX_USERS_IN_FOLLOWER_FOLLOWING_LIST: u64 = 10000;
 pub const MAX_POSTS_IN_ONE_REQUEST: u64 = 100;
@@ -33,9 +33,9 @@ pub const INDIVIDUAL_USER_CANISTER_SUBNET_MAX_CAPACITY: u64 = 50_000;
 //  Cycles costs of IC
 pub const DEFAULT_FREEZING_THRESHOLD: u128 = 30; // 30 days
 pub const BASE_COST_FOR_INGRESS_MESSAGE: u128 = 1_200_000; //1.2M cycles
-pub const BASE_COST_FOR_EXECUTION: u128 = 590_000; // 590K cycles
+pub const BASE_COST_FOR_EXECUTION: u128 = 5_000_000; // 5M cycles
 pub const COST_PER_BYTE_FOR_INGRESS_MESSAGE: u128 = 2_000; //2k cycles
-pub const COST_PER_BILLION_INSTRUCTION_EXECUTED: u128 = 400_000_000; //400M cycles for per 1B instructions
+pub const COST_PER_BILLION_INSTRUCTION_EXECUTED: u128 = 1_000_000_000; //1B cycles for per 1B instructions
 pub const ASSUMED_NUMBER_OF_INGRESS_CALL_PER_DAY: u128 = 150;
 pub const ASSUMED_BYTES_PER_INGRESS_CALL: u128 = 100; // 100 bytes
 pub const ASSUMED_NUMBER_OF_INSTRUCTIONS_PER_INGRESS_CALL: u128 = 5_000_000_000; //5B instructions (no matter the number of instructions executed 5B is reserved)
