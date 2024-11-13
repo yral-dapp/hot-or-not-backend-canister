@@ -694,7 +694,7 @@ fn creator_dao_tests() {
         })),
     };
 
-    pocket_ic.advance_time(Duration::from_secs(10000));
+    pocket_ic.advance_time(Duration::from_secs(250));
     for _ in 0..10 {
         pocket_ic.tick();
     }
