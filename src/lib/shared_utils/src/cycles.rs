@@ -3,7 +3,8 @@ use crate::constant::{
     ASSUMED_NUMBER_OF_INSTRUCTIONS_PER_INGRESS_CALL, BASE_COST_FOR_EXECUTION,
     BASE_COST_FOR_INGRESS_MESSAGE, COST_PER_BILLION_INSTRUCTION_EXECUTED,
     COST_PER_BYTE_FOR_INGRESS_MESSAGE, DEFAULT_FREEZING_THRESHOLD,
-    MAX_NUMBER_OF_DAYS_TO_KEEP_CANISTER_RUNNING, RESERVED_NUMBER_OF_INSTRUCTIONS_FOR_INSTALL_CODE,
+    MAX_AMOUNT_OF_RECHARGE_FOR_INDIVIDUAL_CANISTER, MAX_NUMBER_OF_DAYS_TO_KEEP_CANISTER_RUNNING,
+    RESERVED_NUMBER_OF_INSTRUCTIONS_FOR_INSTALL_CODE,
     THRESHOLD_NUMBER_OF_DAYS_TO_KEEP_CANISTER_RUNNING,
 };
 
@@ -100,14 +101,15 @@ pub fn calculate_threshold_and_recharge_cycles_for_canister(
 
     threshold_cycles_to_keep_canister_running += threshold_compute_cost_for_canister;
     recharge_amount_for_canister += recharge_compute_cost_for_canister;
-    recharge_amount_for_canister = recharge_amount_for_canister.min(3_000_000_000_000); //maximum 3T cycles alloted
+    recharge_amount_for_canister =
+        recharge_amount_for_canister.min(MAX_AMOUNT_OF_RECHARGE_FOR_INDIVIDUAL_CANISTER); //maximum 3T cycles alloted
     (
         threshold_cycles_to_keep_canister_running,
         recharge_amount_for_canister,
     )
 }
 
-pub fn calulate_required_cycles_for_upgrading(
+pub fn calculate_required_cycles_for_upgrading(
     idle_cycles_burned_per_day: u128,
     freezing_threshold_in_days: Option<u128>,
 ) -> u128 {
@@ -130,10 +132,10 @@ mod test {
     fn test_cycles_required_for_upgrade_for_idle_canister() {
         let (threshold, recharge) =
             calculate_threshold_and_recharge_cycles_for_canister(27_000_000, 0, None);
-        let cycles_required_for_upgrade = calulate_required_cycles_for_upgrading(27_000_000, None);
+        let cycles_required_for_upgrade = calculate_required_cycles_for_upgrading(27_000_000, None);
         assert!(threshold > cycles_required_for_upgrade);
         assert!(recharge > cycles_required_for_upgrade);
-        assert!(recharge < 3_000_000_000_000);
+        assert!(recharge < MAX_AMOUNT_OF_RECHARGE_FOR_INDIVIDUAL_CANISTER);
     }
 
     #[test]
@@ -145,10 +147,10 @@ mod test {
             None,
         );
         let cycles_required_for_upgrade =
-            calulate_required_cycles_for_upgrading(idle_cycles_burned_per_day, None);
+            calculate_required_cycles_for_upgrading(idle_cycles_burned_per_day, None);
         assert!(threshold > cycles_required_for_upgrade);
         assert!(recharge > cycles_required_for_upgrade);
-        assert!(recharge < 3_000_000_000_000);
+        assert!(recharge < MAX_AMOUNT_OF_RECHARGE_FOR_INDIVIDUAL_CANISTER);
     }
 
     #[test]
@@ -161,9 +163,9 @@ mod test {
             None,
         );
         let cycles_required_for_upgrade =
-            calulate_required_cycles_for_upgrading(idle_cycles_burned_per_day, None);
+            calculate_required_cycles_for_upgrading(idle_cycles_burned_per_day, None);
         assert!(threshold > cycles_required_for_upgrade);
         assert!(recharge > cycles_required_for_upgrade);
-        assert!(recharge < 3_000_000_000_000);
+        assert!(recharge < MAX_AMOUNT_OF_RECHARGE_FOR_INDIVIDUAL_CANISTER);
     }
 }
