@@ -1,6 +1,8 @@
 use candid::Principal;
 use std::cell::RefCell;
 
+use std::collections::HashSet;
+
 use crate::api::generic_proposal::{
     PlatformOrchestratorGenericArgumentType, PlatformOrchestratorGenericResultType,
 };

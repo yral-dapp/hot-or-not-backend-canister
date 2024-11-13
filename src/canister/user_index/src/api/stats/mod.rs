@@ -1,0 +1,1 @@
+pub mod receive_creator_dao_stats_from_individual_canister;
