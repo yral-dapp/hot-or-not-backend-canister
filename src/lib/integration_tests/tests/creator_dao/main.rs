@@ -795,13 +795,21 @@ fn creator_dao_tests() {
         .unwrap();
 
     // simulating off-chain allocation (kinda)
-    let decimals = pocket_ic.query_call(ledger_canister, alice_canister_id, "icrc1_decimals", Encode!(&()).unwrap()).map(|res|{
-        let response: u8 = match res {
-            WasmResult::Reply(payload) => Decode!(&payload, u8).unwrap(),
-            _ => panic!("\n🛑 icrc1_transfer failed with: {:?}", res),
-        };
-        response
-    }).unwrap();
+    let decimals = pocket_ic
+        .query_call(
+            ledger_canister,
+            alice_canister_id,
+            "icrc1_decimals",
+            Encode!(&()).unwrap(),
+        )
+        .map(|res| {
+            let response: u8 = match res {
+                WasmResult::Reply(payload) => Decode!(&payload, u8).unwrap(),
+                _ => panic!("\n🛑 icrc1_transfer failed with: {:?}", res),
+            };
+            response
+        })
+        .unwrap();
 
     let transfer_args = types::TransferArg {
         from_subaccount: None,
@@ -835,10 +843,17 @@ fn creator_dao_tests() {
     let res = pocket_ic
         .update_call(
             alice_canister_id,
-             bob,
-              "request_airdrop",
-               encode_args((root_canister, None::<Memo>, Nat::from(100u64) * 10u64.pow(decimals.into()), bob_canister_id)).unwrap())
-        .map(|reply_payload|{
+            bob,
+            "request_airdrop",
+            encode_args((
+                root_canister,
+                None::<Memo>,
+                Nat::from(100u64) * 10u64.pow(decimals.into()),
+                bob_canister_id,
+            ))
+            .unwrap(),
+        )
+        .map(|reply_payload| {
             let response: Result<(), AirdropError> = match reply_payload {
                 WasmResult::Reply(payload) => Decode!(&payload, Result<(), AirdropError>).unwrap(),
                 _ => panic!("\n🛑 get requester principals canister id failed\n"),
@@ -850,18 +865,25 @@ fn creator_dao_tests() {
 
     // trying to claim the airdrop again
     let res: Result<Result<(), AirdropError>, pocket_ic::UserError> = pocket_ic
-    .update_call(
-        alice_canister_id,
-         bob,
-          "request_airdrop",
-           encode_args((root_canister, None::<Memo>, Nat::from(100u64) * 10u64.pow(decimals.into()), bob_canister_id)).unwrap())
-    .map(|reply_payload|{
-        let response: Result<(), AirdropError> = match reply_payload {
-            WasmResult::Reply(payload) => Decode!(&payload, Result<(), AirdropError>).unwrap(),
-            _ => panic!("\n🛑 get requester principals canister id failed\n"),
-        };
-        response
-    });
+        .update_call(
+            alice_canister_id,
+            bob,
+            "request_airdrop",
+            encode_args((
+                root_canister,
+                None::<Memo>,
+                Nat::from(100u64) * 10u64.pow(decimals.into()),
+                bob_canister_id,
+            ))
+            .unwrap(),
+        )
+        .map(|reply_payload| {
+            let response: Result<(), AirdropError> = match reply_payload {
+                WasmResult::Reply(payload) => Decode!(&payload, Result<(), AirdropError>).unwrap(),
+                _ => panic!("\n🛑 get requester principals canister id failed\n"),
+            };
+            response
+        });
 
     ic_cdk::println!("🧪 Result: {:?}", res);
     assert!(
@@ -870,18 +892,25 @@ fn creator_dao_tests() {
 
     // trying to claim the airdrop with the wrong canister id
     let res: Result<Result<(), AirdropError>, pocket_ic::UserError> = pocket_ic
-    .update_call(
-        alice_canister_id,
-         bob,
-          "request_airdrop",
-           encode_args((root_canister, None::<Memo>, Nat::from(100u64) * 10u64.pow(decimals.into()), Principal::anonymous())).unwrap())
-    .map(|reply_payload|{
-        let response: Result<(), AirdropError> = match reply_payload {
-            WasmResult::Reply(payload) => Decode!(&payload, Result<(), AirdropError>).unwrap(),
-            _ => panic!("\n🛑 get requester principals canister id failed\n"),
-        };
-        response
-    });
+        .update_call(
+            alice_canister_id,
+            bob,
+            "request_airdrop",
+            encode_args((
+                root_canister,
+                None::<Memo>,
+                Nat::from(100u64) * 10u64.pow(decimals.into()),
+                Principal::anonymous(),
+            ))
+            .unwrap(),
+        )
+        .map(|reply_payload| {
+            let response: Result<(), AirdropError> = match reply_payload {
+                WasmResult::Reply(payload) => Decode!(&payload, Result<(), AirdropError>).unwrap(),
+                _ => panic!("\n🛑 get requester principals canister id failed\n"),
+            };
+            response
+        });
 
     ic_cdk::println!("🧪 Result: {:?}", res);
     assert!(res.unwrap().is_err());
