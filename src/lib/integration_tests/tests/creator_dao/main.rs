@@ -18,11 +18,13 @@ use ic_sns_swap::pb::v1::{
     NewSaleTicketResponse, RefreshBuyerTokensRequest, RefreshBuyerTokensResponse,
 };
 use sha2::{Digest, Sha256};
+use shared_utils::canister_specific::individual_user_template::types::arg::IndividualUserTemplateInitArgs;
 use shared_utils::canister_specific::individual_user_template::types::error::AirdropError;
 use shared_utils::constant::{
     SNS_TOKEN_ARCHIVE_MODULE_HASH, SNS_TOKEN_GOVERNANCE_MODULE_HASH, SNS_TOKEN_INDEX_MODULE_HASH,
     SNS_TOKEN_LEDGER_MODULE_HASH, SNS_TOKEN_ROOT_MODULE_HASH, SNS_TOKEN_SWAP_MODULE_HASH,
 };
+use shared_utils::types::creator_dao_stats::CreatorDaoTokenStats;
 use std::time::{Duration, UNIX_EPOCH};
 use std::{collections::HashMap, fmt::Debug, str::FromStr, time::SystemTime, vec};
 use test_utils::setup::test_constants::get_mock_user_bob_principal_id;
@@ -827,4 +829,57 @@ fn creator_dao_tests() {
     ic_cdk::println!("🧪 SNS token Balance of alice canister: {:?}", alice_bal);
 
     assert!(bob_bal == Nat::from(100u64) * 10u64.pow(decimals.into()));
+
+    for _ in 0..5 {
+        pocket_ic.tick();
+    }
+
+    let creator_dao_stats = pocket_ic
+        .query_call(
+            platform_canister_id,
+            charlie_global_admin,
+            "get_creator_dao_stats",
+            candid::encode_one(()).unwrap(),
+        )
+        .map(|wasm_result| {
+            let result: CreatorDaoTokenStats = match wasm_result {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                WasmResult::Reject(e) => panic!("\n failed to get creator dao stats {}", e),
+            };
+            result
+        })
+        .unwrap();
+
+    assert_eq!(creator_dao_stats.total_number_of_creator_dao_tokens, 1);
+
+    pocket_ic
+        .update_call(
+            platform_canister_id,
+            charlie_global_admin,
+            "collect_creator_dao_stats_in_the_network",
+            candid::encode_one(()).unwrap(),
+        )
+        .unwrap();
+
+    for _ in 0..5 {
+        pocket_ic.tick();
+    }
+
+    let creator_dao_stats = pocket_ic
+        .query_call(
+            platform_canister_id,
+            charlie_global_admin,
+            "get_creator_dao_stats",
+            candid::encode_one(()).unwrap(),
+        )
+        .map(|wasm_result| {
+            let result: CreatorDaoTokenStats = match wasm_result {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                WasmResult::Reject(e) => panic!("\n failed to get creator dao stats {}", e),
+            };
+            result
+        })
+        .unwrap();
+
+    assert_eq!(creator_dao_stats.total_number_of_creator_dao_tokens, 1);
 }

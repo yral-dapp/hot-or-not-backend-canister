@@ -14,6 +14,7 @@ use crate::CANISTER_DATA;
 #[derive(Clone, Copy)]
 pub struct IndividualUserCanister {
     pub canister_id: Principal,
+    pub profile_id: Principal,
 }
 
 impl IndividualUserCanister {
@@ -23,12 +24,13 @@ impl IndividualUserCanister {
                 .user_principal_id_to_canister_id_map
                 .iter()
                 .find(move |(_, &user_canister)| user_canister == canister_id)
-                .map(|(_, user_canister_id)| *user_canister_id)
+                .map(|entry| (*entry.0, *entry.1))
         });
 
-        if let Some(user_canister_id) = res {
+        if let Some((user_profile_id, user_canister_id)) = res {
             Ok(Self {
                 canister_id: user_canister_id,
+                profile_id: user_profile_id,
             })
         } else {
             Err(format!("Canister Id {canister_id} not found in the subnet"))

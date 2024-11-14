@@ -2,18 +2,22 @@ use ciborium::de;
 use ic_stable_structures::{storable::Bound, StableBTreeMap, StableLog, Storable};
 use std::{
     borrow::Cow,
-    collections::HashSet,
+    collections::{HashMap, HashSet},
     time::{SystemTime, UNIX_EPOCH},
 };
 
 use candid::{CandidType, Principal};
 use serde::{Deserialize, Serialize};
 use shared_utils::{
-    canister_specific::platform_orchestrator::types::{
-        args::UpgradeCanisterArg, well_known_principal::PlatformOrchestratorKnownPrincipal,
-        SubnetUpgradeReport,
+    canister_specific::{
+        individual_user_template::types::{cdao::DeployedCdaoCanisters, session::SessionType},
+        platform_orchestrator::types::{
+            args::UpgradeCanisterArg, well_known_principal::PlatformOrchestratorKnownPrincipal,
+            SubnetUpgradeReport,
+        },
     },
     common::types::wasm::{CanisterWasm, WasmType},
+    types::creator_dao_stats::CreatorDaoTokenStats,
 };
 
 use self::memory::{
@@ -47,6 +51,8 @@ pub struct CanisterData {
     pub subnets_upgrade_report: SubnetUpgradeReport,
     #[serde(default)]
     pub state_guard: StateGuard,
+    #[serde(default)]
+    pub creator_dao_stats: CreatorDaoTokenStats,
 }
 
 fn _default_wasms() -> StableBTreeMap<WasmType, CanisterWasm, Memory> {
@@ -75,6 +81,7 @@ impl Default for CanisterData {
             platform_global_admins: Default::default(),
             subnets_upgrade_report: SubnetUpgradeReport::default(),
             state_guard: StateGuard::default(),
+            creator_dao_stats: CreatorDaoTokenStats::default(),
         }
     }
 }
@@ -129,5 +136,18 @@ impl Default for CanisterUpgradeStatus {
             count: Default::default(),
             failures: Default::default(),
         }
+    }
+}
+
+impl CanisterData {
+    pub fn add_creator_dao_stats_recieved_from_subnet_orchestrator(
+        &mut self,
+        individual_user_profile_id: Principal,
+        root_canister_ids: HashSet<Principal>,
+    ) {
+        root_canister_ids.iter().for_each(|root_canister_id| {
+            self.creator_dao_stats
+                .insert_new_entry(individual_user_profile_id, *root_canister_id);
+        });
     }
 }
