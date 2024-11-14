@@ -28,19 +28,17 @@ use ic_nns_governance::pb::v1::{
     SettleNeuronsFundParticipationRequest, SettleNeuronsFundParticipationResponse,
 };
 use shared_utils::{
-    canister_specific::individual_user_template::{
-        consts::CDAO_TOKEN_LIMIT,
-        types::{
-            cdao::{AirdropInfo, DeployedCdaoCanisters},
-            error::CdaoDeployError,
-            session::SessionType,
-        },
+    canister_specific::individual_user_template::types::{
+        cdao::{AirdropInfo, DeployedCdaoCanisters},
+        error::CdaoDeployError,
+        session::SessionType,
     },
     common::types::known_principal::KnownPrincipalType,
     constant::{
-        NNS_LEDGER_CANISTER_ID, SNS_TOKEN_ARCHIVE_MODULE_HASH, SNS_TOKEN_GOVERNANCE_MODULE_HASH,
-        SNS_TOKEN_INDEX_MODULE_HASH, SNS_TOKEN_LEDGER_MODULE_HASH, SNS_TOKEN_ROOT_MODULE_HASH,
-        SNS_TOKEN_SWAP_MODULE_HASH, USER_SNS_CANISTER_INITIAL_CYCLES,
+        MAX_LIMIT_FOR_CREATOR_DAO_SNS_TOKEN, NNS_LEDGER_CANISTER_ID, SNS_TOKEN_ARCHIVE_MODULE_HASH,
+        SNS_TOKEN_GOVERNANCE_MODULE_HASH, SNS_TOKEN_INDEX_MODULE_HASH,
+        SNS_TOKEN_LEDGER_MODULE_HASH, SNS_TOKEN_ROOT_MODULE_HASH, SNS_TOKEN_SWAP_MODULE_HASH,
+        USER_SNS_CANISTER_INITIAL_CYCLES,
     },
 };
 
@@ -113,11 +111,16 @@ async fn deploy_cdao_sns(
     let (registered, limit_hit) = CANISTER_DATA.with(|cdata| {
         let cdata = cdata.borrow();
         let registered = matches!(cdata.session_type, Some(SessionType::RegisteredSession));
-        (registered, cdata.cdao_canisters.len() == CDAO_TOKEN_LIMIT)
+        (
+            registered,
+            cdata.cdao_canisters.len() >= MAX_LIMIT_FOR_CREATOR_DAO_SNS_TOKEN,
+        )
     });
 
     if limit_hit {
-        return Err(CdaoDeployError::TokenLimit(CDAO_TOKEN_LIMIT));
+        return Err(CdaoDeployError::TokenLimit(
+            MAX_LIMIT_FOR_CREATOR_DAO_SNS_TOKEN,
+        ));
     }
 
     // Alloting 0.5T more to the user canister to be on safer side while deploying canisters
