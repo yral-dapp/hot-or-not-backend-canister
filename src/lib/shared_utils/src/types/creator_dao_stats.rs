@@ -6,10 +6,10 @@ use serde::{Deserialize, Serialize};
 type IndividualProfileId = Principal;
 type RootCanisterId = Principal;
 
-#[derive(Default, Debug, Serialize, Deserialize, CandidType)]
+#[derive(Default, Debug, Serialize, Deserialize, CandidType, Clone)]
 pub struct CreatorDaoTokenStats {
     creator_dao_token_sns_canisters: HashMap<IndividualProfileId, IndividualUserCreatorDaoEntry>,
-    total_number_of_creator_dao_tokens: u64,
+    pub total_number_of_creator_dao_tokens: u64,
 }
 
 #[derive(CandidType, Serialize, Deserialize, Debug, Clone)]

@@ -18,6 +18,7 @@ use shared_utils::{
     common::types::http::{HttpRequest, HttpResponse},
     common::types::known_principal::KnownPrincipalType,
     common::types::wasm::WasmType,
+    types::creator_dao_stats::CreatorDaoTokenStats,
 };
 
 mod api;

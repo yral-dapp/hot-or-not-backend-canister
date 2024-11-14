@@ -3,6 +3,13 @@ type CanisterUpgradeStatus = record {
   count : nat64;
   upgrade_arg : UpgradeCanisterArg;
 };
+type CreatorDaoTokenStats = record {
+  total_number_of_creator_dao_tokens : nat64;
+  creator_dao_token_sns_canisters : vec record {
+    principal;
+    IndividualUserCreatorDaoEntry;
+  };
+};
 type HttpRequest = record {
   url : text;
   method : text;
@@ -13,6 +20,10 @@ type HttpResponse = record {
   body : blob;
   headers : vec record { text; text };
   status_code : nat16;
+};
+type IndividualUserCreatorDaoEntry = record {
+  deployed_canisters : vec principal;
+  individual_profile_id : principal;
 };
 type KnownPrincipalType = variant {
   CanisterIdUserIndex;
@@ -71,11 +82,13 @@ type WasmType = variant {
 };
 service : (PlatformOrchestratorInitArgs) -> {
   add_principal_as_global_admin : (principal) -> ();
+  collect_creator_dao_stats_in_the_network : () -> ();
   deposit_cycles_to_canister : (principal, nat) -> (Result);
   deregister_subnet_orchestrator : (principal, bool) -> ();
   get_all_available_subnet_orchestrators : () -> (vec principal) query;
   get_all_global_admins : () -> (vec principal) query;
   get_all_subnet_orchestrators : () -> (vec principal) query;
+  get_creator_dao_stats : () -> (CreatorDaoTokenStats) query;
   get_global_known_principal : (KnownPrincipalType) -> (principal) query;
   get_subnet_known_principal : (principal, KnownPrincipalType) -> (
       principal,
@@ -97,6 +110,10 @@ service : (PlatformOrchestratorInitArgs) -> {
   populate_known_principal_for_all_subnet : () -> ();
   provision_empty_canisters_in_a_subnet : (principal, nat64) -> (Result_1);
   provision_subnet_orchestrator_canister : (principal) -> (Result_2);
+  receive_creator_dao_stats_from_subnet_orchestrator : (
+      principal,
+      vec principal,
+    ) -> (Result_1);
   recharge_subnet_orchestrator : () -> (Result_1);
   register_new_subnet_orchestrator : (principal, bool) -> (Result_1);
   reinstall_yral_post_cache_canister : () -> ();

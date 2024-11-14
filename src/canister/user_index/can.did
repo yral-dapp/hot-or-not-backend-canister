@@ -119,6 +119,7 @@ type UserIndexInitArgs = record {
 service : (UserIndexInitArgs) -> {
   allot_empty_canister : () -> (Result);
   are_signups_enabled : () -> (bool) query;
+  collect_creator_dao_stats_in_the_network : () -> ();
   create_pool_of_individual_user_available_canisters : (text, blob) -> (
       Result_1,
     );
@@ -163,6 +164,9 @@ service : (UserIndexInitArgs) -> {
       blob,
     ) -> (Result_3);
   provision_empty_canisters : (nat64) -> ();
+  receive_creator_dao_stats_from_individual_canister : (vec principal) -> (
+      Result_3,
+    );
   recharge_individual_user_canister : () -> (Result_3);
   reclaim_cycles_from_individual_canisters : () -> ();
   request_cycles : (nat) -> (Result_3);

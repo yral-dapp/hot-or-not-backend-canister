@@ -51,6 +51,7 @@ use crate::{
     CANISTER_DATA,
 };
 
+pub mod send_creator_dao_stats_to_subnet_orchestrator;
 pub mod upgrade_creator_dao_governance_canisters;
 
 #[update]
@@ -300,6 +301,13 @@ async fn deploy_cdao_sns(
         cdata.cdao_canisters.push(deployed_cans.clone());
         cdata.token_roots.insert(root.0, ());
     });
+
+    let send_creator_dao_stats_res =
+        subnet_orchestrator.send_creator_dao_stats(vec![root.into()].into_iter().collect());
+
+    if let Err(e) = send_creator_dao_stats_res {
+        ic_cdk::println!("Error sending creator stats to subnet orchestrator {}", e)
+    }
 
     Ok(deployed_cans)
 }
