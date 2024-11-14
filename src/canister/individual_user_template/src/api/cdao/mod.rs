@@ -113,7 +113,7 @@ async fn deploy_cdao_sns(
         let registered = matches!(cdata.session_type, Some(SessionType::RegisteredSession));
         (
             registered,
-            cdata.cdao_canisters.len() == MAX_LIMIT_FOR_CREATOR_DAO_SNS_TOKEN,
+            cdata.cdao_canisters.len() >= MAX_LIMIT_FOR_CREATOR_DAO_SNS_TOKEN,
         )
     });
 
