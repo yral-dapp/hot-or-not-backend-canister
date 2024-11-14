@@ -145,9 +145,9 @@ impl CanisterData {
         individual_user_profile_id: Principal,
         root_canister_ids: HashSet<Principal>,
     ) {
-        root_canister_ids.iter().for_each(|governance_canister_id| {
+        root_canister_ids.iter().for_each(|root_canister_id| {
             self.creator_dao_stats
-                .insert_new_entry(individual_user_profile_id, *governance_canister_id);
+                .insert_new_entry(individual_user_profile_id, *root_canister_id);
         });
     }
 }

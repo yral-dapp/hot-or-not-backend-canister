@@ -22,7 +22,7 @@ impl CreatorDaoTokenStats {
     pub fn insert_new_entry(
         &mut self,
         individual_user_profile_id: IndividualProfileId,
-        governance_canister_id: RootCanisterId,
+        root_canister_id: RootCanisterId,
     ) {
         let individual_user_creator_dao_entry = self
             .creator_dao_token_sns_canisters
@@ -31,7 +31,7 @@ impl CreatorDaoTokenStats {
         if let Some(individual_user_creator_dao_entry) = individual_user_creator_dao_entry {
             if individual_user_creator_dao_entry
                 .deployed_canisters
-                .insert(governance_canister_id)
+                .insert(root_canister_id)
             {
                 self.total_number_of_creator_dao_tokens += 1;
             }
@@ -40,7 +40,7 @@ impl CreatorDaoTokenStats {
                 individual_user_profile_id,
                 IndividualUserCreatorDaoEntry {
                     individual_profile_id: individual_user_profile_id,
-                    deployed_canisters: vec![governance_canister_id].into_iter().collect(),
+                    deployed_canisters: vec![root_canister_id].into_iter().collect(),
                 },
             );
 
