@@ -11,6 +11,7 @@ mod global_admin;
 mod known_principal;
 pub mod logging;
 pub mod notify_all_individual_canisters_to_upgrade_creator_dao_governance_canisters;
+pub mod notify_specific_individual_canister_to_upgrade_creator_dao_governance_canisters;
 mod populate_known_principal_for_all_subnet;
 pub mod provision_empty_canisters_in_a_subnet;
 pub mod provision_subnet_orchestrator;

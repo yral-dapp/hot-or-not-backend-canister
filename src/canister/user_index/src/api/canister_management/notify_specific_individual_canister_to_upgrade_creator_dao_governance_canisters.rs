@@ -1,8 +1,6 @@
 use candid::Principal;
 use ic_cdk_macros::update;
-use shared_utils::common::utils::permissions::{
-    is_caller_controller, is_caller_controller_or_global_admin,
-};
+use shared_utils::common::utils::permissions::is_caller_controller_or_global_admin;
 
 use crate::util::types::individual_user_canister::IndividualUserCanister;
 
