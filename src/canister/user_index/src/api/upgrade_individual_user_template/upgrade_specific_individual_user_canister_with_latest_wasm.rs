@@ -9,7 +9,6 @@ use shared_utils::{
         types::{known_principal::KnownPrincipalType, wasm::WasmType},
         utils::permissions::is_caller_controller,
     },
-    constant::INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT,
 };
 
 use crate::{util::canister_management, CANISTER_DATA};

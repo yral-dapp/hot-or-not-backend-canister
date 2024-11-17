@@ -32,6 +32,17 @@ impl SubnetOrchestrator {
         result
     }
 
+    pub async fn receive_cycles_from_subnet_orchestrator(&self) -> Result<(), String> {
+        ic_cdk::call::<_, (Result<(), String>,)>(
+            self.canister_id,
+            "recharge_individual_user_canister",
+            (),
+        )
+        .await
+        .map_err(|e| e.1)?
+        .0
+    }
+
     pub fn send_creator_dao_stats(&self, root_canisters: HashSet<Principal>) -> Result<(), String> {
         notify(
             self.canister_id,

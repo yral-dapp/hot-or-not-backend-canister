@@ -2,7 +2,7 @@ use std::cell::RefCell;
 
 use crate::common::types::known_principal::{KnownPrincipalMap, KnownPrincipalType};
 use candid::Principal;
-pub const INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT: u128 = 1_500_000_000_000; // 1.5T Cycles
+pub const BASE_INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT: u128 = 300_000_000_000; // 0.3T Cycles
 pub const EMPTY_CANISTER_RECHARGE_AMOUNT: u128 = 700_000_000_000; //0.7T Cycles
 pub const MAX_AMOUNT_OF_RECHARGE_FOR_INDIVIDUAL_CANISTER: u128 = 6_000_000_000_000;
 
@@ -36,7 +36,7 @@ pub const BASE_COST_FOR_INGRESS_MESSAGE: u128 = 1_200_000; //1.2M cycles
 pub const BASE_COST_FOR_EXECUTION: u128 = 5_000_000; // 5M cycles
 pub const COST_PER_BYTE_FOR_INGRESS_MESSAGE: u128 = 2_000; //2k cycles
 pub const COST_PER_BILLION_INSTRUCTION_EXECUTED: u128 = 1_000_000_000; //1B cycles for per 1B instructions
-pub const ASSUMED_NUMBER_OF_INGRESS_CALL_PER_DAY: u128 = 150;
+pub const ASSUMED_NUMBER_OF_INGRESS_CALL_PER_DAY: u128 = 10;
 pub const ASSUMED_BYTES_PER_INGRESS_CALL: u128 = 100; // 100 bytes
 pub const ASSUMED_NUMBER_OF_INSTRUCTIONS_PER_INGRESS_CALL: u128 = 5_000_000_000; //5B instructions (no matter the number of instructions executed 5B is reserved)
 pub const RESERVED_NUMBER_OF_INSTRUCTIONS_FOR_INSTALL_CODE: u128 = 200_000_000_000; //200B instructions

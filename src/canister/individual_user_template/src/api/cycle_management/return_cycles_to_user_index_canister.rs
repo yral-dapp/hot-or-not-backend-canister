@@ -7,7 +7,7 @@ use shared_utils::{
     common::{
         types::known_principal::KnownPrincipalType, utils::permissions::is_caller_controller,
     },
-    constant::INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT,
+    constant::BASE_INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT,
 };
 
 use crate::CANISTER_DATA;
@@ -23,13 +23,15 @@ async fn return_cycles_to_user_index_canister(cycle_amount: Option<u128>) {
             .unwrap()
     });
 
-    if cycle_amount.is_some() || canister_balance128() > INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT {
+    if cycle_amount.is_some()
+        || canister_balance128() > BASE_INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT
+    {
         main::deposit_cycles(
             CanisterIdRecord {
                 canister_id: user_index_canister_id,
             },
             cycle_amount
-                .unwrap_or(canister_balance128() - INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT),
+                .unwrap_or(canister_balance128() - BASE_INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT),
         )
         .await
         .unwrap();

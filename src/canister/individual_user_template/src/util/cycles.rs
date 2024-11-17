@@ -26,7 +26,7 @@ pub async fn request_cycles_from_subnet_orchestrator(amount: u128) -> Result<(),
     result
 }
 
-pub async fn recieve_cycles_from_subnet_orchestrator() -> Result<(), String> {
+pub async fn receive_cycles_from_subnet_orchestrator() -> Result<(), String> {
     let subnet_orchestrator_canister_id = CANISTER_DATA
         .with_borrow(|canister_data| {
             canister_data

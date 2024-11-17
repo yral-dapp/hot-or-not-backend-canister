@@ -52,13 +52,13 @@ impl IndividualUserCanister {
         let current_user_canister_balance =
             u128::try_from(user_canister_status.cycles.0).map_err(|e| e.to_string())?;
 
-        let (threeshold, recharge_amount) = calculate_threshold_and_recharge_cycles_for_canister(
+        let (threshold, recharge_amount) = calculate_threshold_and_recharge_cycles_for_canister(
             idle_cycles_burned_in_a_day,
             reserved_cycles,
             None,
         );
 
-        if current_user_canister_balance <= threeshold {
+        if current_user_canister_balance <= threshold {
             return deposit_cycles(
                 CanisterIdRecord {
                     canister_id: self.canister_id,

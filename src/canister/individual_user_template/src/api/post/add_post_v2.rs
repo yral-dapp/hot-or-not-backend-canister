@@ -13,7 +13,7 @@ use crate::{
     },
     data_model::CanisterData,
     util::cycles::{
-        recieve_cycles_from_subnet_orchestrator, request_cycles_from_subnet_orchestrator,
+        receive_cycles_from_subnet_orchestrator, request_cycles_from_subnet_orchestrator,
     },
     CANISTER_DATA,
 };
@@ -59,7 +59,7 @@ fn add_post_v2(post_details: PostDetailsFromFrontend) -> Result<u64, String> {
     });
 
     ic_cdk::spawn(async {
-        let _res = recieve_cycles_from_subnet_orchestrator().await;
+        let _res = receive_cycles_from_subnet_orchestrator().await;
     }); // 100B additional cycles for computing
 
     Ok(post_id)

@@ -19,7 +19,7 @@ use shared_utils::{
 
 use crate::{
     data_model::{configuration::Configuration, CanisterData},
-    util::canister_management::{self, recharge_canister_if_below_threshold},
+    util::canister_management::{self, recharge_canister_for_installing_wasm},
     CANISTER_DATA,
 };
 
@@ -163,7 +163,7 @@ async fn recharge_and_upgrade(
         .await
         .map_err(|e| ((user_principal_id, user_canister_id), e))?;
 
-    recharge_canister_if_below_threshold(&user_canister_id)
+    recharge_canister_for_installing_wasm(user_canister_id)
         .await
         .map_err(|e| ((user_principal_id, user_canister_id), e))?;
 

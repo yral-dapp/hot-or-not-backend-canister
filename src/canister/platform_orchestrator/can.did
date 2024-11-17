@@ -104,6 +104,10 @@ service : (PlatformOrchestratorInitArgs) -> {
   notify_all_individual_canisters_to_upgrade_creator_dao_governance_canisters : (
       blob,
     ) -> (Result_1);
+  notify_specific_individual_canister_to_upgrade_creator_dao_governance_canisters : (
+      principal,
+      blob,
+    ) -> (Result_1);
   platform_orchestrator_generic_function : (
       PlatformOrchestratorGenericArgumentType,
     ) -> (PlatformOrchestratorGenericResultType);
