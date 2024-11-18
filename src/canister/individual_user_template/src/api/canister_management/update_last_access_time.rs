@@ -33,10 +33,7 @@ pub async fn update_last_canister_functionality_access_time() {
             Some(get_current_system_time_from_ic());
     });
 
-    ic_cdk::spawn(async {
-        let subnet_orchestrator = SubnetOrchestrator::new().unwrap();
-        subnet_orchestrator
-            .receive_cycles_from_subnet_orchestrator()
-            .await;
-    });
+    if let Ok(subnet_orchestrator) = SubnetOrchestrator::new() {
+        subnet_orchestrator.receive_cycles_from_subnet_orchestrator();
+    }
 }
