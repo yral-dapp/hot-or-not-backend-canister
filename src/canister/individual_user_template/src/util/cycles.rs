@@ -28,11 +28,11 @@ pub async fn request_cycles_from_subnet_orchestrator(amount: u128) -> Result<(),
     result
 }
 
-pub async fn recharge_canister() {
+pub fn recharge_canister() {
     if let Ok(subnet_orchestrator) = SubnetOrchestrator::new() {
         let res = subnet_orchestrator.receive_cycles_from_subnet_orchestrator();
         if let Err(e) = res {
-            ic_cdk::println!("Recharging canister failed: Error: {}", e)
+            ic_cdk::println!("Recharging canister failed. Error: {}", e)
         }
     } else {
         ic_cdk::println!("Recharging canister failed. Error: Subnet orchestrator id not found")

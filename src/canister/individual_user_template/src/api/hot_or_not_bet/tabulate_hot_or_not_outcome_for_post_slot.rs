@@ -10,8 +10,6 @@ use shared_utils::{
 use crate::{util::cycles::recharge_canister, CANISTER_DATA};
 
 pub fn tabulate_hot_or_not_outcome_for_post_slot(post_id: u64, slot_id: u8) {
-    recharge_canister();
-
     ic_cdk::println!("Computing outcome for post:{post_id} and slot:{slot_id} ");
 
     CANISTER_DATA.with_borrow_mut(|canister_data| {
