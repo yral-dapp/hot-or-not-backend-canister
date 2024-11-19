@@ -279,7 +279,7 @@ fn recharge_canister_for_installing_wasm_with_retries(
             }
             Err(e) => {
                 if let Some(retry_attempt) = retry_attempt {
-                    if retry_attempt > max_retry_attempts {
+                    if retry_attempt >= max_retry_attempts {
                         return Err(e.1);
                     }
                 }
