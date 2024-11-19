@@ -947,7 +947,7 @@ fn creator_dao_tests() {
                             controller: Some(
                                 PrincipalId::from_str(&bob.to_string()).unwrap(),
                             ),
-                            stake_e8s: 4_400_000,
+                            stake_e8s: 60_000_000_000,
                             memo: 0,
                             dissolve_delay_seconds: 0,
                             vesting_period_seconds: None,
@@ -967,7 +967,7 @@ fn creator_dao_tests() {
                     total_e8s: 10_000_000,
                 }),
                 swap_distribution: Some(SwapDistribution {
-                    total_e8s: 5_000_000,
+                    total_e8s: 65_000_000_000,
                     initial_swap_amount_e8s: 5_000_000,
                 }),
             },
@@ -1086,7 +1086,7 @@ fn creator_dao_tests() {
     
     pocket_ic.advance_time(Duration::from_secs(200));
     pocket_ic.tick();
-    
+
     let res = pocket_ic
         .update_call(
             swap_canister,
@@ -1227,6 +1227,12 @@ fn creator_dao_tests() {
             amount: Some(manage_neuron::disburse::Amount { e8s: amount }),
         })),
     };
+    
+    pocket_ic.advance_time(Duration::from_secs(250));
+    for _ in 0..10 {
+        pocket_ic.tick();
+    }
+
     let res = pocket_ic
         .update_call(
             gov_canister,
@@ -1265,7 +1271,7 @@ fn creator_dao_tests() {
         .unwrap();
     ic_cdk::println!("🧪 SNS token Balance of bob: {:?}", res);
 
-    let expected_balance = Nat::from(4_400_000 - tx_fee);
+    let expected_balance = Nat::from(60_000_000_000 - tx_fee);
     ic_cdk::println!("🧪 Expected Balance: {:?}", expected_balance);
 
     let bob_canister_final_cycle_balance = pocket_ic.cycle_balance(bob_canister_id);
