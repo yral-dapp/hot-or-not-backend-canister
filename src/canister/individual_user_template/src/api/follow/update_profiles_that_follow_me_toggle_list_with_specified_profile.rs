@@ -6,7 +6,7 @@ use shared_utils::canister_specific::individual_user_template::types::{
 
 use crate::{
     api::canister_management::update_last_access_time::update_last_canister_functionality_access_time,
-    data_model::CanisterData, CANISTER_DATA,
+    data_model::CanisterData, util::cycles::recharge_canister, CANISTER_DATA,
 };
 
 use super::update_profiles_i_follow_toggle_list_with_specified_profile::MAX_USERS_IN_FOLLOWER_FOLLOWING_LIST;
@@ -23,6 +23,8 @@ pub struct FollowerArg {
 async fn update_profiles_that_follow_me_toggle_list_with_specified_profile(
     arg: FollowerArg,
 ) -> Result<bool, FollowAnotherUserProfileError> {
+    recharge_canister();
+
     let calling_canister_principal = ic_cdk::caller();
 
     update_last_canister_functionality_access_time();

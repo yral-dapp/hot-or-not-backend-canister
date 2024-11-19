@@ -32,8 +32,4 @@ pub fn update_last_canister_functionality_access_time() {
         canister_data.last_canister_functionality_access_time =
             Some(get_current_system_time_from_ic());
     });
-
-    if let Ok(subnet_orchestrator) = SubnetOrchestrator::new() {
-        subnet_orchestrator.receive_cycles_from_subnet_orchestrator();
-    }
 }
