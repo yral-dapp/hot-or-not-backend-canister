@@ -27,7 +27,7 @@ fn update_last_access_time() -> Result<String, String> {
 }
 
 #[update]
-pub async fn update_last_canister_functionality_access_time() {
+pub fn update_last_canister_functionality_access_time() {
     CANISTER_DATA.with_borrow_mut(|canister_data| {
         canister_data.last_canister_functionality_access_time =
             Some(get_current_system_time_from_ic());
