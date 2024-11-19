@@ -934,7 +934,6 @@ fn creator_dao_tests() {
         }),
         nns_proposal_id: Some(1),
         neurons_fund_participation: Some(false),
-        neurons_fund_participants: None,
         token_logo: Some("data:image/png;base64,iVBORw0".to_string()),
         neurons_fund_participation_constraints: None,
         initial_token_distribution: Some(InitialTokenDistribution::FractionalDeveloperVotingPower(
@@ -974,6 +973,7 @@ fn creator_dao_tests() {
             },
         )),
     };
+
 
     let res = pocket_ic
         .update_call(
