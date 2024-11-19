@@ -3,7 +3,7 @@ use ic_cdk::api::time;
 use ic_cdk_macros::update;
 use icrc_ledger_types::icrc2::{allowance::{Allowance, AllowanceArgs}, approve::{ApproveArgs, ApproveError}, transfer_from::{TransferFromArgs, TransferFromError}};
 use serde::Deserialize;
-use shared_utils::canister_specific::individual_user_template::types::{cdao::{SwapRequestActions, TokenPairs}, error::SwapError};
+use shared_utils::{canister_specific::individual_user_template::types::{cdao::{SwapRequestActions, TokenPairs}, error::SwapError}, common::utils::permissions::is_caller_global_admin};
 
 use crate::{api::profile::get_profile_details_v2::get_profile_details_v2, CANISTER_DATA};
 
@@ -91,7 +91,7 @@ pub async fn swap_request_action(op: SwapRequestActions) -> Result<(), SwapError
     Ok(())
 }
 
-#[update]
+#[update(guard = "is_caller_global_admin")]
 fn update_last_swap_price(token_ledger: Principal, price: f64){
     CANISTER_DATA.with_borrow_mut(|data| {
         if let Some(cdao) = data.cdao_canisters.iter_mut().find(|cdao| cdao.ledger == token_ledger){

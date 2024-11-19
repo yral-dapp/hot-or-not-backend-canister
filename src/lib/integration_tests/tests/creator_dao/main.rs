@@ -1083,7 +1083,10 @@ fn creator_dao_tests() {
         })
         .unwrap();
     ic_cdk::println!("🧪 Result: {:?}", res);
-
+    
+    pocket_ic.advance_time(Duration::from_secs(200));
+    pocket_ic.tick();
+    
     let res = pocket_ic
         .update_call(
             swap_canister,
