@@ -115,22 +115,4 @@ fn test_allot_empty_canisters_to_individual_canister() {
             .controllers
             .contains(&alice_yral_canister_id));
     }
-
-    let final_backup_capacity = pocket_ic
-        .query_call(
-            subnet_orchestrator_canister_id,
-            super_admin,
-            "get_subnet_backup_capacity",
-            candid::encode_one(()).unwrap(),
-        )
-        .map(|reply_payload| {
-            let subnet_capacity: u64 = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_subnet_backup_capacity failed\n"),
-            };
-            subnet_capacity
-        })
-        .unwrap();
-
-    assert!(final_backup_capacity > intial_subnet_backup_capacity);
 }

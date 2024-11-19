@@ -1,4 +1,6 @@
+pub mod test_number_of_creator_tokens;
 pub mod types;
+pub mod utils;
 
 use ic_ledger_types::Memo;
 use ic_sns_governance::pb::v1::governance::Version;
@@ -16,6 +18,7 @@ use ic_sns_swap::pb::v1::{
     NewSaleTicketResponse, RefreshBuyerTokensRequest, RefreshBuyerTokensResponse,
 };
 use sha2::{Digest, Sha256};
+use shared_utils::canister_specific::individual_user_template::types::arg::IndividualUserTemplateInitArgs;
 use shared_utils::canister_specific::individual_user_template::types::cdao::{SwapRequestActions, SwapTokenData, TokenPairs};
 use shared_utils::canister_specific::individual_user_template::types::error::{AirdropError, SwapError};
 use test_utils::setup::test_constants::get_mock_user_bob_principal_id;
@@ -23,8 +26,10 @@ use shared_utils::constant::{
     SNS_TOKEN_ARCHIVE_MODULE_HASH, SNS_TOKEN_GOVERNANCE_MODULE_HASH, SNS_TOKEN_INDEX_MODULE_HASH,
     SNS_TOKEN_LEDGER_MODULE_HASH, SNS_TOKEN_ROOT_MODULE_HASH, SNS_TOKEN_SWAP_MODULE_HASH,
 };
+use shared_utils::types::creator_dao_stats::CreatorDaoTokenStats;
 use std::time::{Duration, UNIX_EPOCH};
 use std::{collections::HashMap, fmt::Debug, str::FromStr, time::SystemTime, vec};
+use utils::setup_sns_w_canister_for_creator_dao;
 
 use candid::{encode_args, CandidType, Decode, Encode, Nat, Principal};
 use ic_base_types::PrincipalId;
@@ -187,158 +192,9 @@ fn creator_dao_tests() {
         .unwrap();
 
     let alice_initial_cycle_balance = pocket_ic.cycle_balance(alice_canister_id);
-
-    let sns_wasm_w_canister_wasm = include_bytes!("../../../../../wasms/sns-wasm-canister.wasm");
     let sns_wasm_w_canister_id = Principal::from_text(SNS_WASM_W_PRINCIPAL_ID).unwrap();
 
-    let _ = pocket_ic.create_canister_with_id(
-        Some(super_admin),
-        None,
-        Principal::from_text(SNS_WASM_W_PRINCIPAL_ID).unwrap(),
-    );
-
-    let sns_wasm_canister_init_payload = SnsWasmCanisterInitPayload {
-        sns_subnet_ids: vec![],
-        access_controls_enabled: false,
-        allowed_principals: vec![],
-    };
-
-    pocket_ic.install_canister(
-        sns_wasm_w_canister_id,
-        sns_wasm_w_canister_wasm.to_vec(),
-        Encode!(&sns_wasm_canister_init_payload).unwrap(),
-        Some(super_admin),
-    );
-
-    let res = pocket_ic
-        .update_call(
-            sns_wasm_w_canister_id,
-            super_admin,
-            "add_wasm",
-            candid::encode_one(add_wasm(
-                include_bytes!("../../../../../wasms/root.wasm.gz"),
-                1,
-            ))
-            .unwrap(),
-        )
-        .map(|res| {
-            let response: AddWasmResultRecord = match res {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get requester principals canister id failed\n"),
-            };
-            response
-        })
-        .unwrap();
-    ic_cdk::println!("🧪 Result: {:?}", res);
-
-    let res = pocket_ic
-        .update_call(
-            sns_wasm_w_canister_id,
-            super_admin,
-            "add_wasm",
-            candid::encode_one(add_wasm(
-                include_bytes!("../../../../../wasms/governance.wasm.gz"),
-                2,
-            ))
-            .unwrap(),
-        )
-        .map(|res| {
-            let response: AddWasmResultRecord = match res {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get requester principals canister id failed\n"),
-            };
-            response
-        })
-        .unwrap();
-    ic_cdk::println!("🧪 Result: {:?}", res);
-
-    let res = pocket_ic
-        .update_call(
-            sns_wasm_w_canister_id,
-            super_admin,
-            "add_wasm",
-            candid::encode_one(add_wasm(
-                include_bytes!("../../../../../wasms/ledger.wasm.gz"),
-                3,
-            ))
-            .unwrap(),
-        )
-        .map(|res| {
-            let response: AddWasmResultRecord = match res {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get requester principals canister id failed\n"),
-            };
-            response
-        })
-        .unwrap();
-    ic_cdk::println!("🧪 Result: {:?}", res);
-
-    let res = pocket_ic
-        .update_call(
-            sns_wasm_w_canister_id,
-            super_admin,
-            "add_wasm",
-            candid::encode_one(add_wasm(
-                include_bytes!("../../../../../wasms/swap.wasm.gz"),
-                4,
-            ))
-            .unwrap(),
-        )
-        .map(|res| {
-            let response: AddWasmResultRecord = match res {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get requester principals canister id failed\n"),
-            };
-            response
-        })
-        .unwrap();
-    ic_cdk::println!("🧪 Result: {:?}", res);
-
-    let res = pocket_ic
-        .update_call(
-            sns_wasm_w_canister_id,
-            super_admin,
-            "add_wasm",
-            candid::encode_one(add_wasm(
-                include_bytes!("../../../../../wasms/archive.wasm.gz"),
-                5,
-            ))
-            .unwrap(),
-        )
-        .map(|res| {
-            let response: AddWasmResultRecord = match res {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get requester principals canister id failed\n"),
-            };
-            response
-        })
-        .unwrap();
-    ic_cdk::println!("🧪 Result: {:?}", res);
-
-    let res = pocket_ic
-        .update_call(
-            sns_wasm_w_canister_id,
-            super_admin,
-            "add_wasm",
-            candid::encode_one(add_wasm(
-                include_bytes!("../../../../../wasms/index.wasm.gz"),
-                6,
-            ))
-            .unwrap(),
-        )
-        .map(|res| {
-            let response: AddWasmResultRecord = match res {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get requester principals canister id failed\n"),
-            };
-            response
-        })
-        .unwrap();
-    ic_cdk::println!("🧪 Result: {:?}", res);
-
-    for _ in 0..50 {
-        pocket_ic.tick();
-    }
+    setup_sns_w_canister_for_creator_dao(&pocket_ic, super_admin);
 
     let res = pocket_ic
         .update_call(
@@ -401,7 +257,6 @@ fn creator_dao_tests() {
         }),
         nns_proposal_id: Some(1),
         neurons_fund_participation: Some(false),
-        neurons_fund_participants: None,
         token_logo: Some("data:image/png;base64,iVBORw0".to_string()),
         neurons_fund_participation_constraints: None,
         initial_token_distribution: Some(InitialTokenDistribution::FractionalDeveloperVotingPower(
@@ -415,7 +270,7 @@ fn creator_dao_tests() {
                             controller: Some(
                                 PrincipalId::from_str(&alice_principal.to_string()).unwrap(),
                             ),
-                            stake_e8s: 4_400_000,
+                            stake_e8s: 60_000_000_000,
                             memo: 0,
                             dissolve_delay_seconds: 0,
                             vesting_period_seconds: None,
@@ -435,7 +290,7 @@ fn creator_dao_tests() {
                     total_e8s: 10_000_000,
                 }),
                 swap_distribution: Some(SwapDistribution {
-                    total_e8s: 5_000_000,
+                    total_e8s: 65_000_000_000,
                     initial_swap_amount_e8s: 5_000_000,
                 }),
             },
@@ -544,12 +399,16 @@ fn creator_dao_tests() {
         .map(|res| {
             let response = match res {
                 WasmResult::Reply(payload) => Decode!(&payload, Nat).unwrap(),
-                _ => panic!("\n🛑 get requester principals canister id failed\n"),
+                _ => panic!("\n🛑 icrc_1_balance_of call failed\n"),
             };
             response
         })
         .unwrap();
     ic_cdk::println!("🧪 Result: {:?}", res);
+
+    //
+    pocket_ic.advance_time(Duration::from_secs(200));
+    pocket_ic.tick();
 
     let res = pocket_ic
         .update_call(
@@ -691,6 +550,12 @@ fn creator_dao_tests() {
             amount: Some(manage_neuron::disburse::Amount { e8s: amount }),
         })),
     };
+
+    pocket_ic.advance_time(Duration::from_secs(250));
+    for _ in 0..10 {
+        pocket_ic.tick();
+    }
+
     let res = pocket_ic
         .update_call(
             gov_canister,
@@ -722,14 +587,14 @@ fn creator_dao_tests() {
         .map(|res| {
             let response = match res {
                 WasmResult::Reply(payload) => Decode!(&payload, Nat).unwrap(),
-                _ => panic!("\n🛑 get requester principals canister id failed\n"),
+                _ => panic!("\n🛑 icrc1_balance_of failed \n"),
             };
             response
         })
         .unwrap();
     ic_cdk::println!("🧪 SNS token Balance of alice: {:?}", res);
 
-    let expected_balance = Nat::from(4_400_000 - tx_fee);
+    let expected_balance = Nat::from(60_000_000_000 - tx_fee);
     ic_cdk::println!("🧪 Expected Balance: {:?}", expected_balance);
 
     let alice_canister_final_cycle_balance = pocket_ic.cycle_balance(alice_canister_id);
@@ -737,47 +602,6 @@ fn creator_dao_tests() {
     assert!(alice_canister_final_cycle_balance > alice_initial_cycle_balance);
 
     assert!(res == expected_balance);
-
-    let sns_running_version = pocket_ic
-        .query_call(
-            gov_canister,
-            Principal::anonymous(),
-            "get_running_sns_version",
-            candid::encode_one(GetRunningSnsVersionRequest {}).unwrap(),
-        )
-        .map(|wasm_result| {
-            let result: GetRunningSnsVersionResponse = match wasm_result {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("Call to get version of sns failed"),
-            };
-            result
-        })
-        .unwrap();
-
-    assert!(sns_running_version.deployed_version.is_none());
-
-    let sns_governance_custom_wasm_to_include_version =
-        include_bytes!("../../../../../wasms/custom-governance-canister.wasm.gz");
-
-    pocket_ic
-        .update_call(
-            platform_canister_id,
-            charlie_global_admin,
-            "notify_all_individual_canisters_to_upgrade_creator_dao_governance_canisters",
-            candid::encode_args((sns_governance_custom_wasm_to_include_version.to_vec(),)).unwrap(),
-        )
-        .map(|wasm_result| match wasm_result {
-            WasmResult::Reply(payload) => {
-                candid::decode_one::<Result<(), String>>(&payload).unwrap()
-            }
-            WasmResult::Reject(e) => panic!("call to upgrade governance canister failed {}", e),
-        })
-        .unwrap()
-        .unwrap();
-
-    for _ in 0..10 {
-        pocket_ic.tick();
-    }
 
     let sns_running_version = pocket_ic
         .query_call(
@@ -809,7 +633,6 @@ fn creator_dao_tests() {
         Some(deployed_sns_version)
     );
     //Upgrade Governance Canister and check the running version
-
     let bob = get_mock_user_bob_principal_id();
     let bob_canister_id: Principal = pocket_ic
         .update_call(
@@ -829,6 +652,22 @@ fn creator_dao_tests() {
         .unwrap();
 
     // simulating off-chain allocation (kinda)
+    let decimals = pocket_ic
+        .query_call(
+            ledger_canister,
+            alice_canister_id,
+            "icrc1_decimals",
+            Encode!(&()).unwrap(),
+        )
+        .map(|res| {
+            let response: u8 = match res {
+                WasmResult::Reply(payload) => Decode!(&payload, u8).unwrap(),
+                _ => panic!("\n🛑 icrc1_transfer failed with: {:?}", res),
+            };
+            response
+        })
+        .unwrap();
+
     let transfer_args = types::TransferArg {
         from_subaccount: None,
         to: types::Account {
@@ -838,7 +677,7 @@ fn creator_dao_tests() {
         fee: None,
         created_at_time: None,
         memo: None,
-        amount: 200u32.into(),
+        amount: Nat::from(200u32) * 10u64.pow(decimals.into()),
     };
     let transfer = pocket_ic
         .update_call(
@@ -866,7 +705,7 @@ fn creator_dao_tests() {
             encode_args((
                 root_canister,
                 None::<Memo>,
-                Nat::from(100u64),
+                Nat::from(100u64) * 10u64.pow(decimals.into()),
                 bob_canister_id,
             ))
             .unwrap(),
@@ -890,7 +729,7 @@ fn creator_dao_tests() {
             encode_args((
                 root_canister,
                 None::<Memo>,
-                Nat::from(100u64),
+                Nat::from(100u64) * 10u64.pow(decimals.into()),
                 bob_canister_id,
             ))
             .unwrap(),
@@ -902,6 +741,7 @@ fn creator_dao_tests() {
             };
             response
         });
+
     ic_cdk::println!("🧪 Result: {:?}", res);
     assert!(
         res.as_ref().unwrap().is_err() && res.unwrap() == Err(AirdropError::AlreadyClaimedAirdrop)
@@ -916,7 +756,7 @@ fn creator_dao_tests() {
             encode_args((
                 root_canister,
                 None::<Memo>,
-                Nat::from(100u64),
+                Nat::from(100u64) * 10u64.pow(decimals.into()),
                 Principal::anonymous(),
             ))
             .unwrap(),
@@ -928,6 +768,7 @@ fn creator_dao_tests() {
             };
             response
         });
+
     ic_cdk::println!("🧪 Result: {:?}", res);
     assert!(res.unwrap().is_err());
 
@@ -988,7 +829,60 @@ fn creator_dao_tests() {
         .unwrap();
     ic_cdk::println!("🧪 SNS token Balance of alice canister: {:?}", alice_bal);
 
-    assert!(bob_bal == 100u64);
+    assert!(bob_bal == Nat::from(100u64) * 10u64.pow(decimals.into()));
+
+    for _ in 0..5 {
+        pocket_ic.tick();
+    }
+
+    let creator_dao_stats = pocket_ic
+        .query_call(
+            platform_canister_id,
+            charlie_global_admin,
+            "get_creator_dao_stats",
+            candid::encode_one(()).unwrap(),
+        )
+        .map(|wasm_result| {
+            let result: CreatorDaoTokenStats = match wasm_result {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                WasmResult::Reject(e) => panic!("\n failed to get creator dao stats {}", e),
+            };
+            result
+        })
+        .unwrap();
+
+    assert_eq!(creator_dao_stats.total_number_of_creator_dao_tokens, 1);
+
+    pocket_ic
+        .update_call(
+            platform_canister_id,
+            charlie_global_admin,
+            "collect_creator_dao_stats_in_the_network",
+            candid::encode_one(()).unwrap(),
+        )
+        .unwrap();
+
+    for _ in 0..5 {
+        pocket_ic.tick();
+    }
+
+    let creator_dao_stats = pocket_ic
+        .query_call(
+            platform_canister_id,
+            charlie_global_admin,
+            "get_creator_dao_stats",
+            candid::encode_one(()).unwrap(),
+        )
+        .map(|wasm_result| {
+            let result: CreatorDaoTokenStats = match wasm_result {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                WasmResult::Reject(e) => panic!("\n failed to get creator dao stats {}", e),
+            };
+            result
+        })
+        .unwrap();
+
+    assert_eq!(creator_dao_stats.total_number_of_creator_dao_tokens, 1);
 
 
 

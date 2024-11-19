@@ -1,7 +1,12 @@
+use std::collections::HashSet;
+
 use candid::{Nat, Principal};
-use ic_cdk::api::management_canister::main::{
-    canister_status, deposit_cycles, start_canister, update_settings, CanisterIdRecord,
-    CanisterSettings, LogVisibility, UpdateSettingsArgument,
+use ic_cdk::{
+    api::management_canister::main::{
+        canister_status, deposit_cycles, start_canister, update_settings, CanisterIdRecord,
+        CanisterSettings, LogVisibility, UpdateSettingsArgument,
+    },
+    notify,
 };
 use shared_utils::{
     common::types::wasm::WasmType, constant::SUBNET_ORCHESTRATOR_CANISTER_CYCLES_THRESHOLD,
@@ -210,5 +215,18 @@ impl RegisteredSubnetOrchestrator {
         })
         .await
         .map_err(|e| e.1)
+    }
+
+    pub fn notify_specific_individual_canister_to_upgrade_creator_dao_governance_canisters(
+        &self,
+        individual_canister_id: Principal,
+        wasm_module: Vec<u8>,
+    ) -> Result<(), String> {
+        notify(
+            self.canister_id,
+            "notify_specific_individual_canister_to_upgrade_creator_dao_governance_canisters",
+            (individual_canister_id, wasm_module),
+        )
+        .map_err(|e| format!("Notify to subnet orchestrator failed {:?}", e))
     }
 }

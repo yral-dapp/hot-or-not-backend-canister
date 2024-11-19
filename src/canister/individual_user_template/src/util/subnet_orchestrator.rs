@@ -1,4 +1,7 @@
+use std::collections::HashSet;
+
 use candid::Principal;
+use ic_cdk::notify;
 use shared_utils::common::types::known_principal::KnownPrincipalType;
 
 use crate::CANISTER_DATA;
@@ -27,5 +30,19 @@ impl SubnetOrchestrator {
             .map_err(|e| e.1)?;
 
         result
+    }
+
+    pub fn send_creator_dao_stats(&self, root_canisters: HashSet<Principal>) -> Result<(), String> {
+        notify(
+            self.canister_id,
+            "receive_creator_dao_stats_from_individual_canister",
+            (root_canisters,),
+        )
+        .map_err(|e| {
+            format!(
+                "error sending canister stats to subnet orchestrator {:?}",
+                e
+            )
+        })
     }
 }

@@ -20,6 +20,7 @@ use ic_cdk::{
     },
     query, update,
 };
+use ic_sns_governance::pb::v1::governance::Version as SnsVersion;
 use ic_sns_init::{pb::v1::SnsInitPayload, SnsCanisterIds};
 use ic_sns_wasm::pb::v1::{GetWasmRequest, GetWasmResponse};
 // use ic_sns_swap::pb::v1::{SettleNeuronsFundParticipationRequest, SettleNeuronsFundParticipationResponse};
@@ -28,16 +29,18 @@ use ic_nns_governance::pb::v1::{
     SettleNeuronsFundParticipationRequest, SettleNeuronsFundParticipationResponse,
 };
 use shared_utils::{
-    canister_specific::individual_user_template::{
-        consts::CDAO_TOKEN_LIMIT,
-        types::{
-            cdao::{AirdropInfo, DeployedCdaoCanisters},
-            error::CdaoDeployError,
-            session::SessionType,
-        },
+    canister_specific::individual_user_template::types::{
+        cdao::{AirdropInfo, DeployedCdaoCanisters},
+        error::CdaoDeployError,
+        session::SessionType,
     },
     common::types::known_principal::KnownPrincipalType,
-    constant::{NNS_LEDGER_CANISTER_ID, USER_SNS_CANISTER_INITIAL_CYCLES},
+    constant::{
+        MAX_LIMIT_FOR_CREATOR_DAO_SNS_TOKEN, NNS_LEDGER_CANISTER_ID, SNS_TOKEN_ARCHIVE_MODULE_HASH,
+        SNS_TOKEN_GOVERNANCE_MODULE_HASH, SNS_TOKEN_INDEX_MODULE_HASH,
+        SNS_TOKEN_LEDGER_MODULE_HASH, SNS_TOKEN_ROOT_MODULE_HASH, SNS_TOKEN_SWAP_MODULE_HASH,
+        USER_SNS_CANISTER_INITIAL_CYCLES,
+    },
 };
 
 use crate::{
@@ -47,6 +50,7 @@ use crate::{
     CANISTER_DATA,
 };
 
+pub mod send_creator_dao_stats_to_subnet_orchestrator;
 pub mod upgrade_creator_dao_governance_canisters;
 
 #[update]
@@ -109,11 +113,16 @@ async fn deploy_cdao_sns(
     let (registered, limit_hit) = CANISTER_DATA.with(|cdata| {
         let cdata = cdata.borrow();
         let registered = matches!(cdata.session_type, Some(SessionType::RegisteredSession));
-        (registered, cdata.cdao_canisters.len() == CDAO_TOKEN_LIMIT)
+        (
+            registered,
+            cdata.cdao_canisters.len() >= MAX_LIMIT_FOR_CREATOR_DAO_SNS_TOKEN,
+        )
     });
 
     if limit_hit {
-        return Err(CdaoDeployError::TokenLimit(CDAO_TOKEN_LIMIT));
+        return Err(CdaoDeployError::TokenLimit(
+            MAX_LIMIT_FOR_CREATOR_DAO_SNS_TOKEN,
+        ));
     }
 
     // Alloting 0.5T more to the user canister to be on safer side while deploying canisters
@@ -163,8 +172,25 @@ async fn deploy_cdao_sns(
         swap,
         index,
     };
+
+    let gov_hash = hex::decode(SNS_TOKEN_GOVERNANCE_MODULE_HASH).unwrap();
+    let ledger_hash = hex::decode(SNS_TOKEN_LEDGER_MODULE_HASH).unwrap();
+    let root_hash = hex::decode(SNS_TOKEN_ROOT_MODULE_HASH).unwrap();
+    let swap_hash = hex::decode(SNS_TOKEN_SWAP_MODULE_HASH).unwrap();
+    let index_hash = hex::decode(SNS_TOKEN_INDEX_MODULE_HASH).unwrap();
+    let arhive_hash = hex::decode(SNS_TOKEN_ARCHIVE_MODULE_HASH).unwrap();
+
+    let sns_version = SnsVersion {
+        governance_wasm_hash: gov_hash.clone(),
+        ledger_wasm_hash: ledger_hash.clone(),
+        root_wasm_hash: root_hash.clone(),
+        swap_wasm_hash: swap_hash.clone(),
+        index_wasm_hash: index_hash.clone(),
+        archive_wasm_hash: arhive_hash.clone(),
+    };
+
     let mut payloads = init_payload
-        .build_canister_payloads(&sns_canisters, None, true)
+        .build_canister_payloads(&sns_canisters, Some(sns_version), true)
         .map_err(CdaoDeployError::InvalidInitPayload)?;
     let time_seconds = ic_cdk::api::time() / 1_000_000_000;
     payloads.swap.swap_start_timestamp_seconds = Some(time_seconds);
@@ -181,17 +207,6 @@ async fn deploy_cdao_sns(
                 .copied()
         })
         .expect("SNS WASM not specified in config");
-
-    let gov_hash =
-        hex::decode("3feb8ff7b47f53da83235e4c68676bb6db54df1e62df3681de9425ad5cf43be5").unwrap();
-    let ledger_hash =
-        hex::decode("e8942f56f9439b89b13bd8037f357126e24f1e7932cf03018243347505959fd4").unwrap();
-    let root_hash =
-        hex::decode("495e31370b14fa61c76bd1483c9f9ba66733793ee2963e8e44a231436a60bcc6").unwrap();
-    let swap_hash =
-        hex::decode("3bb490d197b8cf2e7d9948bcb5d1fc46747a835294b3ffe47b882dbfa584555f").unwrap();
-    let index_hash =
-        hex::decode("08ae5042c8e413716d04a08db886b8c6b01bb610b8197cdbe052c59538b924f0").unwrap();
 
     ic_cdk::println!("gov_hash: {:?}", gov_hash);
 
@@ -289,6 +304,13 @@ async fn deploy_cdao_sns(
         cdata.cdao_canisters.push(deployed_cans.clone());
         cdata.token_roots.insert(root.0, ());
     });
+
+    let send_creator_dao_stats_res =
+        subnet_orchestrator.send_creator_dao_stats(vec![root.into()].into_iter().collect());
+
+    if let Err(e) = send_creator_dao_stats_res {
+        ic_cdk::println!("Error sending creator stats to subnet orchestrator {}", e)
+    }
 
     Ok(deployed_cans)
 }

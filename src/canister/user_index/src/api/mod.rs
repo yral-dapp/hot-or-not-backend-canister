@@ -3,6 +3,7 @@ pub mod canister_management;
 pub mod cycle_management;
 pub mod http;
 pub mod monitoring;
+pub mod stats;
 pub mod upgrade_individual_user_template;
 pub mod user_record;
 pub mod user_signup;

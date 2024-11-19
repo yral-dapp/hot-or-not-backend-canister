@@ -27,6 +27,7 @@ futures = "0.3.29"
 shared_utils = { path = "./src/lib/shared_utils" }
 test_utils = { path = "./src/lib/test_utils" }
 serde_json = "1.0.113"
+<<<<<<< HEAD
 ic-sns-init = { git = "https://github.com/dfinity/ic", rev = "tags/release-2024-05-29_23-02-base" }
 ic-sns-root = {  git = "https://github.com/dfinity/ic", rev = "tags/release-2024-05-29_23-02-base" }
 ic-sns-wasm = { git = "https://github.com/dfinity/ic", rev = "tags/release-2024-05-29_23-02-base" }
@@ -37,4 +38,20 @@ ic-nns-governance = { git = "https://github.com/dfinity/ic", rev = "tags/release
 ic-icrc1-ledger = { git = "https://github.com/dfinity/ic", rev = "tags/release-2024-05-29_23-02-base" }
 ic-icrc1-index-ng = { git = "https://github.com/dfinity/ic", rev = "tags/release-2024-05-29_23-02-base" }
 ic-icrc1-index = { git = "https://github.com/dfinity/ic", rev = "tags/release-2024-05-29_23-02-base" }
+=======
+ic-sns-init = { git = "https://github.com/dfinity/ic", rev = "tags/release-2024-10-17_03-07-base" }
+ic-sns-root = { git = "https://github.com/dfinity/ic", rev = "tags/release-2024-10-17_03-07-base" }
+ic-sns-wasm = { git = "https://github.com/dfinity/ic", rev = "tags/release-2024-10-17_03-07-base" }
+ic-sns-governance = { git = "https://github.com/dfinity/ic", rev = "tags/release-2024-10-17_03-07-base" }
+ic-base-types = { git = "https://github.com/dfinity/ic", rev = "tags/release-2024-10-17_03-07-base" }
+ic-nns-constants = { git = "https://github.com/dfinity/ic", rev = "tags/release-2024-10-17_03-07-base" }
+ic-nervous-system-proto = { git = "https://github.com/dfinity/ic", rev = "tags/release-2024-10-17_03-07-base" }
+ic-nns-governance = { git = "https://github.com/dfinity/ic", rev = "tags/release-2024-10-17_03-07-base" }
+ic-nervous-system-humanize = { git = "https://github.com/dfinity/ic", rev = "tags/release-2024-10-17_03-07-base" }
+ic-icrc1-ledger = { git = "https://github.com/dfinity/ic", rev = "tags/release-2024-10-17_03-07-base" }
+ic-icrc1-index-ng = { git = "https://github.com/dfinity/ic", rev = "tags/release-2024-10-17_03-07-base" }
+ic-icrc1-index = { git = "https://github.com/dfinity/ic", rev = "tags/release-2024-10-17_03-07-base" }
+ic-sns-swap = { git = "https://github.com/dfinity/ic", rev = "tags/release-2024-10-17_03-07-base" }
+icp-ledger = { git = "https://github.com/dfinity/ic", rev = "tags/release-2024-10-17_03-07-base" }
+>>>>>>> eac8b32d6c5ea68090918dd9fab4ed1df1f34a3a
 icrc-ledger-types = "0.1.6"

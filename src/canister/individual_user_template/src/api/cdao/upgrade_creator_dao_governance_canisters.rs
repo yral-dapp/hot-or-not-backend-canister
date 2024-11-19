@@ -30,7 +30,7 @@ pub async fn upgrade_creator_dao_governance_canisters(wasm_module: Vec<u8>) -> R
                 .collect()
         });
 
-    let recharge_amount = 100_000_000_000;
+    let recharge_amount = 100_000_000_000; //100B
 
     let futures = governance_canisters
         .iter()
