@@ -58,10 +58,6 @@ fn add_post_v2(post_details: PostDetailsFromFrontend) -> Result<u64, String> {
         );
     });
 
-    ic_cdk::spawn(async {
-        let _res = receive_cycles_from_subnet_orchestrator().await;
-    }); // 100B additional cycles for computing
-
     Ok(post_id)
 }
 

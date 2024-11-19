@@ -122,25 +122,22 @@ async fn receive_bet_winnings_when_distributed(
     bet_outcome_for_bet_maker: BetOutcomeForBetMaker,
 ) {
     ic_cdk::println!(
-        "Informating participant with canister:{} for post:{post_id}",
+        "Informing participant with canister:{} for post:{post_id}",
         bet_maker_canister_id.to_string()
     );
 
-    let res = ic_cdk::call::<_, ()>(
+    let res = ic_cdk::notify(
         bet_maker_canister_id,
         "receive_bet_winnings_when_distributed",
         (post_id, bet_outcome_for_bet_maker),
-    )
-    .await;
+    );
 
     let mut bet_maker_informed_status = Some(BetMakerInformedStatus::InformedSuccessfully);
 
     if let Err(e) = res {
         bet_maker_informed_status = Some(BetMakerInformedStatus::Failed(format!(
-            "Informing bet maker canister {} failed: {:?} {}",
-            bet_maker_canister_id.to_string(),
-            e.0,
-            e.1
+            "Informing bet maker canister {} failed: {:?}",
+            bet_maker_canister_id, e
         )));
     }
 
