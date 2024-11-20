@@ -532,7 +532,10 @@ fn hotornot_game_simulation_test() {
 
     // Forward timer
     pic.advance_time(Duration::from_secs(60 * 60));
-    pic.tick();
+
+    for _ in 0..10 {
+        pic.tick()
+    }
 
     // Show alice rewards
 
@@ -796,8 +799,9 @@ fn hotornot_game_simulation_test() {
 
     // Forward timer
     pic.advance_time(Duration::from_secs(60 * 60));
-    pic.tick();
-
+    for _ in 0..10 {
+        pic.tick();
+    }
     // Show alice rewards
 
     let alice_rewards = pic
