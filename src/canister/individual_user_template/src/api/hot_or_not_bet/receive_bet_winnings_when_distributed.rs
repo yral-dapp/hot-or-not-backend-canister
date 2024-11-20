@@ -11,11 +11,14 @@ use shared_utils::{
     },
 };
 
-use crate::{util::cycles::recharge_canister, CANISTER_DATA};
+use crate::{
+    util::cycles::{notify_to_recharge_canister, recharge_canister},
+    CANISTER_DATA,
+};
 
 #[update]
 fn receive_bet_winnings_when_distributed(post_id: PostId, outcome: BetOutcomeForBetMaker) {
-    recharge_canister();
+    notify_to_recharge_canister();
 
     let post_creator_canister_id = ic_cdk::caller();
     let current_time = system_time::get_current_system_time_from_ic();

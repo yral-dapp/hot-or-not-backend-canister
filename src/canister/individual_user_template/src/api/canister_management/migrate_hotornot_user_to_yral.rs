@@ -1,5 +1,5 @@
 use crate::util::{
-    cycles::recharge_canister,
+    cycles::notify_to_recharge_canister,
     migration::{IndividualUser, Migration},
     subnet_orchestrator,
 };
@@ -15,7 +15,7 @@ pub async fn transfer_tokens_and_posts(
     to_account: Principal,
     to_account_canister_id: Principal,
 ) -> Result<(), MigrationErrors> {
-    recharge_canister();
+    notify_to_recharge_canister();
 
     let caller = caller();
     let user = IndividualUser::from_canister_data().await?;
@@ -30,7 +30,7 @@ pub async fn receive_data_from_hotornot(
     amount: u64,
     posts: Vec<Post>,
 ) -> Result<(), MigrationErrors> {
-    recharge_canister();
+    notify_to_recharge_canister();
 
     let user = IndividualUser::from_canister_data().await?;
 

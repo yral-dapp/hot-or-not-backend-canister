@@ -5,14 +5,14 @@ use shared_utils::common::types::{
 
 use crate::{
     api::canister_management::update_last_access_time::update_last_canister_functionality_access_time,
-    util::cycles::recharge_canister, CANISTER_DATA,
+    util::cycles::notify_to_recharge_canister, CANISTER_DATA,
 };
 
 use super::send_update_post_cache::send_update_post_cache;
 
 #[update]
 fn update_post_as_ready_to_view(id: u64) {
-    recharge_canister();
+    notify_to_recharge_canister();
 
     let api_caller = ic_cdk::caller();
 

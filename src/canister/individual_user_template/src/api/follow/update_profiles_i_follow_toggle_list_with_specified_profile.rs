@@ -1,6 +1,6 @@
 use crate::{
     api::canister_management::update_last_access_time::update_last_canister_functionality_access_time,
-    data_model::CanisterData, util::cycles::recharge_canister, CANISTER_DATA,
+    data_model::CanisterData, util::cycles::notify_to_recharge_canister, CANISTER_DATA,
 };
 
 use candid::Principal;
@@ -19,7 +19,7 @@ pub const MAX_USERS_IN_FOLLOWER_FOLLOWING_LIST: u64 = 10_000;
 async fn update_profiles_i_follow_toggle_list_with_specified_profile(
     arg: FolloweeArg,
 ) -> Result<bool, FollowAnotherUserProfileError> {
-    recharge_canister();
+    notify_to_recharge_canister();
 
     let current_caller = ic_cdk::caller();
 

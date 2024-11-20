@@ -1,6 +1,6 @@
 use crate::{
     api::canister_management::update_last_access_time::update_last_canister_functionality_access_time,
-    util::cycles::recharge_canister, CANISTER_DATA,
+    util::cycles::notify_to_recharge_canister, CANISTER_DATA,
 };
 use candid::CandidType;
 use ic_cdk_macros::update;
@@ -19,7 +19,7 @@ pub enum UpdateProfileDetailsError {
 fn update_profile_display_details(
     user_profile_details: UserProfileUpdateDetailsFromFrontend,
 ) -> Result<UserProfileDetailsForFrontend, UpdateProfileDetailsError> {
-    recharge_canister();
+    notify_to_recharge_canister();
     // * access control
     let current_caller = ic_cdk::caller();
     let my_principal_id = CANISTER_DATA

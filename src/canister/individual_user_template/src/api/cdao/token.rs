@@ -13,13 +13,13 @@ use shared_utils::{
     pagination::{self, PaginationError},
 };
 
-use crate::{util::cycles::recharge_canister, CANISTER_DATA};
+use crate::{util::cycles::notify_to_recharge_canister, CANISTER_DATA};
 
 /// Add a new token
 /// returns true if new token is added
 #[update]
 async fn add_token(root_canister: Principal) -> Result<bool, CdaoTokenError> {
-    recharge_canister();
+    notify_to_recharge_canister();
 
     let token_added = CANISTER_DATA.with(|cdata| {
         let cdata = cdata.borrow();

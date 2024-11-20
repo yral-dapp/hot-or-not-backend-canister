@@ -2,16 +2,16 @@ use candid::Principal;
 use ic_cdk::api::{self, is_controller};
 use ic_cdk_macros::update;
 
-use crate::CANISTER_DATA;
+use crate::{util::cycles::notify_to_recharge_canister, CANISTER_DATA};
 
 use super::update_last_access_time::update_last_canister_functionality_access_time;
 
 #[update]
 pub async fn update_profile_owner(user_id: Option<Principal>) -> Result<(), String> {
+    notify_to_recharge_canister();
     if !is_controller(&api::caller()) {
         return Err("Unauthorised".into());
     }
-
     update_last_canister_functionality_access_time();
 
     CANISTER_DATA.with_borrow_mut(|canister_data| {

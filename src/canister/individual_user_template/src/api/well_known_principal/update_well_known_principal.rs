@@ -4,11 +4,11 @@ use shared_utils::common::{
     types::known_principal::KnownPrincipalType, utils::permissions::is_caller_controller,
 };
 
-use crate::{util::cycles::recharge_canister, CANISTER_DATA};
+use crate::{util::cycles::notify_to_recharge_canister, CANISTER_DATA};
 
 #[update(guard = "is_caller_controller")]
 fn update_well_known_principal(known_principal_type: KnownPrincipalType, value: Principal) {
-    recharge_canister();
+    notify_to_recharge_canister();
     CANISTER_DATA.with_borrow_mut(|canister_data| {
         canister_data
             .known_principal_ids

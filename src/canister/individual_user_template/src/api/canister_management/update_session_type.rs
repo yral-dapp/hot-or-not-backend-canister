@@ -7,13 +7,13 @@ use shared_utils::{
     common::utils::permissions::is_caller_controller_or_global_admin,
 };
 
-use crate::{util::cycles::recharge_canister, CANISTER_DATA};
+use crate::{util::cycles::notify_to_recharge_canister, CANISTER_DATA};
 
 use super::update_last_access_time::update_last_canister_functionality_access_time;
 
 #[update(guard = "is_caller_controller_or_global_admin")]
 fn update_session_type(session_type: SessionType) -> Result<String, String> {
-    recharge_canister();
+    notify_to_recharge_canister();
     update_last_canister_functionality_access_time();
 
     CANISTER_DATA.with_borrow_mut(|canister_data| {

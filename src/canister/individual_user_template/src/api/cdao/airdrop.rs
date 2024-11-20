@@ -10,7 +10,7 @@ use shared_utils::canister_specific::individual_user_template::types::{
     error::AirdropError, profile::UserProfileDetailsForFrontendV2,
 };
 
-use crate::{util::cycles::recharge_canister, CANISTER_DATA};
+use crate::{util::cycles::notify_to_recharge_canister, CANISTER_DATA};
 
 // TODO: Add checks to verify if the user_canister is from our network of yral canisters
 #[update]
@@ -20,7 +20,7 @@ async fn request_airdrop(
     amount: Nat,
     user_canister: Principal,
 ) -> Result<(), AirdropError> {
-    recharge_canister();
+    notify_to_recharge_canister();
     let current_caller = ic_cdk::caller();
     let profile_info = get_profile_info(user_canister).await?;
 

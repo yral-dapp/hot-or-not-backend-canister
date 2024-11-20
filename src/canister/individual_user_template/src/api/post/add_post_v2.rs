@@ -12,7 +12,7 @@ use crate::{
         hot_or_not_bet::tabulate_hot_or_not_outcome_for_post_slot::tabulate_hot_or_not_outcome_for_post_slot,
     },
     data_model::CanisterData,
-    util::cycles::recharge_canister,
+    util::cycles::{notify_to_recharge_canister, recharge_canister},
     CANISTER_DATA,
 };
 
@@ -22,7 +22,7 @@ use super::update_scores_and_share_with_post_cache_if_difference_beyond_threshol
 /// Only the user whose profile details are stored in this canister can create a post.
 #[update]
 fn add_post_v2(post_details: PostDetailsFromFrontend) -> Result<u64, String> {
-    recharge_canister();
+    notify_to_recharge_canister();
 
     // * access control
     let current_caller = ic_cdk::caller();
@@ -53,7 +53,10 @@ fn add_post_v2(post_details: PostDetailsFromFrontend) -> Result<u64, String> {
         ic_cdk_timers::set_timer(
             Duration::from_secs(slot_number as u64 * 60 * 60),
             move || {
-                tabulate_hot_or_not_outcome_for_post_slot(post_id, slot_number);
+                ic_cdk::spawn(tabulate_hot_or_not_outcome_for_post_slot(
+                    post_id,
+                    slot_number,
+                ))
             },
         );
     });

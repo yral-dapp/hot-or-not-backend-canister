@@ -44,7 +44,7 @@ use shared_utils::{
 
 use crate::{
     util::{
-        cycles::{recharge_canister, request_cycles_from_subnet_orchestrator},
+        cycles::{notify_to_recharge_canister, request_cycles_from_subnet_orchestrator},
         subnet_orchestrator::SubnetOrchestrator,
     },
     CANISTER_DATA,
@@ -102,7 +102,7 @@ async fn deploy_cdao_sns(
     init_payload: SnsInitPayload,
     swap_time: u64,
 ) -> Result<DeployedCdaoCanisters, CdaoDeployError> {
-    recharge_canister();
+    notify_to_recharge_canister();
 
     // * access control
     let current_caller = ic_cdk::caller();

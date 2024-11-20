@@ -14,14 +14,16 @@ use shared_utils::{
 
 use crate::{
     api::canister_management::update_last_access_time::update_last_canister_functionality_access_time,
-    data_model::CanisterData, util::cycles::recharge_canister, CANISTER_DATA,
+    data_model::CanisterData,
+    util::cycles::{notify_to_recharge_canister, recharge_canister},
+    CANISTER_DATA,
 };
 
 #[update]
 async fn bet_on_currently_viewing_post(
     place_bet_arg: PlaceBetArg,
 ) -> Result<BettingStatus, BetOnCurrentlyViewingPostError> {
-    recharge_canister();
+    notify_to_recharge_canister();
 
     let bet_maker_principal_id = ic_cdk::caller();
     let current_time = system_time::get_current_system_time_from_ic();
