@@ -3,7 +3,7 @@ use std::collections::{HashMap, HashSet};
 use candid::{CandidType, Principal};
 use ic_cdk::api::management_canister::main::{CanisterId, LogVisibility};
 use ic_ledger_types::{AccountIdentifier, BlockIndex, Tokens, DEFAULT_SUBACCOUNT};
-use pocket_ic::{CanisterSettings, PocketIc, PocketIcBuilder};
+use pocket_ic::{management_canister::CanisterSettings, PocketIc, PocketIcBuilder};
 use shared_utils::{
     canister_specific::platform_orchestrator::types::args::PlatformOrchestratorInitArgs,
     common::types::{

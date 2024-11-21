@@ -1,4 +1,9 @@
-use crate::{util::cycles::request_cycles_from_subnet_orchestrator, CANISTER_DATA};
+use crate::{
+    util::cycles::{
+        notify_to_recharge_canister, recharge_canister, request_cycles_from_subnet_orchestrator,
+    },
+    CANISTER_DATA,
+};
 use candid::Principal;
 use ic_cdk::api::management_canister::main::{
     deposit_cycles, CanisterIdRecord, CanisterInstallMode, InstallCodeArgument,
@@ -21,6 +26,9 @@ use shared_utils::{
 
 #[update(guard = "is_caller_controller_or_global_admin")]
 pub async fn upgrade_creator_dao_governance_canisters(wasm_module: Vec<u8>) -> Result<(), String> {
+    notify_to_recharge_canister();
+
+    let mut res: Result<(), String>;
     let governance_canisters: Vec<candid::Principal> =
         CANISTER_DATA.with_borrow_mut(|canister_data| {
             canister_data

@@ -2,14 +2,16 @@ use crate::{
     util::canister_management::{
         check_and_request_cycles_from_platform_orchestrator, create_empty_user_canister,
         install_canister_wasm, provision_number_of_empty_canisters, recharge_canister,
+        recharge_canister_for_installing_wasm,
     },
     CANISTER_DATA,
 };
 use candid::Principal;
+use futures::{future::BoxFuture, FutureExt};
 use ic_cdk::api::{
     call,
     management_canister::main::{
-        canister_info, canister_status, CanisterIdRecord, CanisterInfoRequest,
+        canister_info, canister_status, deposit_cycles, CanisterIdRecord, CanisterInfoRequest,
     },
 };
 use ic_cdk_macros::update;
@@ -26,9 +28,11 @@ use shared_utils::{
         get_backup_individual_user_canister_batch_size,
         get_backup_individual_user_canister_threshold,
         get_individual_user_canister_subnet_batch_size,
-        get_individual_user_canister_subnet_threshold, INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT,
+        get_individual_user_canister_subnet_threshold,
+        BASE_INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT,
         INDIVIDUAL_USER_CANISTER_SUBNET_MAX_CAPACITY,
     },
+    cycles::calculate_required_cycles_for_upgrading,
 };
 
 #[update]
@@ -216,7 +220,9 @@ async fn provision_new_available_canisters(individual_user_template_canister_was
             async move {
                 let _ = check_and_request_cycles_from_platform_orchestrator().await;
                 //recharge backup canister if required
-                recharge_empty_canister_if_required(canister_id).await;
+                recharge_canister_for_installing_wasm(canister_id)
+                    .await
+                    .map_err(|e| (canister_id, e))?;
                 install_canister_wasm(
                     canister_id,
                     None,
@@ -253,21 +259,6 @@ async fn provision_new_available_canisters(individual_user_template_canister_was
         breaking_condition,
     )
     .await;
-}
-
-async fn recharge_empty_canister_if_required(canister_id: Principal) {
-    let canister_status_res = canister_status(CanisterIdRecord { canister_id }).await;
-    match canister_status_res {
-        Ok((canister_status,))
-            if canister_status.cycles < INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT =>
-        {
-            let _ = recharge_canister(&canister_id, INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT).await;
-        }
-        Err(_e) => {
-            let _ = recharge_canister(&canister_id, INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT).await;
-        }
-        _ => {}
-    }
 }
 
 async fn provision_new_backup_canisters(canister_count: u64) {

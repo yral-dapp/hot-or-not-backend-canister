@@ -459,21 +459,23 @@ fn when_bet_maker_places_bet_on_a_post_it_is_assigned_a_slot_id_and_the_outcome_
     };
 
     pocket_ic
-        .upgrade_canister(
-            alice_canister_id,
-            individual_user_template_wasm.to_vec(),
-            candid::encode_one(individual_user_template_upgrade_args).unwrap(),
-            Some(subnet_orchestrator_canister_id_0),
+        .update_call(
+            platform_orchestrator_canister_id,
+            global_admin_principal,
+            "upgrade_individual_canisters_in_a_subnet_with_latest_wasm",
+            candid::encode_one(subnet_orchestrator_canister_id_0).unwrap(),
         )
         .unwrap();
 
-    pocket_ic.tick();
+    for _ in 0..100 {
+        pocket_ic.tick();
+    }
 
     // /********************************/
     // Assert on final results
 
     pocket_ic.advance_time(Duration::from_secs(50 * 60 * 60));
-    for _ in 0..20 {
+    for _ in 0..120 {
         pocket_ic.tick();
     }
 

@@ -4,10 +4,15 @@ use candid::Principal;
 use ic_cdk_macros::update;
 use shared_utils::common::utils::permissions::is_caller_controller;
 
-use crate::{util::subnet_orchestrator::SubnetOrchestrator, CANISTER_DATA};
+use crate::{
+    util::{cycles::notify_to_recharge_canister, subnet_orchestrator::SubnetOrchestrator},
+    CANISTER_DATA,
+};
 
 #[update(guard = "is_caller_controller")]
 fn send_creator_dao_stats_to_subnet_orchestrator() {
+    notify_to_recharge_canister();
+
     let root_canisters: HashSet<Principal> = CANISTER_DATA.with_borrow(|canister_data| {
         canister_data
             .cdao_canisters

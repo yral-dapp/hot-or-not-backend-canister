@@ -1,5 +1,6 @@
 use crate::{
     data_model::memory::{self, MEMORY_MANAGER},
+    util::cycles::notify_to_recharge_canister,
     CANISTER_DATA, SNAPSHOT_DATA,
 };
 use candid::Principal;
@@ -13,6 +14,7 @@ use super::CanisterDataForSnapshot;
 
 #[update(guard = "is_reclaim_canister_id")]
 fn save_snapshot_json() -> u32 {
+    notify_to_recharge_canister();
     let mut state_bytes = vec![];
 
     CANISTER_DATA.with(|canister_data_ref_cell| {
@@ -45,6 +47,7 @@ fn download_snapshot(offset: u64, length: u64) -> Vec<u8> {
 
 #[update(guard = "is_reclaim_canister_id")]
 fn receive_and_save_snaphot(offset: u64, state_bytes: Vec<u8>) {
+    notify_to_recharge_canister();
     SNAPSHOT_DATA.with(|snapshot_data_ref_cell| {
         let mut snapshot = snapshot_data_ref_cell.borrow_mut();
         // grow snapshot if needed
@@ -73,6 +76,7 @@ fn load_snapshot(length: u64) {
 
 #[update(guard = "is_reclaim_canister_id")]
 fn clear_snapshot() {
+    notify_to_recharge_canister();
     SNAPSHOT_DATA.with(|snapshot_data_ref_cell| {
         *snapshot_data_ref_cell.borrow_mut() = vec![];
     });

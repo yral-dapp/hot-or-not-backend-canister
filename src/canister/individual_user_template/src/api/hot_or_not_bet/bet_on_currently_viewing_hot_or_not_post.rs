@@ -14,13 +14,17 @@ use shared_utils::{
 
 use crate::{
     api::canister_management::update_last_access_time::update_last_canister_functionality_access_time,
-    data_model::CanisterData, CANISTER_DATA,
+    data_model::CanisterData,
+    util::cycles::{notify_to_recharge_canister, recharge_canister},
+    CANISTER_DATA,
 };
 
 #[update]
 async fn bet_on_currently_viewing_post(
     place_bet_arg: PlaceBetArg,
 ) -> Result<BettingStatus, BetOnCurrentlyViewingPostError> {
+    notify_to_recharge_canister();
+
     let bet_maker_principal_id = ic_cdk::caller();
     let current_time = system_time::get_current_system_time_from_ic();
 
@@ -34,7 +38,7 @@ async fn bet_on_currently_viewing_post(
 
     update_last_canister_functionality_access_time();
     update_token_balance_before_bet_happens(place_bet_arg.bet_amount);
-    
+
     let response = ic_cdk::call::<_, (Result<BettingStatus, BetOnCurrentlyViewingPostError>,)>(
         place_bet_arg.post_canister_id,
         "receive_bet_from_bet_makers_canister",
@@ -104,18 +108,21 @@ async fn bet_on_currently_viewing_post(
 
 // this #[update] is for local testing only see: src/lib/integration_tests/tests/upgrade/excessive_tokens_test.rs
 // #[update]
-pub fn update_token_balance_before_bet_happens(  bet_amount: u64) {
+pub fn update_token_balance_before_bet_happens(bet_amount: u64) {
     CANISTER_DATA.with_borrow_mut(|canister_data| {
-        canister_data.my_token_balance.adjust_balance_pre_bet(bet_amount);
+        canister_data
+            .my_token_balance
+            .adjust_balance_pre_bet(bet_amount);
     });
 }
 
-fn update_token_balance_after_bet_placement_fails( bet_amount: u64) {
+fn update_token_balance_after_bet_placement_fails(bet_amount: u64) {
     CANISTER_DATA.with_borrow_mut(|canister_data| {
-        canister_data.my_token_balance.adjust_balance_for_failed_bet_placement(bet_amount);
+        canister_data
+            .my_token_balance
+            .adjust_balance_for_failed_bet_placement(bet_amount);
     });
 }
-
 
 fn validate_incoming_bet(
     canister_data: &CanisterData,

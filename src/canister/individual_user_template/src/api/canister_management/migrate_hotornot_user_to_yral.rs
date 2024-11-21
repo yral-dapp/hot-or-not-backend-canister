@@ -1,4 +1,8 @@
-use crate::util::migration::{IndividualUser, Migration};
+use crate::util::{
+    cycles::notify_to_recharge_canister,
+    migration::{IndividualUser, Migration},
+    subnet_orchestrator,
+};
 use candid::Principal;
 use ic_cdk::caller;
 use ic_cdk_macros::update;
@@ -11,6 +15,8 @@ pub async fn transfer_tokens_and_posts(
     to_account: Principal,
     to_account_canister_id: Principal,
 ) -> Result<(), MigrationErrors> {
+    notify_to_recharge_canister();
+
     let caller = caller();
     let user = IndividualUser::from_canister_data().await?;
     let to_individual_user = IndividualUser::new(to_account_canister_id, to_account, None).await?;
@@ -24,6 +30,8 @@ pub async fn receive_data_from_hotornot(
     amount: u64,
     posts: Vec<Post>,
 ) -> Result<(), MigrationErrors> {
+    notify_to_recharge_canister();
+
     let user = IndividualUser::from_canister_data().await?;
 
     let from_individual_user = IndividualUser::new(caller(), from_account, None).await?;

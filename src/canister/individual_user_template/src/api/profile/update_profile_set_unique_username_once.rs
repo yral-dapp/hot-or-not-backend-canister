@@ -1,6 +1,6 @@
 use crate::{
     api::canister_management::update_last_access_time::update_last_canister_functionality_access_time,
-    CANISTER_DATA,
+    util::cycles::notify_to_recharge_canister, CANISTER_DATA,
 };
 use ic_cdk::api::call;
 use ic_cdk_macros::update;
@@ -18,6 +18,7 @@ use shared_utils::{
 async fn update_profile_set_unique_username_once(
     new_unique_username: String,
 ) -> Result<(), UpdateProfileSetUniqueUsernameError> {
+    notify_to_recharge_canister();
     // * access control
     let current_caller = ic_cdk::caller();
     let my_principal_id = CANISTER_DATA

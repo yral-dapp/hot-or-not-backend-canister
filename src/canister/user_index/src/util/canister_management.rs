@@ -1,4 +1,5 @@
 use candid::{CandidType, Principal};
+use futures::{future::BoxFuture, FutureExt};
 use ic_cdk::{
     api::{
         self,
@@ -6,8 +7,7 @@ use ic_cdk::{
         canister_balance128,
         management_canister::{
             main::{
-                self, canister_info, canister_status, start_canister, stop_canister,
-                CanisterInfoRequest, CanisterInstallMode, CreateCanisterArgument,
+                self, canister_info, canister_status, CanisterInstallMode, CreateCanisterArgument,
                 InstallCodeArgument, WasmModule,
             },
             provisional::{CanisterIdRecord, CanisterSettings},
@@ -17,18 +17,16 @@ use ic_cdk::{
 };
 use serde::{Deserialize, Serialize};
 use shared_utils::{
-    canister_specific::{
-        individual_user_template::types::arg::IndividualUserTemplateInitArgs, platform_orchestrator,
-    },
+    canister_specific::individual_user_template::types::arg::IndividualUserTemplateInitArgs,
     common::{
         types::known_principal::KnownPrincipalType,
         utils::{task::run_task_concurrently, upgrade_canister::upgrade_canister_util},
     },
     constant::{
-        EMPTY_CANISTER_RECHARGE_AMOUNT, INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT,
+        BASE_INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT, EMPTY_CANISTER_RECHARGE_AMOUNT,
         SUBNET_ORCHESTRATOR_CANISTER_CYCLES_THRESHOLD,
     },
-    cycles::calculate_threshold_and_recharge_cycles_for_canister,
+    cycles::calculate_required_cycles_for_upgrading,
 };
 
 use crate::CANISTER_DATA;
@@ -57,6 +55,7 @@ pub async fn create_users_canister(
     individual_user_wasm: Vec<u8>,
 ) -> Principal {
     let canister_id = create_empty_user_canister().await;
+    recharge_canister_for_installing_wasm(canister_id).await;
     install_canister_wasm(canister_id, profile_owner, version, individual_user_wasm).await;
     canister_id
 }
@@ -211,41 +210,6 @@ pub async fn upgrade_individual_user_canister(
     upgrade_canister_util(install_code_argument).await
 }
 
-pub async fn recharge_canister_if_below_threshold(canister_id: &Principal) -> Result<(), String> {
-    match canister_status(CanisterIdRecord {
-        canister_id: *canister_id,
-    })
-    .await
-    {
-        Ok((individual_canister_status,)) => {
-            let idle_cycles_burned_per_day =
-                u128::try_from(individual_canister_status.idle_cycles_burned_per_day.0)
-                    .map_err(|e| e.to_string())?;
-            let reserved_cycles = u128::try_from(individual_canister_status.reserved_cycles.0)
-                .map_err(|e| e.to_string())?;
-            let (threshold_balance, recharge_amount) =
-                calculate_threshold_and_recharge_cycles_for_canister(
-                    idle_cycles_burned_per_day,
-                    reserved_cycles,
-                    None,
-                );
-            let individual_canister_current_balance =
-                u128::try_from(individual_canister_status.cycles.0).map_err(|e| e.to_string())?;
-            if individual_canister_current_balance < threshold_balance {
-                let recharge_amount = recharge_amount - individual_canister_current_balance;
-                let _ = check_and_request_cycles_from_platform_orchestrator().await;
-                recharge_canister(canister_id, recharge_amount).await?;
-            }
-
-            Ok(())
-        }
-        Err(e) => {
-            recharge_canister(canister_id, INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT).await?;
-            Ok(())
-        }
-    }
-}
-
 pub async fn check_and_request_cycles_from_platform_orchestrator() -> Result<(), String> {
     let current_cycle_balance = canister_balance128();
 
@@ -287,4 +251,51 @@ pub async fn recharge_canister(
     )
     .await
     .map_err(|e| e.1)
+}
+
+pub async fn recharge_canister_for_installing_wasm(canister_id: Principal) -> Result<(), String> {
+    recharge_canister_for_installing_wasm_with_retries(canister_id, None, 1).await
+}
+
+fn recharge_canister_for_installing_wasm_with_retries(
+    canister_id: Principal,
+    retry_attempt: Option<u32>,
+    max_retry_attempts: u32,
+) -> BoxFuture<'static, Result<(), String>> {
+    async move {
+        let canister_status_res = canister_status(CanisterIdRecord { canister_id }).await;
+        match canister_status_res {
+            Ok((canister_status,)) => {
+                let idle_cycles_burned_per_day =
+                    u128::try_from(canister_status.idle_cycles_burned_per_day.0)
+                        .map_err(|e| e.to_string())?;
+                let amount_required_to_upgrade_canister =
+                    calculate_required_cycles_for_upgrading(idle_cycles_burned_per_day, None);
+
+                if canister_status.cycles < amount_required_to_upgrade_canister {
+                    recharge_canister(&canister_id, amount_required_to_upgrade_canister).await?;
+                }
+                Ok(())
+            }
+            Err(e) => {
+                if let Some(retry_attempt) = retry_attempt {
+                    if retry_attempt >= max_retry_attempts {
+                        return Err(e.1);
+                    }
+                }
+
+                //canister might be out of cycles recharge with base amount and retry.
+                recharge_canister(&canister_id, BASE_INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT)
+                    .await?;
+                let retry_attempt = retry_attempt.unwrap_or(0) + 1;
+                Box::pin(recharge_canister_for_installing_wasm_with_retries(
+                    canister_id,
+                    Some(retry_attempt),
+                    max_retry_attempts,
+                ))
+                .await
+            }
+        }
+    }
+    .boxed()
 }

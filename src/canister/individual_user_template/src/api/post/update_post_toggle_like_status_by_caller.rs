@@ -2,13 +2,14 @@ use ic_cdk_macros::update;
 
 use crate::{
     api::canister_management::update_last_access_time::update_last_canister_functionality_access_time,
-    CANISTER_DATA,
+    util::cycles::notify_to_recharge_canister, CANISTER_DATA,
 };
 
 use super::update_scores_and_share_with_post_cache_if_difference_beyond_threshold::update_scores_and_share_with_post_cache_if_difference_beyond_threshold;
 
 #[update]
 fn update_post_toggle_like_status_by_caller(id: u64) -> bool {
+    notify_to_recharge_canister();
     update_last_canister_functionality_access_time();
 
     let caller_id = ic_cdk::caller();
