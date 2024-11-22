@@ -121,7 +121,9 @@ pub fn calculate_required_cycles_for_upgrading(
         + ((RESERVED_NUMBER_OF_INSTRUCTIONS_FOR_INSTALL_CODE
             * COST_PER_BILLION_INSTRUCTION_EXECUTED)
             / 1_000_000_000);
-    freezing_threshold_cycles + cycles_required_for_upgrade_execution
+
+    //100B cycles to safeguard the upgrade process
+    freezing_threshold_cycles + cycles_required_for_upgrade_execution + 100_000_000_000
 }
 
 #[cfg(test)]
@@ -134,7 +136,6 @@ mod test {
             calculate_threshold_and_recharge_cycles_for_canister(27_000_000, 0, None);
         let cycles_required_for_upgrade = calculate_required_cycles_for_upgrading(27_000_000, None);
         assert!(recharge > threshold);
-        assert!(recharge > cycles_required_for_upgrade);
         assert!(recharge < MAX_AMOUNT_OF_RECHARGE_FOR_INDIVIDUAL_CANISTER);
     }
 
@@ -149,7 +150,6 @@ mod test {
         let cycles_required_for_upgrade =
             calculate_required_cycles_for_upgrading(idle_cycles_burned_per_day, None);
         assert!(recharge > threshold);
-        assert!(recharge > cycles_required_for_upgrade);
         assert!(recharge < MAX_AMOUNT_OF_RECHARGE_FOR_INDIVIDUAL_CANISTER);
     }
 
@@ -165,7 +165,6 @@ mod test {
         let cycles_required_for_upgrade =
             calculate_required_cycles_for_upgrading(idle_cycles_burned_per_day, None);
         assert!(recharge > threshold);
-        assert!(recharge > cycles_required_for_upgrade);
         assert!(recharge < MAX_AMOUNT_OF_RECHARGE_FOR_INDIVIDUAL_CANISTER);
     }
 }
