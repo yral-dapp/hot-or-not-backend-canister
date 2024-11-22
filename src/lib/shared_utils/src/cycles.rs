@@ -121,7 +121,9 @@ pub fn calculate_required_cycles_for_upgrading(
         + ((RESERVED_NUMBER_OF_INSTRUCTIONS_FOR_INSTALL_CODE
             * COST_PER_BILLION_INSTRUCTION_EXECUTED)
             / 1_000_000_000);
-    freezing_threshold_cycles + cycles_required_for_upgrade_execution
+
+    //100B cycles to safeguard the upgrade process
+    freezing_threshold_cycles + cycles_required_for_upgrade_execution + 100_000_000_000
 }
 
 #[cfg(test)]
