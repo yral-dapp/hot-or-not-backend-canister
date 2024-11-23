@@ -28,8 +28,9 @@ pub async fn swap_request(token_pairs: TokenPairs) -> Result<(), SwapError>{
         return Err(SwapError::IsNotTokenCreator);
     }
 
+    
+    // todo: replace this by a frontend server function instead because this uses the caller to infer the from field in approve...
     let previous_approval_amt = get_previous_approval_amount(ic_cdk::caller(), ic_cdk::id(), token_a.ledger).await?;
-
     let allocation_res: (Result<Nat, ApproveError>, ) = ic_cdk::call(token_a.ledger, "icrc2_approve", (ApproveArgs{
         from_subaccount: None,
         spender: ic_cdk::id().into(),
@@ -40,6 +41,8 @@ pub async fn swap_request(token_pairs: TokenPairs) -> Result<(), SwapError>{
         fee: None,
         created_at_time: None
     }, )).await?;
+    // ....
+
 
     allocation_res.0.map_err(SwapError::ApproveError)?;
     // TODO: Push notifications
