@@ -2,7 +2,7 @@
 // You may want to manually adjust some of the types.
 #![allow(dead_code, unused_imports)]
 use candid::{self, CandidType, Decode, Deserialize, Encode, Nat, Principal};
-use ic_cdk::api::call::CallResult as Result;
+use ic_cdk::api::call::{CallResult as Result, RejectionCode};
 use serde_bytes;
 
 #[derive(CandidType, Deserialize)]
