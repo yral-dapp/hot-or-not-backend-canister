@@ -26,13 +26,9 @@ use shared_utils::{
     },
     constant::{
         get_backup_individual_user_canister_batch_size,
-        get_backup_individual_user_canister_threshold,
         get_individual_user_canister_subnet_batch_size,
         get_individual_user_canister_subnet_threshold,
-        BASE_INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT,
-        INDIVIDUAL_USER_CANISTER_SUBNET_MAX_CAPACITY,
     },
-    cycles::calculate_required_cycles_for_upgrading,
 };
 
 #[update]

@@ -9,7 +9,13 @@ use shared_utils::{
     cycles::calculate_threshold_and_recharge_cycles_for_canister,
 };
 
-use crate::CANISTER_DATA;
+use crate::{
+    api::canister_management::request_cycles,
+    util::canister_management::{
+        check_and_request_cycles_from_platform_orchestrator, recharge_canister,
+    },
+    CANISTER_DATA,
+};
 
 #[derive(Clone, Copy)]
 pub struct IndividualUserCanister {
@@ -59,14 +65,7 @@ impl IndividualUserCanister {
         );
 
         if current_user_canister_balance <= threshold {
-            return deposit_cycles(
-                CanisterIdRecord {
-                    canister_id: self.canister_id,
-                },
-                recharge_amount,
-            )
-            .await
-            .map_err(|e| e.1);
+            return recharge_canister(&self.canister_id, recharge_amount).await;
         }
 
         Ok(())
