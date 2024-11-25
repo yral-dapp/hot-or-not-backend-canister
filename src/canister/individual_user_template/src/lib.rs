@@ -20,8 +20,8 @@ use shared_utils::{
         cdao::DeployedCdaoCanisters,
         device_id::DeviceIdentity,
         error::{
-            BetOnCurrentlyViewingPostError, CdaoDeployError, CdaoTokenError,
-            FollowAnotherUserProfileError, GetPostsOfUserProfileError, AirdropError
+            AirdropError, BetOnCurrentlyViewingPostError, CdaoDeployError, CdaoTokenError,
+            FollowAnotherUserProfileError, GetPostsOfUserProfileError,
         },
         follow::{FollowEntryDetail, FollowEntryId},
         hot_or_not::{BetDetails, BetOutcomeForBetMaker, BettingStatus, PlacedBetDetail},
@@ -48,6 +48,7 @@ use shared_utils::{
     types::canister_specific::individual_user_template::error_types::{
         GetUserUtilityTokenTransactionHistoryError, UpdateProfileSetUniqueUsernameError,
     },
+    types::creator_dao_stats::IndividualUserCreatorDaoEntry,
 };
 
 mod api;

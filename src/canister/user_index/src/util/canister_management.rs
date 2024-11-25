@@ -243,14 +243,18 @@ pub async fn recharge_canister(
     canister_id: &Principal,
     recharge_amount: u128,
 ) -> Result<(), String> {
-    main::deposit_cycles(
+    let result = main::deposit_cycles(
         CanisterIdRecord {
             canister_id: *canister_id,
         },
         recharge_amount,
     )
     .await
-    .map_err(|e| e.1)
+    .map_err(|e| e.1);
+
+    let _ = check_and_request_cycles_from_platform_orchestrator().await;
+
+    result
 }
 
 pub async fn recharge_canister_for_installing_wasm(canister_id: Principal) -> Result<(), String> {
