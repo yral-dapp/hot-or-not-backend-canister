@@ -135,11 +135,18 @@ async fn deploy_cdao_sns(
     let subnet_orchestrator = SubnetOrchestrator::new()
         .map_err(|e| CdaoDeployError::CallError(RejectionCode::CanisterError, e))?;
 
-    let canister_ids: Vec<Principal> = (0..5)
-        .map(|_| subnet_orchestrator.get_empty_canister())
+    let number_of_canisters_required_to_be_alloted =
+        CANISTER_DATA.with_borrow(|canister_data| 5 - 5.min(canister_data.empty_canisters.len()));
+
+    (0..number_of_canisters_required_to_be_alloted)
+        .map(|_| subnet_orchestrator.allot_empty_canister())
         .collect::<FuturesOrdered<_>>()
         .try_collect()
         .await
+        .map_err(|e| CdaoDeployError::CallError(RejectionCode::CanisterError, e))?;
+
+    let canister_ids = CANISTER_DATA
+        .with_borrow_mut(|canister_data| canister_data.empty_canisters.get_number_of_canister(5))
         .map_err(|e| CdaoDeployError::CallError(RejectionCode::CanisterError, e))?;
 
     canister_ids

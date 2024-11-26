@@ -24,12 +24,23 @@ impl SubnetOrchestrator {
         subnet_orchestrator.ok_or("Subnet Orchestrator canister not found".into())
     }
 
-    pub async fn get_empty_canister(&self) -> Result<Principal, String> {
-        let (result,) = ic_cdk::call(self.canister_id, "allot_empty_canister", ())
-            .await
-            .map_err(|e| e.1)?;
+    pub async fn allot_empty_canister(&self) -> Result<(), String> {
+        let canister_id: Principal = ic_cdk::call::<_, (Result<Principal, String>,)>(
+            self.canister_id,
+            "allot_empty_canister",
+            (),
+        )
+        .await
+        .map_err(|e| e.1)?
+        .0?;
 
-        result
+        CANISTER_DATA.with_borrow_mut(|canister_data| {
+            canister_data
+                .empty_canisters
+                .insert_empty_canister(canister_id)
+        });
+
+        Ok(())
     }
 
     pub fn notify_to_receive_cycles_from_subnet_orchestrator(&self) -> Result<(), String> {

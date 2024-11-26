@@ -1,5 +1,5 @@
 use std::{
-    collections::{BTreeMap, BTreeSet},
+    collections::{BTreeMap, BTreeSet, HashSet},
     time::SystemTime,
 };
 
@@ -95,6 +95,39 @@ pub struct CanisterData {
     pub token_roots: ic_stable_structures::btreemap::BTreeMap<Principal, (), Memory>,
     #[serde(default)]
     pub ml_data: MLData,
+    #[serde(default)]
+    pub empty_canisters: AllotedEmptyCanister,
+}
+
+#[derive(Serialize, Deserialize, Default)]
+pub struct AllotedEmptyCanister {
+    canister_ids: HashSet<Principal>,
+}
+
+impl AllotedEmptyCanister {
+    pub fn get_number_of_canister(&mut self, number: usize) -> Result<Vec<Principal>, String> {
+        let mut canister_ids = vec![];
+        let mut iterator = self.canister_ids.iter().copied();
+        for _ in 0..number {
+            if let Some(canister_id) = iterator.next() {
+                canister_ids.push(canister_id);
+            } else {
+                return Err(format!("{} number of canisters not available", number));
+            }
+        }
+
+        self.canister_ids = iterator.collect();
+
+        Ok(canister_ids)
+    }
+
+    pub fn insert_empty_canister(&mut self, canister_id: Principal) -> bool {
+        self.canister_ids.insert(canister_id)
+    }
+
+    pub fn len(&self) -> usize {
+        self.canister_ids.len()
+    }
 }
 
 pub fn _default_room_details(
@@ -168,6 +201,7 @@ impl Default for CanisterData {
             cdao_canisters: Vec::new(),
             token_roots: _default_token_list(),
             ml_data: MLData::default(),
+            empty_canisters: AllotedEmptyCanister::default(),
         }
     }
 }
