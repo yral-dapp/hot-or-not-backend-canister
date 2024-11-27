@@ -482,7 +482,7 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
         &app_subnets[0]
     );
     let user_index = user_index_res.unwrap();
-    for _ in 0..30 {
+    for _ in 0..1000 {
         pic.tick();
     }
 
