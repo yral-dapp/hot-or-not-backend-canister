@@ -6,3 +6,4 @@ pub mod hot_or_not_feed;
 pub mod monitoring;
 pub mod well_known_principal;
 pub mod yral_feed;
+pub mod snapshot;

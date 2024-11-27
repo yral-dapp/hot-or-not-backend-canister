@@ -82,9 +82,11 @@ type WasmType = variant {
 };
 service : (PlatformOrchestratorInitArgs) -> {
   add_principal_as_global_admin : (principal) -> ();
+  clear_snapshot : () -> ();
   collect_creator_dao_stats_in_the_network : () -> ();
   deposit_cycles_to_canister : (principal, nat) -> (Result);
   deregister_subnet_orchestrator : (principal, bool) -> ();
+  download_snapshot : (nat64, nat64) -> (blob) query;
   get_all_available_subnet_orchestrators : () -> (vec principal) query;
   get_all_global_admins : () -> (vec principal) query;
   get_all_subnet_orchestrators : () -> (vec principal) query;
@@ -97,6 +99,7 @@ service : (PlatformOrchestratorInitArgs) -> {
   get_subnets_upgrade_status_report : () -> (SubnetUpgradeReport) query;
   get_version : () -> (text) query;
   http_request : (HttpRequest) -> (HttpResponse) query;
+  load_snapshot : () -> ();
   make_individual_canister_logs_private : (principal) -> (Result_1);
   make_individual_canister_logs_public : (principal) -> (Result_1);
   make_subnet_orchestrator_logs_private : (principal) -> (Result_1);
@@ -114,6 +117,7 @@ service : (PlatformOrchestratorInitArgs) -> {
   populate_known_principal_for_all_subnet : () -> ();
   provision_empty_canisters_in_a_subnet : (principal, nat64) -> (Result_1);
   provision_subnet_orchestrator_canister : (principal) -> (Result_2);
+  receive_and_save_snaphot : (nat64, blob) -> ();
   receive_creator_dao_stats_from_subnet_orchestrator : (
       principal,
       vec principal,
@@ -124,6 +128,7 @@ service : (PlatformOrchestratorInitArgs) -> {
   remove_principal_from_global_admins : (principal) -> ();
   remove_subnet_orchestrators_from_available_list : (principal) -> (Result);
   report_subnet_upgrade_status : (UpgradeStatus) -> (Result_1);
+  save_snapshot_json : () -> (nat32);
   set_reserved_cycle_limit_for_subnet_orchestrator : (principal, nat) -> (
       Result_1,
     );
