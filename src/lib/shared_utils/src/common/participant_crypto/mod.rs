@@ -1,11 +1,10 @@
 //! Utilities for creating and verifying proof that a given canister is a part of YRAL Backend canisters
 mod types;
 
-use std::{cell::RefCell, thread::LocalKey};
+use std::{cell::RefCell, collections::HashMap, thread::LocalKey};
 
 use candid::{CandidType, Principal};
 use ed25519_dalek::{Signature, VerifyingKey, Verifier};
-use ic_stable_structures::{StableBTreeMap, Memory};
 use types::{ManagementCanisterSchnorrPublicKeyReply, ManagementCanisterSchnorrPublicKeyRequest, ManagementCanisterSignatureReply, ManagementCanisterSignatureRequest, SchnorrAlgorithm, SchnorrKeyId};
 use serde::{Serialize, Deserialize};
 
@@ -22,16 +21,13 @@ pub(crate) const THRESHOLD_SCHNORR_KEY: &str = {
 
 pub(crate) type LocalPoPStore<Store> = LocalKey<RefCell<Store>>;
 
-pub struct PubKeyCache<M: Memory>(StableBTreeMap<Principal, Vec<u8>, M>);
+#[derive(Default, Serialize, Deserialize)]
+pub struct PubKeyCache(HashMap<Principal, Vec<u8>>);
 
-impl<M: Memory> PubKeyCache<M> {
-    pub fn init(memory: M) -> Self {
-        Self(StableBTreeMap::init(memory))
-    }
-
-    async fn get_or_init_public_key<Store: ProofOfParticipationStore<M>>(store: &'static LocalPoPStore<Store>, principal: Principal) -> Result<VerifyingKey, String> {
+impl PubKeyCache {
+    async fn get_or_init_public_key<Store: ProofOfParticipationStore>(store: &'static LocalPoPStore<Store>, principal: Principal) -> Result<VerifyingKey, String> {
         let maybe_pk = store.with_borrow(|store| {
-            store.pubkey_cache().0.get(&principal)
+            store.pubkey_cache().0.get(&principal).cloned()
         });
         if let Some(pk) = maybe_pk {
             return VerifyingKey::try_from(pk.as_slice())
@@ -160,7 +156,7 @@ impl ProofOfParticipation {
     }
 
     /// Verify that the caller is a YRAL canister
-    pub async fn verify_caller_is_participant<M: Memory, Store: ProofOfParticipationStore<M>>(&self, store: &'static LocalPoPStore<Store>) -> Result<(), String> {
+    pub async fn verify_caller_is_participant<Store: ProofOfParticipationStore>(&self, store: &'static LocalPoPStore<Store>) -> Result<(), String> {
         #[cfg(feature = "local")]
         {
             // Hack: Always pass on local testing node
@@ -186,10 +182,10 @@ impl ProofOfParticipation {
     }
 }
 
-pub trait ProofOfParticipationStore<M: Memory> {
-    fn pubkey_cache(&self) -> &PubKeyCache<M>;
+pub trait ProofOfParticipationStore {
+    fn pubkey_cache(&self) -> &PubKeyCache;
 
-    fn pubkey_cache_mut(&mut self) -> &mut PubKeyCache<M>;
+    fn pubkey_cache_mut(&mut self) -> &mut PubKeyCache;
 
     fn platform_orchestrator(&self) -> Principal;
 }
