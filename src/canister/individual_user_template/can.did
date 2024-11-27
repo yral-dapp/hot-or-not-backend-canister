@@ -561,8 +561,8 @@ service : (IndividualUserTemplateInitArgs) -> {
   add_token : (principal) -> (Result_2);
   bet_on_currently_viewing_post : (PlaceBetArg) -> (Result_3);
   check_and_update_scores_and_share_with_post_cache_if_difference_beyond_threshold : (
-      vec nat64,
-    ) -> ();
+    vec nat64
+  ) -> ();
   clear_snapshot : () -> ();
   create_a_namespace : (text) -> (Result_4);
   delete_key_value_pair : (nat64, text) -> (Result_5);
@@ -576,27 +576,27 @@ service : (IndividualUserTemplateInitArgs) -> {
   get_entire_individual_post_detail_by_id : (nat64) -> (Result_10) query;
   get_hot_or_not_bet_details_for_this_post : (nat64) -> (BettingStatus) query;
   get_hot_or_not_bets_placed_by_this_profile_with_pagination : (nat64) -> (
-      vec PlacedBetDetail,
-    ) query;
+    vec PlacedBetDetail
+  ) query;
   get_individual_hot_or_not_bet_placed_by_this_profile : (principal, nat64) -> (
-      opt PlacedBetDetail,
-    ) query;
+    opt PlacedBetDetail
+  ) query;
   get_individual_post_details_by_id : (nat64) -> (PostDetailsForFrontend) query;
   get_last_access_time : () -> (Result_11) query;
   get_last_canister_functionality_access_time : () -> (Result_11) query;
   get_ml_feed_cache_paginated : (nat64, nat64) -> (vec MLFeedCacheItem) query;
   get_posts_of_this_user_profile_with_pagination : (nat64, nat64) -> (
-      Result_12,
-    ) query;
+    Result_12
+  ) query;
   get_posts_of_this_user_profile_with_pagination_cursor : (nat64, nat64) -> (
-      Result_12,
-    ) query;
+    Result_12
+  ) query;
   get_principals_that_follow_this_profile_paginated : (opt nat64) -> (
-      vec record { nat64; FollowEntryDetail },
-    ) query;
+    vec record { nat64; FollowEntryDetail }
+  ) query;
   get_principals_this_profile_follows_paginated : (opt nat64) -> (
-      vec record { nat64; FollowEntryDetail },
-    ) query;
+    vec record { nat64; FollowEntryDetail }
+  ) query;
   get_profile_details : () -> (UserProfileDetailsForFrontend) query;
   get_profile_details_v2 : () -> (UserProfileDetailsForFrontendV2) query;
   get_rewarded_for_referral : (principal, principal) -> ();
@@ -605,21 +605,21 @@ service : (IndividualUserTemplateInitArgs) -> {
   get_stable_memory_size : () -> (nat64) query;
   get_success_history : () -> (Result_14) query;
   get_token_roots_of_this_user_with_pagination_cursor : (nat64, nat64) -> (
-      Result_15,
-    ) query;
+    Result_15
+  ) query;
   get_user_caniser_cycle_balance : () -> (nat) query;
   get_user_propensity : () -> (float64) query;
   get_user_utility_token_transaction_history_with_pagination : (
-      nat64,
-      nat64,
-    ) -> (Result_16) query;
+    nat64,
+    nat64,
+  ) -> (Result_16) query;
   get_utility_token_balance : () -> (nat64) query;
   get_version : () -> (text) query;
   get_version_number : () -> (nat64) query;
   get_watch_history : () -> (Result_17) query;
   get_well_known_principal_value : (KnownPrincipalType) -> (
-      opt principal,
-    ) query;
+    opt principal
+  ) query;
   http_request : (HttpRequest) -> (HttpResponse) query;
   list_namespace_keys : (nat64) -> (Result_18) query;
   list_namespaces : (nat64, nat64) -> (vec NamespaceForFrontend) query;
@@ -636,11 +636,11 @@ service : (IndividualUserTemplateInitArgs) -> {
   send_creator_dao_stats_to_subnet_orchestrator : () -> (Result_22);
   set_controller_as_subnet_orchestrator : (principal) -> ();
   settle_neurons_fund_participation : (
-      SettleNeuronsFundParticipationRequest,
-    ) -> (SettleNeuronsFundParticipationResponse);
+    SettleNeuronsFundParticipationRequest
+  ) -> (SettleNeuronsFundParticipationResponse);
   transfer_token_to_user_canister : (principal, principal, opt blob, nat) -> (
-      Result_25,
-    );
+    Result_25
+  );
   transfer_tokens_and_posts : (principal, principal) -> (Result_20);
   update_last_access_time : () -> (Result_26);
   update_last_canister_functionality_access_time : () -> ();
@@ -651,16 +651,16 @@ service : (IndividualUserTemplateInitArgs) -> {
   update_post_status : (nat64, PostStatus) -> ();
   update_post_toggle_like_status_by_caller : (nat64) -> (bool);
   update_profile_display_details : (UserProfileUpdateDetailsFromFrontend) -> (
-      Result_27,
-    );
+    Result_27
+  );
   update_profile_owner : (opt principal) -> (Result_28);
   update_profile_set_unique_username_once : (text) -> (Result_29);
   update_profiles_i_follow_toggle_list_with_specified_profile : (
-      FolloweeArg,
-    ) -> (Result_8);
+    FolloweeArg
+  ) -> (Result_8);
   update_profiles_that_follow_me_toggle_list_with_specified_profile : (
-      FollowerArg,
-    ) -> (Result_8);
+    FollowerArg
+  ) -> (Result_8);
   update_referrer_details : (UserCanisterDetails) -> (Result_26);
   update_session_type : (SessionType) -> (Result_26);
   update_success_history : (SuccessHistoryItemV1) -> (Result_26);
@@ -670,6 +670,6 @@ service : (IndividualUserTemplateInitArgs) -> {
   upgrade_creator_dao_governance_canisters : (blob) -> (Result_28);
   write_key_value_pair : (nat64, text, text) -> (Result_5);
   write_multiple_key_value_pairs : (nat64, vec record { text; text }) -> (
-      Result_6,
-    );
-}
+    Result_6
+  );
+};

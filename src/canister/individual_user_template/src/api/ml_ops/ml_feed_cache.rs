@@ -61,6 +61,17 @@ fn get_ml_feed_cache_paginated_impl(
     canister_data.ml_feed_cache[start_index..end_index].to_vec()
 }
 
+#[update(guard = "is_caller_controller_or_global_admin")]
+fn reset_ml_feed_cache() -> Result<String, String> {
+    let _ = CANISTER_DATA.with(|canister_data| {
+        let mut canister_data = canister_data.borrow_mut();
+
+        canister_data.ml_feed_cache.clear();
+    });
+
+    Ok("Success".into())
+}
+
 #[cfg(test)]
 mod test {
     use candid::Principal;
