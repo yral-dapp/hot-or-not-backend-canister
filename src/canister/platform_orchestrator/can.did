@@ -91,8 +91,8 @@ service : (PlatformOrchestratorInitArgs) -> {
   get_creator_dao_stats : () -> (CreatorDaoTokenStats) query;
   get_global_known_principal : (KnownPrincipalType) -> (principal) query;
   get_subnet_known_principal : (principal, KnownPrincipalType) -> (
-    principal
-  ) query;
+      principal,
+    ) query;
   get_subnet_last_upgrade_status : () -> (CanisterUpgradeStatus) query;
   get_subnets_upgrade_status_report : () -> (SubnetUpgradeReport) query;
   get_version : () -> (text) query;
@@ -102,31 +102,32 @@ service : (PlatformOrchestratorInitArgs) -> {
   make_subnet_orchestrator_logs_private : (principal) -> (Result_1);
   make_subnet_orchestrator_logs_public : (principal) -> (Result_1);
   notify_all_individual_canisters_to_upgrade_creator_dao_governance_canisters : (
-    blob
-  ) -> (Result_1);
+      blob,
+    ) -> (Result_1);
   notify_specific_individual_canister_to_upgrade_creator_dao_governance_canisters : (
-    principal,
-    blob,
-  ) -> (Result_1);
+      principal,
+      blob,
+    ) -> (Result_1);
   platform_orchestrator_generic_function : (
-    PlatformOrchestratorGenericArgumentType
-  ) -> (PlatformOrchestratorGenericResultType);
+      PlatformOrchestratorGenericArgumentType,
+    ) -> (PlatformOrchestratorGenericResultType);
   populate_known_principal_for_all_subnet : () -> ();
   provision_empty_canisters_in_a_subnet : (principal, nat64) -> (Result_1);
   provision_subnet_orchestrator_canister : (principal) -> (Result_2);
   receive_creator_dao_stats_from_subnet_orchestrator : (
-    principal,
-    vec principal,
-  ) -> (Result_1);
+      principal,
+      vec principal,
+    ) -> (Result_1);
   recharge_subnet_orchestrator : () -> (Result_1);
   register_new_subnet_orchestrator : (principal, bool) -> (Result_1);
   reinstall_yral_post_cache_canister : () -> ();
   remove_principal_from_global_admins : (principal) -> ();
   remove_subnet_orchestrators_from_available_list : (principal) -> (Result);
   report_subnet_upgrade_status : (UpgradeStatus) -> (Result_1);
+  reset_canisters_ml_feed_cache : () -> (Result);
   set_reserved_cycle_limit_for_subnet_orchestrator : (principal, nat) -> (
-    Result_1
-  );
+      Result_1,
+    );
   start_reclaiming_cycles_from_individual_canisters : () -> (Result);
   start_reclaiming_cycles_from_subnet_orchestrator_canister : () -> (text);
   start_subnet_orchestrator_canister : (principal) -> (Result_1);
@@ -137,17 +138,17 @@ service : (PlatformOrchestratorInitArgs) -> {
   update_profile_owner_for_individual_canisters : () -> ();
   update_restart_timers_hon_game : () -> (Result);
   update_subnet_known_principal : (
-    principal,
-    KnownPrincipalType,
-    principal,
-  ) -> (Result);
+      principal,
+      KnownPrincipalType,
+      principal,
+    ) -> (Result);
   upgrade_canisters_in_network : (UpgradeCanisterArg) -> (Result);
   upgrade_individual_canisters_in_a_subnet_with_latest_wasm : (principal) -> (
-    Result_1
-  );
+      Result_1,
+    );
   upgrade_specific_individual_canister : (principal) -> ();
   upload_wasms : (WasmType, blob) -> (Result);
   validate_platform_orchestrator_generic_function : (
-    PlatformOrchestratorGenericArgumentType
-  ) -> (Result);
-};
+      PlatformOrchestratorGenericArgumentType,
+    ) -> (Result);
+}

@@ -129,11 +129,11 @@ service : (UserIndexInitArgs) -> {
   are_signups_enabled : () -> (bool) query;
   collect_creator_dao_stats_in_the_network : () -> (Result_1);
   create_pool_of_individual_user_available_canisters : (text, blob) -> (
-    Result_2
-  );
+      Result_2,
+    );
   get_current_list_of_all_well_known_principal_values : () -> (
-    vec record { KnownPrincipalType; principal }
-  ) query;
+      vec record { KnownPrincipalType; principal },
+    ) query;
   get_index_details_is_user_name_taken : (text) -> (bool) query;
   get_index_details_last_upgrade_status : () -> (UpgradeStatus) query;
   get_last_broadcast_call_status : () -> (BroadcastCallStatus) query;
@@ -141,43 +141,44 @@ service : (UserIndexInitArgs) -> {
   get_recycle_status : () -> (RecycleStatus) query;
   get_requester_principals_canister_id_create_if_not_exists : () -> (Result);
   get_requester_principals_canister_id_create_if_not_exists_and_optionally_allow_referrer : () -> (
-    principal
-  );
+      principal,
+    );
   get_subnet_available_capacity : () -> (nat64) query;
   get_subnet_backup_capacity : () -> (nat64) query;
   get_user_canister_id_from_unique_user_name : (text) -> (opt principal) query;
   get_user_canister_id_from_user_principal_id : (principal) -> (
-    opt principal
-  ) query;
+      opt principal,
+    ) query;
   get_user_canister_incl_avail_list : () -> (vec principal) query;
   get_user_canister_list : () -> (vec principal) query;
   get_user_canister_status : (principal) -> (Result_3);
   get_user_id_and_canister_list : () -> (
-    vec record { principal; principal }
-  ) query;
+      vec record { principal; principal },
+    ) query;
   get_user_index_canister_count : () -> (nat64) query;
   get_user_index_canister_cycle_balance : () -> (nat) query;
   get_well_known_principal_value : (KnownPrincipalType) -> (
-    opt principal
-  ) query;
+      opt principal,
+    ) query;
   http_request : (HttpRequest) -> (HttpResponse) query;
   issue_rewards_for_referral : (principal, principal, principal) -> (Result_2);
   make_individual_canister_logs_private : (principal) -> (Result_4);
   make_individual_canister_logs_public : (principal) -> (Result_4);
   notify_all_individual_canisters_to_upgrade_creator_dao_governance_canisters : (
-    blob
-  ) -> (Result_4);
+      blob,
+    ) -> (Result_4);
   notify_specific_individual_canister_to_upgrade_creator_dao_governance_canisters : (
-    principal,
-    blob,
-  ) -> (Result_4);
+      principal,
+      blob,
+    ) -> (Result_4);
   provision_empty_canisters : (nat64) -> ();
   receive_creator_dao_stats_from_individual_canister : (vec principal) -> (
-    Result_4
-  );
+      Result_4,
+    );
   recharge_individual_user_canister : () -> (Result_4);
   reclaim_cycles_from_individual_canisters : () -> ();
   request_cycles : (nat) -> (Result_4);
+  reset_user_canisters_ml_feed_cache : () -> (text);
   reset_user_individual_canisters : (vec principal) -> (Result_2);
   return_cycles_to_platform_orchestrator_canister : () -> (Result_2);
   set_permission_to_upgrade_individual_canisters : (bool) -> (text);
@@ -185,18 +186,18 @@ service : (UserIndexInitArgs) -> {
   toggle_signups_enabled : () -> (Result_4);
   update_canisters_last_functionality_access_time : () -> (text);
   update_index_with_unique_user_name_corresponding_to_user_principal_id : (
-    text,
-    principal,
-  ) -> (Result_5);
+      text,
+      principal,
+    ) -> (Result_5);
   update_profile_owner_for_individual_canisters : () -> ();
   update_restart_timers_hon_game : () -> (text);
   update_well_known_principal : (KnownPrincipalType, principal) -> ();
   upgrade_specific_individual_user_canister_with_latest_wasm : (
-    principal,
-    opt principal,
-    opt CanisterInstallMode,
-  ) -> (Result_4);
+      principal,
+      opt principal,
+      opt CanisterInstallMode,
+    ) -> (Result_4);
   validate_reset_user_individual_canisters : (vec principal) -> (
-    Result_2
-  ) query;
-};
+      Result_2,
+    ) query;
+}
