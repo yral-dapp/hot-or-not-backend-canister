@@ -27,6 +27,7 @@ memory-db = { version = "0.32.0", default-features = false }
 trie-root = { version = "0.18.0", default-features = false }
 # monotree = { git = "https://github.com/rupansh-sekar-yral/monotree.git", rev = "1504007dae91a909fbb29bfebb36181ef3333cb8" }
 # hashbrown = { version = "0.7", features = ["serde"] }
+generic-array = { version = "1.1.1", features = ["serde"] }
 
 [dev-dependencies]
 test_utils = { workspace = true }

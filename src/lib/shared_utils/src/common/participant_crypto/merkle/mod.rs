@@ -1,6 +1,7 @@
 
 use backing::ChildrenBacking;
-use candid::Principal;
+use candid::{CandidType, Principal};
+use generic_array::{typenum::U32, GenericArray};
 use hash256_std_hasher::Hash256StdHasher;
 use hash_db::Hasher;
 use serde::{Deserialize, Serialize};
@@ -11,7 +12,35 @@ use super::ProofOfChildren;
 mod layout;
 mod backing;
 
-pub(super) type Hash = [u8; 32];
+// We use GenericArray instead of [u8; 32] because serde::Serialize generates an implementation
+// that is too complex for IC to run...
+#[derive(Serialize, Deserialize, Clone, Copy, Default, Debug, PartialOrd, Ord, PartialEq, Eq, Hash)]
+pub struct Hash(GenericArray<u8, U32>);
+
+impl AsRef<[u8]> for Hash {
+    fn as_ref(&self) -> &[u8] {
+        &self.0
+    }
+}
+
+impl AsMut<[u8]> for Hash {
+    fn as_mut(&mut self) -> &mut [u8] {
+        &mut self.0
+    }
+}
+
+impl CandidType for Hash {
+    fn _ty() -> candid::types::Type {
+        <[u8; 32]>::_ty()
+    }
+
+    fn idl_serialize<S>(&self, serializer: S) -> Result<(), S::Error>
+        where
+            S: candid::types::Serializer {
+        self.0.idl_serialize(serializer)
+    }
+}
+
 pub(super) type ProofOfInclusion = Vec<Vec<u8>>;
 
 #[derive(Default, Debug, Clone, PartialEq)]
@@ -28,7 +57,7 @@ impl Hasher for Blake3Hasher {
         let mut hasher = blake3::Hasher::new();
         hasher.update(x);
         let hs: [u8; 32] = hasher.finalize().into();
-        hs
+        Hash(hs.into())
     }
 }
 
@@ -64,7 +93,7 @@ impl ChildrenMerkle {
         let mut trie = self.trie_mut();
         for child in children {
             let key = Blake3Hasher::hash(child.as_slice());
-            trie.insert(&key, b"_").expect("insertion should not fail");
+            trie.insert(key.as_ref(), b"_").expect("insertion should not fail");
         }
         std::mem::drop(trie);
         if self.root != prev_root {
@@ -76,7 +105,7 @@ impl ChildrenMerkle {
     pub fn remove_child(&mut self, child: Principal) {
         let mut trie = self.trie_mut();
         let key = Blake3Hasher::hash(child.as_slice());
-        trie.remove(&key).expect("removal should not fail");
+        trie.remove(key.as_ref()).expect("removal should not fail");
         std::mem::drop(trie);
 
         // mark proof of children as stale

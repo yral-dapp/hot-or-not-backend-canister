@@ -75,11 +75,11 @@ impl PubKeyCache {
 #[derive(Serialize)]
 struct ProofOfAuthorityMsg {
     prefix: &'static [u8],
-    pub merkle_root: [u8; 32],
+    pub merkle_root: merkle::Hash,
 }
 
 impl ProofOfAuthorityMsg {
-    pub fn new(merkle_root: [u8; 32]) -> Self {
+    pub fn new(merkle_root: merkle::Hash) -> Self {
         Self {
             prefix: b"CHILDREN",
             merkle_root,
@@ -98,12 +98,12 @@ impl ProofOfAuthorityMsg {
 /// Proof that a given merkle tree contains children of the parent canister 
 #[derive(Clone, CandidType, Serialize, Deserialize)]
 struct ProofOfChildren {
-    merkle_root: [u8; 32],
+    merkle_root: merkle::Hash,
     signature: Vec<u8>,
 }
 
 impl ProofOfChildren {
-    async fn new(merkle_root: [u8; 32]) -> Result<Self, String> {
+    async fn new(merkle_root: merkle::Hash) -> Result<Self, String> {
         let message = ProofOfAuthorityMsg::new(merkle_root);
         let sign_args = ManagementCanisterSignatureRequest {
             message: message.serialize_cbor(),
