@@ -13,9 +13,9 @@ pub struct CreatorDaoTokenStats {
 }
 
 #[derive(CandidType, Serialize, Deserialize, Debug, Clone)]
-struct IndividualUserCreatorDaoEntry {
-    individual_profile_id: IndividualProfileId,
-    deployed_canisters: HashSet<RootCanisterId>,
+pub struct IndividualUserCreatorDaoEntry {
+    pub individual_profile_id: IndividualProfileId,
+    pub deployed_canisters: HashSet<RootCanisterId>,
 }
 
 impl CreatorDaoTokenStats {
