@@ -339,7 +339,7 @@ fn reset_ml_feed_cache_test() {
         })
         .unwrap();
 
-    for i in 0..10 {
+    for i in 0..50 {
         pocket_ic.tick();
     }
 
