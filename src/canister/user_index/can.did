@@ -163,9 +163,8 @@ service : (UserIndexInitArgs) -> {
       opt principal,
     ) query;
   http_request : (HttpRequest) -> (HttpResponse) query;
-  issue_rewards_for_referral : (principal, principal, principal) -> (Result_1);
-  load_snapshot : () -> ();
   issue_rewards_for_referral : (principal, principal, principal) -> (Result_2);
+  load_snapshot : () -> ();
   make_individual_canister_logs_private : (principal) -> (Result_4);
   make_individual_canister_logs_public : (principal) -> (Result_4);
   notify_all_individual_canisters_to_upgrade_creator_dao_governance_canisters : (
@@ -182,11 +181,10 @@ service : (UserIndexInitArgs) -> {
     );
   recharge_individual_user_canister : () -> (Result_4);
   reclaim_cycles_from_individual_canisters : () -> ();
-
-  save_snapshot_json : () -> (nat32);
   request_cycles : (nat) -> (Result_4);
   reset_user_individual_canisters : (vec principal) -> (Result_2);
   return_cycles_to_platform_orchestrator_canister : () -> (Result_2);
+  save_snapshot_json : () -> (nat32);
   set_permission_to_upgrade_individual_canisters : (bool) -> (text);
   start_upgrades_for_individual_canisters : (text, blob) -> (text);
   toggle_signups_enabled : () -> (Result_4);

@@ -61,8 +61,6 @@ type TopPostsFetchError = variant {
   ExceededMaxNumberOfItemsAllowedInOneRequest;
 };
 service : (PostCacheInitArgs) -> {
-  clear_snapshot : () -> ();
-  download_snapshot : (nat64, nat64) -> (blob) query;
   get_cycle_balance : () -> (nat) query;
   get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed_cursor : (
       nat64,
@@ -89,8 +87,6 @@ service : (PostCacheInitArgs) -> {
       opt principal,
     ) query;
   http_request : (HttpRequest) -> (HttpResponse) query;
-  load_snapshot : () -> ();
-  receive_and_save_snaphot : (nat64, blob) -> ();
   receive_top_home_feed_posts_from_publishing_canister : (
       vec PostScoreIndexItemV1,
     ) -> ();
@@ -101,7 +97,6 @@ service : (PostCacheInitArgs) -> {
       vec PostScoreIndexItemV1,
     ) -> ();
   remove_all_feed_entries : () -> ();
-  save_snapshot_json : () -> (nat32);
   update_post_home_feed : (PostScoreIndexItemV1) -> ();
   update_post_hot_or_not_feed : (PostScoreIndexItemV1) -> ();
   update_post_yral_feed : (PostScoreIndexItemV1) -> ();
