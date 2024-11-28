@@ -260,7 +260,7 @@ fn reset_ml_feed_cache_test() {
     let res = pocket_ic
         .update_call(
             alice_individual_template_canister_id,
-            super_admin,
+            user_index_canister_id,
             "update_ml_feed_cache",
             candid::encode_one(items.clone()).unwrap(),
         )
@@ -296,7 +296,7 @@ fn reset_ml_feed_cache_test() {
     let res = pocket_ic
         .update_call(
             bob_individual_template_canister_id,
-            super_admin,
+            user_index_canister_id,
             "update_ml_feed_cache",
             candid::encode_one(items).unwrap(),
         )
