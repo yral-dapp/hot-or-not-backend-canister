@@ -265,8 +265,6 @@ fn reset_ml_feed_cache_test() {
             candid::encode_one(items.clone()).unwrap(),
         )
         .map(|res| {
-            println!("update_ml_feed_cache res: {:?}", res);
-
             let canister_id_result: Result<String, String> = match res {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
                 _ => panic!("Canister call failed"),
