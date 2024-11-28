@@ -230,6 +230,10 @@ fn reset_ml_feed_cache_test() {
     pocket_ic.add_cycles(bob_individual_template_canister_id, 2_000_000_000_000);
     pocket_ic.add_cycles(dan_individual_template_canister_id, 2_000_000_000_000);
 
+    for i in 0..50 {
+        pocket_ic.tick();
+    }
+
     // add items into ml cache
 
     let items = vec![
