@@ -34,7 +34,7 @@ pub fn delete_sns_creator_token(deployed_canisters: &DeployedCdaoCanisters) {
     ic_cdk::spawn(async move {
         let _ = request_cycles_from_subnet_orchestrator(5 * UNINSTALL_RECHARGE_AMOUNT).await;
         for canister_id in canister_ids.iter() {
-            deposit_cycles(
+            let _ = deposit_cycles(
                 CanisterIdRecord {
                     canister_id: *canister_id,
                 },

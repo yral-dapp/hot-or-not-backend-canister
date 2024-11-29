@@ -131,7 +131,7 @@ service : (UserIndexInitArgs) -> {
   create_pool_of_individual_user_available_canisters : (text, blob) -> (
       Result_2,
     );
-  delete_all_sns_creator_token_of_an_individual_user : (principal) -> (
+  delete_all_sns_creator_token_of_an_individual_canister : (principal) -> (
       Result_3,
     );
   get_current_list_of_all_well_known_principal_values : () -> (
@@ -176,6 +176,9 @@ service : (UserIndexInitArgs) -> {
     ) -> (Result_3);
   provision_empty_canisters : (nat64) -> ();
   receive_creator_dao_stats_from_individual_canister : (vec principal) -> (
+      Result_3,
+    );
+  receive_empty_canister_from_individual_canister : (vec principal) -> (
       Result_3,
     );
   recharge_individual_user_canister : () -> (Result_3);
