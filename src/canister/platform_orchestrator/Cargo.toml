@@ -15,7 +15,7 @@ ic-cdk = { workspace = true }
 serde = { workspace = true }
 ic-cdk-macros = { workspace = true }
 ic-stable-structures = { workspace = true }
-ciborium = { workspace = true }
+minicbor-serde = { workspace = true }
 shared_utils = { workspace = true }
 
 [dev-dependencies]

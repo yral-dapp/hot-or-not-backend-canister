@@ -1,14 +1,12 @@
 use ic_cdk_macros::pre_upgrade;
 use ic_stable_structures::writer::Writer;
-use ciborium::ser;
 use crate::{data_model::memory, CANISTER_DATA};
 
 
 #[pre_upgrade]
 fn pre_upgrade() {
-    let mut state_bytes = vec![];
-    CANISTER_DATA.with_borrow(|canister_data| 
-        ser::into_writer(&*canister_data, &mut state_bytes)
+    let state_bytes = CANISTER_DATA.with_borrow(|canister_data| 
+        minicbor_serde::to_vec(canister_data)
     )
     .expect("failed to encode state");
     let len = state_bytes.len() as u32;

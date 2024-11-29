@@ -1,5 +1,3 @@
-use ciborium::de;
-
 use ic_cdk::api::call::ArgDecoderConfig;
 use ic_cdk_macros::post_upgrade;
 use ic_stable_structures::Memory;
@@ -44,7 +42,7 @@ fn restore_data_from_stable_memory() {
     let mut canister_data_bytes = vec![0; heap_data_len];
     heap_data.read(4, &mut canister_data_bytes);
     let canister_data =
-        de::from_reader(&*canister_data_bytes).expect("Failed to deserialize heap data");
+        minicbor_serde::from_slice(&canister_data_bytes).expect("Failed to deserialize heap data");
     CANISTER_DATA.with_borrow_mut(|cd| {
         *cd = canister_data;
     })

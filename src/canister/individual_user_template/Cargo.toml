@@ -10,7 +10,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 candid = { workspace = true }
-ciborium = { workspace = true }
+minicbor-serde = { workspace = true }
 ic-stable-structures = { workspace = true }
 ic-cdk = { workspace = true }
 ic-cdk-timers = { workspace = true }

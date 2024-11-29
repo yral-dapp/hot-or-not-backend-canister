@@ -3749,7 +3749,6 @@ name = "individual_user_template"
 version = "0.1.0"
 dependencies = [
  "candid",
- "ciborium",
  "futures",
  "hex",
  "ic-base-types",
@@ -3767,6 +3766,7 @@ dependencies = [
  "ic-sns-wasm",
  "ic-stable-structures",
  "icrc-ledger-types 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "minicbor-serde",
  "serde",
  "serde_bytes",
  "serde_json",
@@ -4073,6 +4073,36 @@ checksum = "f7c44f8e672c00fe5308fa235f821cb4198414e1c77935c1ab6948d3fd78550e"
 dependencies = [
  "mime",
  "unicase",
+]
+
+[[package]]
+name = "minicbor"
+version = "0.25.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c0452a60c1863c1f50b5f77cd295e8d2786849f35883f0b9e18e7e6e1b5691b0"
+dependencies = [
+ "minicbor-derive",
+]
+
+[[package]]
+name = "minicbor-derive"
+version = "0.15.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bd2209fff77f705b00c737016a48e73733d7fbccb8b007194db148f03561fb70"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.89",
+]
+
+[[package]]
+name = "minicbor-serde"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "becf18ac384ecf6f53b2db3b1549eebff664c67ecf259ae99be5912193291686"
+dependencies = [
+ "minicbor",
+ "serde",
 ]
 
 [[package]]
@@ -4491,10 +4521,10 @@ name = "platform_orchestrator"
 version = "0.1.0"
 dependencies = [
  "candid",
- "ciborium",
  "ic-cdk 0.15.1",
  "ic-cdk-macros 0.16.0",
  "ic-stable-structures",
+ "minicbor-serde",
  "serde",
  "shared_utils",
  "test_utils",
@@ -5570,7 +5600,6 @@ version = "0.1.0"
 dependencies = [
  "blake3",
  "candid",
- "ciborium",
  "ed25519-compact",
  "futures",
  "generic-array 1.1.1",
@@ -5581,6 +5610,7 @@ dependencies = [
  "ic-stable-structures",
  "icrc-ledger-types 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "memory-db",
+ "minicbor-serde",
  "parity-scale-codec",
  "pprof",
  "rmp-serde",
@@ -6287,12 +6317,12 @@ name = "user_index"
 version = "0.1.0"
 dependencies = [
  "candid",
- "ciborium",
  "futures",
  "ic-cdk 0.15.1",
  "ic-cdk-macros 0.16.0",
  "ic-cdk-timers",
  "ic-stable-structures",
+ "minicbor-serde",
  "serde",
  "serde_json",
  "shared_utils",

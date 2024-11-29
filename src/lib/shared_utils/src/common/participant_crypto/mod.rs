@@ -87,11 +87,8 @@ impl ProofOfAuthorityMsg {
     }
 
     pub fn serialize_cbor(&self) -> Vec<u8> {
-        let mut bytes = vec![];
-        ciborium::into_writer(self, &mut bytes)
-            .expect("PoaMessage should serialize succesfully");
-
-        bytes
+        minicbor_serde::to_vec(self)
+            .expect("PoaMessage should serialize succesfully")
     }
 }
 

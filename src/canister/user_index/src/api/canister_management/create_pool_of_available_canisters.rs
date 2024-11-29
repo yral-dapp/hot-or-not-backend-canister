@@ -47,7 +47,7 @@ pub async fn impl_create_pool_of_individual_user_available_canisters(version: St
         let version = version.clone();
         let individual_user_wasm = individual_user_wasm.clone();
         async move {
-            recharge_canister_for_installing_wasm(canister_id).await.map_err(|e| (canister_id, e))?;
+            recharge_canister_for_installing_wasm(canister_id).await.map_err(|e| (canister_id, format!("recharge error {e}")))?;
             install_canister_wasm(
                 canister_id,
                 None,
@@ -65,7 +65,7 @@ pub async fn impl_create_pool_of_individual_user_available_canisters(version: St
                 })
             }
             Err((canister_id, e)) => {
-                ic_cdk::println!("Failed to install wasm on canister: {:?}, error: {:?}", canister_id, e);
+                ic_cdk::println!("Failed to install wasm on canister: {}, error: {:?}", canister_id, e);
                 CANISTER_DATA.with_borrow_mut(|cdata| {
                     cdata.insert_backup_canister(canister_id);
                 })
