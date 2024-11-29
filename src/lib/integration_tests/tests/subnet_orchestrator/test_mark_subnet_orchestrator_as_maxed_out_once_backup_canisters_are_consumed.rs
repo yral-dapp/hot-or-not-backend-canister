@@ -8,7 +8,7 @@ use shared_utils::{
     },
 };
 use test_utils::setup::{
-    env::pocket_ic_env::get_new_pocket_ic_env, test_constants::get_mock_user_charlie_principal_id,
+    env::pocket_ic_env::{get_new_pocket_ic_env, provision_subnet_orchestrator_canister}, test_constants::get_mock_user_charlie_principal_id,
 };
 
 #[test]
@@ -24,8 +24,6 @@ fn test_mark_subnet_orchestrator_as_maxed_out_once_backup_canisters_are_consumed
         .cloned()
         .unwrap();
 
-    let application_subnets = pocket_ic.topology().get_app_subnets();
-
     let charlie_global_admin = get_mock_user_charlie_principal_id();
 
     pocket_ic
@@ -37,25 +35,12 @@ fn test_mark_subnet_orchestrator_as_maxed_out_once_backup_canisters_are_consumed
         )
         .unwrap();
 
-    let subnet_orchestrator_canister_id: Principal = pocket_ic
-        .update_call(
-            platform_canister_id,
-            charlie_global_admin,
-            "provision_subnet_orchestrator_canister",
-            candid::encode_one(application_subnets[1]).unwrap(),
-        )
-        .map(|res| {
-            let canister_id_result: Result<Principal, String> = match res {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("Canister call failed"),
-            };
-            canister_id_result.unwrap()
-        })
-        .unwrap();
-
-    for i in 0..130 {
-        pocket_ic.tick();
-    }
+    let subnet_orchestrator_canister_id = provision_subnet_orchestrator_canister(
+        &pocket_ic,
+        &known_principal,
+        1,
+        Some(charlie_global_admin),
+    );
 
     let subnet_available_canister_cnt = pocket_ic
         .query_call(

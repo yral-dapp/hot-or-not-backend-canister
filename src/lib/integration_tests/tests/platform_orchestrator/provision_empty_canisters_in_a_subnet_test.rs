@@ -5,7 +5,7 @@ use shared_utils::{
     constant::TEST_BACKUP_INDIVIDUAL_USER_CANISTER_BATCH_SIZE,
 };
 use test_utils::setup::{
-    env::pocket_ic_env::get_new_pocket_ic_env, test_constants::get_mock_user_charlie_principal_id,
+    env::pocket_ic_env::{get_new_pocket_ic_env, provision_subnet_orchestrator_canister}, test_constants::get_mock_user_charlie_principal_id,
 };
 
 #[test]
@@ -34,25 +34,12 @@ fn provision_empty_canisters_in_a_subnet_test() {
         )
         .unwrap();
 
-    let subnet_orchestrator_canister_id: Principal = pocket_ic
-        .update_call(
-            platform_canister_id,
-            charlie_global_admin,
-            "provision_subnet_orchestrator_canister",
-            candid::encode_one(application_subnets[0]).unwrap(),
-        )
-        .map(|res| {
-            let canister_id_result: Result<Principal, String> = match res {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("Canister call failed"),
-            };
-            canister_id_result.unwrap()
-        })
-        .unwrap();
-
-    for i in 0..130 {
-        pocket_ic.tick();
-    }
+    let subnet_orchestrator_canister_id = provision_subnet_orchestrator_canister(
+        &pocket_ic,
+        &known_principal,
+        0,
+        Some(charlie_global_admin),
+    );
 
     let empty_canisters_cnt = pocket_ic
         .query_call(

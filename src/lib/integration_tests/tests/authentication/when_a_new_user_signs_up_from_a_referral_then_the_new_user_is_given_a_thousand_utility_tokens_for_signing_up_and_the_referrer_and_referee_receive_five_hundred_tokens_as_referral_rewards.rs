@@ -13,7 +13,7 @@ use shared_utils::{
     types::canister_specific::individual_user_template::error_types::GetUserUtilityTokenTransactionHistoryError,
 };
 use test_utils::setup::{
-    env::{pocket_ic_env::{execute_query, execute_query_multi, execute_update, execute_update_no_res, get_new_pocket_ic_env}, v1::{get_initialized_env_with_provisioned_known_canisters, get_new_state_machine}},
+    env::{pocket_ic_env::{execute_query, execute_query_multi, execute_update, execute_update_no_res, get_new_pocket_ic_env, provision_subnet_orchestrator_canister}, v1::{get_initialized_env_with_provisioned_known_canisters, get_new_state_machine}},
     test_constants::{get_mock_user_alice_principal_id, get_mock_user_bob_principal_id},
 };
 
@@ -470,21 +470,12 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
 #[test]
 fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousand_utility_tokens_for_signing_up_and_the_referrer_and_referee_receive_five_hundred_tokens_as_referral_rewards_v2() {
     let (pic, known_principals) = get_new_pocket_ic_env();
-    let global_admin_principal = known_principals[&KnownPrincipalType::UserIdGlobalSuperAdmin];
-
-    let platform_orc = known_principals[&KnownPrincipalType::CanisterIdPlatformOrchestrator];
-    let app_subnets = pic.topology().get_app_subnets();
-    let user_index_res: Result<Principal, String> = execute_update(
+    let user_index = provision_subnet_orchestrator_canister(
         &pic,
-        global_admin_principal,
-        platform_orc,
-        "provision_subnet_orchestrator_canister",
-        &app_subnets[0]
+        &known_principals,
+        0,
+        None
     );
-    let user_index = user_index_res.unwrap();
-    for _ in 0..30 {
-        pic.tick();
-    }
 
     let alice_principal = get_mock_user_alice_principal_id();
     let alice_canister: Principal = execute_update(

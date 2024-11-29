@@ -5,14 +5,13 @@ use shared_utils::{
     common::types::known_principal::KnownPrincipalType,
 };
 use test_utils::setup::{
-    env::pocket_ic_env::get_new_pocket_ic_env, test_constants::get_mock_user_charlie_principal_id,
+    env::pocket_ic_env::{get_new_pocket_ic_env, provision_subnet_orchestrator_canister, provision_subnet_orchestrator_canister_no_wait}, test_constants::get_mock_user_charlie_principal_id,
 };
 
 #[test]
 fn register_subnet_orchestrator_with_platform_orchestrator_test() {
     let (pocket_ic, known_principal) = get_new_pocket_ic_env();
 
-    let application_subnets = pocket_ic.topology().get_app_subnets();
     let platform_canister_id = known_principal
         .get(&KnownPrincipalType::CanisterIdPlatformOrchestrator)
         .cloned()
@@ -34,25 +33,12 @@ fn register_subnet_orchestrator_with_platform_orchestrator_test() {
         )
         .unwrap();
 
-    let subnet_orchestrator_canister_id: Principal = pocket_ic
-        .update_call(
-            platform_canister_id,
-            charlie_global_admin,
-            "provision_subnet_orchestrator_canister",
-            candid::encode_one(application_subnets[1]).unwrap(),
-        )
-        .map(|res| {
-            let canister_id_result: Result<Principal, String> = match res {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("Canister call failed"),
-            };
-            canister_id_result.unwrap()
-        })
-        .unwrap();
-
-    for i in 0..110 {
-        pocket_ic.tick();
-    }
+    let subnet_orchestrator_canister_id = provision_subnet_orchestrator_canister(
+        &pocket_ic,
+        &known_principal,
+        1,
+        Some(charlie_global_admin),
+    );
 
     let new_subnet_orchestrator_canister = pocket_ic.create_canister();
     pocket_ic.add_cycles(new_subnet_orchestrator_canister, 1_000_000_000_000_000);
@@ -222,7 +208,6 @@ fn register_subnet_orchestrator_with_platform_orchestrator_test() {
 fn deregister_subnet_orchestrator_from_platform_orchestrator() {
     let (pocket_ic, known_principal) = get_new_pocket_ic_env();
 
-    let application_subnets = pocket_ic.topology().get_app_subnets();
     let platform_canister_id = known_principal
         .get(&KnownPrincipalType::CanisterIdPlatformOrchestrator)
         .cloned()
@@ -244,21 +229,12 @@ fn deregister_subnet_orchestrator_from_platform_orchestrator() {
         )
         .unwrap();
 
-    let subnet_orchestrator_canister_id: Principal = pocket_ic
-        .update_call(
-            platform_canister_id,
-            charlie_global_admin,
-            "provision_subnet_orchestrator_canister",
-            candid::encode_one(application_subnets[1]).unwrap(),
-        )
-        .map(|res| {
-            let canister_id_result: Result<Principal, String> = match res {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("Canister call failed"),
-            };
-            canister_id_result.unwrap()
-        })
-        .unwrap();
+    let subnet_orchestrator_canister_id = provision_subnet_orchestrator_canister_no_wait(
+        &pocket_ic,
+        &known_principal,
+        1,
+        Some(charlie_global_admin),
+    );
 
     let deregister_new_subnet_orchestrator_res = pocket_ic
         .update_call(

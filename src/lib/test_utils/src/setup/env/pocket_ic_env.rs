@@ -194,6 +194,59 @@ pub fn get_new_pocket_ic_env() -> (PocketIc, KnownPrincipalMap) {
     (pocket_ic, known_principal)
 }
 
+/// Provision a subnet canister
+/// `app_subnet_idx` is the index of the application subnet to use. Set to 0 if you're unsure
+/// optionally provide a `caller` for the call, else it uses the global super admin
+pub fn provision_subnet_orchestrator_canister(pic: &PocketIc, known_principals: &KnownPrincipalMap, app_subnet_idx: usize, caller: Option<Principal>) -> Principal {
+    let user_index = provision_subnet_orchestrator_canister_no_wait(pic, known_principals, app_subnet_idx, caller);
+    for _ in 0..1000 {
+        pic.tick();
+    }
+
+    user_index
+}
+
+/// use [`provision_subnet_orchestrator_canister`] if you don't know what you're doing
+pub fn provision_subnet_orchestrator_canister_no_wait(pic: &PocketIc, known_principals: &KnownPrincipalMap, app_subnet_idx: usize, caller: Option<Principal>) -> Principal {
+    let caller = caller.unwrap_or_else(|| known_principals[&KnownPrincipalType::UserIdGlobalSuperAdmin]);
+    let platform_orc = known_principals[&KnownPrincipalType::CanisterIdPlatformOrchestrator];
+    let app_subnets = pic.topology().get_app_subnets();
+    let user_index_res: Result<Principal, String> = execute_update(
+        pic,
+        caller,
+        platform_orc,
+        "provision_subnet_orchestrator_canister",
+        &app_subnets[app_subnet_idx]
+    );
+    let user_index = user_index_res.unwrap();
+    user_index
+}
+
+pub fn provision_n_subnet_orchestrator_canisters(pic: &PocketIc, known_principals: &KnownPrincipalMap, n: usize, caller: Option<Principal>) -> Vec<Principal> {
+    let mut out = vec![];
+
+    let caller = caller.unwrap_or_else(|| known_principals[&KnownPrincipalType::CanisterIdPlatformOrchestrator]);
+    let platform_orc = known_principals[&KnownPrincipalType::CanisterIdPlatformOrchestrator];
+    let app_subnets = pic.topology().get_app_subnets();
+
+    for subnet in app_subnets.into_iter().take(n) {
+        let user_index_res: Result<Principal, String> = execute_update(
+            pic,
+            caller,
+            platform_orc,
+            "provision_subnet_orchestrator_canister",
+            &subnet
+        );
+        out.push(user_index_res.unwrap());
+    }
+
+    for _ in 0..(1000 + 10 * n) {
+        pic.tick()
+    }
+
+    out
+}
+
 pub fn execute_query<P: CandidType, R: CandidType + for<'x> Deserialize<'x>>(
     pic: &PocketIc,
     sender: Principal,

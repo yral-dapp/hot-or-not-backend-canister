@@ -19,7 +19,7 @@ use shared_utils::{
     common::types::known_principal::{self, KnownPrincipalType},
 };
 use test_utils::setup::{
-    env::pocket_ic_env::get_new_pocket_ic_env,
+    env::pocket_ic_env::{get_new_pocket_ic_env, provision_subnet_orchestrator_canister},
     test_constants::{
         get_mock_user_alice_principal_id, get_mock_user_bob_principal_id,
         get_mock_user_charlie_principal_id, get_mock_user_dan_principal_id,
@@ -963,37 +963,12 @@ fn hotornot_game_simulation_test() {
 fn hotornot_game_simulation_test_2() {
     let (pic, known_principals) = get_new_pocket_ic_env();
 
-    let platform_canister_id = known_principals
-        .get(&KnownPrincipalType::CanisterIdPlatformOrchestrator)
-        .cloned()
-        .unwrap();
-
-    let global_admin = known_principals
-        .get(&KnownPrincipalType::UserIdGlobalSuperAdmin)
-        .cloned()
-        .unwrap();
-
-    let application_subnets = pic.topology().get_app_subnets();
-
-    let subnet_orchestrator_canister_id = pic
-        .update_call(
-            platform_canister_id,
-            global_admin,
-            "provision_subnet_orchestrator_canister",
-            candid::encode_one(application_subnets[0]).unwrap(),
-        )
-        .map(|res| {
-            let canister_id_result: Result<Principal, String> = match res {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("Canister call failed"),
-            };
-            canister_id_result.unwrap()
-        })
-        .unwrap();
-
-    for _ in 0..50 {
-        pic.tick()
-    }
+    let subnet_orchestrator_canister_id = provision_subnet_orchestrator_canister(
+        &pic,
+        &known_principals,
+        0,
+        None,
+    ); 
 
     // Init N canisters
     let mut individual_template_canister_ids = vec![];

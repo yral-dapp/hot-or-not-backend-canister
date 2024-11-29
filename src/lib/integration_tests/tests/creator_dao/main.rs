@@ -25,6 +25,7 @@ use shared_utils::constant::{
     SNS_TOKEN_LEDGER_MODULE_HASH, SNS_TOKEN_ROOT_MODULE_HASH, SNS_TOKEN_SWAP_MODULE_HASH,
 };
 use shared_utils::types::creator_dao_stats::CreatorDaoTokenStats;
+use test_utils::setup::env::pocket_ic_env::provision_subnet_orchestrator_canister;
 use std::time::{Duration, UNIX_EPOCH};
 use std::{collections::HashMap, fmt::Debug, str::FromStr, time::SystemTime, vec};
 use test_utils::setup::test_constants::get_mock_user_bob_principal_id;
@@ -118,15 +119,13 @@ fn add_wasm(wasm_file: &[u8], canister_type: u32) -> AddWasmPayload {
 
 #[test]
 fn creator_dao_tests() {
-    let (pocket_ic, known_principal) = get_new_pocket_ic_env();
+    let (pocket_ic, mut known_principal) = get_new_pocket_ic_env();
     let platform_canister_id = known_principal
         .get(&KnownPrincipalType::CanisterIdPlatformOrchestrator)
         .cloned()
         .unwrap();
 
     let super_admin = get_global_super_admin_principal_id();
-
-    let application_subnets = pocket_ic.topology().get_app_subnets();
 
     let charlie_global_admin = get_mock_user_charlie_principal_id();
 
@@ -152,25 +151,12 @@ fn creator_dao_tests() {
         )
         .unwrap();
 
-    let subnet_orchestrator_canister_id: Principal = pocket_ic
-        .update_call(
-            platform_canister_id,
-            charlie_global_admin,
-            "provision_subnet_orchestrator_canister",
-            candid::encode_one(application_subnets[1]).unwrap(),
-        )
-        .map(|res| {
-            let canister_id_result: Result<Principal, String> = match res {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("Canister call failed"),
-            };
-            canister_id_result.unwrap()
-        })
-        .unwrap();
-
-    for i in 0..50 {
-        pocket_ic.tick();
-    }
+    let subnet_orchestrator_canister_id = provision_subnet_orchestrator_canister(
+        &pocket_ic,
+        &known_principal,
+        1,
+        Some(charlie_global_admin),
+    );
 
     let alice_principal = get_mock_user_alice_principal_id();
     let alice_canister_id: Principal = pocket_ic
