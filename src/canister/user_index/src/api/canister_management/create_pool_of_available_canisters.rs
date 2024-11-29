@@ -35,11 +35,16 @@ pub async fn impl_create_pool_of_individual_user_available_canisters(version: St
     //empty canister for backup
     let create_empty_canister_futures = (0..total_cnt)
         .map(|_| create_empty_user_canister());
-    let mut cans_stream = futures::stream::iter(create_empty_canister_futures).buffer_unordered(10);
+    let cans_stream = futures::stream::iter(create_empty_canister_futures).buffer_unordered(10);
 
-    let to_install: Vec<_> = cans_stream.by_ref().take(individual_user_canister_subnet_batch_size as usize).collect().await;
+    // Adding to children merkle is not done concurrently to benefit as much as possible from merkleization
+    let mut empty_canisters: Vec<_> = cans_stream.collect().await;
+    let to_install: Vec<_> = empty_canisters.drain(0..individual_user_canister_subnet_batch_size as usize).collect();
     CANISTER_DATA.with_borrow_mut(|cdata| {
         cdata.children_merkle.insert_children(to_install.clone());
+    });
+    CANISTER_DATA.with_borrow_mut(|cdata| {
+        cdata.insert_backup_canisters(empty_canisters);
     });
 
     //canisters with installed wasm for available pool
@@ -71,11 +76,5 @@ pub async fn impl_create_pool_of_individual_user_available_canisters(version: St
                 })
             }
         }
-    }
-
-    while let Some(canister_id) = cans_stream.next().await {
-        CANISTER_DATA.with_borrow_mut(|cdata| {
-            cdata.insert_backup_canister(canister_id);
-        })
     }
 }

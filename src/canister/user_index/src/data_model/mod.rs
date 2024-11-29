@@ -74,6 +74,11 @@ impl CanisterData {
         inserted
     }
 
+    pub fn insert_backup_canisters(&mut self, canister_ids: impl IntoIterator<Item = Principal> + Clone) {
+        self.backup_canister_pool.extend(canister_ids.clone());
+        self.children_merkle.insert_children(canister_ids);
+    }
+
     pub fn remove_backup_canister(&mut self, canister_id: &Principal) {
         self.backup_canister_pool.remove(&canister_id);
         // removal from backup pool does not mean its not part of our fleet
