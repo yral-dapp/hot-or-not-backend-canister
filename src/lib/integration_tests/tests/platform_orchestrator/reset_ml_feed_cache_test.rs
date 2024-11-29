@@ -58,33 +58,10 @@ fn pf_orch_canister_wasm() -> Vec<u8> {
     std::fs::read(PF_ORCH_WASM_PATH).unwrap()
 }
 
-#[derive(CandidType)]
-struct CyclesMintingCanisterInitPayload {
-    ledger_canister_id: CanisterId,
-    governance_canister_id: CanisterId,
-    minting_account_id: Option<String>,
-    last_purged_notification: Option<BlockIndex>,
-}
-
-#[derive(CandidType)]
-struct AuthorizedSubnetWorks {
-    who: Option<Principal>,
-    subnets: Vec<Principal>,
-}
-
-#[derive(CandidType)]
-struct NnsLedgerCanisterInitPayload {
-    minting_account: String,
-    initial_values: HashMap<String, Tokens>,
-    send_whitelist: HashSet<CanisterId>,
-    transfer_fee: Option<Tokens>,
-}
-
 // TODO: remove this when removing the update_last_access_time API from PF Orch
 
 #[test]
-#[ignore]
-fn update_canisters_last_access_time_test() {
+fn reset_ml_feed_cache_test() {
     let (pocket_ic, known_principal) = get_new_pocket_ic_env();
     let platform_canister_id = known_principal
         .get(&KnownPrincipalType::CanisterIdPlatformOrchestrator)
@@ -129,23 +106,6 @@ fn update_canisters_last_access_time_test() {
         .unwrap();
 
     for i in 0..50 {
-        pocket_ic.tick();
-    }
-
-    // upgrade pf_orch
-
-    let platform_orchestrator_init_args = PlatformOrchestratorInitArgs {
-        version: "v1.0.0".into(),
-    };
-    pocket_ic
-        .upgrade_canister(
-            platform_canister_id,
-            pf_orch_canister_wasm(),
-            candid::encode_one(platform_orchestrator_init_args).unwrap(),
-            Some(super_admin),
-        )
-        .unwrap();
-    for i in 0..20 {
         pocket_ic.tick();
     }
 
@@ -249,145 +209,152 @@ fn update_canisters_last_access_time_test() {
         .unwrap();
     println!("res3: {:?}", dan_individual_template_canister_id);
 
-    pocket_ic.add_cycles(alice_individual_template_canister_id, 2_000_000_000_000);
-    pocket_ic.add_cycles(bob_individual_template_canister_id, 2_000_000_000_000);
-    pocket_ic.add_cycles(dan_individual_template_canister_id, 2_000_000_000_000);
+    // add items into ml cache
 
-    // Call get_last_canister_functionality_access_time for all users
+    let items = vec![
+        MLFeedCacheItem {
+            post_id: 1 as u64,
+            canister_id: Principal::from_text("ryjl3-tyaaa-aaaaa-aaaba-cai").unwrap(),
+            video_id: "1".to_string(),
+            creator_principal_id: None,
+        },
+        MLFeedCacheItem {
+            post_id: 2 as u64,
+            canister_id: Principal::from_text("ryjl3-tyaaa-aaaaa-aaaba-cai").unwrap(),
+            video_id: "2".to_string(),
+            creator_principal_id: None,
+        },
+        MLFeedCacheItem {
+            post_id: 3 as u64,
+            canister_id: Principal::from_text("ryjl3-tyaaa-aaaaa-aaaba-cai").unwrap(),
+            video_id: "3".to_string(),
+            creator_principal_id: None,
+        },
+    ];
+
+    let res = pocket_ic
+        .update_call(
+            alice_individual_template_canister_id,
+            user_index_canister_id,
+            "update_ml_feed_cache",
+            candid::encode_one(items.clone()).unwrap(),
+        )
+        .map(|res| {
+            let canister_id_result: Result<String, String> = match res {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("Canister call failed"),
+            };
+            canister_id_result.unwrap()
+        })
+        .unwrap();
 
     let res1 = pocket_ic
         .query_call(
             alice_individual_template_canister_id,
             alice_principal_id,
-            "get_last_canister_functionality_access_time",
-            encode_one(()).unwrap(),
+            "get_ml_feed_cache_paginated",
+            encode_args((0 as u64, 10 as u64)).unwrap(),
         )
         .map(|reply_payload| {
-            let result: Result<SystemTime, String> = match reply_payload {
+            let result: Vec<MLFeedCacheItem> = match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
                 _ => panic!("\n🛑 get_last_canister_functionality_access_time failed\n"),
             };
             result
         })
         .unwrap();
-    println!("res1: {:?}", res1);
+
+    assert_eq!(res1.len(), 3);
+
+    let res = pocket_ic
+        .update_call(
+            bob_individual_template_canister_id,
+            user_index_canister_id,
+            "update_ml_feed_cache",
+            candid::encode_one(items).unwrap(),
+        )
+        .map(|res| {
+            let canister_id_result: Result<String, String> = match res {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("Canister call failed"),
+            };
+            canister_id_result.unwrap()
+        })
+        .unwrap();
 
     let res2 = pocket_ic
         .query_call(
             bob_individual_template_canister_id,
             bob_principal_id,
-            "get_last_canister_functionality_access_time",
-            encode_one(()).unwrap(),
+            "get_ml_feed_cache_paginated",
+            encode_args((0 as u64, 10 as u64)).unwrap(),
         )
         .map(|reply_payload| {
-            let result: Result<SystemTime, String> = match reply_payload {
+            let result: Vec<MLFeedCacheItem> = match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
                 _ => panic!("\n🛑 get_last_canister_functionality_access_time failed\n"),
             };
             result
         })
         .unwrap();
-    println!("res2: {:?}", res2);
 
-    let res3 = pocket_ic
-        .query_call(
-            dan_individual_template_canister_id,
-            dan_principal_id,
-            "get_last_canister_functionality_access_time",
-            encode_one(()).unwrap(),
-        )
-        .map(|reply_payload| {
-            let result: Result<SystemTime, String> = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_last_canister_functionality_access_time failed\n"),
-            };
-            result
-        })
-        .unwrap();
-    println!("res3: {:?}", res3);
+    assert_eq!(res2.len(), 3);
 
-    // Forward timer
-    pocket_ic.advance_time(Duration::from_secs(60 * 60));
-    for _ in 0..5 {
-        pocket_ic.tick();
-    }
-
-    // Call update_canisters_last_functionality_access_time on pf orch
+    // reset cache
 
     let res = pocket_ic
         .update_call(
             platform_canister_id,
             super_admin,
-            "update_canisters_last_functionality_access_time",
-            encode_one(()).unwrap(),
+            "reset_canisters_ml_feed_cache",
+            candid::encode_one(application_subnets[1]).unwrap(),
         )
-        .map(|reply_payload| {
-            let result: Result<String, String> = match reply_payload {
+        .map(|res| {
+            let canister_id_result: Result<String, String> = match res {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 update_canisters_last_functionality_access_time failed\n"),
+                _ => panic!("Canister call failed"),
             };
-            result
+            canister_id_result.unwrap()
         })
         .unwrap();
-    println!("res: {:?}", res);
 
-    for _ in 0..5 {
+    for i in 0..50 {
         pocket_ic.tick();
     }
 
-    // Call get_last_canister_functionality_access_time for all users
-
-    let res11 = pocket_ic
+    let res1 = pocket_ic
         .query_call(
             alice_individual_template_canister_id,
             alice_principal_id,
-            "get_last_canister_functionality_access_time",
-            encode_one(()).unwrap(),
+            "get_ml_feed_cache_paginated",
+            encode_args((0 as u64, 10 as u64)).unwrap(),
         )
         .map(|reply_payload| {
-            let result: Result<SystemTime, String> = match reply_payload {
+            let result: Vec<MLFeedCacheItem> = match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
                 _ => panic!("\n🛑 get_last_canister_functionality_access_time failed\n"),
             };
             result
         })
         .unwrap();
-    println!("res11: {:?}", res11);
-    assert!(res11 > res1);
 
-    let res22 = pocket_ic
+    assert_eq!(res1.len(), 0);
+
+    let res2 = pocket_ic
         .query_call(
             bob_individual_template_canister_id,
             bob_principal_id,
-            "get_last_canister_functionality_access_time",
-            encode_one(()).unwrap(),
+            "get_ml_feed_cache_paginated",
+            encode_args((0 as u64, 10 as u64)).unwrap(),
         )
         .map(|reply_payload| {
-            let result: Result<SystemTime, String> = match reply_payload {
+            let result: Vec<MLFeedCacheItem> = match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
                 _ => panic!("\n🛑 get_last_canister_functionality_access_time failed\n"),
             };
             result
         })
         .unwrap();
-    println!("res22: {:?}", res22);
-    assert!(res22 > res2);
 
-    let res33 = pocket_ic
-        .query_call(
-            dan_individual_template_canister_id,
-            dan_principal_id,
-            "get_last_canister_functionality_access_time",
-            encode_one(()).unwrap(),
-        )
-        .map(|reply_payload| {
-            let result: Result<SystemTime, String> = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_last_canister_functionality_access_time failed\n"),
-            };
-            result
-        })
-        .unwrap();
-    println!("res33: {:?}", res33);
-    assert!(res33 > res3);
+    assert_eq!(res2.len(), 0);
 }
