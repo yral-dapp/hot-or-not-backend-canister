@@ -14,14 +14,16 @@ use super::{
 
 #[update(guard = "is_caller_controller")]
 pub fn delete_all_creator_token() {
-    CANISTER_DATA.with_borrow_mut(|canister_data| {
-        canister_data
-            .cdao_canisters
-            .iter()
-            .for_each(|deployed_cdao_canisters| {
-                delete_sns_creator_token(deployed_cdao_canisters);
-            });
+    let deployed_canisters =
+        CANISTER_DATA.with_borrow(|canister_data| canister_data.cdao_canisters.clone());
 
+    deployed_canisters
+        .iter()
+        .for_each(|deployed_cdao_canisters| {
+            delete_sns_creator_token(deployed_cdao_canisters);
+        });
+
+    CANISTER_DATA.with_borrow_mut(|canister_data| {
         canister_data.cdao_canisters = vec![];
     })
 }

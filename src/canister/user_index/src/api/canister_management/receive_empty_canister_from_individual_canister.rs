@@ -1,4 +1,5 @@
 use candid::Principal;
+use futures::{stream::FuturesUnordered, TryStreamExt};
 use ic_cdk::{
     api::management_canister::main::{canister_info, CanisterInfoRequest},
     caller, id,
@@ -12,6 +13,26 @@ pub async fn receive_empty_canister_from_individual_canister(
     canister_ids: Vec<Principal>,
 ) -> Result<(), String> {
     let _individual_canister = IndividualUserCanister::new(caller())?;
+
+    canister_ids
+        .iter()
+        .map(|canister_id| async {
+            let (canister_info,) = canister_info(CanisterInfoRequest {
+                canister_id: *canister_id,
+                num_requested_changes: None,
+            })
+            .await
+            .map_err(|e| e.1)?;
+
+            if canister_info.controllers.contains(&id()) {
+                Ok(())
+            } else {
+                Err("Controller not set as subnet orchestrator".to_owned())
+            }
+        })
+        .collect::<FuturesUnordered<_>>()
+        .try_collect::<()>()
+        .await?;
 
     CANISTER_DATA.with_borrow_mut(|canister_data| {
         canister_data
