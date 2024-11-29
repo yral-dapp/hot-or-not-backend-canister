@@ -43,6 +43,7 @@ pub mod provision_empty_canisters;
 pub mod recharge_individual_user_canister;
 pub mod recycle_canisters;
 pub mod request_cycles;
+pub mod reset_user_canister_ml_feed_cache;
 pub mod start_upgrades_for_individual_canisters;
 pub mod update_canisters_access_time;
 pub mod update_user_canister_restart_timers;

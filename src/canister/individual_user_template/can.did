@@ -377,11 +377,11 @@ type Result_19 = variant { Ok : vec record { nat64; nat8 }; Err : text };
 type Result_2 = variant { Ok : bool; Err : CdaoTokenError };
 type Result_20 = variant { Ok; Err : MigrationErrors };
 type Result_21 = variant { Ok; Err : AirdropError };
-type Result_22 = variant { Ok : IndividualUserCreatorDaoEntry; Err : text };
-type Result_23 = variant { Committed : Committed; Aborted : record {} };
-type Result_24 = variant { Ok : Ok; Err : GovernanceError };
-type Result_25 = variant { Ok; Err : CdaoTokenError };
-type Result_26 = variant { Ok : text; Err : text };
+type Result_22 = variant { Ok : text; Err : text };
+type Result_23 = variant { Ok : IndividualUserCreatorDaoEntry; Err : text };
+type Result_24 = variant { Committed : Committed; Aborted : record {} };
+type Result_25 = variant { Ok : Ok; Err : GovernanceError };
+type Result_26 = variant { Ok; Err : CdaoTokenError };
 type Result_27 = variant {
   Ok : UserProfileDetailsForFrontend;
   Err : UpdateProfileDetailsError;
@@ -408,10 +408,10 @@ type RoomDetails = record {
 };
 type SessionType = variant { AnonymousSession; RegisteredSession };
 type SettleNeuronsFundParticipationRequest = record {
-  result : opt Result_23;
+  result : opt Result_24;
   nns_proposal_id : opt nat64;
 };
-type SettleNeuronsFundParticipationResponse = record { result : opt Result_24 };
+type SettleNeuronsFundParticipationResponse = record { result : opt Result_25 };
 type SlotDetails = record { room_details : vec record { nat64; RoomDetails } };
 type SnsInitPayload = record {
   url : opt text;
@@ -631,20 +631,21 @@ service : (IndividualUserTemplateInitArgs) -> {
   receive_bet_winnings_when_distributed : (nat64, BetOutcomeForBetMaker) -> ();
   receive_data_from_hotornot : (principal, nat64, vec Post) -> (Result_20);
   request_airdrop : (principal, opt blob, nat, principal) -> (Result_21);
+  reset_ml_feed_cache : () -> (Result_22);
   return_cycles_to_user_index_canister : (opt nat) -> ();
   save_snapshot_json : () -> (nat32);
-  send_creator_dao_stats_to_subnet_orchestrator : () -> (Result_22);
+  send_creator_dao_stats_to_subnet_orchestrator : () -> (Result_23);
   set_controller_as_subnet_orchestrator : (principal) -> ();
   settle_neurons_fund_participation : (
       SettleNeuronsFundParticipationRequest,
     ) -> (SettleNeuronsFundParticipationResponse);
   transfer_token_to_user_canister : (principal, principal, opt blob, nat) -> (
-      Result_25,
+      Result_26,
     );
   transfer_tokens_and_posts : (principal, principal) -> (Result_20);
-  update_last_access_time : () -> (Result_26);
+  update_last_access_time : () -> (Result_22);
   update_last_canister_functionality_access_time : () -> ();
-  update_ml_feed_cache : (vec MLFeedCacheItem) -> (Result_26);
+  update_ml_feed_cache : (vec MLFeedCacheItem) -> (Result_22);
   update_post_add_view_details : (nat64, PostViewDetailsFromFrontend) -> ();
   update_post_as_ready_to_view : (nat64) -> ();
   update_post_increment_share_count : (nat64) -> (nat64);
@@ -661,11 +662,11 @@ service : (IndividualUserTemplateInitArgs) -> {
   update_profiles_that_follow_me_toggle_list_with_specified_profile : (
       FollowerArg,
     ) -> (Result_8);
-  update_referrer_details : (UserCanisterDetails) -> (Result_26);
-  update_session_type : (SessionType) -> (Result_26);
-  update_success_history : (SuccessHistoryItemV1) -> (Result_26);
-  update_user_propensity : (float64) -> (Result_26);
-  update_watch_history : (WatchHistoryItem) -> (Result_26);
+  update_referrer_details : (UserCanisterDetails) -> (Result_22);
+  update_session_type : (SessionType) -> (Result_22);
+  update_success_history : (SuccessHistoryItemV1) -> (Result_22);
+  update_user_propensity : (float64) -> (Result_22);
+  update_watch_history : (WatchHistoryItem) -> (Result_22);
   update_well_known_principal : (KnownPrincipalType, principal) -> ();
   upgrade_creator_dao_governance_canisters : (blob) -> (Result_28);
   write_key_value_pair : (nat64, text, text) -> (Result_5);

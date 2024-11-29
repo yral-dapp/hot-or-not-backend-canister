@@ -124,6 +124,7 @@ service : (PlatformOrchestratorInitArgs) -> {
   remove_principal_from_global_admins : (principal) -> ();
   remove_subnet_orchestrators_from_available_list : (principal) -> (Result);
   report_subnet_upgrade_status : (UpgradeStatus) -> (Result_1);
+  reset_canisters_ml_feed_cache : () -> (Result);
   set_reserved_cycle_limit_for_subnet_orchestrator : (principal, nat) -> (
       Result_1,
     );
