@@ -565,6 +565,7 @@ service : (IndividualUserTemplateInitArgs) -> {
     ) -> ();
   clear_snapshot : () -> ();
   create_a_namespace : (text) -> (Result_4);
+  delete_all_creator_token : () -> ();
   delete_key_value_pair : (nat64, text) -> (Result_5);
   delete_multiple_key_value_pairs : (nat64, vec text) -> (Result_6);
   deploy_cdao_sns : (SnsInitPayload, nat64) -> (Result_7);

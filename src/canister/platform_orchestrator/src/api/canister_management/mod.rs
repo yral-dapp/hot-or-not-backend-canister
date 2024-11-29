@@ -2,6 +2,7 @@ use ic_cdk_macros::query;
 
 use crate::CANISTER_DATA;
 
+pub mod delete_all_sns_creator_token_of_an_individual_canister;
 pub mod deregister_subnet_orchestrator;
 mod get_all_available_subnet_orchestrators;
 mod get_all_subnet_orchestrators;

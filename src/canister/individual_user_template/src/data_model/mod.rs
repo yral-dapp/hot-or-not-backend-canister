@@ -125,6 +125,10 @@ impl AllotedEmptyCanister {
         self.canister_ids.insert(canister_id)
     }
 
+    pub fn append_empty_canisters(&mut self, canister_ids: Vec<Principal>) {
+        self.canister_ids.extend(canister_ids.into_iter());
+    }
+
     pub fn len(&self) -> usize {
         self.canister_ids.len()
     }
