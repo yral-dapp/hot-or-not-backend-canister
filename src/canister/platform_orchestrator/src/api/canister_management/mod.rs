@@ -21,6 +21,7 @@ pub mod register_new_subnet_orhestrator;
 mod reinstall_yral_post_cache_canister;
 pub mod remove_subnet_orchestrator_from_available_list;
 pub mod report_subnet_upgrade_status;
+pub mod reset_canisters_ml_feed_cache;
 pub mod set_reserved_cycle_limit_for_subnet_orchestrator;
 pub mod start_subnet_orchestrator_canister;
 mod stop_upgrades_for_individual_user_canisters;
