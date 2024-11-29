@@ -109,23 +109,6 @@ fn reset_ml_feed_cache_test() {
         pocket_ic.tick();
     }
 
-    // upgrade pf_orch
-
-    let platform_orchestrator_init_args = PlatformOrchestratorInitArgs {
-        version: "v1.0.0".into(),
-    };
-    pocket_ic
-        .upgrade_canister(
-            platform_canister_id,
-            pf_orch_canister_wasm(),
-            candid::encode_one(platform_orchestrator_init_args).unwrap(),
-            Some(super_admin),
-        )
-        .unwrap();
-    for i in 0..20 {
-        pocket_ic.tick();
-    }
-
     // User Index available details - call get_subnet_available_capacity
 
     let res = pocket_ic
@@ -225,14 +208,6 @@ fn reset_ml_feed_cache_test() {
         .unwrap()
         .unwrap();
     println!("res3: {:?}", dan_individual_template_canister_id);
-
-    pocket_ic.add_cycles(alice_individual_template_canister_id, 2_000_000_000_000);
-    pocket_ic.add_cycles(bob_individual_template_canister_id, 2_000_000_000_000);
-    pocket_ic.add_cycles(dan_individual_template_canister_id, 2_000_000_000_000);
-
-    for i in 0..50 {
-        pocket_ic.tick();
-    }
 
     // add items into ml cache
 
