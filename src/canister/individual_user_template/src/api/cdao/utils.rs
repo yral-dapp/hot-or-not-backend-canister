@@ -34,7 +34,7 @@ pub(crate) async fn uninstall_code_and_return_empty_canisters_to_subnet_backup_p
             }
         };
 
-        run_task_concurrently(uninstall_code_tasks, 10, uninstall_callback, || false);
+        run_task_concurrently(uninstall_code_tasks, 10, uninstall_callback, || false).await;
 
         let inserting_canisters_into_subnet_backup_pool_res = subnet_orchestrator
             .insert_into_backup_pool(
