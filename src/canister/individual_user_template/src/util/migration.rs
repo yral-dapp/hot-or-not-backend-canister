@@ -44,7 +44,7 @@ pub trait Migration {
 }
 
 #[derive(Copy, Clone)]
-pub struct IndividualUser {
+pub(crate) struct IndividualUser {
     pub canister_id: Principal,
     pub profile_principal: Principal,
     pub subnet_type: SubnetType,
