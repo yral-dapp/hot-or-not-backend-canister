@@ -32,6 +32,7 @@ use crate::{
 
 pub mod allot_empty_canister;
 pub mod create_pool_of_available_canisters;
+pub mod delete_all_sns_creator_token_in_the_network;
 pub mod delete_all_sns_creator_token_of_an_individual_canister;
 pub mod get_last_broadcast_call_status;
 pub mod get_subnet_available_capacity;

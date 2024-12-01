@@ -83,6 +83,7 @@ type WasmType = variant {
 service : (PlatformOrchestratorInitArgs) -> {
   add_principal_as_global_admin : (principal) -> ();
   collect_creator_dao_stats_in_the_network : () -> ();
+  delete_all_sns_creator_token_in_the_network : () -> ();
   delete_all_sns_creator_token_of_an_individual_canister : (principal) -> (
       Result,
     );

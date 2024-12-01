@@ -1,7 +1,9 @@
 use candid::{encode_one, Principal};
 use pocket_ic::WasmResult;
 use shared_utils::{
-    canister_specific::platform_orchestrator,
+    canister_specific::individual_user_template::types::{
+        cdao::DeployedCdaoCanisters, session::SessionType,
+    },
     common::types::known_principal::{self, KnownPrincipalType},
     constant::SNS_WASM_W_PRINCIPAL_ID,
 };
@@ -118,22 +120,32 @@ pub fn test_deletion_of_creator_tokens() {
         .update_call(
             platform_canister_id,
             charlie_global_admin,
-            "delete_all_sns_creator_token_of_an_individual_canister",
+            "delete_all_sns_creator_token_in_the_network",
             candid::encode_one(alice_canister_id).unwrap(),
         )
-        .map(|reply_payload| {
-            let response: Result<(), String> = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 delete sns creator token failed\n"),
-            };
-            response
-        })
-        .unwrap()
         .unwrap();
 
     for _ in 0..50 {
         pocket_ic.tick();
     }
+
+    let deployed_cdao_canisters = pocket_ic
+        .query_call(
+            alice_canister_id,
+            alice_principal,
+            "deployed_cdao_canisters",
+            candid::encode_one(()).unwrap(),
+        )
+        .map(|res| {
+            let response: Vec<DeployedCdaoCanisters> = match res {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 get deployed_cdao_canisters failed\n"),
+            };
+            response
+        })
+        .unwrap();
+
+    assert_eq!(deployed_cdao_canisters.len(), 0);
 
     let after_deleting_backup_capacity = pocket_ic
         .query_call(
@@ -154,5 +166,55 @@ pub fn test_deletion_of_creator_tokens() {
     assert_eq!(
         before_deleting_subnet_backup_capacity + 5,
         after_deleting_backup_capacity
-    )
+    );
+
+    pocket_ic
+        .update_call(
+            alice_canister_id,
+            subnet_orchestrator_canister_id,
+            "update_session_type",
+            candid::encode_one(SessionType::RegisteredSession).unwrap(),
+        )
+        .map(|reply_payload| {
+            let res: Result<String, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 add_post failed\n"),
+            };
+            res
+        })
+        .unwrap()
+        .unwrap();
+
+    setup_default_sns_creator_token(&pocket_ic, super_admin, alice_principal, alice_canister_id);
+
+    pocket_ic
+        .update_call(
+            platform_canister_id,
+            charlie_global_admin,
+            "delete_all_sns_creator_token_in_the_network",
+            candid::encode_one(alice_canister_id).unwrap(),
+        )
+        .unwrap();
+
+    for _ in 0..50 {
+        pocket_ic.tick();
+    }
+
+    let deployed_cdao_canisters = pocket_ic
+        .query_call(
+            alice_canister_id,
+            alice_principal,
+            "deployed_cdao_canisters",
+            candid::encode_one(()).unwrap(),
+        )
+        .map(|res| {
+            let response: Vec<DeployedCdaoCanisters> = match res {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 get deployed_cdao_canisters failed\n"),
+            };
+            response
+        })
+        .unwrap();
+
+    assert_eq!(deployed_cdao_canisters.len(), 1);
 }

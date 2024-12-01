@@ -179,6 +179,16 @@ impl RegisteredSubnetOrchestrator {
         .0
     }
 
+    pub async fn delete_all_sns_creator_token_in_the_network(&self) -> Result<(), String> {
+        ic_cdk::call::<_, ()>(
+            self.canister_id,
+            "delete_all_sns_creator_token_in_the_network",
+            (),
+        )
+        .await
+        .map_err(|e| e.1)
+    }
+
     pub async fn provision_empty_canisters(&self, number_of_canisters: u64) -> Result<(), String> {
         ic_cdk::call::<_, ()>(
             self.canister_id,

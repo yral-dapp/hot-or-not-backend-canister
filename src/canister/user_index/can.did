@@ -131,6 +131,7 @@ service : (UserIndexInitArgs) -> {
   create_pool_of_individual_user_available_canisters : (text, blob) -> (
       Result_2,
     );
+  delete_all_sns_creator_token_in_the_network : () -> ();
   delete_all_sns_creator_token_of_an_individual_canister : (principal) -> (
       Result_3,
     );

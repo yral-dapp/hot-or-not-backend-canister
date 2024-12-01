@@ -1,7 +1,9 @@
 use ic_cdk::api::management_canister::main::{deposit_cycles, CanisterIdRecord};
 use ic_cdk_macros::update;
 use shared_utils::{
-    canister_specific::individual_user_template::types::cdao::DeployedCdaoCanisters,
+    canister_specific::individual_user_template::types::{
+        cdao::DeployedCdaoCanisters, session::SessionType,
+    },
     common::utils::permissions::is_caller_controller,
 };
 
@@ -14,6 +16,14 @@ use super::{
 
 #[update(guard = "is_caller_controller")]
 pub fn delete_all_creator_token() {
+    let session_type_opt = CANISTER_DATA.with_borrow(|canister_data| canister_data.session_type);
+
+    if let Some(session_type) = session_type_opt {
+        if matches!(session_type, SessionType::RegisteredSession) {
+            return;
+        }
+    }
+
     let deployed_canisters =
         CANISTER_DATA.with_borrow(|canister_data| canister_data.cdao_canisters.clone());
 
