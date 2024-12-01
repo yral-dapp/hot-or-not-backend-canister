@@ -97,15 +97,23 @@ impl SubnetOrchestrator {
         )
         .await;
 
+        let canister_ids_that_can_be_sent: Vec<Principal> = canister_ids
+            .iter()
+            .copied()
+            .filter(|canister_id| !errored_canisters.contains(canister_id))
+            .collect();
+
         ic_cdk::call::<_, (Result<(), String>,)>(
             self.canister_id,
             "receive_empty_canister_from_individual_canister",
-            (canister_ids.clone(),),
+            (canister_ids_that_can_be_sent.clone(),),
         )
         .await
-        .map_err(|e| (canister_ids.clone()))?
+        .inspect_err(|_| errored_canisters.extend(&canister_ids_that_can_be_sent))
+        .map_err(|_e| errored_canisters.clone())?
         .0
-        .map_err(|e| (canister_ids.clone()))?;
+        .inspect_err(|_| errored_canisters.extend_from_slice(&canister_ids_that_can_be_sent))
+        .map_err(|_| (errored_canisters.clone()))?;
 
         if errored_canisters.is_empty() {
             Ok(())
