@@ -214,12 +214,6 @@ impl ProofOfParticipation {
 
     /// Verify that the caller is a YRAL canister
     pub async fn verify_caller_is_participant<Store: ProofOfParticipationStore>(&self, store: &'static LocalPoPStore<Store>) -> Result<(), String> {
-        if is_local() {
-            // Hack: Always pass on local testing node
-            // a proper implementation requires deploying platform orchestrator locally
-            return Ok(())
-        }
-
         let platform_orchestrator = store.with_borrow(|s| s.platform_orchestrator());
         let canister = ic_cdk::caller();
 

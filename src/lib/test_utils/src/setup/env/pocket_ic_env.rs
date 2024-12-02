@@ -199,7 +199,7 @@ pub fn get_new_pocket_ic_env() -> (PocketIc, KnownPrincipalMap) {
 /// optionally provide a `caller` for the call, else it uses the global super admin
 pub fn provision_subnet_orchestrator_canister(pic: &PocketIc, known_principals: &KnownPrincipalMap, app_subnet_idx: usize, caller: Option<Principal>) -> Principal {
     let user_index = provision_subnet_orchestrator_canister_no_wait(pic, known_principals, app_subnet_idx, caller);
-    for _ in 0..10000 {
+    for _ in 0..50 {
         pic.tick();
     }
 
@@ -218,8 +218,7 @@ pub fn provision_subnet_orchestrator_canister_no_wait(pic: &PocketIc, known_prin
         "provision_subnet_orchestrator_canister",
         &app_subnets[app_subnet_idx]
     );
-    let user_index = user_index_res.unwrap();
-    user_index
+    user_index_res.unwrap()
 }
 
 pub fn provision_n_subnet_orchestrator_canisters(pic: &PocketIc, known_principals: &KnownPrincipalMap, n: usize, caller: Option<Principal>) -> Vec<Principal> {
@@ -240,7 +239,7 @@ pub fn provision_n_subnet_orchestrator_canisters(pic: &PocketIc, known_principal
         out.push(user_index_res.unwrap());
     }
 
-    for _ in 0..(10000 + 100 * n) {
+    for _ in 0..(50 + 10 * n) {
         pic.tick()
     }
 

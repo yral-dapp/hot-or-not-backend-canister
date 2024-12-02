@@ -153,7 +153,7 @@ pub fn provision_individual_user_canisters(
         )
         .unwrap();
 
-    for _ in 0..1000 {
+    for _ in 0..50 {
         state_machine.tick();
     }
 }
