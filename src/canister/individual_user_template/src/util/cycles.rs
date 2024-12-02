@@ -6,7 +6,7 @@ use crate::CANISTER_DATA;
 
 use super::subnet_orchestrator::{self, SubnetOrchestrator};
 
-pub async fn request_cycles_from_subnet_orchestrator(amount: u128) -> Result<(), String> {
+pub(crate) async fn request_cycles_from_subnet_orchestrator(amount: u128) -> Result<(), String> {
     let subnet_orchestrator_canister_id = CANISTER_DATA
         .with_borrow(|canister_data| {
             canister_data
@@ -28,7 +28,7 @@ pub async fn request_cycles_from_subnet_orchestrator(amount: u128) -> Result<(),
     result
 }
 
-pub fn notify_to_recharge_canister() {
+pub(crate) fn notify_to_recharge_canister() {
     if let Ok(subnet_orchestrator) = SubnetOrchestrator::new() {
         let res = subnet_orchestrator.notify_to_receive_cycles_from_subnet_orchestrator();
         if let Err(e) = res {
@@ -39,7 +39,7 @@ pub fn notify_to_recharge_canister() {
     }
 }
 
-pub async fn recharge_canister() {
+pub(crate) async fn recharge_canister() {
     if let Ok(subnet_orchestrator) = SubnetOrchestrator::new() {
         let res = subnet_orchestrator
             .receive_cycles_from_subnet_orchestrator()
