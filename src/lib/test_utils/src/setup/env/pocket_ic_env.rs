@@ -224,7 +224,7 @@ pub fn provision_subnet_orchestrator_canister_no_wait(pic: &PocketIc, known_prin
 pub fn provision_n_subnet_orchestrator_canisters(pic: &PocketIc, known_principals: &KnownPrincipalMap, n: usize, caller: Option<Principal>) -> Vec<Principal> {
     let mut out = vec![];
 
-    let caller = caller.unwrap_or_else(|| known_principals[&KnownPrincipalType::CanisterIdPlatformOrchestrator]);
+    let caller = caller.unwrap_or_else(|| known_principals[&KnownPrincipalType::UserIdGlobalSuperAdmin]);
     let platform_orc = known_principals[&KnownPrincipalType::CanisterIdPlatformOrchestrator];
     let app_subnets = pic.topology().get_app_subnets();
 
