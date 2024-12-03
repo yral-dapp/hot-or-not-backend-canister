@@ -90,6 +90,9 @@ dfx canister install user_index --argument "(record {
       vec { variant { CanisterAdmin }; variant { CanisterController }; }
     };
   };
+  proof_of_participation = opt record {
+    chain = vec {};
+  };
   version= \"v1.0.0\"
 })"
 

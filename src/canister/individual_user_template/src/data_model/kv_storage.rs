@@ -37,13 +37,12 @@ impl From<Namespace> for NamespaceForFrontend {
 
 impl Storable for Namespace {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
-        let mut bytes = vec![];
-        ciborium::ser::into_writer(self, &mut bytes).unwrap();
+        let bytes = minicbor_serde::to_vec(self).unwrap();
         Cow::Owned(bytes)
     }
 
     fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
-        let namespace: Self = ciborium::de::from_reader(bytes.as_ref()).unwrap();
+        let namespace: Self = minicbor_serde::from_slice(bytes.as_ref()).unwrap();
         namespace
     }
 
@@ -188,13 +187,12 @@ pub struct NameSpaceKey {
 
 impl Storable for NameSpaceKey {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
-        let mut bytes = vec![];
-        ciborium::ser::into_writer(self, &mut bytes).unwrap();
+        let bytes = minicbor_serde::to_vec(self).unwrap();
         Cow::Owned(bytes)
     }
 
     fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
-        let namespace: Self = ciborium::de::from_reader(bytes.as_ref()).unwrap();
+        let namespace: Self = minicbor_serde::from_slice(bytes.as_ref()).unwrap();
         namespace
     }
 

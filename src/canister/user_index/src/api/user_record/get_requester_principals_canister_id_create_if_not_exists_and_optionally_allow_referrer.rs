@@ -152,7 +152,7 @@ async fn new_user_signup(user_id: Principal) -> Result<Principal, String> {
     let available_individual_user_canisters_cnt =
         CANISTER_DATA.with_borrow(|canister_data| canister_data.available_canisters.len() as u64);
     let backup_individual_user_canister_cnt =
-        CANISTER_DATA.with_borrow(|canister_data| canister_data.backup_canister_pool.len() as u64);
+        CANISTER_DATA.with_borrow(|canister_data| canister_data.backup_canisters().len() as u64);
 
     // notify platform_orchestrator that this subnet has reached maximum capacity.
     if available_individual_user_canisters_cnt == 0 && backup_individual_user_canister_cnt == 0 {
@@ -190,7 +190,7 @@ async fn new_user_signup(user_id: Principal) -> Result<Principal, String> {
 
 async fn provision_new_available_canisters(individual_user_template_canister_wasm: CanisterWasm) {
     let backup_pool_canister_count =
-        CANISTER_DATA.with_borrow(|canister_data| canister_data.backup_canister_pool.len() as u64);
+        CANISTER_DATA.with_borrow(|canister_data| canister_data.backup_canisters().len() as u64);
     let individual_canister_batch_size = get_individual_user_canister_subnet_batch_size();
     let canister_count = individual_canister_batch_size.min(backup_pool_canister_count);
     let available_canister_count =
@@ -198,7 +198,7 @@ async fn provision_new_available_canisters(individual_user_template_canister_was
     let max_canister_count = available_canister_count + canister_count;
 
     let install_canister_wasm_futures = CANISTER_DATA.with_borrow(|canister_data| {
-        let mut backup_pool_canister = canister_data.backup_canister_pool.clone().into_iter();
+        let mut backup_pool_canister = canister_data.backup_canisters().clone().into_iter();
         (0..canister_count).map(move |_| {
             let individual_user_template_canister_wasm_version =
                 individual_user_template_canister_wasm.version.clone();
@@ -210,7 +210,7 @@ async fn provision_new_available_canisters(individual_user_template_canister_was
 
             // Remove the canister id from backup pool so no one else access it
             CANISTER_DATA.with_borrow_mut(|canister_data| {
-                canister_data.backup_canister_pool.remove(&canister_id)
+                canister_data.remove_backup_canister(&canister_id)
             });
 
             async move {
@@ -236,7 +236,7 @@ async fn provision_new_available_canisters(individual_user_template_canister_was
                 canister_data.available_canisters.insert(canister_id);
             }
             Err(e) => {
-                canister_data.backup_canister_pool.insert(e.0);
+                canister_data.reinsert_backup_canister_due_to_failure(e.0);
                 ic_cdk::println!("Error installing wasm for canister {} {}", e.0, e.1);
             }
         })
@@ -260,7 +260,7 @@ async fn provision_new_available_canisters(individual_user_template_canister_was
 async fn provision_new_backup_canisters(canister_count: u64) {
     let breaking_condition = || {
         CANISTER_DATA.with_borrow(|canister_data| {
-            canister_data.backup_canister_pool.len() as u64
+            canister_data.backup_canisters().len() as u64
                 > get_backup_individual_user_canister_batch_size()
         })
     };

@@ -15,7 +15,7 @@ use std::{
     time::Duration,
 };
 use test_utils::setup::{
-    env::pocket_ic_env::get_new_pocket_ic_env,
+    env::pocket_ic_env::{get_new_pocket_ic_env, provision_n_subnet_orchestrator_canisters},
     test_constants::{
         get_mock_user_alice_principal_id, get_mock_user_bob_principal_id,
         get_mock_user_charlie_principal_id, get_mock_user_dan_principal_id,
@@ -37,43 +37,14 @@ fn test_transfer_token_can_heppen_only_once_from_hot_or_not_canister_to_yral_can
         .cloned()
         .unwrap();
 
-    let application_subnets = pocket_ic.topology().get_app_subnets();
-
-    let hot_or_not_subnet_orchestrator_canister_id: Principal = pocket_ic
-        .update_call(
-            platform_canister_id,
-            super_admin,
-            "provision_subnet_orchestrator_canister",
-            candid::encode_one(application_subnets[0]).unwrap(),
-        )
-        .map(|res| {
-            let canister_id_result: Result<Principal, String> = match res {
-                PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("Canister call failed"),
-            };
-            canister_id_result.unwrap()
-        })
-        .unwrap();
-
-    let yral_subnet_orchestrator_canister_id: Principal = pocket_ic
-        .update_call(
-            platform_canister_id,
-            super_admin,
-            "provision_subnet_orchestrator_canister",
-            candid::encode_one(application_subnets[1]).unwrap(),
-        )
-        .map(|res| {
-            let canister_id_result: Result<Principal, String> = match res {
-                PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("Canister call failed"),
-            };
-            canister_id_result.unwrap()
-        })
-        .unwrap();
-
-    for _ in 0..30 {
-        pocket_ic.tick();
-    }
+    let subnet_orchestrators = provision_n_subnet_orchestrator_canisters(
+        &pocket_ic,
+        &known_principal,
+        2,
+        None,
+    );
+    let hot_or_not_subnet_orchestrator_canister_id = subnet_orchestrators[0];
+    let yral_subnet_orchestrator_canister_id = subnet_orchestrators[1];
 
     let post_cache_canister_id = Principal::anonymous();
 
@@ -540,43 +511,14 @@ fn test_when_user_tries_to_misuse_to_recieve_tokens_and_posts() {
         .cloned()
         .unwrap();
 
-    let application_subnets = pocket_ic.topology().get_app_subnets();
-
-    let hot_or_not_subnet_orchestrator_canister_id: Principal = pocket_ic
-        .update_call(
-            platform_canister_id,
-            super_admin,
-            "provision_subnet_orchestrator_canister",
-            candid::encode_one(application_subnets[0]).unwrap(),
-        )
-        .map(|res| {
-            let canister_id_result: Result<Principal, String> = match res {
-                PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("Canister call failed"),
-            };
-            canister_id_result.unwrap()
-        })
-        .unwrap();
-
-    let yral_subnet_orchestrator_canister_id: Principal = pocket_ic
-        .update_call(
-            platform_canister_id,
-            super_admin,
-            "provision_subnet_orchestrator_canister",
-            candid::encode_one(application_subnets[1]).unwrap(),
-        )
-        .map(|res| {
-            let canister_id_result: Result<Principal, String> = match res {
-                PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("Canister call failed"),
-            };
-            canister_id_result.unwrap()
-        })
-        .unwrap();
-
-    for _ in 0..30 {
-        pocket_ic.tick();
-    }
+    let subnet_orchestrators = provision_n_subnet_orchestrator_canisters(
+        &pocket_ic,
+        &known_principal,
+        2,
+        None,
+    );
+    let hot_or_not_subnet_orchestrator_canister_id = subnet_orchestrators[0];
+    let yral_subnet_orchestrator_canister_id = subnet_orchestrators[1];
 
     let post_cache_canister_id = Principal::anonymous();
 

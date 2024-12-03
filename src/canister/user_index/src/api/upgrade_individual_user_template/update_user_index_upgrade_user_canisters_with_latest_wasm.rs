@@ -51,6 +51,13 @@ pub async fn upgrade_user_canisters_with_latest_wasm(
             })
     });
 
+    // TODO: remove this after upgrade is executed on all individual canisters
+    CANISTER_DATA.with_borrow_mut(|cdata| {
+        cdata.children_merkle.insert_children(
+            user_principal_id_to_canister_id_vec.iter().map(|(_, canister_id)| *canister_id)
+        );
+    });
+
     let saved_upgrade_status = CANISTER_DATA.with(|canister_data_ref_cell| {
         canister_data_ref_cell
             .borrow()
@@ -210,6 +217,12 @@ async fn upgrade_user_canister(
     version: String,
     individual_user_wasm: Vec<u8>,
 ) -> Result<(), String> {
+    // TODO: remove this after upgrade is executed on all individual canisters
+    let mut proof_of_participation = CANISTER_DATA.with_borrow(|cdata| cdata.proof_of_participation.clone());
+    if let Some(pop) = proof_of_participation {
+        proof_of_participation = Some(pop.derive_for_child(&CANISTER_DATA, canister_id).await?);
+    }
+
     canister_management::upgrade_individual_user_canister(
         canister_id,
         CanisterInstallMode::Upgrade(None),
@@ -219,6 +232,7 @@ async fn upgrade_user_canister(
             upgrade_version_number: None,
             url_to_send_canister_metrics_to: None,
             version,
+            proof_of_participation,
         },
         individual_user_wasm,
     )

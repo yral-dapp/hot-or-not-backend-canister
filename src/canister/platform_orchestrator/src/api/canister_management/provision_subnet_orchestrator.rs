@@ -15,10 +15,10 @@ use shared_utils::{
     canister_specific::{
         post_cache::types::arg::PostCacheInitArgs, user_index::types::args::UserIndexInitArgs,
     },
-    common::types::{
+    common::{participant_crypto::ProofOfParticipation, types::{
         known_principal::{KnownPrincipalMap, KnownPrincipalType},
         wasm::WasmType,
-    },
+    }},
     constant::{
         GLOBAL_SUPER_ADMIN_USER_ID, NNS_CYCLE_MINTING_CANISTER,
         SUBNET_ORCHESTRATOR_CANISTER_INITIAL_CYCLES, YRAL_POST_CACHE_CANISTER_ID,
@@ -105,22 +105,20 @@ pub async fn provision_subnet_orchestrator_canister(
     );
 
     CANISTER_DATA.with_borrow_mut(|canister_data| {
-        canister_data
-            .all_post_cache_orchestrator_list
-            .insert(post_cache_canister_id);
-        canister_data
-            .all_subnet_orchestrator_canisters_list
-            .insert(subnet_orchestrator_canister_id);
-        canister_data
-            .subet_orchestrator_with_capacity_left
-            .insert(subnet_orchestrator_canister_id);
+        canister_data.insert_subnet_orchestrator_and_post_cache(
+            subnet_orchestrator_canister_id,
+            post_cache_canister_id
+        );
     });
 
+    let mut proof_of_participation = ProofOfParticipation::new_for_root();
+    proof_of_participation = proof_of_participation.derive_for_child(&CANISTER_DATA, subnet_orchestrator_canister_id).await.unwrap();
     let user_index_init_arg = UserIndexInitArgs {
         known_principal_ids: Some(known_principal_map.clone()),
         access_control_map: None,
         version: CANISTER_DATA
             .with_borrow(|canister_data| canister_data.version_detail.version.clone()),
+        proof_of_participation: Some(proof_of_participation),
     };
 
     let subnet_orchestrator_install_code_arg = InstallCodeArgument {

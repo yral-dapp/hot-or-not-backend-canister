@@ -33,7 +33,7 @@ async fn register_new_subnet_orchestrator(
 
     if let Some(first_subnet_orchestrator) = CANISTER_DATA.with_borrow(|canister_data| {
         canister_data
-            .all_subnet_orchestrator_canisters_list
+            .subnet_orchestrators()
             .iter()
             .next()
             .copied()
@@ -59,15 +59,10 @@ async fn register_new_subnet_orchestrator(
     }
 
     CANISTER_DATA.with_borrow_mut(|canister_data| {
-        canister_data
-            .all_subnet_orchestrator_canisters_list
-            .insert(new_subnet_orchestrator_caniter_id);
-
-        if subnet_is_available_for_provisioning_individual_canister {
-            canister_data
-                .subet_orchestrator_with_capacity_left
-                .insert(new_subnet_orchestrator_caniter_id);
-        }
+        canister_data.insert_subnet_orchestrator(
+            new_subnet_orchestrator_caniter_id,
+            subnet_is_available_for_provisioning_individual_canister,
+        );
         Ok(())
     })
 }

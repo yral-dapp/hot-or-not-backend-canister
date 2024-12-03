@@ -16,8 +16,7 @@ use shared_utils::{
         post_cache::types::arg::PostCacheInitArgs, user_index::types::args::UserIndexInitArgs,
     },
     common::{
-        types::wasm::{CanisterWasm, WasmType},
-        utils::{task::run_task_concurrently, upgrade_canister::upgrade_canister_util},
+        participant_crypto::ProofOfParticipation, types::wasm::{CanisterWasm, WasmType}, utils::{task::run_task_concurrently, upgrade_canister::upgrade_canister_util}
     },
     constant::{
         POST_CACHE_CANISTER_CYCLES_RECHARGE_AMOUMT, POST_CACHE_CANISTER_CYCLES_THRESHOLD,
@@ -63,7 +62,7 @@ async fn upgrade_individual_canisters(upgrade_arg: UpgradeCanisterArg) {
         canister_data.last_subnet_canister_upgrade_status.count = 0;
     });
     let subnet_orchestrator_canisters = CANISTER_DATA
-        .with_borrow(|canister_data| canister_data.all_subnet_orchestrator_canisters_list.clone());
+        .with_borrow(|canister_data| canister_data.subnet_orchestrators().clone());
 
     for subnet_orchestrator in subnet_orchestrator_canisters.iter() {
         match recharge_subnet_orchestrator_if_needed(*subnet_orchestrator).await {
@@ -119,9 +118,9 @@ async fn upgrade_subnet_canisters(upgrade_arg: UpgradeCanisterArg) {
 
     let canister_list = CANISTER_DATA.with_borrow(|canister_data| {
         match upgrade_arg.canister {
-            WasmType::PostCacheWasm => Ok(canister_data.all_post_cache_orchestrator_list.clone()),
+            WasmType::PostCacheWasm => Ok(canister_data.post_cache_orchestrators().clone()),
             WasmType::SubnetOrchestratorWasm => {
-                Ok(canister_data.all_subnet_orchestrator_canisters_list.clone())
+                Ok(canister_data.subnet_orchestrators().clone())
             }
             _ => Err(()),
         }
@@ -255,6 +254,10 @@ async fn upgrade_subnet_orchestrator_canister(
     wasm: Vec<u8>,
     version: String,
 ) -> Result<(), String> {
+    // TODO: remove this when all subnet orchestrators are upgraded
+    let mut proof_of_participation = ProofOfParticipation::new_for_root();
+    proof_of_participation = proof_of_participation.derive_for_child(&CANISTER_DATA, canister_id).await?;
+
     let install_code_arg = InstallCodeArgument {
         mode: CanisterInstallMode::Upgrade(None),
         canister_id,
@@ -263,6 +266,7 @@ async fn upgrade_subnet_orchestrator_canister(
             known_principal_ids: None,
             access_control_map: None,
             version,
+            proof_of_participation: Some(proof_of_participation),
         })
         .unwrap(),
     };

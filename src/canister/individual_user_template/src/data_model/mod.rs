@@ -3,6 +3,7 @@ use std::{
     time::SystemTime,
 };
 
+use airdrop::AirdropData;
 use candid::{Deserialize, Principal};
 use ic_cdk::api::management_canister::provisional::CanisterId;
 use memory::{get_success_history_memory, get_token_list_memory, get_watch_history_memory};
@@ -26,12 +27,12 @@ use shared_utils::{
         session::SessionType,
         token::TokenBalance,
     },
-    common::types::{
+    common::{participant_crypto::{ProofOfParticipationStore, ProofOfParticipation, PubKeyCache}, types::{
         app_primitive_type::PostId,
-        known_principal::KnownPrincipalMap,
+        known_principal::{KnownPrincipalMap, KnownPrincipalType},
         top_posts::{post_score_index::PostScoreIndex, post_score_index_item::PostStatus},
         version_details::VersionDetails,
-    },
+    }},
 };
 
 use self::memory::{
@@ -43,6 +44,7 @@ use kv_storage::AppStorage;
 
 pub mod kv_storage;
 pub mod memory;
+pub mod airdrop;
 
 #[derive(Deserialize, Serialize)]
 pub struct CanisterData {
@@ -97,6 +99,12 @@ pub struct CanisterData {
     pub ml_data: MLData,
     #[serde(default)]
     pub empty_canisters: AllotedEmptyCanister,
+    #[serde(default)]
+    pub proof_of_participation: Option<ProofOfParticipation>,
+    #[serde(skip, default)]
+    pub pubkey_cache: PubKeyCache,
+    #[serde(default)]
+    pub airdrop: AirdropData,
 }
 
 #[derive(Serialize, Deserialize, Default)]
@@ -206,6 +214,23 @@ impl Default for CanisterData {
             token_roots: _default_token_list(),
             ml_data: MLData::default(),
             empty_canisters: AllotedEmptyCanister::default(),
+            proof_of_participation: None,
+            pubkey_cache: PubKeyCache::default(),
+            airdrop: AirdropData::default(),
         }
+    }
+}
+
+impl ProofOfParticipationStore for CanisterData {
+    fn pubkey_cache(&self) -> &PubKeyCache {
+        &self.pubkey_cache
+    }
+
+    fn pubkey_cache_mut(&mut self) -> &mut PubKeyCache {
+        &mut self.pubkey_cache
+    }
+
+    fn platform_orchestrator(&self) -> Principal {
+        self.known_principal_ids[&KnownPrincipalType::CanisterIdPlatformOrchestrator]
     }
 }

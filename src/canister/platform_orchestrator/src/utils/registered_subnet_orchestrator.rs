@@ -63,7 +63,7 @@ impl RegisteredSubnetOrchestrator {
     pub fn new(canister_id: Principal) -> Result<RegisteredSubnetOrchestrator, String> {
         let contains = CANISTER_DATA.with_borrow(|canister_data| {
             canister_data
-                .all_subnet_orchestrator_canisters_list
+                .subnet_orchestrators()
                 .contains(&canister_id)
         });
 

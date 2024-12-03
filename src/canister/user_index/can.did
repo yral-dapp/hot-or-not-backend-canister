@@ -63,6 +63,13 @@ type KnownPrincipalType = variant {
   UserIdGlobalSuperAdmin;
 };
 type LogVisibility = variant { controllers; public };
+type ProofOfChild = record {
+  proof_of_inclusion : vec blob;
+  "principal" : principal;
+  children_proof : ProofOfChildren;
+};
+type ProofOfChildren = record { signature : blob; merkle_root : blob };
+type ProofOfParticipation = record { chain : vec ProofOfChild };
 type QueryStats = record {
   response_payload_bytes_total : nat;
   num_instructions_total : nat;
@@ -120,6 +127,7 @@ type UserAccessRole = variant {
   ProjectCanister;
 };
 type UserIndexInitArgs = record {
+  proof_of_participation : opt ProofOfParticipation;
   known_principal_ids : opt vec record { KnownPrincipalType; principal };
   version : text;
   access_control_map : opt vec record { principal; vec UserAccessRole };

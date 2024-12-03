@@ -7,7 +7,7 @@ pub fn notify_all_individual_canisters_to_upgrade_creator_dao_governance_caniste
     wasm_module: Vec<u8>,
 ) -> Result<(), String> {
     CANISTER_DATA.with_borrow(|canister_data| {
-        let subnet_orchestrators = canister_data.all_subnet_orchestrator_canisters_list.iter();
+        let subnet_orchestrators = canister_data.subnet_orchestrators().iter();
 
         for canister_id in subnet_orchestrators {
             ic_cdk::notify::<_>(
