@@ -61,7 +61,11 @@ pub async fn impl_create_pool_of_individual_user_available_canisters(version: St
             ).await
         }
     });
+
     let mut install_wasm_stream = futures::stream::iter(install_wasm_futs).buffer_unordered(10);
+
+    let mut backup_canisters = Vec::new();
+
     while let Some(res) = install_wasm_stream.next().await {
         match res {
             Ok(canister_id) => {
@@ -71,10 +75,12 @@ pub async fn impl_create_pool_of_individual_user_available_canisters(version: St
             }
             Err((canister_id, e)) => {
                 ic_cdk::println!("Failed to install wasm on canister: {}, error: {:?}", canister_id, e);
-                CANISTER_DATA.with_borrow_mut(|cdata| {
-                    cdata.insert_backup_canister(canister_id);
-                })
+                backup_canisters.push(canister_id);
             }
         }
     }
+
+    CANISTER_DATA.with_borrow_mut(|cdata| {
+        cdata.insert_backup_canisters(backup_canisters);
+    })
 }
