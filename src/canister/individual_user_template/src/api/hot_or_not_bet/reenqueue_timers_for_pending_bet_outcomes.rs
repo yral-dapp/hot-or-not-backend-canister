@@ -56,7 +56,7 @@ fn reenqueue_timers_for_these_posts(
                         .duration_since(*current_time)
                         .unwrap_or_default(),
                     move || {
-                        tabulate_hot_or_not_outcome_for_post_slot(post_id, slot_id);
+                        ic_cdk::spawn(tabulate_hot_or_not_outcome_for_post_slot(post_id, slot_id));
                     },
                 );
             })
@@ -89,7 +89,10 @@ fn once_reenqueue_timers_for_these_posts(post_slot_ids: Vec<(u64, u8)>) {
             // random jitter
             Duration::from_secs(300),
             move || {
-                tabulate_hot_or_not_outcome_for_post_slot(post_id, slot_number);
+                ic_cdk::spawn(tabulate_hot_or_not_outcome_for_post_slot(
+                    post_id,
+                    slot_number,
+                ));
             },
         );
     }

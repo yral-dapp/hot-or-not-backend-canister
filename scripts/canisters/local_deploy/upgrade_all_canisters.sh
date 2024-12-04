@@ -21,10 +21,6 @@ while getopts "sh" arg; do
   esac
 done
 
-dfx build individual_user_template
-gzip -f -1 ./target/wasm32-unknown-unknown/release/individual_user_template.wasm
-dfx build user_index
-gzip -f -1 ./target/wasm32-unknown-unknown/release/user_index.wasm
 dfx build post_cache
 gzip -f -1 ./target/wasm32-unknown-unknown/release/post_cache.wasm
 dfx build platform_orchestrator
@@ -35,11 +31,16 @@ then
   cargo test
 fi
 
+dfx canister install platform_orchestrator --mode upgrade --argument "(record {
+  version= \"v2.2.0\"
+})"
+
 dfx canister install post_cache --mode upgrade --argument "(record {
     version= \"v1.1.0\"
 })"
-dfx canister install user_index --mode upgrade --argument "(record {
-  version= \"v1.1.0\"
-})"
 
-scripts/canisters/local_deploy/start_upgrades.sh
+scripts/canisters/local_deploy/upgrade_subnet_orchestrator.sh
+
+sleep 2
+
+scripts/canisters/local_deploy/start_upgrades_for_individual_canisters.sh

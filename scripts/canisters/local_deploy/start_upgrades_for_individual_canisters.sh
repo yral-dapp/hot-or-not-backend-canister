@@ -25,5 +25,5 @@ char=$(hexdump -ve '1/1 "%.2x"' "$wasm")
 char_escaped=$(printf "%s" "$char" | sed 's/../\\&/g')
 
 # Create a shell script with the escaped hexadecimal string
-printf "(\"v2.2.0\", blob \"%s\")"  "$char_escaped" > argument
-dfx canister call user_index  start_upgrades_for_individual_canisters --argument-file argument
+printf "(record {version = \"v2.2.0\"; canister = variant {IndividualUserWasm}; wasm_blob = blob \"%s\"})"  "$char_escaped" > argument
+dfx canister call platform_orchestrator  upgrade_canisters_in_network --argument-file argument
