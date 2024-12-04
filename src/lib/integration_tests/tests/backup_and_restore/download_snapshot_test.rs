@@ -1350,7 +1350,7 @@ fn all_canister_snapshot_tests(){
         offset += length;
     }
 
-    println!("data: {}", serde_json::from_slice::<'_, String>(&data).unwrap());
+    println!("data: {}", std::str::from_utf8(&data).unwrap());
 
     let snapshot_len = data.len() as u64;
     let mut offset: u64 = 0;
