@@ -339,14 +339,14 @@ async fn deploy_cdao_sns(
     ));
     update_ctrls_futs.push(update_controllers(
         ledger,
-        vec![admin_canister, user_can, governance.0],
+        vec![admin_canister, user_can, root.0],
     ));
     update_ctrls_futs.push(update_controllers(
         swap,
         vec![
             admin_canister,
             user_can,
-            swap.0,
+            root.0,
             ic_nns_constants::ROOT_CANISTER_ID.into(),
         ],
     ));
