@@ -105,9 +105,6 @@ service : (PlatformOrchestratorInitArgs) -> {
   make_individual_canister_logs_public : (principal) -> (Result);
   make_subnet_orchestrator_logs_private : (principal) -> (Result);
   make_subnet_orchestrator_logs_public : (principal) -> (Result);
-  notify_all_individual_canisters_to_upgrade_creator_dao_governance_canisters : (
-      blob,
-    ) -> (Result);
   notify_specific_individual_canister_to_upgrade_creator_dao_governance_canisters : (
       principal,
       blob,
@@ -146,6 +143,7 @@ service : (PlatformOrchestratorInitArgs) -> {
       KnownPrincipalType,
       principal,
     ) -> (Result_1);
+  upgrade_all_creator_dao_governance_canisters_in_the_network : (blob) -> ();
   upgrade_canisters_in_network : (UpgradeCanisterArg) -> (Result_1);
   upgrade_individual_canisters_in_a_subnet_with_latest_wasm : (principal) -> (
       Result,

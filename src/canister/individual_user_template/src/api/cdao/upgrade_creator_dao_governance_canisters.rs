@@ -22,6 +22,7 @@ use shared_utils::{
         SNS_TOKEN_INDEX_MODULE_HASH, SNS_TOKEN_LEDGER_MODULE_HASH, SNS_TOKEN_ROOT_MODULE_HASH,
         SNS_TOKEN_SWAP_MODULE_HASH,
     },
+    types::sns_canisters::sns_governance::{self, GetRunningSnsVersionArg},
 };
 
 #[update(guard = "is_caller_controller_or_global_admin")]
@@ -29,14 +30,13 @@ pub async fn upgrade_creator_dao_governance_canisters(wasm_module: Vec<u8>) -> R
     notify_to_recharge_canister();
 
     let mut res: Result<(), String>;
-    let governance_canisters: Vec<candid::Principal> =
-        CANISTER_DATA.with_borrow_mut(|canister_data| {
-            canister_data
-                .cdao_canisters
-                .iter()
-                .map(|canisters| canisters.governance)
-                .collect()
-        });
+    let governance_canisters: Vec<candid::Principal> = CANISTER_DATA.with_borrow(|canister_data| {
+        canister_data
+            .cdao_canisters
+            .iter()
+            .map(|canisters| canisters.governance)
+            .collect()
+    });
 
     let recharge_amount = 100_000_000_000; //100B
 
@@ -88,6 +88,17 @@ async fn recharge_and_upgrade_canister(
     deposit_cycles(CanisterIdRecord { canister_id }, recharge_amount)
         .await
         .map_err(|e| e.1)?;
+
+    let sns_governance = sns_governance::Service(canister_id);
+
+    let (sns_running_version,) = sns_governance
+        .get_running_sns_version(GetRunningSnsVersionArg {})
+        .await
+        .map_err(|e| e.1)?;
+
+    if sns_running_version.deployed_version.is_some() {
+        return Ok(());
+    }
 
     let gov_hash = hex::decode(SNS_TOKEN_GOVERNANCE_MODULE_HASH).unwrap();
     let ledger_hash = hex::decode(SNS_TOKEN_LEDGER_MODULE_HASH).unwrap();
