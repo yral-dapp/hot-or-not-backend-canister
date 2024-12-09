@@ -127,6 +127,7 @@ type UserIndexInitArgs = record {
 service : (UserIndexInitArgs) -> {
   allot_empty_canister : () -> (Result);
   are_signups_enabled : () -> (bool) query;
+  clear_snapshot : () -> ();
   collect_creator_dao_stats_in_the_network : () -> (Result_1);
   create_pool_of_individual_user_available_canisters : (text, blob) -> (
       Result_2,
@@ -135,6 +136,7 @@ service : (UserIndexInitArgs) -> {
   delete_all_sns_creator_token_of_an_individual_canister : (principal) -> (
       Result_3,
     );
+  download_snapshot : (nat64, nat64) -> (blob) query;
   get_current_list_of_all_well_known_principal_values : () -> (
       vec record { KnownPrincipalType; principal },
     ) query;
@@ -166,6 +168,7 @@ service : (UserIndexInitArgs) -> {
     ) query;
   http_request : (HttpRequest) -> (HttpResponse) query;
   issue_rewards_for_referral : (principal, principal, principal) -> (Result_2);
+  load_snapshot : () -> ();
   make_individual_canister_logs_private : (principal) -> (Result_3);
   make_individual_canister_logs_public : (principal) -> (Result_3);
   notify_specific_individual_canister_to_upgrade_creator_dao_governance_canisters : (
@@ -173,6 +176,7 @@ service : (UserIndexInitArgs) -> {
       blob,
     ) -> (Result_3);
   provision_empty_canisters : (nat64) -> ();
+  receive_and_save_snaphot : (nat64, blob) -> ();
   receive_creator_dao_stats_from_individual_canister : (vec principal) -> (
       Result_3,
     );
@@ -185,6 +189,7 @@ service : (UserIndexInitArgs) -> {
   reset_user_canisters_ml_feed_cache : () -> (text);
   reset_user_individual_canisters : (vec principal) -> (Result_2);
   return_cycles_to_platform_orchestrator_canister : () -> (Result_2);
+  save_snapshot_json : () -> (nat32);
   set_permission_to_upgrade_individual_canisters : (bool) -> (text);
   start_upgrades_for_individual_canisters : (text, blob) -> (text);
   toggle_signups_enabled : () -> (Result_3);
