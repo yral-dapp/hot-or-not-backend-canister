@@ -171,9 +171,6 @@ service : (UserIndexInitArgs) -> {
   load_snapshot : () -> ();
   make_individual_canister_logs_private : (principal) -> (Result_3);
   make_individual_canister_logs_public : (principal) -> (Result_3);
-  notify_all_individual_canisters_to_upgrade_creator_dao_governance_canisters : (
-      blob,
-    ) -> (Result_3);
   notify_specific_individual_canister_to_upgrade_creator_dao_governance_canisters : (
       principal,
       blob,
@@ -204,6 +201,7 @@ service : (UserIndexInitArgs) -> {
   update_profile_owner_for_individual_canisters : () -> ();
   update_restart_timers_hon_game : () -> (text);
   update_well_known_principal : (KnownPrincipalType, principal) -> ();
+  upgrade_all_creator_dao_governance_canisters_in_the_network : (blob) -> ();
   upgrade_specific_individual_user_canister_with_latest_wasm : (
       principal,
       opt principal,

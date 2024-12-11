@@ -39,7 +39,6 @@ pub mod get_subnet_available_capacity;
 pub mod get_subnet_backup_capacity;
 pub mod make_individual_canister_logs_private;
 pub mod make_individual_canister_logs_public;
-pub mod notify_all_individual_canisters_to_upgrade_creator_dao_governance_canisters;
 pub mod notify_specific_individual_canister_to_upgrade_creator_dao_governance_canisters;
 pub mod provision_empty_canisters;
 pub mod receive_empty_canister_from_individual_canister;
@@ -50,6 +49,7 @@ pub mod reset_user_canister_ml_feed_cache;
 pub mod start_upgrades_for_individual_canisters;
 pub mod update_canisters_access_time;
 pub mod update_user_canister_restart_timers;
+pub mod upgrade_all_creator_dao_governance_canisters_in_the_network;
 
 #[update]
 pub async fn get_user_canister_status(
