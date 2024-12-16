@@ -624,7 +624,7 @@ service : (IndividualUserTemplateInitArgs) -> {
   http_request : (HttpRequest) -> (HttpResponse) query;
   list_namespace_keys : (nat64) -> (Result_18) query;
   list_namespaces : (nat64, nat64) -> (vec NamespaceForFrontend) query;
-  load_snapshot : (nat64) -> ();
+  load_snapshot : () -> ();
   once_reenqueue_timers_for_pending_bet_outcomes : () -> (Result_19);
   read_key_value_pair : (nat64, text) -> (Result_5) query;
   receive_and_save_snaphot : (nat64, blob) -> ();
