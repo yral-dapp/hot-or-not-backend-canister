@@ -18,7 +18,6 @@ sha256 = "1.5.0"
 sha2 = "0.10.8"
 flate2 = "1.0.33"
 serde_bytes = "0.11.15"
-serde_json = {workspace = true}
 ic-sns-wasm = { workspace = true }
 ic-base-types = { workspace = true }
 icp-ledger = { workspace = true }

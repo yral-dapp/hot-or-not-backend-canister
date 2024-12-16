@@ -3748,7 +3748,6 @@ dependencies = [
  "pocket-ic",
  "serde",
  "serde_bytes",
- "serde_json",
  "sha2",
  "sha256",
  "shared_utils",
