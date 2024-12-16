@@ -1399,11 +1399,15 @@ fn all_canister_snapshot_tests(){
         let length = std::cmp::min(chunk_size, snapshot_len - offset);
         let chunk = &data[(offset as usize)..((offset + length) as usize)];
 
-        pocket_ic.update_call(user_index_canister_id, reclaim_principal_id, "receive_and_save_snaphot", Encode!(&offset, &chunk).unwrap()).unwrap();
+        if pocket_ic.update_call(user_index_canister_id, reclaim_principal_id, "receive_and_save_snaphot", Encode!(&offset, &chunk).unwrap()).is_err(){
+            panic!("\n🛑receive_and_save_snaphot failed for user index\n")
+        };
         offset += length;
     }
 
-    pocket_ic.update_call(user_index_canister_id, reclaim_principal_id, "load_snapshot", Encode!(&()).unwrap()).unwrap();
+    if pocket_ic.update_call(user_index_canister_id, reclaim_principal_id, "load_snapshot", Encode!(&()).unwrap()).is_err(){
+        panic!("\n🛑Load snapshot failed for user index\n")
+    };
 }
 
 const PF_ORCH_WASM_PATH: &str =
