@@ -28,6 +28,7 @@ mod utils;
 
 thread_local! {
     pub static CANISTER_DATA: RefCell<CanisterData> = RefCell::default();
+    pub static SNAPSHOT_DATA: RefCell<Vec<u8>> = RefCell::default();
 }
 
 export_candid!();
