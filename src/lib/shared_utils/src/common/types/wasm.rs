@@ -14,12 +14,12 @@ pub enum WasmType {
 
 impl Storable for WasmType {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
-        let bytes = minicbor_serde::to_vec(self).unwrap();
+        let bytes = postcard::to_stdvec(self).unwrap();
         Cow::Owned(bytes)
     }
 
     fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
-        let wasm_type: WasmType = minicbor_serde::from_slice(bytes.as_ref()).unwrap();
+        let wasm_type: WasmType = postcard::from_bytes(bytes.as_ref()).unwrap();
         wasm_type
     }
 
@@ -35,12 +35,12 @@ pub struct CanisterWasm {
 
 impl Storable for CanisterWasm {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
-        let bytes = minicbor_serde::to_vec(self).unwrap();
+        let bytes = postcard::to_stdvec(self).unwrap();
         Cow::Owned(bytes)
     }
 
     fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
-        let canister_wasm: CanisterWasm = minicbor_serde::from_slice(bytes.as_ref()).unwrap();
+        let canister_wasm: CanisterWasm = postcard::from_bytes(bytes.as_ref()).unwrap();
         canister_wasm
     }
 

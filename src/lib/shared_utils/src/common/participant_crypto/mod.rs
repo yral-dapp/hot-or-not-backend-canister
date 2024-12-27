@@ -87,7 +87,7 @@ impl ProofOfAuthorityMsg {
     }
 
     pub fn serialize_cbor(&self) -> Vec<u8> {
-        minicbor_serde::to_vec(self)
+        postcard::to_stdvec(self)
             .expect("PoaMessage should serialize succesfully")
     }
 }

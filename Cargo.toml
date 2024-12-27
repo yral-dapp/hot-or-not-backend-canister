@@ -13,7 +13,7 @@ members = [
 
 [workspace.dependencies]
 candid = "0.10.2"
-minicbor-serde = { version = "0.3.2", features = ["std"] }
+postcard = { version = "1.1.1", features = ["use-std"]}
 pocket-ic = "6.0.0"
 ic-cdk = "0.15.1"
 ic-cdk-timers = "0.7.0"

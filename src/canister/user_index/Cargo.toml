@@ -17,7 +17,7 @@ shared_utils = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 ic-stable-structures = { workspace = true }
-minicbor-serde = { workspace = true }
+postcard = { workspace = true }
 futures = { workspace = true }
 
 [dev-dependencies]

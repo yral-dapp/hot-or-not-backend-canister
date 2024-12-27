@@ -7,7 +7,7 @@ use crate::{data_model::memory, CANISTER_DATA};
 #[pre_upgrade]
 fn pre_upgrade() {
     let state_bytes = CANISTER_DATA.with_borrow(|canister_data| 
-        minicbor_serde::to_vec(canister_data)
+        postcard::to_stdvec(canister_data)
     )
     .expect("failed to encode state");
     let len = state_bytes.len() as u32;

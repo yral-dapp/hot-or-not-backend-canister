@@ -9,7 +9,7 @@ use crate::CANISTER_DATA;
 #[pre_upgrade]
 fn pre_upgrade() {
     let state_bytes = CANISTER_DATA.with(|canister_data_ref_cell| {
-        minicbor_serde::to_vec(&*canister_data_ref_cell.borrow())
+        postcard::to_stdvec(&*canister_data_ref_cell.borrow())
     })
     .expect("failed to encode state");
 

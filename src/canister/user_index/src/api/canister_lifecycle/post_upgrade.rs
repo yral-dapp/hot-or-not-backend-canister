@@ -42,7 +42,7 @@ fn restore_data_from_stable_memory() {
     let mut canister_data_bytes = vec![0; heap_data_len];
     heap_data.read(4, &mut canister_data_bytes);
     let canister_data =
-        minicbor_serde::from_slice(&canister_data_bytes).expect("Failed to deserialize heap data");
+        postcard::from_bytes(&canister_data_bytes).expect("Failed to deserialize heap data");
     CANISTER_DATA.with_borrow_mut(|cd| {
         *cd = canister_data;
     })
