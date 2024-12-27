@@ -1,0 +1,59 @@
+use candid::Nat;
+use ic_cdk::update;
+use shared_utils::common::types::known_principal::KnownPrincipalType;
+
+use crate::CANISTER_DATA;
+
+#[update]
+pub async fn redeem_gdollr(amount: Nat) -> Result<(), String> {
+    let caller = ic_cdk::caller();
+    let (profile_owner, user_index) = CANISTER_DATA.with_borrow_mut(|cdata| {
+        let admin = cdata.known_principal_ids[&KnownPrincipalType::UserIdGlobalSuperAdmin];
+        if admin != caller {
+            return Err("Unauthorized".to_string());
+        }
+        let principal_id = cdata.profile.principal_id.ok_or("Unavailable")?;
+
+        if cdata.pump_n_dump.dollr_balance < amount {
+            return Err("Not enough balance".to_string());
+        }
+        cdata.pump_n_dump.dollr_balance -= amount.clone();
+
+        let user_index = cdata.known_principal_ids[&KnownPrincipalType::CanisterIdUserIndex];
+        Ok((principal_id, user_index))
+    })?;
+
+    let res = ic_cdk::call::<_, (Result<(), String>,)>(
+        user_index,
+        "redeem_gdollr",
+        (profile_owner, amount.clone())
+    ).await;
+
+    match res {
+        Ok((Err(e),)) | Err((_, e)) => {
+            CANISTER_DATA.with_borrow_mut(|cdata| {
+                cdata.pump_n_dump.dollr_balance += amount
+            });
+            Err(e)
+        },
+        Ok((Ok(()),)) => Ok(()),
+    }
+}
+
+#[update]
+pub async fn settle_gdollr_balance(delta: i128) -> Result<(), String> {
+    let caller = ic_cdk::caller();
+    CANISTER_DATA.with_borrow_mut(|cdata| {
+        let admin = cdata.known_principal_ids[&KnownPrincipalType::UserIdGlobalSuperAdmin];
+        if admin != caller {
+            return Err("Unauthorized".to_string())
+        }
+        if delta > 0 {
+            cdata.pump_n_dump.dollr_balance.0 += delta as u128;
+        } else {
+            cdata.pump_n_dump.dollr_balance.0 -= (-delta) as u128;
+        }
+
+        Ok(())
+    })
+}

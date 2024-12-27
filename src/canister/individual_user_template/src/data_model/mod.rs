@@ -3,9 +3,10 @@ use std::{
     time::SystemTime,
 };
 
-use candid::{Deserialize, Principal};
+use candid::{Deserialize, Nat, Principal};
 use ic_cdk::api::management_canister::provisional::CanisterId;
 use memory::{get_success_history_memory, get_token_list_memory, get_watch_history_memory};
+use pump_n_dump::PumpAndDumpGame;
 use serde::Serialize;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
@@ -43,6 +44,7 @@ use kv_storage::AppStorage;
 
 pub mod kv_storage;
 pub mod memory;
+pub mod pump_n_dump;
 
 #[derive(Deserialize, Serialize)]
 pub struct CanisterData {
@@ -97,6 +99,8 @@ pub struct CanisterData {
     pub ml_data: MLData,
     #[serde(default)]
     pub empty_canisters: AllotedEmptyCanister,
+    #[serde(default)]
+    pub pump_n_dump: PumpAndDumpGame,
 }
 
 #[derive(Serialize, Deserialize, Default)]
@@ -206,6 +210,7 @@ impl Default for CanisterData {
             token_roots: _default_token_list(),
             ml_data: MLData::default(),
             empty_canisters: AllotedEmptyCanister::default(),
+            pump_n_dump: PumpAndDumpGame::default(),
         }
     }
 }

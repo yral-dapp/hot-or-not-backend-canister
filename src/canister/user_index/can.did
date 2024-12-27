@@ -56,6 +56,7 @@ type KnownPrincipalType = variant {
   CanisterIdTopicCacheIndex;
   CanisterIdRootCanister;
   CanisterIdDataBackup;
+  CanisterIdSnsLedger;
   CanisterIdSnsWasm;
   CanisterIdPostCache;
   CanisterIdSNSController;
@@ -185,6 +186,7 @@ service : (UserIndexInitArgs) -> {
     );
   recharge_individual_user_canister : () -> (Result_3);
   reclaim_cycles_from_individual_canisters : () -> ();
+  redeem_gdollr : (principal, nat) -> (Result_3);
   request_cycles : (nat) -> (Result_3);
   reset_user_canisters_ml_feed_cache : () -> (text);
   reset_user_individual_canisters : (vec principal) -> (Result_2);

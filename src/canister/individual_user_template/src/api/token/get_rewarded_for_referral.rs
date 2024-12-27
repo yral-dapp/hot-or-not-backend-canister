@@ -34,8 +34,8 @@ fn get_rewarded_for_referral(referrer: Principal, referree: Principal) {
 
     let current_time = system_time::get_current_system_time_from_ic();
 
-    CANISTER_DATA.with(|canister_data_ref_cell| {
-        let my_token_balance = &mut canister_data_ref_cell.borrow_mut().my_token_balance;
+    CANISTER_DATA.with_borrow_mut(|cdata| {
+        let my_token_balance = &mut cdata.my_token_balance;
 
         let referral_reward_amount =
             TokenEvent::get_token_amount_for_token_event(&TokenEvent::Mint {
@@ -55,5 +55,7 @@ fn get_rewarded_for_referral(referrer: Principal, referree: Principal) {
             },
             timestamp: current_time,
         });
+
+        cdata.pump_n_dump.dollr_balance += cdata.pump_n_dump.referral_reward.clone();
     });
 }
