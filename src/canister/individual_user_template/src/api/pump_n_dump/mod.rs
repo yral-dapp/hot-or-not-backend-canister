@@ -1,4 +1,4 @@
-use candid::Nat;
+use candid::{Nat, Principal};
 use ic_cdk::update;
 use shared_utils::common::types::known_principal::KnownPrincipalType;
 
@@ -53,6 +53,22 @@ pub async fn settle_gdollr_balance(delta: i128) -> Result<(), String> {
         } else {
             cdata.pump_n_dump.dollr_balance.0 -= (-delta) as u128;
         }
+
+        Ok(())
+    })
+}
+
+#[update]
+pub async fn add_dollr_to_liquidity_pool(pool_root: Principal, amount: Nat) -> Result<(), String> {
+    let caller = ic_cdk::caller();
+    CANISTER_DATA.with_borrow_mut(|cdata| {
+        let admin = cdata.known_principal_ids[&KnownPrincipalType::UserIdGlobalSuperAdmin];
+        if admin != caller {
+            return Err("Unauthorized".to_string())
+        }
+        cdata.pump_n_dump.liquidity_pools.entry(pool_root)
+            .and_modify(|bal| *bal += amount.clone())
+            .or_insert(amount);
 
         Ok(())
     })
