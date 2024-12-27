@@ -11,7 +11,6 @@ use test_utils::setup::{
     env::pocket_ic_env::{get_new_pocket_ic_env, provision_subnet_orchestrator_canister}, test_constants::get_mock_user_charlie_principal_id,
 };
 
-#[ignore = "we are not provisioning new backup canisters anymore"]
 #[test]
 pub fn provision_new_available_and_backup_canisters_on_signup_if_required() {
     let (pocket_ic, known_principal) = get_new_pocket_ic_env();
@@ -149,22 +148,4 @@ pub fn provision_new_available_and_backup_canisters_on_signup_if_required() {
         .unwrap();
 
     assert!(subnet_available_canister_cnt > 0);
-
-    let subnet_backup_canister_cnt = pocket_ic
-        .query_call(
-            subnet_orchestrator_canister_id,
-            Principal::anonymous(),
-            "get_subnet_backup_capacity",
-            candid::encode_one(()).unwrap(),
-        )
-        .map(|res| {
-            let available_capacity: u64 = match res {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("get subnet available capacity call failed"),
-            };
-            available_capacity
-        })
-        .unwrap();
-
-    assert!(subnet_backup_canister_cnt > 0);
 }

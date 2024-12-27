@@ -4526,6 +4526,8 @@ dependencies = [
  "ic-stable-structures",
  "minicbor-serde",
  "serde",
+ "serde_json",
+ "serde_json_any_key",
  "shared_utils",
  "test_utils",
 ]
@@ -4568,6 +4570,7 @@ dependencies = [
  "ic-cdk-macros 0.16.0",
  "ic-cdk-timers",
  "serde",
+ "serde_json",
  "shared_utils",
  "test_utils",
 ]

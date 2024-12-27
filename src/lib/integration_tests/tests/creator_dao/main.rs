@@ -1,3 +1,4 @@
+pub mod test_custom_governance_upgrade;
 pub mod test_deletion_of_creator_tokens;
 pub mod test_number_of_creator_tokens;
 pub mod types;

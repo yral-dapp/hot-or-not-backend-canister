@@ -80,7 +80,7 @@ impl CanisterData {
     }
 
     pub fn remove_backup_canister(&mut self, canister_id: &Principal) {
-        self.backup_canister_pool.remove(&canister_id);
+        self.backup_canister_pool.remove(canister_id);
         // removal from backup pool does not mean its not part of our fleet
         // an individual canister might be installed on it instead, for example
         // so we don't remove it from children_merkle

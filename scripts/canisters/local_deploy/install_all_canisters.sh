@@ -43,6 +43,11 @@ then
   cargo test
 fi
 
+
+dfx canister install platform_orchestrator --argument "(record {
+  version = \"v1.0.0\"
+})"
+
 dfx canister install post_cache --argument "(record {
   known_principal_ids = opt vec {
     record {
@@ -67,6 +72,10 @@ dfx canister install post_cache --argument "(record {
 
 dfx canister install user_index --argument "(record {
   known_principal_ids = opt vec {
+    record {
+      variant { CanisterIdPlatformOrchestrator };
+      principal \"$(dfx canister id platform_orchestrator)\";
+    };
     record {
       variant { UserIdGlobalSuperAdmin };
       principal \"$(dfx identity get-principal)\";
@@ -95,5 +104,9 @@ dfx canister install user_index --argument "(record {
   };
   version= \"v1.0.0\"
 })"
-
 scripts/canisters/local_deploy/create_pool_of_individual_canister_user_index.sh
+
+ dfx canister update-settings user_index --set-controller $(dfx canister id platform_orchestrator) --yes 
+ dfx canister call platform_orchestrator register_new_subnet_orchestrator  "(principal \"$(dfx canister id user_index)\", true)"
+
+
