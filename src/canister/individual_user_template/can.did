@@ -574,6 +574,7 @@ service : (IndividualUserTemplateInitArgs) -> {
   deployed_cdao_canisters : () -> (vec DeployedCdaoCanisters) query;
   do_i_follow_this_user : (FolloweeArg) -> (Result_9) query;
   download_snapshot : (nat64, nat64) -> (blob) query;
+  gdollr_balance : () -> (nat) query;
   get_bet_details_for_a_user_on_a_post : (principal, nat64) -> (
       Result_10,
     ) query;

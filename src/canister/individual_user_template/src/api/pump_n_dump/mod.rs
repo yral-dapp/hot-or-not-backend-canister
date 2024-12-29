@@ -1,5 +1,5 @@
-use candid::{Nat, Principal};
-use ic_cdk::update;
+use candid::{Int, Nat, Principal};
+use ic_cdk::{query, update};
 use shared_utils::common::types::known_principal::KnownPrincipalType;
 
 use crate::CANISTER_DATA;
@@ -41,7 +41,7 @@ pub async fn redeem_gdollr(amount: Nat) -> Result<(), String> {
 }
 
 #[update]
-pub async fn settle_gdollr_balance(delta: i128) -> Result<(), String> {
+pub async fn settle_gdollr_balance(delta: Int) -> Result<(), String> {
     let caller = ic_cdk::caller();
     CANISTER_DATA.with_borrow_mut(|cdata| {
         let admin = cdata.known_principal_ids[&KnownPrincipalType::UserIdGlobalSuperAdmin];
@@ -49,9 +49,9 @@ pub async fn settle_gdollr_balance(delta: i128) -> Result<(), String> {
             return Err("Unauthorized".to_string())
         }
         if delta > 0 {
-            cdata.pump_n_dump.dollr_balance.0 += delta as u128;
+            cdata.pump_n_dump.dollr_balance.0 += delta.0.to_biguint().unwrap();
         } else {
-            cdata.pump_n_dump.dollr_balance.0 -= (-delta) as u128;
+            cdata.pump_n_dump.dollr_balance.0 -= (-delta.0).to_biguint().unwrap();
         }
 
         Ok(())
@@ -72,4 +72,9 @@ pub async fn add_dollr_to_liquidity_pool(pool_root: Principal, amount: Nat) -> R
 
         Ok(())
     })
+}
+
+#[query]
+pub async fn gdollr_balance() -> Nat {
+    CANISTER_DATA.with_borrow(|cdata| cdata.pump_n_dump.dollr_balance.clone())
 }
