@@ -1,7 +1,6 @@
 use std::collections::{BTreeMap, HashSet};
 
 use candid::{Deserialize, Principal};
-use ic_sns_root::pb::v1::{ListSnsCanistersRequest, ListSnsCanistersResponse};
 use ic_stable_structures::StableBTreeMap;
 use serde::Serialize;
 use shared_utils::canister_specific::user_index::types::{
@@ -66,7 +65,7 @@ fn _empty_wasms() -> StableBTreeMap<WasmType, CanisterWasm, Memory> {
     StableBTreeMap::init(get_wasm_memory())
 }
 
-pub async fn get_sns_ledger() -> Option<Principal> {
+pub fn get_sns_ledger() -> Option<Principal> {
     let ledger = CANISTER_DATA.with_borrow(|cdata| {
         cdata
             .configuration
@@ -74,30 +73,6 @@ pub async fn get_sns_ledger() -> Option<Principal> {
             .get(&KnownPrincipalType::CanisterIdSnsLedger)
             .copied()
     });
-    if let Some(ledger) = ledger {
-        return Some(ledger);
-    };
 
-    let root_canister = CANISTER_DATA.with_borrow(|cdata| {
-        cdata
-            .configuration
-            .known_principal_ids
-            .get(&KnownPrincipalType::CanisterIdRootCanister)
-            .copied()
-    })?;
-    let sns_canisters: (ListSnsCanistersResponse,) = ic_cdk::call(
-        root_canister,
-        "list_sns_canisters",
-        (ListSnsCanistersRequest {},)
-    ).await.ok()?;
-
-    let ledger = sns_canisters.0.ledger?.0;
-    CANISTER_DATA.with_borrow_mut(|cdata| {
-        cdata
-            .configuration
-            .known_principal_ids
-            .insert(KnownPrincipalType::CanisterIdRootCanister, ledger)
-    });
-
-    Some(ledger)
+    ledger
 }

@@ -1,5 +1,6 @@
 use candid::{Int, Nat, Principal};
 use ic_cdk::{query, update};
+use icrc_ledger_types::{icrc1::account::Account, icrc2::transfer_from::{TransferFromArgs, TransferFromError}};
 use shared_utils::common::types::known_principal::KnownPrincipalType;
 
 use crate::CANISTER_DATA;
@@ -72,6 +73,46 @@ pub async fn add_dollr_to_liquidity_pool(pool_root: Principal, amount: Nat) -> R
 
         Ok(())
     })
+}
+
+#[update]
+pub async fn stake_dollr_for_gdollr(amount: Nat) -> Result<(), String> {
+    let (ledger_id, user_index) = CANISTER_DATA.with_borrow(|cdata| {
+        let ledger_id = cdata.known_principal_ids
+            .get(&KnownPrincipalType::CanisterIdSnsLedger)
+            .copied()?;
+        let user_index = cdata.known_principal_ids
+            .get(&KnownPrincipalType::CanisterIdUserIndex)
+            .copied()?;
+
+        Some((ledger_id, user_index))
+    }).ok_or("Unavailable")?;
+
+    let caller = ic_cdk::caller();
+    let res: (Result<Nat, TransferFromError>,) = ic_cdk::call(
+        ledger_id,
+        "icrc2_transfer_from",
+        (TransferFromArgs {
+            spender_subaccount: None,
+            from: Account {
+                owner: caller,
+                subaccount: None,
+            },
+            to: Account { owner: user_index, subaccount: None, },
+            amount: amount.clone(),
+            fee: None,
+            memo: None,
+            created_at_time: None,
+        },)
+    ).await.map_err(|(_, e)| e)?;
+
+    res.0.map_err(|e| format!("{e:?}"))?;
+
+    CANISTER_DATA.with_borrow_mut(|cdata| {
+        cdata.pump_n_dump.dollr_balance += amount;
+    });
+
+    Ok(())
 }
 
 #[query]

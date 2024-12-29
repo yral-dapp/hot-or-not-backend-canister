@@ -6,7 +6,7 @@ use crate::{data_model::get_sns_ledger, CANISTER_DATA};
 
 #[update]
 pub async fn redeem_gdollr(to_principal: Principal, amount: Nat) -> Result<(), String> {
-    let ledger_id = get_sns_ledger().await.ok_or("Unavailable")?;
+    let ledger_id = get_sns_ledger().ok_or("Unavailable")?;
 
     let caller = ic_cdk::caller();
     CANISTER_DATA.with_borrow(|cdata| {

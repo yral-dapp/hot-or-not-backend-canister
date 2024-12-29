@@ -647,6 +647,7 @@ service : (IndividualUserTemplateInitArgs) -> {
   settle_neurons_fund_participation : (
       SettleNeuronsFundParticipationRequest,
     ) -> (SettleNeuronsFundParticipationResponse);
+  stake_dollr_for_gdollr : (nat) -> (Result_1);
   transfer_token_to_user_canister : (principal, principal, opt blob, nat) -> (
       Result_27,
     );
