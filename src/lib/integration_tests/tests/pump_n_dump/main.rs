@@ -1,0 +1,248 @@
+mod mock_ledger;
+
+use candid::{Int, Nat, Principal};
+use mock_ledger::{mock_ledger_intf::{Account, ApproveArgs, TransferArg}, LEDGER_FEE, LEDGER_MINT_AMOUNT};
+use pocket_ic::PocketIc;
+use shared_utils::{canister_specific::individual_user_template::types::session::SessionType, common::types::known_principal::{KnownPrincipalMap, KnownPrincipalType}, constant::GLOBAL_SUPER_ADMIN_USER_ID};
+use test_utils::setup::{env::pocket_ic_env::{execute_query, execute_update, execute_update_no_res, execute_update_no_res_multi, get_new_pocket_ic_env}, test_constants::{get_global_super_admin_principal_id, get_mock_user_alice_principal_id, get_mock_user_charlie_principal_id}};
+
+struct PumpNDumpHarness {
+    pic: PocketIc,
+    known_principals: KnownPrincipalMap,
+    user_index: Principal,
+}
+
+impl Default for PumpNDumpHarness {
+    fn default() -> Self {
+        let (pic, mut known_principals) = get_new_pocket_ic_env();
+
+        let platform_canister_id = known_principals[&KnownPrincipalType::CanisterIdPlatformOrchestrator];
+
+        let super_admin = get_global_super_admin_principal_id();
+        let charlie_global_admin = get_mock_user_charlie_principal_id();
+
+        execute_update_no_res(
+            &pic,
+            super_admin,
+            platform_canister_id,
+            "add_principal_as_global_admin",
+            &charlie_global_admin
+        );
+
+        let dollr_ledger = mock_ledger::deploy(&pic, charlie_global_admin);
+        execute_update_no_res_multi(
+            &pic,
+            super_admin,
+            platform_canister_id,
+            "update_global_known_principal",
+            (
+                KnownPrincipalType::CanisterIdSnsLedger,
+                dollr_ledger,
+            )
+        );
+        known_principals.insert(KnownPrincipalType::CanisterIdSnsLedger, dollr_ledger);
+
+        let app_subnets = pic.topology().get_app_subnets();
+
+        let subnet_orchestartor: Principal = execute_update::<_, Result<_, String>>(
+            &pic,
+            charlie_global_admin,
+            platform_canister_id,
+            "provision_subnet_orchestrator_canister",
+            &app_subnets[1]
+        ).unwrap();
+
+        for _ in 0..50 {
+            pic.tick();
+        }
+
+        execute_update_no_res(
+            &pic,
+            charlie_global_admin,
+            dollr_ledger,
+            "icrc1_transfer",
+            &TransferArg {
+                to: Account {
+                    owner: subnet_orchestartor,
+                    subaccount: None,
+                },
+                fee: None,
+                memo: None,
+                from_subaccount: None,
+                created_at_time: None,
+                amount: (LEDGER_MINT_AMOUNT - LEDGER_FEE).into(),
+            }
+        );
+
+        Self {
+            pic,
+            known_principals,
+            user_index: subnet_orchestartor,
+        }
+    }
+}
+
+impl PumpNDumpHarness {
+    pub fn provision_individual_canister(&self, owner: Principal) -> Principal {
+        let new_canister: Principal = execute_update::<_, Result<_, String>>(
+            &self.pic,
+            owner,
+            self.user_index,
+            "get_requester_principals_canister_id_create_if_not_exists",
+            &()
+        ).unwrap();
+
+        // XX: hack, this is a canister bug, where individual user canister uses mainnet admin id, even in testing
+        // for certain update calls
+        let super_admin = Principal::from_text(GLOBAL_SUPER_ADMIN_USER_ID).unwrap();
+        let update_res = execute_update::<_, Result<String, String>>(
+            &self.pic,
+            super_admin,
+            new_canister,
+            "update_session_type",
+            &SessionType::RegisteredSession
+        );
+        match update_res {
+            Ok(_) => (),
+            Err(e) if e == "Session Already marked as Registered Session" => (),
+            e => panic!("{e:?}"),
+        };
+
+        new_canister
+    }
+
+    pub fn gdollr_balance(&self, individual_canister: Principal) -> Nat {
+        execute_query(
+            &self.pic,
+            Principal::anonymous(),
+            individual_canister,
+            "gdollr_balance",
+            &()
+        )
+    }
+
+    pub fn ledger_balance(&self, user: Principal) -> Nat {
+        execute_query(
+            &self.pic,
+            Principal::anonymous(),
+            self.known_principals[&KnownPrincipalType::CanisterIdSnsLedger],
+            "icrc1_balance_of",
+            &Account {
+                owner: user,
+                subaccount: None,
+            }
+        )
+    }
+}
+
+#[test]
+fn newly_registered_user_should_have_1000_gdollr() {
+    let harness = PumpNDumpHarness::default();
+    let alice = get_mock_user_alice_principal_id();
+    let alice_canister = harness.provision_individual_canister(alice);
+
+    let gdollr_bal = harness.gdollr_balance(alice_canister);
+
+    assert_eq!(gdollr_bal, Nat::from(1e8 as u64));
+}
+
+#[test]
+fn claim_gdollr_and_stake_gdollr_should_work() {
+    let harness = PumpNDumpHarness::default();
+
+    let alice = get_mock_user_alice_principal_id();
+    let alice_canister = harness.provision_individual_canister(alice);
+
+    let to_claim = Nat::from(1e4 as u64);
+
+    let past_bal = harness.ledger_balance(alice);
+
+    let global_admin = Principal::from_text(GLOBAL_SUPER_ADMIN_USER_ID).unwrap();
+
+    execute_update::<_, Result<(), String>>(
+        &harness.pic,
+        global_admin,
+        alice_canister,
+        "redeem_gdollr",
+        &(to_claim.clone() + LEDGER_FEE * 2), 
+    ).unwrap();
+
+    let new_bal = harness.ledger_balance(alice);
+
+    assert_eq!(new_bal - past_bal.clone(), to_claim.clone() + LEDGER_FEE * 2);
+
+    let amount = to_claim.clone() + LEDGER_FEE;
+    execute_update_no_res(
+        &harness.pic,
+        alice,
+        harness.known_principals[&KnownPrincipalType::CanisterIdSnsLedger],
+        "icrc2_approve",
+        &ApproveArgs {
+            fee: None,
+            memo: None,
+            from_subaccount: None,
+            created_at_time: None,
+            amount,
+            expected_allowance: None,
+            expires_at: None,
+            spender: Account {
+                owner: alice_canister,
+                subaccount: None,
+            },
+        }
+    );
+
+    let past_gdollr_bal = harness.gdollr_balance(alice_canister);
+
+    execute_update::<_, Result<(), String>>(
+        &harness.pic,
+        alice,
+        alice_canister,
+        "stake_dollr_for_gdollr",
+        &to_claim,
+    ).unwrap();
+
+    let new_bal = harness.ledger_balance(alice);
+    assert_eq!(new_bal, past_bal);
+
+    let new_gdollr_bal = harness.gdollr_balance(alice_canister);
+    assert_eq!(new_gdollr_bal - past_gdollr_bal, to_claim);
+}
+
+#[test]
+fn settle_gdollr_balance_should_work() {
+    let harness = PumpNDumpHarness::default();
+
+    let alice = get_mock_user_alice_principal_id();
+    let alice_canister = harness.provision_individual_canister(alice);
+
+    // Test Addition
+    let past_bal = harness.gdollr_balance(alice_canister);
+    let to_add = Int::from(1e4 as u64);
+
+    let global_admin = Principal::from_text(GLOBAL_SUPER_ADMIN_USER_ID).unwrap();
+    execute_update::<_, Result<(), String>>(
+        &harness.pic,
+        global_admin,
+        alice_canister,
+        "settle_gdollr_balance",
+        &to_add 
+    ).unwrap();
+
+    let new_bal = harness.gdollr_balance(alice_canister);
+    assert_eq!(new_bal.clone() - past_bal, Nat::from(1e4 as u64));
+
+    // Test Deduction
+    let past_bal = new_bal;
+    let to_deduct = Int::from(-1e4 as i64);
+
+    execute_update::<_, Result<(), String>>(
+        &harness.pic,
+        global_admin,
+        alice_canister,
+        "settle_gdollr_balance",
+        &to_deduct,
+    ).unwrap();
+    let new_bal = harness.gdollr_balance(alice_canister);
+    assert_eq!(past_bal - new_bal, Nat::from(1e4 as u64));
+}
