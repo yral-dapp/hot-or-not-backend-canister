@@ -118,13 +118,6 @@ type FractionalDeveloperVotingPower = record {
   swap_distribution : opt SwapDistribution;
 };
 type GameDirection = variant { Dump; Pump };
-type GameInfo = record {
-  game_direction : GameDirection;
-  reward : nat;
-  pumps : nat64;
-  dumps : nat64;
-  token_root : principal;
-};
 type GetPostsOfUserProfileError = variant {
   ReachedEndOfItemsList;
   InvalidBoundsPassed;
@@ -277,6 +270,13 @@ type PaginationError = variant {
   InvalidBoundsPassed;
   ExceededMaxNumberOfItemsAllowedInOneRequest;
 };
+type ParticipatedGameInfo = record {
+  game_direction : GameDirection;
+  reward : nat;
+  pumps : nat64;
+  dumps : nat64;
+  token_root : principal;
+};
 type PlaceBetArg = record {
   bet_amount : nat64;
   post_id : nat64;
@@ -356,6 +356,10 @@ type PostViewStatistics = record {
   threshold_view_count : nat64;
 };
 type Principals = record { principals : vec principal };
+type PumpNDumpStateDiff = variant {
+  Participant : ParticipatedGameInfo;
+  CreatorReward : nat;
+};
 type PumpsAndDumps = record { pumps : nat; dumps : nat };
 type RejectionCode = variant {
   NoError;
@@ -386,7 +390,7 @@ type Result_18 = variant { Ok : vec WatchHistoryItem; Err : text };
 type Result_19 = variant { Ok : vec text; Err : NamespaceErrors };
 type Result_2 = variant { Ok : nat64; Err : text };
 type Result_20 = variant { Ok : vec record { nat64; nat8 }; Err : text };
-type Result_21 = variant { Ok : vec GameInfo; Err : text };
+type Result_21 = variant { Ok : vec ParticipatedGameInfo; Err : text };
 type Result_22 = variant { Ok; Err : MigrationErrors };
 type Result_23 = variant { Ok; Err : AirdropError };
 type Result_24 = variant { Ok : text; Err : text };
@@ -649,7 +653,7 @@ service : (IndividualUserTemplateInitArgs) -> {
   receive_bet_from_bet_makers_canister : (PlaceBetArg, principal) -> (Result_4);
   receive_bet_winnings_when_distributed : (nat64, BetOutcomeForBetMaker) -> ();
   receive_data_from_hotornot : (principal, nat64, vec Post) -> (Result_22);
-  reconcile_user_state : (vec GameInfo) -> (Result_1);
+  reconcile_user_state : (vec PumpNDumpStateDiff) -> (Result_1);
   redeem_gdollr : (nat) -> (Result_1);
   request_airdrop : (principal, opt blob, nat, principal) -> (Result_23);
   reset_ml_feed_cache : () -> (Result_24);

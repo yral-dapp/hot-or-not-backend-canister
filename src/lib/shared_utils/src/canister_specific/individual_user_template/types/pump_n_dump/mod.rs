@@ -9,12 +9,18 @@ pub enum GameDirection {
 }
 
 #[derive(Serialize, Deserialize, Clone, CandidType)]
-pub struct GameInfo {
+pub struct ParticipatedGameInfo {
     pub pumps: u64,
     pub dumps: u64,
     pub reward: Nat,
     pub token_root: Principal,
     pub game_direction: GameDirection,
+}
+
+#[derive(Serialize, Deserialize, Clone, CandidType)]
+pub enum PumpNDumpStateDiff {
+    Participant(ParticipatedGameInfo),
+    CreatorReward(Nat)
 }
 
 #[derive(Serialize, Deserialize, Clone, CandidType)]

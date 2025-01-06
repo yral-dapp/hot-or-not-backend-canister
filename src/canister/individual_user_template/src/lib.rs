@@ -35,7 +35,7 @@ use shared_utils::{
             UserCanisterDetails, UserProfile, UserProfileDetailsForFrontend,
             UserProfileDetailsForFrontendV2, UserProfileUpdateDetailsFromFrontend,
         },
-        pump_n_dump::{GameInfo, PumpsAndDumps},
+        pump_n_dump::{ParticipatedGameInfo, PumpNDumpStateDiff, PumpsAndDumps},
         session::SessionType,
     },
     common::types::{

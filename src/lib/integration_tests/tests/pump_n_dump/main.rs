@@ -3,7 +3,7 @@ mod mock_ledger;
 use candid::{Nat, Principal};
 use mock_ledger::{mock_ledger_intf::{Account, ApproveArgs, TransferArg}, LEDGER_FEE, LEDGER_MINT_AMOUNT};
 use pocket_ic::PocketIc;
-use shared_utils::{canister_specific::individual_user_template::types::{pump_n_dump::{GameDirection, GameInfo, PumpsAndDumps}, session::SessionType}, common::types::known_principal::{KnownPrincipalMap, KnownPrincipalType}, constant::GLOBAL_SUPER_ADMIN_USER_ID};
+use shared_utils::{canister_specific::individual_user_template::types::{pump_n_dump::{GameDirection, PumpNDumpStateDiff, ParticipatedGameInfo, PumpsAndDumps}, session::SessionType}, common::types::known_principal::{KnownPrincipalMap, KnownPrincipalType}, constant::GLOBAL_SUPER_ADMIN_USER_ID};
 use test_utils::setup::{env::pocket_ic_env::{execute_query, execute_update, execute_update_no_res, execute_update_no_res_multi, get_new_pocket_ic_env}, test_constants::{get_global_super_admin_principal_id, get_mock_user_alice_principal_id, get_mock_user_charlie_principal_id}};
 
 struct PumpNDumpHarness {
@@ -153,6 +153,17 @@ impl PumpNDumpHarness {
             &()
         )
     }
+
+    pub fn reconcile_user_state(&self, individual_canister: Principal, state_diffs: &Vec<PumpNDumpStateDiff>) {
+        let global_admin = Principal::from_text(GLOBAL_SUPER_ADMIN_USER_ID).unwrap();
+        execute_update::<_, Result<(), String>>(
+            &self.pic,
+            global_admin,
+            individual_canister,
+            "reconcile_user_state",
+            state_diffs,
+        ).unwrap();
+    }
 }
 
 #[test]
@@ -240,15 +251,15 @@ fn reconcile_user_state_should_work() {
     let past_bal = harness.gdollr_balance(alice_canister);
     let past_pd = harness.pumps_and_dumps(alice_canister);
     let past_game_count = harness.played_game_count(alice_canister);
-    let games = vec![
-        GameInfo {
+    let games = [
+        ParticipatedGameInfo {
             pumps: 10,
             dumps: 10,
             reward: Nat::from(1e2 as u64),
             token_root: Principal::anonymous(),
             game_direction: GameDirection::Pump,
         },
-        GameInfo {
+        ParticipatedGameInfo {
             pumps: 10,
             dumps: 10,
             reward: Nat::from(1e2 as u64),
@@ -262,15 +273,12 @@ fn reconcile_user_state_should_work() {
             (acc.0 + gdata.pumps, acc.1 + gdata.dumps, acc.2 + gdata.reward.clone())
     });
     total_reward -= pumps + dumps;
+    let state_diffs: Vec<_> = games
+        .into_iter()
+        .map(PumpNDumpStateDiff::Participant)
+        .collect();
 
-    let global_admin = Principal::from_text(GLOBAL_SUPER_ADMIN_USER_ID).unwrap();
-    execute_update::<_, Result<(), String>>(
-        &harness.pic,
-        global_admin,
-        alice_canister,
-        "reconcile_user_state",
-        &games 
-    ).unwrap();
+    harness.reconcile_user_state(alice_canister, &state_diffs);
 
     let new_bal = harness.gdollr_balance(alice_canister);
     assert_eq!(new_bal.clone() - past_bal, total_reward);
@@ -278,28 +286,34 @@ fn reconcile_user_state_should_work() {
     let new_game_count = harness.played_game_count(alice_canister);
     assert_eq!(new_pd.pumps - past_pd.pumps, pumps);
     assert_eq!(new_pd.dumps - past_pd.dumps, dumps);
-    assert_eq!(new_game_count - past_game_count, games.len());
+    assert_eq!(new_game_count - past_game_count, state_diffs.len());
 
     // Test Deduction
     let past_bal = new_bal;
-    let games = vec! [
-        GameInfo {
+    let state_diffs = vec! [
+        PumpNDumpStateDiff::Participant(ParticipatedGameInfo {
             pumps: 1e4 as u64,
             dumps: 0,
             reward: Nat::from(0u32),
             token_root: Principal::anonymous(),
             game_direction: GameDirection::Dump,
-        }
+        })
     ];
     let to_deduct = Nat::from(1e4 as u64);
 
-    execute_update::<_, Result<(), String>>(
-        &harness.pic,
-        global_admin,
-        alice_canister,
-        "reconcile_user_state",
-        &games,
-    ).unwrap();
+    harness.reconcile_user_state(alice_canister, &state_diffs);
     let new_bal = harness.gdollr_balance(alice_canister);
-    assert_eq!(past_bal - new_bal, to_deduct);
+    assert_eq!(past_bal - new_bal.clone(), to_deduct);
+
+    // Test Creator Reward
+    let past_bal = new_bal;
+    let to_add = Nat::from(1e4 as u64);
+    let state_diffs = vec![
+        PumpNDumpStateDiff::CreatorReward(to_add.clone())
+    ];
+
+    harness.reconcile_user_state(alice_canister, &state_diffs);
+    let new_bal = harness.gdollr_balance(alice_canister);
+
+    assert_eq!(new_bal - past_bal, to_add);
 }

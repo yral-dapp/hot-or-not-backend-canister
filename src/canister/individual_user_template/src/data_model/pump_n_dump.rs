@@ -2,14 +2,14 @@ use std::collections::BTreeMap;
 
 use candid::{Nat, Principal};
 use serde::{Deserialize, Serialize};
-use shared_utils::canister_specific::individual_user_template::types::pump_n_dump::GameInfo;
+use shared_utils::canister_specific::individual_user_template::types::pump_n_dump::ParticipatedGameInfo;
 
 #[derive(Serialize, Deserialize)]
 pub struct PumpAndDumpGame {
     pub dollr_balance: Nat,
     pub referral_reward: Nat,
     pub onboarding_reward: Nat,
-    pub games: Vec<GameInfo>,
+    pub games: Vec<ParticipatedGameInfo>,
     pub total_pumps: Nat,
     pub total_dumps: Nat,
     // Root canister: dollr locked
