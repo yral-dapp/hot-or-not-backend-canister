@@ -6,7 +6,7 @@ use crate::{guard::is_caller::is_caller_global_admin_or_controller, CANISTER_DAT
 #[update(guard = "is_caller_global_admin_or_controller")]
 async fn update_canisters_last_functionality_access_time() -> Result<String, String> {
     let subnet_orchestrator_list = CANISTER_DATA
-        .with_borrow(|canister_data| canister_data.all_subnet_orchestrator_canisters_list.clone());
+        .with_borrow(|canister_data| canister_data.subnet_orchestrators().clone());
 
     for subnet_orchestrator in subnet_orchestrator_list {
         let result: CallResult<()> = call(

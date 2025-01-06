@@ -1,9 +1,9 @@
 use std::collections::{HashMap, HashSet};
 
-use candid::{CandidType, Principal};
-use ic_cdk::api::management_canister::main::{CanisterId, LogVisibility};
+use candid::{utils::ArgumentEncoder, CandidType, Deserialize, Principal};
+use ic_cdk::api::management_canister::main::CanisterId;
 use ic_ledger_types::{AccountIdentifier, BlockIndex, Tokens, DEFAULT_SUBACCOUNT};
-use pocket_ic::{management_canister::CanisterSettings, PocketIc, PocketIcBuilder};
+use pocket_ic::{management_canister::CanisterSettings, PocketIc, PocketIcBuilder, UserError, WasmResult};
 use shared_utils::{
     canister_specific::platform_orchestrator::types::args::PlatformOrchestratorInitArgs,
     common::types::{
@@ -42,6 +42,7 @@ struct AuthorizedSubnetWorks {
 pub fn get_new_pocket_ic_env() -> (PocketIc, KnownPrincipalMap) {
     let pocket_ic = PocketIcBuilder::new()
         .with_nns_subnet()
+        .with_ii_subnet() // enables tSchnorr
         .with_application_subnet()
         .with_application_subnet()
         .with_system_subnet()
@@ -191,4 +192,116 @@ pub fn get_new_pocket_ic_env() -> (PocketIc, KnownPrincipalMap) {
     }
 
     (pocket_ic, known_principal)
+}
+
+/// Provision a subnet canister
+/// `app_subnet_idx` is the index of the application subnet to use. Set to 0 if you're unsure
+/// optionally provide a `caller` for the call, else it uses the global super admin
+pub fn provision_subnet_orchestrator_canister(pic: &PocketIc, known_principals: &KnownPrincipalMap, app_subnet_idx: usize, caller: Option<Principal>) -> Principal {
+    let user_index = provision_subnet_orchestrator_canister_no_wait(pic, known_principals, app_subnet_idx, caller);
+    for _ in 0..50 {
+        pic.tick();
+    }
+
+    user_index
+}
+
+/// use [`provision_subnet_orchestrator_canister`] if you don't know what you're doing
+pub fn provision_subnet_orchestrator_canister_no_wait(pic: &PocketIc, known_principals: &KnownPrincipalMap, app_subnet_idx: usize, caller: Option<Principal>) -> Principal {
+    let caller = caller.unwrap_or_else(|| known_principals[&KnownPrincipalType::UserIdGlobalSuperAdmin]);
+    let platform_orc = known_principals[&KnownPrincipalType::CanisterIdPlatformOrchestrator];
+    let app_subnets = pic.topology().get_app_subnets();
+    let user_index_res: Result<Principal, String> = execute_update(
+        pic,
+        caller,
+        platform_orc,
+        "provision_subnet_orchestrator_canister",
+        &app_subnets[app_subnet_idx]
+    );
+    user_index_res.unwrap()
+}
+
+pub fn provision_n_subnet_orchestrator_canisters(pic: &PocketIc, known_principals: &KnownPrincipalMap, n: usize, caller: Option<Principal>) -> Vec<Principal> {
+    let mut out = vec![];
+
+    let caller = caller.unwrap_or_else(|| known_principals[&KnownPrincipalType::UserIdGlobalSuperAdmin]);
+    let platform_orc = known_principals[&KnownPrincipalType::CanisterIdPlatformOrchestrator];
+    let app_subnets = pic.topology().get_app_subnets();
+
+    for subnet in app_subnets.into_iter().take(n) {
+        let user_index_res: Result<Principal, String> = execute_update(
+            pic,
+            caller,
+            platform_orc,
+            "provision_subnet_orchestrator_canister",
+            &subnet
+        );
+        out.push(user_index_res.unwrap());
+    }
+
+    for _ in 0..(50 + 10 * n) {
+        pic.tick()
+    }
+
+    out
+}
+
+pub fn execute_query<P: CandidType, R: CandidType + for<'x> Deserialize<'x>>(
+    pic: &PocketIc,
+    sender: Principal,
+    canister_id: CanisterId,
+    method_name: &str,
+    payload: &P,
+) -> R {
+    unwrap_res(pic.query_call(canister_id, sender, method_name, candid::encode_one(payload).unwrap()))
+}
+
+pub fn execute_query_multi<P: ArgumentEncoder, R: CandidType + for<'x> Deserialize<'x>>(
+    pic: &PocketIc,
+    sender: Principal,
+    canister_id: CanisterId,
+    method_name: &str,
+    payload: P,
+) -> R {
+    unwrap_res(pic.query_call(canister_id, sender, method_name, candid::encode_args(payload).unwrap()))
+}
+
+pub fn execute_update<P: CandidType, R: CandidType + for<'x> Deserialize<'x>>(
+    pic: &PocketIc,
+    sender: Principal,
+    canister_id: CanisterId,
+    method_name: &str,
+    payload: &P,
+) -> R {
+   unwrap_res(pic.update_call(canister_id, sender, method_name, candid::encode_one(payload).unwrap()))
+}
+
+pub fn execute_update_multi<P: ArgumentEncoder, R: CandidType + for<'x> Deserialize<'x>>(
+    pic: &PocketIc,
+    sender: Principal,
+    canister_id: CanisterId,
+    method: &str,
+    payload: P
+) -> R {
+    unwrap_res(pic.update_call(canister_id, sender, method, candid::encode_args(payload).unwrap()))
+}
+
+pub fn execute_update_no_res<P: CandidType>(
+    pic: &PocketIc,
+    sender: Principal,
+    canister_id: CanisterId,
+    method: &str,
+    payload: &P,
+) {
+    let res = pic.update_call(canister_id, sender, method, candid::encode_one(payload).unwrap());
+    if let WasmResult::Reject(error) = res.unwrap() {
+        panic!("{error}");
+    }
+}
+
+fn unwrap_res<R: CandidType + for<'x> Deserialize<'x>>(response: Result<WasmResult, UserError>) -> R {
+    match response.unwrap() {
+        WasmResult::Reply(bytes) => candid::decode_one(&bytes).unwrap(),
+        WasmResult::Reject(error) => panic!("{error}"),
+    }
 }

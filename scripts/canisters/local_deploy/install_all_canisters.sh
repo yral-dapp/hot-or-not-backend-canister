@@ -99,6 +99,9 @@ dfx canister install user_index --argument "(record {
       vec { variant { CanisterAdmin }; variant { CanisterController }; }
     };
   };
+  proof_of_participation = opt record {
+    chain = vec {};
+  };
   version= \"v1.0.0\"
 })"
 scripts/canisters/local_deploy/create_pool_of_individual_canister_user_index.sh

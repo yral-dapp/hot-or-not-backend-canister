@@ -2,7 +2,7 @@ use candid::Principal;
 use pocket_ic::WasmResult;
 use shared_utils::common::types::known_principal::KnownPrincipalType;
 use test_utils::setup::{
-    env::pocket_ic_env::get_new_pocket_ic_env,
+    env::pocket_ic_env::{get_new_pocket_ic_env, provision_subnet_orchestrator_canister},
     test_constants::{
         get_global_super_admin_principal_id, get_mock_user_alice_principal_id,
         get_mock_user_charlie_canister_id,
@@ -41,25 +41,12 @@ pub fn platform_orchestrator_on_receiving_call_from_global_admin_can_make_indivi
         })
         .unwrap();
 
-    let subnet_orchestrator_canister_id = pocket_ic
-        .update_call(
-            platform_orchestrator_canister_id,
-            charlie_global_admin_principal,
-            "provision_subnet_orchestrator_canister",
-            candid::encode_one(application_subnets[0]).unwrap(),
-        )
-        .map(|res| {
-            let canister_id_result: Result<Principal, String> = match res {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("Canister call failed"),
-            };
-            canister_id_result.unwrap()
-        })
-        .unwrap();
-
-    for _ in 0..50 {
-        pocket_ic.tick()
-    }
+    let subnet_orchestrator_canister_id = provision_subnet_orchestrator_canister(
+        &pocket_ic,
+        &known_principal_map,
+        0,
+        Some(charlie_global_admin_principal),
+    );
 
     let alice_principal = get_mock_user_alice_principal_id();
 

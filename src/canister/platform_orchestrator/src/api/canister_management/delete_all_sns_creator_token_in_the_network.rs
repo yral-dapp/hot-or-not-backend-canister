@@ -9,7 +9,7 @@ use crate::{
 #[update(guard = "is_caller_global_admin_or_controller")]
 pub async fn delete_all_sns_creator_token_in_the_network() {
     let subnet_orchestrator_canister_ids = CANISTER_DATA
-        .with_borrow(|canister_data| canister_data.all_subnet_orchestrator_canisters_list.clone());
+        .with_borrow(|canister_data| canister_data.subnet_orchestrators().clone());
 
     let delete_sns_creator_token_in_subnet_tasks = subnet_orchestrator_canister_ids
         .into_iter()

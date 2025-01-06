@@ -5,7 +5,7 @@ use shared_utils::{
     common::types::known_principal::KnownPrincipalType,
 };
 use test_utils::setup::{
-    env::pocket_ic_env::get_new_pocket_ic_env,
+    env::pocket_ic_env::{get_new_pocket_ic_env, provision_subnet_orchestrator_canister},
     test_constants::{get_mock_user_alice_canister_id, get_mock_user_charlie_principal_id},
 };
 
@@ -35,26 +35,12 @@ fn test_updating_controller_before_upgrading_invidividual_canister() {
         )
         .unwrap();
 
-    let subnet_orchestrator_canister_id: Principal = pocket_ic
-        .update_call(
-            platform_canister_id,
-            charlie_global_admin,
-            "provision_subnet_orchestrator_canister",
-            candid::encode_one(application_subnets[1]).unwrap(),
-        )
-        .map(|res| {
-            let canister_id_result: Result<Principal, String> = match res {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("Canister call failed"),
-            };
-            canister_id_result.unwrap()
-        })
-        .unwrap();
-
-    for _ in 0..110 {
-        pocket_ic.tick()
-    }
-
+    let subnet_orchestrator_canister_id = provision_subnet_orchestrator_canister(
+        &pocket_ic,
+        &known_principal,
+        1,
+        Some(charlie_global_admin),
+    );
     let alice_yral_principal_id = get_mock_user_alice_canister_id();
 
     let alice_yral_canister_id = pocket_ic

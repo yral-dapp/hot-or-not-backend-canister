@@ -23,7 +23,7 @@ use std::{
     time::SystemTime,
 };
 use test_utils::setup::{
-    env::pocket_ic_env::get_new_pocket_ic_env,
+    env::pocket_ic_env::{get_new_pocket_ic_env, provision_subnet_orchestrator_canister},
     test_constants::{
         get_global_super_admin_principal_id, get_mock_user_alice_canister_id,
         get_mock_user_alice_principal_id, v1::CANISTER_INITIAL_CYCLES_FOR_SPAWNING_CANISTERS,
@@ -115,27 +115,12 @@ fn when_subnet_known_principal_is_updated_it_is_reflected_in_individual_canister
         .cloned()
         .unwrap();
 
-    let application_subnets = pocket_ic.topology().get_app_subnets();
-
-    let subnet_orchestrator_canister_id: Principal = pocket_ic
-        .update_call(
-            platform_canister_id,
-            super_admin,
-            "provision_subnet_orchestrator_canister",
-            candid::encode_one(application_subnets[1]).unwrap(),
-        )
-        .map(|res| {
-            let canister_id_result: Result<Principal, String> = match res {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("Canister call failed"),
-            };
-            canister_id_result.unwrap()
-        })
-        .unwrap();
-
-    for i in 0..50 {
-        pocket_ic.tick();
-    }
+    let subnet_orchestrator_canister_id = provision_subnet_orchestrator_canister(
+        &pocket_ic,
+        &known_principal,
+        1,
+        None, 
+    );
 
     let post_cache_canister_id = Principal::anonymous();
 

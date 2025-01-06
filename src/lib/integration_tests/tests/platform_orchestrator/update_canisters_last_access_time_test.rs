@@ -25,7 +25,7 @@ use shared_utils::{
     constant::{NNS_CYCLE_MINTING_CANISTER, NNS_LEDGER_CANISTER_ID},
 };
 use test_utils::setup::{
-    env::pocket_ic_env::get_new_pocket_ic_env,
+    env::pocket_ic_env::{get_new_pocket_ic_env, provision_subnet_orchestrator_canister},
     test_constants::{
         get_mock_user_alice_principal_id, get_mock_user_bob_principal_id,
         get_mock_user_charlie_principal_id, get_mock_user_dan_principal_id,
@@ -96,8 +96,6 @@ fn update_canisters_last_access_time_test() {
         .cloned()
         .unwrap();
 
-    let application_subnets = pocket_ic.topology().get_app_subnets();
-
     let charlie_global_admin = get_mock_user_charlie_principal_id();
     let alice_principal_id = get_mock_user_alice_principal_id();
     let bob_principal_id = get_mock_user_bob_principal_id();
@@ -112,25 +110,12 @@ fn update_canisters_last_access_time_test() {
         )
         .unwrap();
 
-    let user_index_canister_id: Principal = pocket_ic
-        .update_call(
-            platform_canister_id,
-            super_admin,
-            "provision_subnet_orchestrator_canister",
-            candid::encode_one(application_subnets[1]).unwrap(),
-        )
-        .map(|res| {
-            let canister_id_result: Result<Principal, String> = match res {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("Canister call failed"),
-            };
-            canister_id_result.unwrap()
-        })
-        .unwrap();
-
-    for i in 0..50 {
-        pocket_ic.tick();
-    }
+    let user_index_canister_id = provision_subnet_orchestrator_canister(
+        &pocket_ic,
+        &known_principal,
+        1,
+        None
+    );
 
     // upgrade pf_orch
 
