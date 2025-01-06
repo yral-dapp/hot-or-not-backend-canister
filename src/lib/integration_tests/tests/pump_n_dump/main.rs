@@ -1,9 +1,9 @@
 mod mock_ledger;
 
-use candid::{Int, Nat, Principal};
+use candid::{Nat, Principal};
 use mock_ledger::{mock_ledger_intf::{Account, ApproveArgs, TransferArg}, LEDGER_FEE, LEDGER_MINT_AMOUNT};
 use pocket_ic::PocketIc;
-use shared_utils::{canister_specific::individual_user_template::types::session::SessionType, common::types::known_principal::{KnownPrincipalMap, KnownPrincipalType}, constant::GLOBAL_SUPER_ADMIN_USER_ID};
+use shared_utils::{canister_specific::individual_user_template::types::{pump_n_dump::{GameDirection, GameInfo, PumpsAndDumps}, session::SessionType}, common::types::known_principal::{KnownPrincipalMap, KnownPrincipalType}, constant::GLOBAL_SUPER_ADMIN_USER_ID};
 use test_utils::setup::{env::pocket_ic_env::{execute_query, execute_update, execute_update_no_res, execute_update_no_res_multi, get_new_pocket_ic_env}, test_constants::{get_global_super_admin_principal_id, get_mock_user_alice_principal_id, get_mock_user_charlie_principal_id}};
 
 struct PumpNDumpHarness {
@@ -133,6 +133,26 @@ impl PumpNDumpHarness {
             }
         )
     }
+
+    pub fn pumps_and_dumps(&self, individual_canister: Principal) -> PumpsAndDumps {
+        execute_query(
+            &self.pic,
+            Principal::anonymous(),
+            individual_canister,
+            "pumps_and_dumps",
+            &(),
+        )
+    }
+
+    pub fn played_game_count(&self, individual_canister: Principal) -> usize {
+        execute_query(
+            &self.pic,
+            Principal::anonymous(),
+            individual_canister,
+            "played_game_count",
+            &()
+        )
+    }
 }
 
 #[test]
@@ -210,7 +230,7 @@ fn claim_gdollr_and_stake_gdollr_should_work() {
 }
 
 #[test]
-fn settle_gdollr_balance_should_work() {
+fn reconcile_user_state_should_work() {
     let harness = PumpNDumpHarness::default();
 
     let alice = get_mock_user_alice_principal_id();
@@ -218,31 +238,68 @@ fn settle_gdollr_balance_should_work() {
 
     // Test Addition
     let past_bal = harness.gdollr_balance(alice_canister);
-    let to_add = Int::from(1e4 as u64);
+    let past_pd = harness.pumps_and_dumps(alice_canister);
+    let past_game_count = harness.played_game_count(alice_canister);
+    let games = vec![
+        GameInfo {
+            pumps: 10,
+            dumps: 10,
+            reward: Nat::from(1e2 as u64),
+            token_root: Principal::anonymous(),
+            game_direction: GameDirection::Pump,
+        },
+        GameInfo {
+            pumps: 10,
+            dumps: 10,
+            reward: Nat::from(1e2 as u64),
+            token_root: Principal::anonymous(),
+            game_direction: GameDirection::Dump,
+        }
+    ];
+    let (pumps, dumps, mut total_reward) = games.iter().fold(
+        (0u64, 0u64, Nat::from(0u32)),
+        |acc, gdata| {
+            (acc.0 + gdata.pumps, acc.1 + gdata.dumps, acc.2 + gdata.reward.clone())
+    });
+    total_reward -= pumps + dumps;
 
     let global_admin = Principal::from_text(GLOBAL_SUPER_ADMIN_USER_ID).unwrap();
     execute_update::<_, Result<(), String>>(
         &harness.pic,
         global_admin,
         alice_canister,
-        "settle_gdollr_balance",
-        &to_add 
+        "reconcile_user_state",
+        &games 
     ).unwrap();
 
     let new_bal = harness.gdollr_balance(alice_canister);
-    assert_eq!(new_bal.clone() - past_bal, Nat::from(1e4 as u64));
+    assert_eq!(new_bal.clone() - past_bal, total_reward);
+    let new_pd = harness.pumps_and_dumps(alice_canister);
+    let new_game_count = harness.played_game_count(alice_canister);
+    assert_eq!(new_pd.pumps - past_pd.pumps, pumps);
+    assert_eq!(new_pd.dumps - past_pd.dumps, dumps);
+    assert_eq!(new_game_count - past_game_count, games.len());
 
     // Test Deduction
     let past_bal = new_bal;
-    let to_deduct = Int::from(-1e4 as i64);
+    let games = vec! [
+        GameInfo {
+            pumps: 1e4 as u64,
+            dumps: 0,
+            reward: Nat::from(0u32),
+            token_root: Principal::anonymous(),
+            game_direction: GameDirection::Dump,
+        }
+    ];
+    let to_deduct = Nat::from(1e4 as u64);
 
     execute_update::<_, Result<(), String>>(
         &harness.pic,
         global_admin,
         alice_canister,
-        "settle_gdollr_balance",
-        &to_deduct,
+        "reconcile_user_state",
+        &games,
     ).unwrap();
     let new_bal = harness.gdollr_balance(alice_canister);
-    assert_eq!(past_bal - new_bal, Nat::from(1e4 as u64));
+    assert_eq!(past_bal - new_bal, to_deduct);
 }

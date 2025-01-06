@@ -3,7 +3,7 @@ use std::{
     time::SystemTime,
 };
 
-use candid::{Deserialize, Nat, Principal};
+use candid::{Deserialize, Principal};
 use ic_cdk::api::management_canister::provisional::CanisterId;
 use memory::{get_success_history_memory, get_token_list_memory, get_watch_history_memory};
 use pump_n_dump::PumpAndDumpGame;

@@ -1,7 +1,7 @@
-use candid::{Int, Nat, Principal};
+use candid::{Nat, Principal};
 use ic_cdk::{query, update};
 use icrc_ledger_types::{icrc1::account::Account, icrc2::transfer_from::{TransferFromArgs, TransferFromError}};
-use shared_utils::common::types::known_principal::KnownPrincipalType;
+use shared_utils::{canister_specific::individual_user_template::types::pump_n_dump::{GameInfo, PumpsAndDumps}, common::types::known_principal::KnownPrincipalType, pagination};
 
 use crate::CANISTER_DATA;
 
@@ -42,18 +42,24 @@ pub async fn redeem_gdollr(amount: Nat) -> Result<(), String> {
 }
 
 #[update]
-pub async fn settle_gdollr_balance(delta: Int) -> Result<(), String> {
+pub fn reconcile_user_state(games: Vec<GameInfo>) -> Result<(), String> {
     let caller = ic_cdk::caller();
     CANISTER_DATA.with_borrow_mut(|cdata| {
         let admin = cdata.known_principal_ids[&KnownPrincipalType::UserIdGlobalSuperAdmin];
         if admin != caller {
             return Err("Unauthorized".to_string())
         }
-        if delta > 0 {
-            cdata.pump_n_dump.dollr_balance.0 += delta.0.to_biguint().unwrap();
-        } else {
-            cdata.pump_n_dump.dollr_balance.0 -= (-delta.0).to_biguint().unwrap();
+        let mut to_deduct: Nat = 0u32.into();
+        let mut to_add: Nat = 0u32.into();
+        for game in games {
+            to_deduct += game.pumps + game.dumps;
+            to_add += game.reward.clone();
+            cdata.pump_n_dump.total_dumps += game.dumps;
+            cdata.pump_n_dump.total_pumps += game.pumps;
+            cdata.pump_n_dump.games.push(game);
         }
+        cdata.pump_n_dump.dollr_balance += to_add;
+        cdata.pump_n_dump.dollr_balance -= to_deduct;
 
         Ok(())
     })
@@ -116,6 +122,34 @@ pub async fn stake_dollr_for_gdollr(amount: Nat) -> Result<(), String> {
 }
 
 #[query]
-pub async fn gdollr_balance() -> Nat {
+pub fn pumps_and_dumps() -> PumpsAndDumps {
+    CANISTER_DATA.with_borrow(|cdata| {
+        PumpsAndDumps {
+            pumps: cdata.pump_n_dump.total_pumps.clone(),
+            dumps: cdata.pump_n_dump.total_dumps.clone(),
+        }
+    })
+} 
+
+#[query]
+pub fn played_game_count() -> usize {
+    CANISTER_DATA.with_borrow(|cdata| cdata.pump_n_dump.games.len())
+}
+
+#[query]
+pub fn played_game_info_with_pagination_cursor(from_inclusive_index: u64, limit: u64) -> Result<Vec<GameInfo>, String> {
+    CANISTER_DATA.with_borrow(|cdata| {
+        let (from_inclusive_index, limit) = pagination::get_pagination_bounds_cursor(
+            from_inclusive_index,
+            limit,
+            cdata.pump_n_dump.games.len() as u64,
+        ).map_err(|e| format!("{e:?}"))?;
+
+        Ok(cdata.pump_n_dump.games[from_inclusive_index as usize..(from_inclusive_index+limit) as usize].to_vec())
+    })
+}
+
+#[query]
+pub fn gdollr_balance() -> Nat {
     CANISTER_DATA.with_borrow(|cdata| cdata.pump_n_dump.dollr_balance.clone())
 }
