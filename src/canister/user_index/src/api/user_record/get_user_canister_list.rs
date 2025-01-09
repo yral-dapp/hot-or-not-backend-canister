@@ -4,7 +4,6 @@ use shared_utils::common::utils::permissions::is_reclaim_canister_id;
 
 use crate::CANISTER_DATA;
 
-#[query(guard = "is_reclaim_canister_id")]
 fn get_user_canister_list() -> Vec<Principal> {
     CANISTER_DATA.with(|canister_data_ref_cell| {
         canister_data_ref_cell
@@ -16,7 +15,6 @@ fn get_user_canister_list() -> Vec<Principal> {
     })
 }
 
-#[query(guard = "is_reclaim_canister_id")]
 fn get_user_id_and_canister_list() -> Vec<(Principal, Principal)> {
     CANISTER_DATA.with(|canister_data_ref_cell| {
         canister_data_ref_cell
@@ -28,7 +26,6 @@ fn get_user_id_and_canister_list() -> Vec<(Principal, Principal)> {
     })
 }
 
-#[query(guard = "is_reclaim_canister_id")]
 fn get_user_canister_incl_avail_list() -> Vec<Principal> {
     CANISTER_DATA.with(|canister_data_ref_cell| {
         let mut canister_list = canister_data_ref_cell
