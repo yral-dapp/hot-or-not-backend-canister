@@ -31,7 +31,6 @@ use shared_utils::constant::{
 use shared_utils::types::creator_dao_stats::CreatorDaoTokenStats;
 use std::time::{Duration, UNIX_EPOCH};
 use std::{collections::HashMap, fmt::Debug, str::FromStr, time::SystemTime, vec};
-use test_utils::setup::test_constants::get_mock_user_bob_principal_id;
 use utils::{setup_default_sns_creator_token, setup_sns_w_canister_for_creator_dao};
 
 use candid::{encode_args, CandidType, Decode, Encode, Nat, Principal};
