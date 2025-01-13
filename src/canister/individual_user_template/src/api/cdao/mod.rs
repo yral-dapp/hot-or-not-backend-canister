@@ -11,11 +11,11 @@ use futures::{
 use ic_base_types::PrincipalId;
 use ic_cdk::{
     api::{
-        call::RejectionCode,
+        call::{CallResult, RejectionCode},
         management_canister::main::{
-            create_canister, deposit_cycles, install_code, update_settings, CanisterIdRecord,
-            CanisterInstallMode, CanisterSettings, CreateCanisterArgument, InstallCodeArgument,
-            UpdateSettingsArgument,
+            create_canister, deposit_cycles, install_code, uninstall_code, update_settings,
+            CanisterIdRecord, CanisterInstallMode, CanisterSettings, CreateCanisterArgument,
+            InstallCodeArgument, UpdateSettingsArgument,
         },
     },
     query, update,
@@ -34,7 +34,7 @@ use shared_utils::{
         error::CdaoDeployError,
         session::SessionType,
     },
-    common::types::known_principal::KnownPrincipalType,
+    common::{types::known_principal::KnownPrincipalType, utils::task::run_task_concurrently},
     constant::{
         MAX_LIMIT_FOR_CREATOR_DAO_SNS_TOKEN, NNS_LEDGER_CANISTER_ID, SNS_TOKEN_ARCHIVE_MODULE_HASH,
         SNS_TOKEN_GOVERNANCE_MODULE_HASH, SNS_TOKEN_INDEX_MODULE_HASH,
@@ -42,16 +42,20 @@ use shared_utils::{
         USER_SNS_CANISTER_INITIAL_CYCLES,
     },
 };
+use utils::uninstall_code_and_return_empty_canisters_to_subnet_backup_pool;
 
 use crate::{
     util::{
-        cycles::request_cycles_from_subnet_orchestrator, subnet_orchestrator::SubnetOrchestrator,
+        cycles::{notify_to_recharge_canister, request_cycles_from_subnet_orchestrator},
+        subnet_orchestrator::{self, SubnetOrchestrator},
     },
     CANISTER_DATA,
 };
 
+pub mod delete_all_sns_creator_token;
 pub mod send_creator_dao_stats_to_subnet_orchestrator;
 pub mod upgrade_creator_dao_governance_canisters;
+pub mod utils;
 
 #[update]
 pub async fn settle_neurons_fund_participation(
@@ -102,6 +106,8 @@ async fn deploy_cdao_sns(
     init_payload: SnsInitPayload,
     swap_time: u64,
 ) -> Result<DeployedCdaoCanisters, CdaoDeployError> {
+    notify_to_recharge_canister();
+
     // * access control
     let current_caller = ic_cdk::caller();
     let my_principal_id = CANISTER_DATA
@@ -133,14 +139,48 @@ async fn deploy_cdao_sns(
     let subnet_orchestrator = SubnetOrchestrator::new()
         .map_err(|e| CdaoDeployError::CallError(RejectionCode::CanisterError, e))?;
 
-    let canister_ids: Vec<Principal> = (0..5)
-        .map(|_| subnet_orchestrator.get_empty_canister())
-        .collect::<FuturesOrdered<_>>()
-        .try_collect()
-        .await
-        .map_err(|e| CdaoDeployError::CallError(RejectionCode::CanisterError, e))?;
+    // TODO: handle this bit of code.
 
-    canister_ids
+    let canister_ids_futures = (0..5).map(|_| subnet_orchestrator.allot_empty_canister());
+
+    let canister_ids_stream = futures::stream::iter(canister_ids_futures)
+        .boxed()
+        .buffer_unordered(5);
+
+    let canister_ids_results: Vec<Result<Principal, String>> =
+        canister_ids_stream.collect::<_>().await;
+
+    let canister_id_result = canister_ids_results
+        .iter()
+        .find(|canister_id_result| canister_id_result.is_err());
+
+    let mut canister_ids: Vec<Principal> = vec![];
+
+    if let Some(canister_id_error) = canister_id_result {
+        if let Err(e) = canister_id_error {
+            let canister_ids: Vec<Principal> = canister_ids_results
+                .iter()
+                .filter(|canister_id_result| canister_id_result.is_ok())
+                .map(|canister_id_result| canister_id_result.clone().unwrap())
+                .collect();
+
+            ic_cdk::spawn(
+                uninstall_code_and_return_empty_canisters_to_subnet_backup_pool(canister_ids),
+            );
+
+            return Err(CdaoDeployError::CallError(
+                RejectionCode::CanisterError,
+                e.clone(),
+            ));
+        }
+    } else {
+        canister_ids = canister_ids_results
+            .into_iter()
+            .map(|canister_id_res| canister_id_res.unwrap())
+            .collect();
+    }
+
+    let deposit_cycles_result: CallResult<()> = canister_ids
         .iter()
         .map(|canister_id| {
             deposit_cycles(
@@ -152,10 +192,18 @@ async fn deploy_cdao_sns(
         })
         .collect::<FuturesUnordered<_>>()
         .try_collect()
-        .await?;
+        .await;
+
+    if let Err(e) = deposit_cycles_result {
+        ic_cdk::spawn(
+            uninstall_code_and_return_empty_canisters_to_subnet_backup_pool(canister_ids.clone()),
+        );
+        return Err(CdaoDeployError::CallError(e.0, e.1));
+    }
 
     let canisters: Vec<PrincipalId> = canister_ids
-        .into_iter()
+        .iter()
+        .copied()
         .map(|canister_id| PrincipalId::from(canister_id))
         .collect();
 
@@ -210,7 +258,7 @@ async fn deploy_cdao_sns(
 
     ic_cdk::println!("gov_hash: {:?}", gov_hash);
 
-    let mut wasm_bins: VecDeque<_> = [gov_hash, ledger_hash, root_hash, swap_hash, index_hash]
+    let wasm_bins_result: Result<_, _> = [gov_hash, ledger_hash, root_hash, swap_hash, index_hash]
         .into_iter()
         .map(|hash| async move {
             let req = GetWasmRequest { hash };
@@ -220,7 +268,15 @@ async fn deploy_cdao_sns(
         })
         .collect::<FuturesOrdered<_>>()
         .try_collect()
-        .await?;
+        .await;
+
+    if let Err(e) = wasm_bins_result {
+        ic_cdk::spawn(
+            uninstall_code_and_return_empty_canisters_to_subnet_backup_pool(canister_ids),
+        );
+        return Err(e);
+    }
+    let mut wasm_bins: VecDeque<_> = wasm_bins_result.unwrap();
 
     let mut sns_install_futs = FuturesUnordered::new();
     sns_install_futs.push(install_canister_wasm(
@@ -249,7 +305,18 @@ async fn deploy_cdao_sns(
         Encode!(&payloads.index_ng).unwrap(),
         index,
     ));
-    while sns_install_futs.try_next().await?.is_some() {}
+    while sns_install_futs
+        .try_next()
+        .await
+        .inspect_err(|e| {
+            ic_cdk::spawn(
+                uninstall_code_and_return_empty_canisters_to_subnet_backup_pool(
+                    canister_ids.clone(),
+                ),
+            )
+        })?
+        .is_some()
+    {}
 
     let admin_canister = CANISTER_DATA
         .with(|cdata| {
@@ -273,14 +340,14 @@ async fn deploy_cdao_sns(
     ));
     update_ctrls_futs.push(update_controllers(
         ledger,
-        vec![admin_canister, user_can, governance.0],
+        vec![admin_canister, user_can, root.0],
     ));
     update_ctrls_futs.push(update_controllers(
         swap,
         vec![
             admin_canister,
             user_can,
-            swap.0,
+            root.0,
             ic_nns_constants::ROOT_CANISTER_ID.into(),
         ],
     ));
@@ -288,7 +355,18 @@ async fn deploy_cdao_sns(
         index,
         vec![admin_canister, user_can, root.0],
     ));
-    while update_ctrls_futs.try_next().await?.is_some() {}
+    while update_ctrls_futs
+        .try_next()
+        .await
+        .inspect_err(|_e| {
+            ic_cdk::spawn(
+                uninstall_code_and_return_empty_canisters_to_subnet_backup_pool(
+                    canister_ids.clone(),
+                ),
+            );
+        })?
+        .is_some()
+    {}
 
     let deployed_cans = DeployedCdaoCanisters {
         governance: governance.0,

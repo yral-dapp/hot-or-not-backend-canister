@@ -1,6 +1,6 @@
 use crate::{
     api::canister_management::update_last_access_time::update_last_canister_functionality_access_time,
-    CANISTER_DATA,
+    util::cycles::notify_to_recharge_canister, CANISTER_DATA,
 };
 use candid::Principal;
 use ic_cdk_macros::update;
@@ -15,6 +15,7 @@ use shared_utils::common::{
 #[update]
 fn get_rewarded_for_referral(referrer: Principal, referree: Principal) {
     // * access control
+    notify_to_recharge_canister();
     let request_maker = ic_cdk::caller();
     let user_index_canister_principal_id = CANISTER_DATA.with(|canister_data_ref_cell| {
         canister_data_ref_cell

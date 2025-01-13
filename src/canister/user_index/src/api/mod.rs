@@ -8,3 +8,4 @@ pub mod upgrade_individual_user_template;
 pub mod user_record;
 pub mod user_signup;
 pub mod well_known_principal;
+pub mod snapshot;

@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::collections::HashSet;
 
 use candid::Principal;
@@ -15,6 +16,7 @@ use shared_utils::{
     common::types::http::{HttpRequest, HttpResponse},
     common::types::known_principal::KnownPrincipalType,
     types::canister_specific::user_index::error_types::SetUniqueUsernameError,
+    types::creator_dao_stats::IndividualUserCreatorDaoEntry,
 };
 
 mod api;
@@ -23,6 +25,7 @@ mod util;
 
 thread_local! {
     static CANISTER_DATA: RefCell<CanisterData> = RefCell::default();
+    static SNAPSHOT_DATA: RefCell<Vec<u8>> = RefCell::default();
 }
 
 export_candid!();

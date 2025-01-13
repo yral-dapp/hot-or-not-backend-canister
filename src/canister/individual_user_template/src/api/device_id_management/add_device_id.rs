@@ -2,12 +2,17 @@ use ic_cdk::{api, query};
 use ic_cdk_macros::update;
 use shared_utils::canister_specific::individual_user_template::types::device_id::DeviceIdentity;
 
-use crate::{data_model::CanisterData, CANISTER_DATA};
+use crate::{
+    data_model::CanisterData,
+    util::cycles::{notify_to_recharge_canister, recharge_canister},
+    CANISTER_DATA,
+};
 
 /// #### Access Control
 /// Only the user whose profile details are stored in this canister can add the device identity.
 #[update]
 fn add_device_id(identity_token: String) -> Result<bool, (String)> {
+    notify_to_recharge_canister();
     // * access control
     let current_caller = ic_cdk::caller();
     let my_principal_id = CANISTER_DATA

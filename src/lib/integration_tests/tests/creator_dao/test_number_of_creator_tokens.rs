@@ -82,7 +82,7 @@ pub fn test_number_of_creator_tokens() {
         })
         .unwrap();
 
-    for i in 0..50 {
+    for i in 0..150 {
         pocket_ic.tick();
     }
 

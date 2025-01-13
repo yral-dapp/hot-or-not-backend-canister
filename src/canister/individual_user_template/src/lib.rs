@@ -48,7 +48,7 @@ use shared_utils::{
     types::canister_specific::individual_user_template::error_types::{
         GetUserUtilityTokenTransactionHistoryError, UpdateProfileSetUniqueUsernameError,
     },
-    
+    types::creator_dao_stats::IndividualUserCreatorDaoEntry,
 };
 
 mod api;

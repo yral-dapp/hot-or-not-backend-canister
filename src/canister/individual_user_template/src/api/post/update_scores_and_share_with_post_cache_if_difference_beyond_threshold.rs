@@ -18,13 +18,14 @@ use shared_utils::{
 
 use crate::{
     api::canister_management::update_last_access_time::update_last_canister_functionality_access_time,
-    data_model::CanisterData, CANISTER_DATA,
+    data_model::CanisterData, util::cycles::notify_to_recharge_canister, CANISTER_DATA,
 };
 
 #[update]
 fn check_and_update_scores_and_share_with_post_cache_if_difference_beyond_threshold(
     post_ids: Vec<u64>,
 ) {
+    notify_to_recharge_canister();
     update_last_canister_functionality_access_time();
     post_ids.iter().for_each(|post_id| {
         update_scores_and_share_with_post_cache_if_difference_beyond_threshold(post_id);

@@ -7,11 +7,13 @@ use shared_utils::canister_specific::individual_user_template::types::{
 
 use crate::{
     api::canister_management::update_last_access_time::update_last_canister_functionality_access_time,
-    CANISTER_DATA,
+    util::cycles::notify_to_recharge_canister, CANISTER_DATA,
 };
 
 #[update]
 async fn update_referrer_details(referrer: UserCanisterDetails) -> Result<String, String> {
+    notify_to_recharge_canister();
+
     let profile_owner =
         CANISTER_DATA.with_borrow_mut(|canister_data| canister_data.profile.principal_id);
     if profile_owner.is_none() || !profile_owner.unwrap().eq(&caller()) {

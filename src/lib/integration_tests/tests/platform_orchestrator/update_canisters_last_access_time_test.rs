@@ -13,6 +13,7 @@ use shared_utils::{
             arg::PlaceBetArg,
             error::BetOnCurrentlyViewingPostError,
             hot_or_not::{BetDirection, BettingStatus},
+            ml_data::MLFeedCacheItem,
             post::PostDetailsFromFrontend,
             profile::UserProfileDetailsForFrontend,
         },

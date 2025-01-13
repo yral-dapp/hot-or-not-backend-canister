@@ -2,14 +2,16 @@ use crate::{
     util::canister_management::{
         check_and_request_cycles_from_platform_orchestrator, create_empty_user_canister,
         install_canister_wasm, provision_number_of_empty_canisters, recharge_canister,
+        recharge_canister_for_installing_wasm,
     },
     CANISTER_DATA,
 };
 use candid::Principal;
+use futures::{future::BoxFuture, FutureExt};
 use ic_cdk::api::{
     call,
     management_canister::main::{
-        canister_info, canister_status, CanisterIdRecord, CanisterInfoRequest,
+        canister_info, canister_status, deposit_cycles, CanisterIdRecord, CanisterInfoRequest,
     },
 };
 use ic_cdk_macros::update;
@@ -24,10 +26,8 @@ use shared_utils::{
     },
     constant::{
         get_backup_individual_user_canister_batch_size,
-        get_backup_individual_user_canister_threshold,
         get_individual_user_canister_subnet_batch_size,
-        get_individual_user_canister_subnet_threshold, INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT,
-        INDIVIDUAL_USER_CANISTER_SUBNET_MAX_CAPACITY,
+        get_individual_user_canister_subnet_threshold,
     },
 };
 
@@ -197,35 +197,37 @@ async fn provision_new_available_canisters(individual_user_template_canister_was
         CANISTER_DATA.with_borrow(|canister_data| canister_data.available_canisters.len() as u64);
     let max_canister_count = available_canister_count + canister_count;
 
-    let install_canister_wasm_futures = CANISTER_DATA.with_borrow(|canister_data| {
-        let mut backup_pool_canister = canister_data.backup_canister_pool.clone().into_iter();
-        (0..canister_count).map(move |_| {
-            let individual_user_template_canister_wasm_version =
-                individual_user_template_canister_wasm.version.clone();
+    let mut backup_pool_canister = CANISTER_DATA
+        .with_borrow(|canister_data| canister_data.backup_canister_pool.clone())
+        .into_iter();
 
-            let individual_user_template_canister_wasm =
-                individual_user_template_canister_wasm.wasm_blob.clone();
+    let install_canister_wasm_futures = (0..canister_count).map(move |_| {
+        let individual_user_template_canister_wasm_version =
+            individual_user_template_canister_wasm.version.clone();
 
-            let canister_id = backup_pool_canister.next().unwrap();
+        let individual_user_template_canister_wasm =
+            individual_user_template_canister_wasm.wasm_blob.clone();
 
-            // Remove the canister id from backup pool so no one else access it
-            CANISTER_DATA.with_borrow_mut(|canister_data| {
-                canister_data.backup_canister_pool.remove(&canister_id)
-            });
+        let canister_id = backup_pool_canister.next().unwrap();
 
-            async move {
-                let _ = check_and_request_cycles_from_platform_orchestrator().await;
-                //recharge backup canister if required
-                recharge_empty_canister_if_required(canister_id).await;
-                install_canister_wasm(
-                    canister_id,
-                    None,
-                    individual_user_template_canister_wasm_version,
-                    individual_user_template_canister_wasm,
-                )
+        CANISTER_DATA.with_borrow_mut(|canister_data| {
+            canister_data.backup_canister_pool.remove(&canister_id)
+        });
+
+        async move {
+            let _ = check_and_request_cycles_from_platform_orchestrator().await;
+            //recharge backup canister if required
+            recharge_canister_for_installing_wasm(canister_id)
                 .await
-            }
-        })
+                .map_err(|e| (canister_id, e))?;
+            install_canister_wasm(
+                canister_id,
+                None,
+                individual_user_template_canister_wasm_version,
+                individual_user_template_canister_wasm,
+            )
+            .await
+        }
     });
 
     let result_callback = |install_canister_wasm_result: Result<Principal, (Principal, String)>| {
@@ -253,21 +255,6 @@ async fn provision_new_available_canisters(individual_user_template_canister_was
         breaking_condition,
     )
     .await;
-}
-
-async fn recharge_empty_canister_if_required(canister_id: Principal) {
-    let canister_status_res = canister_status(CanisterIdRecord { canister_id }).await;
-    match canister_status_res {
-        Ok((canister_status,))
-            if canister_status.cycles < INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT =>
-        {
-            let _ = recharge_canister(&canister_id, INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT).await;
-        }
-        Err(_e) => {
-            let _ = recharge_canister(&canister_id, INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT).await;
-        }
-        _ => {}
-    }
 }
 
 async fn provision_new_backup_canisters(canister_count: u64) {

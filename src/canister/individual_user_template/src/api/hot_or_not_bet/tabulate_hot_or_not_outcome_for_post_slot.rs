@@ -1,16 +1,46 @@
 use candid::Principal;
+use ic_cdk::api::canister_balance;
 use shared_utils::{
     canister_specific::individual_user_template::types::hot_or_not::{
         BetDirection, BetMakerInformedStatus, BetOutcomeForBetMaker, BetPayout, GlobalBetId,
         GlobalRoomId, RoomBetPossibleOutcomes,
     },
-    common::{types::known_principal::KnownPrincipalType, utils::system_time},
+    common::{
+        types::known_principal::KnownPrincipalType,
+        utils::{system_time, task::run_task_concurrently},
+    },
 };
 
-use crate::CANISTER_DATA;
+use crate::{util::cycles::request_cycles_from_subnet_orchestrator, CANISTER_DATA};
 
-pub fn tabulate_hot_or_not_outcome_for_post_slot(post_id: u64, slot_id: u8) {
+async fn recharge_based_on_number_of_bets_placed(total_bets_placed: u64) {
+    let cycles = 10_000_000_000 * total_bets_placed;
+    let res = request_cycles_from_subnet_orchestrator(cycles as u128).await;
+    if let Err(e) = res {
+        ic_cdk::println!(
+            "Request cycles from subnet orchestrator failed. Error {}",
+            e
+        );
+    }
+}
+
+pub async fn tabulate_hot_or_not_outcome_for_post_slot(post_id: u64, slot_id: u8) {
     ic_cdk::println!("Computing outcome for post:{post_id} and slot:{slot_id} ");
+
+    let total_bets_placed_in_the_slot = CANISTER_DATA.with_borrow(|canister_data| {
+        let start_global_room_id = GlobalRoomId(post_id, slot_id, 1);
+        let end_global_room_id = GlobalRoomId(post_id, slot_id + 1, 1);
+        canister_data
+            .room_details_map
+            .range(start_global_room_id..end_global_room_id)
+            .fold(0_u64, |acc, (_, room_details)| {
+                let total_bets_in_the_room =
+                    room_details.total_hot_bets + room_details.total_not_bets;
+                acc + total_bets_in_the_room
+            })
+    });
+
+    recharge_based_on_number_of_bets_placed(total_bets_placed_in_the_slot).await;
 
     CANISTER_DATA.with_borrow_mut(|canister_data| {
         let current_time = system_time::get_current_system_time_from_ic();
@@ -40,10 +70,10 @@ pub fn tabulate_hot_or_not_outcome_for_post_slot(post_id: u64, slot_id: u8) {
 
     ic_cdk::println!("Computed outcome for post:{post_id} and slot:{slot_id}");
 
-    inform_participants_of_outcome(post_id, slot_id);
+    inform_participants_of_outcome(post_id, slot_id).await;
 }
 
-pub fn inform_participants_of_outcome(post_id: u64, slot_id: u8) {
+pub async fn inform_participants_of_outcome(post_id: u64, slot_id: u8) {
     ic_cdk::println!("Informating participant for post: {post_id} and slot: {slot_id}");
     let Some(post) = CANISTER_DATA.with_borrow(|canister_data| {
         let post = canister_data.all_created_posts.get(&post_id);
@@ -64,9 +94,9 @@ pub fn inform_participants_of_outcome(post_id: u64, slot_id: u8) {
         room_details
     });
 
-    room_details
+    let inform_bet_participants_grouped_by_room_futures: Vec<_> = room_details
         .iter()
-        .for_each(|(global_room_id, room_detail)| {
+        .map(|(global_room_id, room_detail)| {
             let bet_details = CANISTER_DATA.with_borrow(|canister_data| {
                 canister_data
                     .bet_details_map
@@ -74,6 +104,8 @@ pub fn inform_participants_of_outcome(post_id: u64, slot_id: u8) {
                     .filter(|(global_bet_id, _bet_details)| global_bet_id.0 == *global_room_id)
                     .collect::<Vec<_>>()
             });
+
+            let mut inform_bet_participants_grouped_by_room_futures = vec![];
 
             for (global_bet_id, bet) in bet_details.iter() {
                 let bet_outcome_for_bet_maker: BetOutcomeForBetMaker = match room_detail.bet_outcome
@@ -105,14 +137,31 @@ pub fn inform_participants_of_outcome(post_id: u64, slot_id: u8) {
                     continue;
                 }
 
-                ic_cdk::spawn(receive_bet_winnings_when_distributed(
-                    global_bet_id.clone(),
-                    bet.bet_maker_canister_id,
-                    post.id,
-                    bet_outcome_for_bet_maker,
-                ));
+                inform_bet_participants_grouped_by_room_futures.push(
+                    receive_bet_winnings_when_distributed(
+                        global_bet_id.clone(),
+                        bet.bet_maker_canister_id,
+                        post.id,
+                        bet_outcome_for_bet_maker,
+                    ),
+                );
             }
-        });
+            inform_bet_participants_grouped_by_room_futures
+        })
+        .collect();
+
+    let inform_bet_participants_futures: Vec<_> = inform_bet_participants_grouped_by_room_futures
+        .into_iter()
+        .flatten()
+        .collect();
+
+    run_task_concurrently(
+        inform_bet_participants_futures.into_iter(),
+        10,
+        |_| {},
+        || false,
+    )
+    .await;
 }
 
 async fn receive_bet_winnings_when_distributed(
@@ -122,9 +171,11 @@ async fn receive_bet_winnings_when_distributed(
     bet_outcome_for_bet_maker: BetOutcomeForBetMaker,
 ) {
     ic_cdk::println!(
-        "Informating participant with canister:{} for post:{post_id}",
+        "Informing participant with canister:{} for post:{post_id}",
         bet_maker_canister_id.to_string()
     );
+
+    ic_cdk::println!("CANISTER BALANCE {}", canister_balance());
 
     let res = ic_cdk::call::<_, ()>(
         bet_maker_canister_id,
@@ -137,11 +188,14 @@ async fn receive_bet_winnings_when_distributed(
 
     if let Err(e) = res {
         bet_maker_informed_status = Some(BetMakerInformedStatus::Failed(format!(
-            "Informing bet maker canister {} failed: {:?} {}",
-            bet_maker_canister_id.to_string(),
-            e.0,
-            e.1
+            "Informing bet maker canister {} failed: {}",
+            bet_maker_canister_id, e.1
         )));
+        ic_cdk::println!(
+            "Informing bet maker canister {} failed {:?}",
+            bet_maker_canister_id,
+            e.1
+        );
     }
 
     CANISTER_DATA.with_borrow_mut(|canister_data| {

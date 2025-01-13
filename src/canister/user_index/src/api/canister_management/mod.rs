@@ -5,7 +5,7 @@ use ic_cdk::{
         call::CallResult,
         is_controller,
         management_canister::{
-            main::{canister_status, CanisterInstallMode, CanisterStatusResponse},
+            main::{canister_status, CanisterStatusResponse},
             provisional::CanisterIdRecord,
         },
     },
@@ -14,20 +14,14 @@ use ic_cdk::{
 use ic_cdk_macros::{query, update};
 use shared_utils::{
     canister_specific::{
-        individual_user_template::types::{
-            arg::IndividualUserTemplateInitArgs, session::SessionType,
-        },
-        user_index::types::RecycleStatus,
+        individual_user_template::types::session::SessionType, user_index::types::RecycleStatus,
     },
     common::{
         types::{
             known_principal::KnownPrincipalType,
             wasm::{CanisterWasm, WasmType},
         },
-        utils::{
-            permissions::is_reclaim_canister_id, system_time::get_current_system_time,
-            task::run_task_concurrently,
-        },
+        utils::{permissions::is_reclaim_canister_id, system_time::get_current_system_time},
     },
 };
 
@@ -38,20 +32,24 @@ use crate::{
 
 pub mod allot_empty_canister;
 pub mod create_pool_of_available_canisters;
+pub mod delete_all_sns_creator_token_in_the_network;
+pub mod delete_all_sns_creator_token_of_an_individual_canister;
 pub mod get_last_broadcast_call_status;
 pub mod get_subnet_available_capacity;
 pub mod get_subnet_backup_capacity;
 pub mod make_individual_canister_logs_private;
 pub mod make_individual_canister_logs_public;
-pub mod notify_all_individual_canisters_to_upgrade_creator_dao_governance_canisters;
 pub mod notify_specific_individual_canister_to_upgrade_creator_dao_governance_canisters;
 pub mod provision_empty_canisters;
+pub mod receive_empty_canister_from_individual_canister;
 pub mod recharge_individual_user_canister;
 pub mod recycle_canisters;
 pub mod request_cycles;
+pub mod reset_user_canister_ml_feed_cache;
 pub mod start_upgrades_for_individual_canisters;
 pub mod update_canisters_access_time;
 pub mod update_user_canister_restart_timers;
+pub mod upgrade_all_creator_dao_governance_canisters_in_the_network;
 
 #[update]
 pub async fn get_user_canister_status(
@@ -209,7 +207,7 @@ pub async fn reset_canister(
         ));
     }
 
-    canister_management::recharge_canister_if_below_threshold(&canister_id)
+    canister_management::recharge_canister_for_installing_wasm(canister_id)
         .await
         .map_err(|e| (canister_id, e))?;
 

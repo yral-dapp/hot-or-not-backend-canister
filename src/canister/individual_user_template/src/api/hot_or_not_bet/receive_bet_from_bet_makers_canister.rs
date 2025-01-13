@@ -18,6 +18,7 @@ use crate::{
         post::update_scores_and_share_with_post_cache_if_difference_beyond_threshold::update_scores_and_share_with_post_cache_if_difference_beyond_threshold,
     },
     data_model::CanisterData,
+    util::cycles::{notify_to_recharge_canister, recharge_canister},
     CANISTER_DATA,
 };
 
@@ -26,6 +27,8 @@ fn receive_bet_from_bet_makers_canister(
     place_bet_arg: PlaceBetArg,
     bet_maker_principal_id: Principal,
 ) -> Result<BettingStatus, BetOnCurrentlyViewingPostError> {
+    notify_to_recharge_canister();
+
     let bet_maker_canister_id = ic_cdk::caller();
     update_last_canister_functionality_access_time();
 

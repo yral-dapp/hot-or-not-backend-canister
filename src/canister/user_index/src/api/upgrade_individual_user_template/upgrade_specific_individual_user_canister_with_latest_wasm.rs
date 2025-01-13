@@ -9,10 +9,12 @@ use shared_utils::{
         types::{known_principal::KnownPrincipalType, wasm::WasmType},
         utils::permissions::is_caller_controller,
     },
-    constant::INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT,
 };
 
-use crate::{util::canister_management, CANISTER_DATA};
+use crate::{
+    util::canister_management::{self, recharge_canister_for_installing_wasm},
+    CANISTER_DATA,
+};
 
 // * dfx canister call user_index upgrade_specific_individual_user_canister_with_latest_wasm '(principal "", principal "", null)' --network ic
 
@@ -21,7 +23,7 @@ async fn upgrade_specific_individual_user_canister_with_latest_wasm(
     user_canister_id: Principal,
     user_principal_id: Option<Principal>,
     upgrade_mode: Option<CanisterInstallMode>,
-) -> String {
+) -> Result<(), String> {
     let known_principal_ids = CANISTER_DATA.with(|canister_data_ref_cell| {
         canister_data_ref_cell
             .borrow()
@@ -47,6 +49,8 @@ async fn upgrade_specific_individual_user_canister_with_latest_wasm(
             .unwrap()
     });
 
+    recharge_canister_for_installing_wasm(user_canister_id).await?;
+
     match canister_management::upgrade_individual_user_canister(
         user_canister_id,
         upgrade_mode.unwrap_or(CanisterInstallMode::Upgrade(None)),
@@ -61,7 +65,7 @@ async fn upgrade_specific_individual_user_canister_with_latest_wasm(
     )
     .await
     {
-        Ok(_) => "Success".to_string(),
-        Err(e) => e.1,
+        Ok(_) => Ok(()),
+        Err(e) => Err(e.1),
     }
 }

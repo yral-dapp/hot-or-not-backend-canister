@@ -532,7 +532,10 @@ fn hotornot_game_simulation_test() {
 
     // Forward timer
     pic.advance_time(Duration::from_secs(60 * 60));
-    pic.tick();
+
+    for _ in 0..10 {
+        pic.tick()
+    }
 
     // Show alice rewards
 
@@ -796,8 +799,9 @@ fn hotornot_game_simulation_test() {
 
     // Forward timer
     pic.advance_time(Duration::from_secs(60 * 60));
-    pic.tick();
-
+    for _ in 0..10 {
+        pic.tick();
+    }
     // Show alice rewards
 
     let alice_rewards = pic
@@ -1062,8 +1066,6 @@ fn hotornot_game_simulation_test_2() {
         })
         .unwrap();
 
-    pic.add_cycles(last_individual_template_canister_id, 2_000_000_000_000); //recharge by 2T cycles
-
     // All 500 users bet on the post
 
     for i in 1..=110 {
@@ -1136,8 +1138,6 @@ fn hotornot_game_simulation_test_2() {
     for _ in 0..20 {
         pic.tick();
     }
-
-    let post_creator_cycle_balance = pic.cycle_balance(last_individual_template_canister_id);
 
     // Check rewards
 

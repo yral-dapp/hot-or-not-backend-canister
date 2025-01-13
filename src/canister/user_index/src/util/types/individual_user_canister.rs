@@ -9,7 +9,13 @@ use shared_utils::{
     cycles::calculate_threshold_and_recharge_cycles_for_canister,
 };
 
-use crate::CANISTER_DATA;
+use crate::{
+    api::canister_management::request_cycles,
+    util::canister_management::{
+        check_and_request_cycles_from_platform_orchestrator, recharge_canister,
+    },
+    CANISTER_DATA,
+};
 
 #[derive(Clone, Copy)]
 pub struct IndividualUserCanister {
@@ -52,21 +58,14 @@ impl IndividualUserCanister {
         let current_user_canister_balance =
             u128::try_from(user_canister_status.cycles.0).map_err(|e| e.to_string())?;
 
-        let (threeshold, recharge_amount) = calculate_threshold_and_recharge_cycles_for_canister(
+        let (threshold, recharge_amount) = calculate_threshold_and_recharge_cycles_for_canister(
             idle_cycles_burned_in_a_day,
             reserved_cycles,
             None,
         );
 
-        if current_user_canister_balance <= threeshold {
-            return deposit_cycles(
-                CanisterIdRecord {
-                    canister_id: self.canister_id,
-                },
-                recharge_amount,
-            )
-            .await
-            .map_err(|e| e.1);
+        if current_user_canister_balance <= threshold {
+            return recharge_canister(&self.canister_id, recharge_amount).await;
         }
 
         Ok(())
@@ -127,6 +126,12 @@ impl IndividualUserCanister {
         }
 
         alloted_canister_id_res
+    }
+
+    pub async fn delete_all_sns_creator_token(&self) -> Result<(), String> {
+        ic_cdk::call::<_, ()>(self.canister_id, "delete_all_creator_token", ())
+            .await
+            .map_err(|e| e.1)
     }
 
     pub fn notify_to_upgrade_creator_dao_governance_canisters(

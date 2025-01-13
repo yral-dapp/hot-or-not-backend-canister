@@ -19,6 +19,11 @@ fn update_success_history(success_history_item: SuccessHistoryItemV1) -> Result<
         canister_data
             .success_history
             .insert(success_history_item, ());
+
+        // keep removing oldest items until the len is less than or equal to 3000
+        while canister_data.success_history.len() > 3000 {
+            canister_data.success_history.pop_first();
+        }
     });
 
     Ok("Success".into())

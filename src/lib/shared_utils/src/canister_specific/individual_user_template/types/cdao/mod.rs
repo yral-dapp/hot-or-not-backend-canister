@@ -18,6 +18,18 @@ pub struct DeployedCdaoCanisters {
     pub last_swapped_price: Option<f64>
 }
 
+impl DeployedCdaoCanisters {
+    pub fn get_canister_ids(&self) -> Vec<Principal> {
+        vec![
+            self.governance,
+            self.ledger,
+            self.root,
+            self.swap,
+            self.index,
+        ]
+    }
+}
+
 #[derive(CandidType, PartialEq, Eq, Debug, Serialize, Deserialize, Clone, Default)]
 pub struct AirdropInfo {
     /// Maps each principal to their claim status
