@@ -644,6 +644,7 @@ service : (IndividualUserTemplateInitArgs) -> {
   list_namespace_keys : (nat64) -> (Result_19) query;
   list_namespaces : (nat64, nat64) -> (vec NamespaceForFrontend) query;
   load_snapshot : () -> ();
+  net_earnings : () -> (nat) query;
   once_reenqueue_timers_for_pending_bet_outcomes : () -> (Result_20);
   played_game_count : () -> (nat64) query;
   played_game_info_with_pagination_cursor : (nat64, nat64) -> (Result_21) query;

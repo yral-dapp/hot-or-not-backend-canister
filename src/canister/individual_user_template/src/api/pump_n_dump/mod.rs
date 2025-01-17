@@ -65,8 +65,9 @@ pub fn reconcile_user_state(games: Vec<PumpNDumpStateDiff>) -> Result<(), String
                 }
             }
         }
-        cdata.pump_n_dump.dollr_balance += to_add;
+        cdata.pump_n_dump.dollr_balance += to_add.clone();
         cdata.pump_n_dump.dollr_balance -= to_deduct;
+        cdata.pump_n_dump.net_earnings += to_add;
 
         Ok(())
     })
@@ -159,4 +160,9 @@ pub fn played_game_info_with_pagination_cursor(from_inclusive_index: u64, limit:
 #[query]
 pub fn gdollr_balance() -> Nat {
     CANISTER_DATA.with_borrow(|cdata| cdata.pump_n_dump.dollr_balance.clone())
+}
+
+#[query]
+pub fn net_earnings() -> Nat {
+    CANISTER_DATA.with_borrow(|cdata| cdata.pump_n_dump.net_earnings.clone())
 }

@@ -12,6 +12,7 @@ pub struct PumpAndDumpGame {
     pub games: Vec<ParticipatedGameInfo>,
     pub total_pumps: Nat,
     pub total_dumps: Nat,
+    pub net_earnings: Nat,
     // Root canister: dollr locked
     pub liquidity_pools: BTreeMap<Principal, Nat>,
 }
@@ -28,6 +29,7 @@ impl Default for PumpAndDumpGame {
             games: vec![],
             total_pumps: 0u32.into(),
             total_dumps: 0u32.into(),
+            net_earnings: 0u32.into(),
         }
     }
 }

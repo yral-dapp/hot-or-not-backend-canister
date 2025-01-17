@@ -164,6 +164,16 @@ impl PumpNDumpHarness {
             state_diffs,
         ).unwrap();
     }
+
+    pub fn net_earnings(&self, individual_canister: Principal) -> Nat {
+        execute_query(
+            &self.pic,
+            Principal::anonymous(),
+            individual_canister,
+            "net_earnings",
+            &()
+        )
+    }
 }
 
 #[test]
@@ -251,6 +261,7 @@ fn reconcile_user_state_should_work() {
     let past_bal = harness.gdollr_balance(alice_canister);
     let past_pd = harness.pumps_and_dumps(alice_canister);
     let past_game_count = harness.played_game_count(alice_canister);
+    let past_earnings = harness.net_earnings(alice_canister);
     let games = [
         ParticipatedGameInfo {
             pumps: 10,
@@ -272,6 +283,7 @@ fn reconcile_user_state_should_work() {
         |acc, gdata| {
             (acc.0 + gdata.pumps, acc.1 + gdata.dumps, acc.2 + gdata.reward.clone())
     });
+    let earnings = total_reward.clone();
     total_reward -= pumps + dumps;
     let state_diffs: Vec<_> = games
         .into_iter()
@@ -287,6 +299,8 @@ fn reconcile_user_state_should_work() {
     assert_eq!(new_pd.pumps - past_pd.pumps, pumps);
     assert_eq!(new_pd.dumps - past_pd.dumps, dumps);
     assert_eq!(new_game_count - past_game_count, state_diffs.len());
+    let new_earnings = harness.net_earnings(alice_canister);
+    assert_eq!(new_earnings - past_earnings, earnings);
 
     // Test Deduction
     let past_bal = new_bal;
