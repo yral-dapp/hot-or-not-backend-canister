@@ -3,7 +3,7 @@ mod mock_ledger;
 use candid::{Nat, Principal};
 use mock_ledger::{mock_ledger_intf::{Account, ApproveArgs, TransferArg}, LEDGER_FEE, LEDGER_MINT_AMOUNT};
 use pocket_ic::PocketIc;
-use shared_utils::{canister_specific::individual_user_template::types::{pump_n_dump::{GameDirection, PumpNDumpStateDiff, ParticipatedGameInfo, PumpsAndDumps}, session::SessionType}, common::types::known_principal::{KnownPrincipalMap, KnownPrincipalType}, constant::GLOBAL_SUPER_ADMIN_USER_ID};
+use shared_utils::{canister_specific::individual_user_template::types::{pump_n_dump::{GameDirection, ParticipatedGameInfo, PumpNDumpStateDiff, PumpsAndDumps}, session::SessionType}, common::types::known_principal::{KnownPrincipalMap, KnownPrincipalType}, constant::{GDOLLR_TO_E8S, GLOBAL_SUPER_ADMIN_USER_ID}};
 use test_utils::setup::{env::pocket_ic_env::{execute_query, execute_update, execute_update_no_res, execute_update_no_res_multi, get_new_pocket_ic_env}, test_constants::{get_global_super_admin_principal_id, get_mock_user_alice_principal_id, get_mock_user_charlie_principal_id}};
 
 struct PumpNDumpHarness {
@@ -287,14 +287,14 @@ fn reconcile_user_state_should_work() {
         ParticipatedGameInfo {
             pumps: 10,
             dumps: 10,
-            reward: Nat::from(1e2 as u64),
+            reward: Nat::from(50 * GDOLLR_TO_E8S),
             token_root: Principal::anonymous(),
             game_direction: GameDirection::Pump,
         },
         ParticipatedGameInfo {
             pumps: 10,
             dumps: 10,
-            reward: Nat::from(1e2 as u64),
+            reward: Nat::from(50 * GDOLLR_TO_E8S),
             token_root: Principal::anonymous(),
             game_direction: GameDirection::Dump,
         }
@@ -305,7 +305,7 @@ fn reconcile_user_state_should_work() {
             (acc.0 + gdata.pumps, acc.1 + gdata.dumps, acc.2 + gdata.reward.clone())
     });
     let earnings = total_reward.clone();
-    total_reward -= pumps + dumps;
+    total_reward -= (pumps + dumps) * GDOLLR_TO_E8S;
     let state_diffs: Vec<_> = games
         .into_iter()
         .map(PumpNDumpStateDiff::Participant)
@@ -327,14 +327,14 @@ fn reconcile_user_state_should_work() {
     let past_bal = new_bal;
     let state_diffs = vec! [
         PumpNDumpStateDiff::Participant(ParticipatedGameInfo {
-            pumps: 1e4 as u64,
+            pumps: 1,
             dumps: 0,
             reward: Nat::from(0u32),
             token_root: Principal::anonymous(),
             game_direction: GameDirection::Dump,
         })
     ];
-    let to_deduct = Nat::from(1e4 as u64);
+    let to_deduct = GDOLLR_TO_E8S;
 
     harness.reconcile_user_state(alice_canister, &state_diffs);
     let new_bal = harness.gdollr_balance(alice_canister);

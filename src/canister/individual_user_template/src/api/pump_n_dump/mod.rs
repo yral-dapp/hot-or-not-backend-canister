@@ -1,7 +1,7 @@
 use candid::{Nat, Principal};
 use ic_cdk::{query, update};
 use icrc_ledger_types::{icrc1::account::Account, icrc2::transfer_from::{TransferFromArgs, TransferFromError}};
-use shared_utils::{canister_specific::individual_user_template::types::pump_n_dump::{ParticipatedGameInfo, PumpNDumpStateDiff, PumpsAndDumps}, common::types::known_principal::KnownPrincipalType, pagination};
+use shared_utils::{canister_specific::individual_user_template::types::pump_n_dump::{ParticipatedGameInfo, PumpNDumpStateDiff, PumpsAndDumps}, common::types::known_principal::KnownPrincipalType, constant::GDOLLR_TO_E8S, pagination};
 
 use crate::CANISTER_DATA;
 
@@ -65,6 +65,7 @@ pub fn reconcile_user_state(games: Vec<PumpNDumpStateDiff>) -> Result<(), String
                 }
             }
         }
+        to_deduct *= GDOLLR_TO_E8S;
         let withdrawable_bal = &mut cdata.pump_n_dump.withdrawable_balance;
         *withdrawable_bal += to_add.clone();
 
