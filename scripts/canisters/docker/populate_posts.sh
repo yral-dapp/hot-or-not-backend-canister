@@ -1,7 +1,7 @@
 #!/bin/bash
 
 USER_CANISTER_RAW="$(dfx canister call user_index get_requester_principals_canister_id_create_if_not_exists "()")"
-export USER_CANISTER="$(echo $USER_CANISTER_RAW | awk '{print $2}' | sed 's/\")//g' | sed 's/\"//g')"
+export USER_CANISTER="$(echo $USER_CANISTER_RAW | awk '{print $6}' | sed -r 's/\"(.*)\"/\1/g')"
 
 echo "Populating videos to $USER_CANISTER (this might take a bit)"
 
@@ -21,4 +21,3 @@ unset -f add_post
 unset USER_CANISTER
 
 echo "Done"
-
