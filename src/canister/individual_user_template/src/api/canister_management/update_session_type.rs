@@ -30,7 +30,7 @@ fn update_session_type(session_type: SessionType) -> Result<String, String> {
         }
 
         if session_type == SessionType::RegisteredSession {
-            canister_data.pump_n_dump.dollr_balance += canister_data.pump_n_dump.onboarding_reward.clone();
+            canister_data.pump_n_dump.game_only_balance += canister_data.pump_n_dump.onboarding_reward.clone();
         }
 
         Ok("Success".into())

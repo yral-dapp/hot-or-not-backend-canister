@@ -56,6 +56,6 @@ fn get_rewarded_for_referral(referrer: Principal, referree: Principal) {
             timestamp: current_time,
         });
 
-        cdata.pump_n_dump.dollr_balance += cdata.pump_n_dump.referral_reward.clone();
+        cdata.pump_n_dump.game_only_balance += cdata.pump_n_dump.referral_reward.clone();
     });
 }

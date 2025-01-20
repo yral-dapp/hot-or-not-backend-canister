@@ -174,6 +174,16 @@ impl PumpNDumpHarness {
             &()
         )
     }
+
+    pub fn withdrawable_balance(&self, individual_canister: Principal) -> Nat {
+        execute_query(
+            &self.pic,
+            Principal::anonymous(),
+            individual_canister,
+            "withdrawable_balance",
+            &()
+        )
+    }
 }
 
 #[test]
@@ -184,7 +194,10 @@ fn newly_registered_user_should_have_1000_gdollr() {
 
     let gdollr_bal = harness.gdollr_balance(alice_canister);
 
-    assert_eq!(gdollr_bal, Nat::from(1e8 as u64));
+    assert_eq!(gdollr_bal, Nat::from(1e9 as u64));
+
+    let withdrawable_bal = harness.withdrawable_balance(alice_canister);
+    assert_eq!(withdrawable_bal, Nat::from(0u32));
 }
 
 #[test]
@@ -199,6 +212,11 @@ fn claim_gdollr_and_stake_gdollr_should_work() {
     let past_bal = harness.ledger_balance(alice);
 
     let global_admin = Principal::from_text(GLOBAL_SUPER_ADMIN_USER_ID).unwrap();
+
+    harness.reconcile_user_state(alice_canister, &vec![
+        PumpNDumpStateDiff::CreatorReward(to_claim.clone() + LEDGER_FEE * 2)
+    ]);
+
 
     execute_update::<_, Result<(), String>>(
         &harness.pic,
@@ -234,6 +252,7 @@ fn claim_gdollr_and_stake_gdollr_should_work() {
     );
 
     let past_gdollr_bal = harness.gdollr_balance(alice_canister);
+    let past_withdrawable_bal = harness.withdrawable_balance(alice_canister);
 
     execute_update::<_, Result<(), String>>(
         &harness.pic,
@@ -247,7 +266,9 @@ fn claim_gdollr_and_stake_gdollr_should_work() {
     assert_eq!(new_bal, past_bal);
 
     let new_gdollr_bal = harness.gdollr_balance(alice_canister);
+    let new_withdrawable_bal = harness.withdrawable_balance(alice_canister);
     assert_eq!(new_gdollr_bal - past_gdollr_bal, to_claim);
+    assert_eq!(new_withdrawable_bal - past_withdrawable_bal, to_claim);
 }
 
 #[test]

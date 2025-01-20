@@ -6,7 +6,10 @@ use shared_utils::canister_specific::individual_user_template::types::pump_n_dum
 
 #[derive(Serialize, Deserialize)]
 pub struct PumpAndDumpGame {
-    pub dollr_balance: Nat,
+    /// balance that is only available for gameplay
+    pub game_only_balance: Nat,
+    /// balance that can be swapped for DOLLR
+    pub withdrawable_balance: Nat,
     pub referral_reward: Nat,
     pub onboarding_reward: Nat,
     pub games: Vec<ParticipatedGameInfo>,
@@ -20,16 +23,24 @@ pub struct PumpAndDumpGame {
 impl Default for PumpAndDumpGame {
     fn default() -> Self {
         Self {
-            dollr_balance: 0u32.into(),
-            // 1 DOLLR
-            referral_reward: Nat::from(1e8 as u64),
-            // 1 DOLLR
-            onboarding_reward: Nat::from(1e8 as u64),
+            game_only_balance: 0u32.into(),
+            withdrawable_balance: 0u32.into(),
+            // 1000 gDOLLR
+            referral_reward: Nat::from(1e9 as u64),
+            // 1000 DOLLR
+            onboarding_reward: Nat::from(1e9 as u64),
             liquidity_pools: BTreeMap::new(),
             games: vec![],
             total_pumps: 0u32.into(),
             total_dumps: 0u32.into(),
             net_earnings: 0u32.into(),
         }
+    }
+}
+
+impl PumpAndDumpGame {
+    /// balance the user can use to play the game
+    pub fn playable_balance(&self) -> Nat {
+        self.game_only_balance.clone() + self.withdrawable_balance.clone()
     }
 }

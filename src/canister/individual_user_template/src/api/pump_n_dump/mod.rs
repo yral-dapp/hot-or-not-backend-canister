@@ -15,10 +15,10 @@ pub async fn redeem_gdollr(amount: Nat) -> Result<(), String> {
         }
         let principal_id = cdata.profile.principal_id.ok_or("Unavailable")?;
 
-        if cdata.pump_n_dump.dollr_balance < amount {
+        if cdata.pump_n_dump.withdrawable_balance < amount {
             return Err("Not enough balance".to_string());
         }
-        cdata.pump_n_dump.dollr_balance -= amount.clone();
+        cdata.pump_n_dump.withdrawable_balance -= amount.clone();
 
         let user_index = cdata.known_principal_ids[&KnownPrincipalType::CanisterIdUserIndex];
         Ok((principal_id, user_index))
@@ -33,7 +33,7 @@ pub async fn redeem_gdollr(amount: Nat) -> Result<(), String> {
     match res {
         Ok((Err(e),)) | Err((_, e)) => {
             CANISTER_DATA.with_borrow_mut(|cdata| {
-                cdata.pump_n_dump.dollr_balance += amount
+                cdata.pump_n_dump.withdrawable_balance += amount
             });
             Err(e)
         },
@@ -65,8 +65,19 @@ pub fn reconcile_user_state(games: Vec<PumpNDumpStateDiff>) -> Result<(), String
                 }
             }
         }
-        cdata.pump_n_dump.dollr_balance += to_add.clone();
-        cdata.pump_n_dump.dollr_balance -= to_deduct;
+        let withdrawable_bal = &mut cdata.pump_n_dump.withdrawable_balance;
+        *withdrawable_bal += to_add.clone();
+
+        let game_only_bal = &mut cdata.pump_n_dump.game_only_balance;
+        if &to_deduct <= game_only_bal {
+            *game_only_bal -= to_deduct;
+        } else {
+            let deduct_from_withdrawable = to_deduct - game_only_bal.clone();
+            *game_only_bal = 0u32.into();
+            assert!(&deduct_from_withdrawable <= withdrawable_bal);
+            *withdrawable_bal -= deduct_from_withdrawable;
+        }
+
         cdata.pump_n_dump.net_earnings += to_add;
 
         Ok(())
@@ -123,7 +134,7 @@ pub async fn stake_dollr_for_gdollr(amount: Nat) -> Result<(), String> {
     res.0.map_err(|e| format!("{e:?}"))?;
 
     CANISTER_DATA.with_borrow_mut(|cdata| {
-        cdata.pump_n_dump.dollr_balance += amount;
+        cdata.pump_n_dump.withdrawable_balance += amount;
     });
 
     Ok(())
@@ -159,7 +170,12 @@ pub fn played_game_info_with_pagination_cursor(from_inclusive_index: u64, limit:
 
 #[query]
 pub fn gdollr_balance() -> Nat {
-    CANISTER_DATA.with_borrow(|cdata| cdata.pump_n_dump.dollr_balance.clone())
+    CANISTER_DATA.with_borrow(|cdata| cdata.pump_n_dump.playable_balance())
+}
+
+#[query]
+pub fn withdrawable_balance() -> Nat {
+    CANISTER_DATA.with_borrow(|cdata| cdata.pump_n_dump.withdrawable_balance.clone())
 }
 
 #[query]

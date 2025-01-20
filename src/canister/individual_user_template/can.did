@@ -696,6 +696,7 @@ service : (IndividualUserTemplateInitArgs) -> {
   update_watch_history : (WatchHistoryItem) -> (Result_24);
   update_well_known_principal : (KnownPrincipalType, principal) -> ();
   upgrade_creator_dao_governance_canisters : (blob) -> (Result_1);
+  withdrawable_balance : () -> (nat) query;
   write_key_value_pair : (nat64, text, text) -> (Result_6);
   write_multiple_key_value_pairs : (nat64, vec record { text; text }) -> (
       Result_7,
