@@ -6,6 +6,7 @@ use api::{
     profile::update_profile_display_details::UpdateProfileDetailsError,
 };
 use candid::{Nat, Principal};
+use data_model::pump_n_dump::PumpAndDumpGame;
 use data_model::CanisterData;
 use ic_cdk::api::management_canister::provisional::CanisterId;
 use ic_cdk_macros::export_candid;
@@ -32,7 +33,7 @@ use shared_utils::{
             Post, PostDetailsForFrontend, PostDetailsFromFrontend, PostViewDetailsFromFrontend,
         },
         profile::{
-            UserCanisterDetails, UserProfile, UserProfileDetailsForFrontend,
+            UserCanisterDetails, UserProfileDetailsForFrontend,
             UserProfileDetailsForFrontendV2, UserProfileUpdateDetailsFromFrontend,
         },
         pump_n_dump::{ParticipatedGameInfo, PumpNDumpStateDiff, PumpsAndDumps},
@@ -59,6 +60,7 @@ mod util;
 thread_local! {
     static CANISTER_DATA: RefCell<CanisterData> = RefCell::default();
     static SNAPSHOT_DATA: RefCell<Vec<u8>> = RefCell::default();
+    static PUMP_N_DUMP: RefCell<PumpAndDumpGame> = RefCell::default();
 }
 
 export_candid!();

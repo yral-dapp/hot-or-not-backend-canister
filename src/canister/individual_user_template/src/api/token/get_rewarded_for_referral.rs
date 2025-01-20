@@ -1,6 +1,6 @@
 use crate::{
     api::canister_management::update_last_access_time::update_last_canister_functionality_access_time,
-    util::cycles::notify_to_recharge_canister, CANISTER_DATA,
+    util::cycles::notify_to_recharge_canister, CANISTER_DATA, PUMP_N_DUMP,
 };
 use candid::Principal;
 use ic_cdk_macros::update;
@@ -56,6 +56,9 @@ fn get_rewarded_for_referral(referrer: Principal, referree: Principal) {
             timestamp: current_time,
         });
 
-        cdata.pump_n_dump.game_only_balance += cdata.pump_n_dump.referral_reward.clone();
+    });
+
+    PUMP_N_DUMP.with_borrow_mut(|pd| {
+        pd.game_only_balance += pd.referral_reward.clone();
     });
 }
