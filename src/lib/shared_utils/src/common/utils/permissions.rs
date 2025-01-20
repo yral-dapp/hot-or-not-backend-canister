@@ -1,6 +1,6 @@
 use ic_cdk::{api::is_controller, caller};
 use candid::Principal;
-use crate::constant::{GLOBAL_SUPER_ADMIN_USER_ID, GOVERNANCE_CANISTER_ID, RECLAIM_CANISTER_PRINCIPAL_ID};
+use crate::{common::types::known_principal::{KnownPrincipalMap, KnownPrincipalType}, constant::{GLOBAL_SUPER_ADMIN_USER_ID, GOVERNANCE_CANISTER_ID, RECLAIM_CANISTER_PRINCIPAL_ID}};
 
 pub fn is_reclaim_canister_id() -> Result<(), String> {
     let caller = ic_cdk::caller();
@@ -38,6 +38,23 @@ pub fn is_caller_controller_or_global_admin() -> Result<(), String> {
     }
 
     Ok(())
+}
+
+pub fn is_caller_controller_or_global_admin_v2(known_principals: &KnownPrincipalMap) -> Result<(), String> {
+    let caller = caller();
+    if is_controller(&caller) {
+        return Ok(())
+    }
+
+    if caller.to_string() == GLOBAL_SUPER_ADMIN_USER_ID {
+        return Ok(())
+    }
+
+    if caller == known_principals[&KnownPrincipalType::UserIdGlobalSuperAdmin] {
+        return Ok(())
+    }
+
+    Err("Unauthorize".into())
 }
 
 
