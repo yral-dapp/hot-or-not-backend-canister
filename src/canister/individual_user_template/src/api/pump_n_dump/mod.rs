@@ -1,7 +1,7 @@
 use candid::{Nat, Principal};
 use ic_cdk::{query, update};
 use icrc_ledger_types::{icrc1::account::Account, icrc2::transfer_from::{TransferFromArgs, TransferFromError}};
-use shared_utils::{canister_specific::individual_user_template::types::pump_n_dump::{ParticipatedGameInfo, PumpNDumpStateDiff, PumpsAndDumps}, common::types::known_principal::KnownPrincipalType, constant::GDOLLR_TO_E8S, pagination};
+use shared_utils::{canister_specific::individual_user_template::types::{pump_n_dump::{ParticipatedGameInfo, PumpNDumpStateDiff, PumpsAndDumps}, session::SessionType}, common::types::known_principal::KnownPrincipalType, constant::GDOLLR_TO_E8S, pagination};
 
 use crate::{data_model::pump_n_dump::NatStore, CANISTER_DATA, PUMP_N_DUMP};
 
@@ -9,6 +9,10 @@ use crate::{data_model::pump_n_dump::NatStore, CANISTER_DATA, PUMP_N_DUMP};
 pub async fn redeem_gdollr(amount: Nat) -> Result<(), String> {
     let caller = ic_cdk::caller();
     let (profile_owner, user_index) = CANISTER_DATA.with_borrow(|cdata| {
+        if cdata.session_type != Some(SessionType::RegisteredSession) {
+            return Err("Login required".to_string());
+        }
+
         let admin = cdata.known_principal_ids[&KnownPrincipalType::UserIdGlobalSuperAdmin];
         if admin != caller {
             return Err("Unauthorized".to_string());
