@@ -1,6 +1,6 @@
 use crate::{
     api::canister_management::update_last_access_time::update_last_canister_functionality_access_time,
-    util::cycles::notify_to_recharge_canister, CANISTER_DATA,
+    util::cycles::notify_to_recharge_canister, CANISTER_DATA, PUMP_N_DUMP,
 };
 use ic_cdk_macros::update;
 use shared_utils::common::{
@@ -54,5 +54,9 @@ fn get_rewarded_for_signing_up() {
             },
             timestamp: current_time,
         });
+    });
+
+    PUMP_N_DUMP.with_borrow_mut(|pd| {
+        pd.game_only_balance += pd.onboarding_reward.clone();
     });
 }
