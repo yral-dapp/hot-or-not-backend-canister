@@ -12,3 +12,4 @@ pub mod session;
 pub mod token;
 pub mod cdao;
 pub mod device_id;
+pub mod pump_n_dump;

@@ -43,6 +43,7 @@ use kv_storage::AppStorage;
 
 pub mod kv_storage;
 pub mod memory;
+pub mod pump_n_dump;
 
 #[derive(Deserialize, Serialize)]
 pub struct CanisterData {

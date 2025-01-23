@@ -103,7 +103,7 @@ dfx canister install user_index --argument "(record {
 })"
 scripts/canisters/local_deploy/create_pool_of_individual_canister_user_index.sh
 
- dfx canister update-settings user_index --set-controller $(dfx canister id platform_orchestrator) --yes 
- dfx canister call platform_orchestrator register_new_subnet_orchestrator  "(principal \"$(dfx canister id user_index)\", true)"
+dfx canister update-settings user_index --set-controller $(dfx canister id platform_orchestrator) --yes 
+dfx canister call platform_orchestrator register_new_subnet_orchestrator  "(principal \"$(dfx canister id user_index)\", true)"
 
 

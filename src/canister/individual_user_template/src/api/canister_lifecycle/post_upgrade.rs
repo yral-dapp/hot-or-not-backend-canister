@@ -1,10 +1,10 @@
 use ciborium::de;
 use ic_cdk::api::call::ArgDecoderConfig;
 use ic_cdk_macros::post_upgrade;
-use ic_stable_structures::Memory;
+use ic_stable_structures::reader::Reader;
 use std::borrow::BorrowMut;
 
-use crate::data_model::memory;
+use crate::{data_model::memory, PUMP_N_DUMP};
 
 use shared_utils::canister_specific::individual_user_template::types::arg::IndividualUserTemplateInitArgs;
 
@@ -23,18 +23,37 @@ fn post_upgrade() {
 
 fn restore_data_from_stable_memory() {
     let heap_data = memory::get_upgrades_memory();
+    let mut upgrade_reader = Reader::new(&heap_data, 0);
+
     let mut heap_data_len_bytes = [0; 4];
-    heap_data.read(0, &mut heap_data_len_bytes);
-    let heap_data_len = u32::from_le_bytes(heap_data_len_bytes) as usize;
+    upgrade_reader.read(&mut heap_data_len_bytes).unwrap();
+    let mut heap_data_len = u32::from_le_bytes(heap_data_len_bytes) as usize;
 
     let mut canister_data_bytes = vec![0; heap_data_len];
-    heap_data.read(4, &mut canister_data_bytes);
+    upgrade_reader.read(&mut canister_data_bytes).unwrap();
 
     let canister_data =
         de::from_reader(&*canister_data_bytes).expect("Failed to deserialize heap data");
     CANISTER_DATA.with(|canister_data_ref_cell| {
         *canister_data_ref_cell.borrow_mut() = canister_data;
     });
+
+    upgrade_reader.read(&mut heap_data_len_bytes).unwrap();
+    heap_data_len = u32::from_le_bytes(heap_data_len_bytes) as usize;
+
+    let mut pump_n_dump_data_bytes = vec![0; heap_data_len];
+    upgrade_reader.read(&mut pump_n_dump_data_bytes).unwrap();
+
+    match de::from_reader(&*pump_n_dump_data_bytes) {
+        Ok(pd_data) => {
+            PUMP_N_DUMP.with_borrow_mut(|pd| {
+                *pd = pd_data;
+            });
+        },
+        Err(e) => {
+            ic_cdk::println!("WARN: pump and data not available during upgrade, assuming uninit {e}")
+        }
+    };
 }
 
 fn save_upgrade_args_to_memory() {

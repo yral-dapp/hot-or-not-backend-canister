@@ -4,7 +4,7 @@ use ic_cdk_macros::pre_upgrade;
 use ic_stable_structures::writer::Writer;
 
 use crate::data_model::memory;
-use crate::CANISTER_DATA;
+use crate::{CANISTER_DATA, PUMP_N_DUMP};
 
 
 #[pre_upgrade]
@@ -22,6 +22,17 @@ fn pre_upgrade() {
     }
     let mut upgrade_memory = memory::get_upgrades_memory();
     let mut writer = Writer::new(&mut upgrade_memory, 0);
+    writer.write(&len.to_le_bytes()).unwrap();
+    writer.write(&state_bytes).unwrap();
+
+    state_bytes = vec![];
+    PUMP_N_DUMP.with_borrow(|pd| {
+        ser::into_writer(&pd, &mut state_bytes)
+    })
+    .expect("failed to encode states");
+
+    let len = state_bytes.len() as u32;
+
     writer.write(&len.to_le_bytes()).unwrap();
     writer.write(&state_bytes).unwrap();
 }
