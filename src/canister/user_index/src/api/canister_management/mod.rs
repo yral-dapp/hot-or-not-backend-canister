@@ -50,6 +50,8 @@ pub mod start_upgrades_for_individual_canisters;
 pub mod update_canisters_access_time;
 pub mod update_user_canister_restart_timers;
 pub mod upgrade_all_creator_dao_governance_canisters_in_the_network;
+pub mod fixup_individual_canisters_mappings;
+
 
 #[update]
 pub async fn get_user_canister_status(

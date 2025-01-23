@@ -150,6 +150,10 @@ impl RegisteredSubnetOrchestrator {
         res
     }
 
+    pub async fn fixup_individual_cansiters_mapping(&self) -> Result<(), String> {
+        ic_cdk::call::<_, ()>(self.canister_id, "fixup_individual_canisters_mapping", ()).await.map_err(|e| e.1)
+    }
+
     pub async fn make_individual_canister_logs_private(
         &self,
         individual_canister_id: Principal,

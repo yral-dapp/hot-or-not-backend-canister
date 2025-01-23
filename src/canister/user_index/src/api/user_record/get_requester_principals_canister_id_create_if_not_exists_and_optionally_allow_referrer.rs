@@ -118,7 +118,7 @@ async fn new_user_signup(user_id: Principal) -> Result<Principal, String> {
         .with_borrow_mut(|canister_data| {
             let mut available_canisters = canister_data.available_canisters.iter().cloned();
             let canister_id = available_canisters.next();
-            canister_data.available_canisters = available_canisters.collect();
+            canister_data.available_canisters = available_canisters.collect(); // available canisters 
             canister_id
         })
         .ok_or("Not Available".into());
@@ -197,10 +197,6 @@ async fn provision_new_available_canisters(individual_user_template_canister_was
         CANISTER_DATA.with_borrow(|canister_data| canister_data.available_canisters.len() as u64);
     let max_canister_count = available_canister_count + canister_count;
 
-    let mut backup_pool_canister = CANISTER_DATA
-        .with_borrow(|canister_data| canister_data.backup_canister_pool.clone())
-        .into_iter();
-
     let install_canister_wasm_futures = (0..canister_count).map(move |_| {
         let individual_user_template_canister_wasm_version =
             individual_user_template_canister_wasm.version.clone();
@@ -208,10 +204,11 @@ async fn provision_new_available_canisters(individual_user_template_canister_was
         let individual_user_template_canister_wasm =
             individual_user_template_canister_wasm.wasm_blob.clone();
 
-        let canister_id = backup_pool_canister.next().unwrap();
+        let canister_id = CANISTER_DATA.with_borrow_mut(|canister_data| {
+            let canister_id = canister_data.backup_canister_pool.iter().next().copied().unwrap();
+            canister_data.backup_canister_pool.remove(&canister_id);
+            canister_id
 
-        CANISTER_DATA.with_borrow_mut(|canister_data| {
-            canister_data.backup_canister_pool.remove(&canister_id)
         });
 
         async move {

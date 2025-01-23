@@ -164,4 +164,47 @@ pub fn provision_new_available_and_backup_canisters_on_signup_if_required() {
         .unwrap();
 
     assert!(subnet_available_canister_cnt > 0);
+
+    /*** Test fixup should not remove valid canisters */
+
+    pocket_ic
+        .update_call(
+            subnet_orchestrator_canister_id,
+            platform_canister_id,
+            "fixup_individual_canisters_mapping",
+            candid::encode_one(()).unwrap(),
+        )
+        .map(|res| {
+            let result: () = match res {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("get subnet available capacity call failed"),
+            };
+            result
+        })
+        .unwrap();
+
+    for _ in 0..110 {
+        pocket_ic.tick();
+    }
+
+    let subnet_available_cnt_after_fixup = pocket_ic
+        .query_call(
+            subnet_orchestrator_canister_id,
+            Principal::anonymous(),
+            "get_subnet_available_capacity",
+            candid::encode_one(()).unwrap(),
+        )
+        .map(|res| {
+            let available_capacity: u64 = match res {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("get subnet available capacity call failed"),
+            };
+            available_capacity
+        })
+        .unwrap();
+
+    assert_eq!(
+        subnet_available_cnt_after_fixup,
+        subnet_available_canister_cnt
+    )
 }

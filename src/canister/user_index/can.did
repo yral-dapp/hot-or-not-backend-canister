@@ -138,6 +138,7 @@ service : (UserIndexInitArgs) -> {
       Result_3,
     );
   download_snapshot : (nat64, nat64) -> (blob) query;
+  fixup_individual_canisters_mapping : () -> ();
   get_current_list_of_all_well_known_principal_values : () -> (
       vec record { KnownPrincipalType; principal },
     ) query;

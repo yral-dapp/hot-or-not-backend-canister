@@ -1,22 +1,18 @@
 use candid::{Nat, Principal};
 use ic_cdk::{query, update};
 use icrc_ledger_types::{icrc1::account::Account, icrc2::transfer_from::{TransferFromArgs, TransferFromError}};
-use shared_utils::{canister_specific::individual_user_template::types::{pump_n_dump::{ParticipatedGameInfo, PumpNDumpStateDiff, PumpsAndDumps}, session::SessionType}, common::types::known_principal::KnownPrincipalType, constant::GDOLLR_TO_E8S, pagination};
+use shared_utils::{canister_specific::individual_user_template::types::{pump_n_dump::{ParticipatedGameInfo, PumpNDumpStateDiff, PumpsAndDumps}, session::SessionType}, common::{types::known_principal::KnownPrincipalType, utils::permissions::is_caller_global_admin_v2}, constant::GDOLLR_TO_E8S, pagination};
 
 use crate::{data_model::pump_n_dump::NatStore, CANISTER_DATA, PUMP_N_DUMP};
 
 #[update]
 pub async fn redeem_gdollr(amount: Nat) -> Result<(), String> {
-    let caller = ic_cdk::caller();
     let (profile_owner, user_index) = CANISTER_DATA.with_borrow(|cdata| {
         if cdata.session_type != Some(SessionType::RegisteredSession) {
             return Err("Login required".to_string());
         }
+        is_caller_global_admin_v2(&cdata.known_principal_ids)?;
 
-        let admin = cdata.known_principal_ids[&KnownPrincipalType::UserIdGlobalSuperAdmin];
-        if admin != caller {
-            return Err("Unauthorized".to_string());
-        }
         let principal_id = cdata.profile.principal_id.ok_or("Unavailable")?;
 
         let user_index = cdata.known_principal_ids[&KnownPrincipalType::CanisterIdUserIndex];
@@ -50,13 +46,8 @@ pub async fn redeem_gdollr(amount: Nat) -> Result<(), String> {
 
 #[update]
 pub fn reconcile_user_state(games: Vec<PumpNDumpStateDiff>) -> Result<(), String> {
-    let caller = ic_cdk::caller();
     CANISTER_DATA.with_borrow(|cdata| {
-        let admin = cdata.known_principal_ids[&KnownPrincipalType::UserIdGlobalSuperAdmin];
-        if admin != caller {
-            return Err("Unauthorized".to_string())
-        }
-        Ok(())
+        is_caller_global_admin_v2(&cdata.known_principal_ids)
     })?;
 
     PUMP_N_DUMP.with_borrow_mut(|pd| {
@@ -98,13 +89,8 @@ pub fn reconcile_user_state(games: Vec<PumpNDumpStateDiff>) -> Result<(), String
 
 #[update]
 pub async fn add_dollr_to_liquidity_pool(pool_root: Principal, amount: Nat) -> Result<(), String> {
-    let caller = ic_cdk::caller();
     CANISTER_DATA.with_borrow(|cdata| {
-        let admin = cdata.known_principal_ids[&KnownPrincipalType::UserIdGlobalSuperAdmin];
-        if admin != caller {
-            return Err("Unauthorized".to_string())
-        }
-        Ok(())
+        is_caller_global_admin_v2(&cdata.known_principal_ids)
     })?;
 
     PUMP_N_DUMP.with_borrow_mut(|pd| {
