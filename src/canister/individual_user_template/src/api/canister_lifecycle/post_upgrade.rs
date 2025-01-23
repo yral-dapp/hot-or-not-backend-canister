@@ -27,7 +27,7 @@ fn restore_data_from_stable_memory() {
 
     let mut heap_data_len_bytes = [0; 4];
     upgrade_reader.read(&mut heap_data_len_bytes).unwrap();
-    let heap_data_len = u32::from_le_bytes(heap_data_len_bytes) as usize;
+    let mut heap_data_len = u32::from_le_bytes(heap_data_len_bytes) as usize;
 
     let mut canister_data_bytes = vec![0; heap_data_len];
     upgrade_reader.read(&mut canister_data_bytes).unwrap();
@@ -39,6 +39,7 @@ fn restore_data_from_stable_memory() {
     });
 
     upgrade_reader.read(&mut heap_data_len_bytes).unwrap();
+    heap_data_len = u32::from_le_bytes(heap_data_len_bytes) as usize;
 
     let mut pump_n_dump_data_bytes = vec![0; heap_data_len];
     upgrade_reader.read(&mut pump_n_dump_data_bytes).unwrap();
