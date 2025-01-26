@@ -6,7 +6,11 @@ use serde::Serialize;
 use shared_utils::canister_specific::user_index::types::{
     BroadcastCallStatus, RecycleStatus, UpgradeStatus,
 };
+use shared_utils::common::types::known_principal::KnownPrincipalType;
 use shared_utils::common::types::wasm::{CanisterWasm, WasmType};
+
+
+use crate::CANISTER_DATA;
 
 use self::memory::get_wasm_memory;
 use self::{configuration::Configuration, memory::Memory};
@@ -59,4 +63,16 @@ impl Default for CanisterData {
 
 fn _empty_wasms() -> StableBTreeMap<WasmType, CanisterWasm, Memory> {
     StableBTreeMap::init(get_wasm_memory())
+}
+
+pub fn get_sns_ledger() -> Option<Principal> {
+    let ledger = CANISTER_DATA.with_borrow(|cdata| {
+        cdata
+            .configuration
+            .known_principal_ids
+            .get(&KnownPrincipalType::CanisterIdSnsLedger)
+            .copied()
+    });
+
+    ledger
 }

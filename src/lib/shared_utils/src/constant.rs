@@ -57,6 +57,13 @@ pub const SNS_TOKEN_INDEX_MODULE_HASH: &'static str =
     "67b5f0bf128e801adf4a959ea26c3c9ca0cd399940e169a26a2eb237899a94dd";
 pub const SNS_TOKEN_ARCHIVE_MODULE_HASH: &'static str =
     "317771544f0e828a60ad6efc97694c425c169c4d75d911ba592546912dba3116";
+
+// 1 DOLLR = 100 GDOLLR
+pub const DOLLR_TO_GDOLLR: u64 = 100;
+// 1 DOLLR = 1e8 "e8s"
+// => 1 GDOLLR = 1e6 "e8s"
+pub const GDOLLR_TO_E8S: u64 = 1e6  as u64;
+
 pub fn get_backup_individual_user_canister_batch_size() -> u64 {
     match option_env!("DFX_NETWORK") {
         Some(val) => {

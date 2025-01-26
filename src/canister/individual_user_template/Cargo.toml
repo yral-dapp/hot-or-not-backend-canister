@@ -34,6 +34,7 @@ ic-icrc1-index.workspace = true
 icrc-ledger-types.workspace = true
 hex = "0.4.3"
 bigdecimal = "0.4.6"
+num-bigint = "0.4.6"
 
 [dev-dependencies]
 test_utils = { workspace = true }
