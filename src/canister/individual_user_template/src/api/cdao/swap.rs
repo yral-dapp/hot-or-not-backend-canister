@@ -134,5 +134,5 @@ async fn get_previous_approval_amount(requester: Principal, spender: Principal, 
 
 async fn is_icrc2_supported_token(token_ledger: Principal) -> Result<bool, SwapError>{
     let res: (Vec<SupportedStandards>, ) = ic_cdk::call(token_ledger, "icrc1_supported_standards", ()).await?;
-    Ok(res.0.iter().any(|v| v.name == "ICRC2"))
+    Ok(res.0.iter().any(|v| v.name == "ICRC-2"))
 }
