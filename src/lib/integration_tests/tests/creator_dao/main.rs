@@ -978,7 +978,7 @@ fn creator_dao_tests() {
             owner: alice_canister_id,
             subaccount: None
         },
-        amount: previous_approval.allowance + Nat::from(100u32),
+        amount: Nat::from(100u32) * Nat::from(10u32.pow(8)),
         expected_allowance: None,
         memo: None,
         expires_at: None,
@@ -995,6 +995,32 @@ fn creator_dao_tests() {
     .unwrap();
     ic_cdk::println!("🧪 Swap Request from bob principal to alice canister: {:?}", res);
     assert!(res.is_ok());
+
+    let res =     pocket_ic.update_call(ledger_canister, alice_principal, "icrc2_approve", 
+    candid::encode_one(ApproveArgs{
+        from_subaccount: None,
+        spender: types::Account {
+            owner: alice_canister_id,
+            subaccount: None
+        },
+        amount: Nat::from(100u32) * Nat::from(10u32.pow(8)),
+        expected_allowance: None,
+        memo: None,
+        expires_at: None,
+        fee: None,
+        created_at_time: None
+    }, ).unwrap())
+    .map(|res| {
+        let response = match res {
+            WasmResult::Reply(payload) => Decode!(&payload, Result<Nat, ApproveError>).unwrap(),
+            _ => panic!("\n🛑 get requester principals canister id failed\n"),
+        };
+        response
+    })
+    .unwrap();
+    ic_cdk::println!("🧪 Swap Request from bob principal to alice canister: {:?}", res);
+    assert!(res.is_ok());
+
 
     let res = pocket_ic
     .update_call(
