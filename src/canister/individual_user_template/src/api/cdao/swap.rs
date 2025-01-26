@@ -33,7 +33,7 @@ pub async fn swap_request(token_pairs: TokenPairs) -> Result<(), SwapError>{
     let previous_approval_amt = get_previous_approval_amount(ic_cdk::caller(), ic_cdk::id(), token_a.ledger).await?;
     let allocation_res: (Result<Nat, ApproveError>, ) = ic_cdk::call(token_a.ledger, "icrc2_approve", (ApproveArgs{
         from_subaccount: None,
-        spender: ic_cdk::caller().into(),
+        spender: ic_cdk::id().into(),
         amount: previous_approval_amt + token_a.amt,
         expected_allowance: None,
         memo: None,

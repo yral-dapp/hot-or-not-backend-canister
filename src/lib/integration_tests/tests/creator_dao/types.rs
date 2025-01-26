@@ -181,7 +181,7 @@ pub struct ApproveArgs {
   pub spender: Account,
 }
 
-#[derive(CandidType, Deserialize)]
+#[derive(CandidType, Deserialize, Debug)]
 pub enum ApproveError {
   GenericError{ message: String, error_code: candid::Nat },
   TemporarilyUnavailable,
