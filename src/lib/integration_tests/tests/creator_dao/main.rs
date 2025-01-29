@@ -1051,7 +1051,29 @@ fn creator_dao_tests() {
     .unwrap();
     ic_cdk::println!("🧪 Accepting the swap from alice pricpal to alice canister: {:?}", res);
     assert!(res.is_ok());
+    // update_last_swap_price
+    let res = pocket_ic.update_call(alice_canister_id, charlie_global_admin, "update_last_swap_price", candid::encode_one((ledger_canister, 100f64, )).unwrap());
 
+    assert!(res.is_ok(), "Swap price set unsucessfully");
+    
+    let deployed_cdao = pocket_ic
+        .query_call(
+            alice_canister_id,
+            alice_principal,
+            "deployed_cdao_canisters",
+            candid::encode_one(()).unwrap(),
+        )
+        .map(|res| {
+            let response: Vec<DeployedCdaoCanisters> = match res {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 get requester principals canister id failed\n"),
+            };
+            response
+        })
+        .unwrap();
+    ic_cdk::println!("🧪 Result: {:?}", deployed_cdao);
+
+    assert!(deployed_cdao[0].last_swapped_price == Some(100f64), "Price setting failed!");
     // let res = pocket_ic
     // .update_call(
     //     alice_canister_id,
