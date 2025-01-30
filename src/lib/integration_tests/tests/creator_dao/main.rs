@@ -952,13 +952,13 @@ fn creator_dao_tests() {
 //     spender: spender.into()
 // }, )).await?;
 
-    let previous_approval = pocket_ic.query_call(bob_ledger_canister, bob, "icrc2_allowance", candid::encode_one(AllowanceArgs{
+    let previous_approval = pocket_ic.query_call(ledger_canister, alice_principal, "icrc2_allowance", candid::encode_one(AllowanceArgs{
         account: types::Account{
-            owner: bob,
+            owner: alice_principal,
             subaccount: None
         },
         spender: types::Account{
-            owner: alice_canister_id,
+            owner: bob_canister_id,
             subaccount: None
         }
     }).unwrap())
@@ -971,11 +971,11 @@ fn creator_dao_tests() {
     })
     .unwrap();
 
-    let res =     pocket_ic.update_call(bob_ledger_canister, bob, "icrc2_approve", 
+    let res = pocket_ic.update_call(ledger_canister, alice_principal, "icrc2_approve", 
     candid::encode_one(ApproveArgs{
         from_subaccount: None,
         spender: types::Account {
-            owner: alice_canister_id,
+            owner: bob_canister_id,
             subaccount: None
         },
         amount: Nat::from(100u32) * Nat::from(10u32.pow(8)),
@@ -993,14 +993,14 @@ fn creator_dao_tests() {
         response
     })
     .unwrap();
-    ic_cdk::println!("🧪 Swap Request from bob principal to alice canister: {:?}", res);
+    ic_cdk::println!("🧪 Swap Request from alice principal to bob canister: {:?}", res);
     assert!(res.is_ok());
 
-    let res =     pocket_ic.update_call(ledger_canister, alice_principal, "icrc2_approve", 
+    let res = pocket_ic.update_call(bob_ledger_canister, bob, "icrc2_approve", 
     candid::encode_one(ApproveArgs{
         from_subaccount: None,
         spender: types::Account {
-            owner: alice_canister_id,
+            owner: bob_canister_id,
             subaccount: None
         },
         amount: Nat::from(100u32) * Nat::from(10u32.pow(8)),
@@ -1018,27 +1018,27 @@ fn creator_dao_tests() {
         response
     })
     .unwrap();
-    ic_cdk::println!("🧪 Swap Request from bob principal to alice canister: {:?}", res);
+    ic_cdk::println!("🧪 Swap Request from alice principal to bob canister: {:?}", res);
     assert!(res.is_ok());
 
 
     let res = pocket_ic
     .update_call(
-        alice_canister_id,
-        alice_principal,
+        bob_canister_id,
+        bob,
         "swap_request_action",
         candid::encode_one(SwapRequestActions::Accept { 
             token_pairs: TokenPairs{
                 token_a: SwapTokenData{
-                    ledger: bob_ledger_canister,
+                    ledger: ledger_canister,
                     amt: 100u32.into()
                 },
                 token_b: SwapTokenData{
-                    ledger: ledger_canister,
+                    ledger: bob_ledger_canister,
                     amt: 10u32.into()
                 }
             }, 
-            requester: bob })
+            requester: alice_principal })
         .unwrap(),
     )
     .map(|res| {
@@ -1049,8 +1049,30 @@ fn creator_dao_tests() {
         response
     })
     .unwrap();
-    ic_cdk::println!("🧪 Accepting the swap from alice pricpal to alice canister: {:?}", res);
+    ic_cdk::println!("🧪 Accepting the swap from bob principal to bob canister: {:?}", res);
     assert!(res.is_ok());
+
+    let res = pocket_ic.update_call(bob_canister_id, charlie_global_admin, "update_last_swap_price", candid::encode_one((bob_ledger_canister, 100f64, )).unwrap()).unwrap();
+    ic_cdk::println!("🧪 Updating the last swap price: {:?}", res);
+
+    let deployed_cdao = pocket_ic
+    .query_call(
+        bob_canister_id,
+        bob,
+        "deployed_cdao_canisters",
+        candid::encode_one(()).unwrap(),
+    )
+    .map(|res| {
+        let response: Vec<DeployedCdaoCanisters> = match res {
+            WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+            _ => panic!("\n🛑 get requester principals canister id failed\n"),
+        };
+        response
+    })
+    .unwrap();
+    ic_cdk::println!("🧪 Result: {:?}", deployed_cdao);
+
+    assert!(deployed_cdao[0].last_swapped_price == Some(100f64), "Price setting failed!");
 
     // let res = pocket_ic
     // .update_call(
