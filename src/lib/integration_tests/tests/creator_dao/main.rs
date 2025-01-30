@@ -25,8 +25,7 @@ use shared_utils::canister_specific::individual_user_template::types::cdao::{Swa
 use shared_utils::canister_specific::individual_user_template::types::error::{AirdropError, SwapError};
 use test_utils::setup::test_constants::get_mock_user_bob_principal_id;
 use shared_utils::constant::{
-    SNS_TOKEN_ARCHIVE_MODULE_HASH, SNS_TOKEN_GOVERNANCE_MODULE_HASH, SNS_TOKEN_INDEX_MODULE_HASH,
-    SNS_TOKEN_LEDGER_MODULE_HASH, SNS_TOKEN_ROOT_MODULE_HASH, SNS_TOKEN_SWAP_MODULE_HASH,
+    GLOBAL_SUPER_ADMIN_USER_ID, GLOBAL_SUPER_ADMIN_USER_ID_V1, SNS_TOKEN_ARCHIVE_MODULE_HASH, SNS_TOKEN_GOVERNANCE_MODULE_HASH, SNS_TOKEN_INDEX_MODULE_HASH, SNS_TOKEN_LEDGER_MODULE_HASH, SNS_TOKEN_ROOT_MODULE_HASH, SNS_TOKEN_SWAP_MODULE_HASH
 };
 use shared_utils::types::creator_dao_stats::CreatorDaoTokenStats;
 use types::{Allowance, AllowanceArgs, ApproveArgs, ApproveError};
@@ -1052,7 +1051,7 @@ fn creator_dao_tests() {
     ic_cdk::println!("🧪 Accepting the swap from bob principal to bob canister: {:?}", res);
     assert!(res.is_ok());
 
-    let res = pocket_ic.update_call(bob_canister_id, charlie_global_admin, "update_last_swap_price", candid::encode_one((bob_ledger_canister, 100f64, )).unwrap()).unwrap();
+    let res = pocket_ic.update_call(bob_canister_id, Principal::from_text(GLOBAL_SUPER_ADMIN_USER_ID_V1).unwrap(), "update_last_swap_price", candid::encode_args((bob_ledger_canister, 100f64)).unwrap()).unwrap();
     ic_cdk::println!("🧪 Updating the last swap price: {:?}", res);
 
     let deployed_cdao = pocket_ic
