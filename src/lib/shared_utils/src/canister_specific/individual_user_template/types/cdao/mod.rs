@@ -127,15 +127,3 @@ pub struct TokenPairs{
     pub token_a: SwapTokenData,
     pub token_b: SwapTokenData
 }
-
-#[derive(CandidType, Deserialize, PartialEq, Eq, Debug)]
-pub enum SwapRequestActions{
-    Accept{
-        token_pairs: TokenPairs,
-        requester: Principal
-    },
-    Reject{
-        token_pairs: TokenPairs,
-        requester: Principal
-    }
-}

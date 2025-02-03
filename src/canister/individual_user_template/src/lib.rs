@@ -18,7 +18,7 @@ use icrc_ledger_types::icrc1::transfer::Memo;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
         arg::{FolloweeArg, IndividualUserTemplateInitArgs, PlaceBetArg},
-        cdao::{DeployedCdaoCanisters, SwapRequestActions, TokenPairs},
+        cdao::{DeployedCdaoCanisters, TokenPairs},
         device_id::DeviceIdentity,
         error::{
             BetOnCurrentlyViewingPostError, CdaoDeployError, CdaoTokenError,

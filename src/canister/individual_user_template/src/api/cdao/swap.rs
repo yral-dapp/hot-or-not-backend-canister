@@ -1,9 +1,8 @@
 use candid::{CandidType, Nat, Principal};
-use ic_cdk::api::time;
 use ic_cdk_macros::update;
-use icrc_ledger_types::icrc2::{allowance::{Allowance, AllowanceArgs}, approve::{ApproveArgs, ApproveError}, transfer_from::{TransferFromArgs, TransferFromError}};
+use icrc_ledger_types::icrc2::transfer_from::{TransferFromArgs, TransferFromError};
 use serde::Deserialize;
-use shared_utils::{canister_specific::individual_user_template::types::{cdao::{SwapRequestActions, TokenPairs}, error::SwapError}, common::utils::permissions::is_caller_global_admin};
+use shared_utils::{canister_specific::individual_user_template::types::{cdao::TokenPairs, error::SwapError}, common::utils::permissions::is_caller_global_admin};
 
 use crate::{api::profile::get_profile_details_v2::get_profile_details_v2, CANISTER_DATA};
 

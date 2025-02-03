@@ -20,8 +20,7 @@ use ic_sns_swap::pb::v1::{
     NewSaleTicketResponse, RefreshBuyerTokensRequest, RefreshBuyerTokensResponse,
 };
 use sha2::{Digest, Sha256};
-use shared_utils::canister_specific::individual_user_template::types::arg::IndividualUserTemplateInitArgs;
-use shared_utils::canister_specific::individual_user_template::types::cdao::{SwapRequestActions, SwapTokenData, TokenPairs};
+use shared_utils::canister_specific::individual_user_template::types::cdao::{SwapTokenData, TokenPairs};
 use shared_utils::canister_specific::individual_user_template::types::error::{AirdropError, SwapError};
 use test_utils::setup::test_constants::get_mock_user_bob_principal_id;
 use shared_utils::constant::{
@@ -35,7 +34,6 @@ use utils::{setup_default_sns_creator_token, setup_sns_w_canister_for_creator_da
 
 use candid::{encode_args, CandidType, Decode, Encode, Nat, Principal};
 use ic_base_types::PrincipalId;
-use ic_sns_wasm::init::SnsWasmCanisterInitPayload;
 use icp_ledger::Subaccount;
 use pocket_ic::WasmResult;
 use serde::{Deserialize, Serialize};
@@ -935,40 +933,6 @@ fn creator_dao_tests() {
     assert!(bob_canister_final_cycle_balance > bob_initial_cycle_balance);
 
     assert!(res == expected_balance);
-// let previous_approval_amt = get_previous_approval_amount(ic_cdk::caller(), ic_cdk::id(), token_a.ledger).await?;
-// let allocation_res: (Result<Nat, ApproveError>, ) = ic_cdk::call(token_a.ledger, "icrc2_approve", (ApproveArgs{
-//     from_subaccount: None,
-//     spender: ic_cdk::id().into(),
-//     amount: previous_approval_amt + token_a.amt,
-//     expected_allowance: None,
-//     memo: None,
-//     expires_at: Some(time() + SWAP_REQUEST_EXPIRY),
-//     fee: None,
-//     created_at_time: None
-// }, )).await?;
-// let previous_approval: (Allowance, ) = ic_cdk::call(ledger, "icrc2_allowance", (AllowanceArgs{
-//     account: requester.into(),
-//     spender: spender.into()
-// }, )).await?;
-
-    let previous_approval = pocket_ic.query_call(ledger_canister, alice_principal, "icrc2_allowance", candid::encode_one(AllowanceArgs{
-        account: types::Account{
-            owner: alice_principal,
-            subaccount: None
-        },
-        spender: types::Account{
-            owner: bob_canister_id,
-            subaccount: None
-        }
-    }).unwrap())
-    .map(|res| {
-        let response = match res {
-            WasmResult::Reply(payload) => Decode!(&payload, Allowance).unwrap(),
-            _ => panic!("\n🛑 get requester principals canister id failed\n"),
-        };
-        response
-    })
-    .unwrap();
 
     let res = pocket_ic.update_call(ledger_canister, alice_principal, "icrc2_approve", 
     candid::encode_one(ApproveArgs{
@@ -1072,90 +1036,4 @@ fn creator_dao_tests() {
     ic_cdk::println!("🧪 Result: {:?}", deployed_cdao);
 
     assert!(deployed_cdao[0].last_swapped_price == Some(100f64), "Price setting failed!");
-
-    // let res = pocket_ic
-    // .update_call(
-    //     alice_canister_id,
-    //     bob,
-    //     "swap_request",
-    //     candid::encode_one(TokenPairs{
-    //         token_a: SwapTokenData{
-    //             ledger: bob_ledger_canister,
-    //             amt: 100u32.into()
-    //         },
-    //         token_b: SwapTokenData{
-    //             ledger: ledger_canister,
-    //             amt: 10u32.into()
-    //         }
-    //     })
-    //     .unwrap(),
-    // )
-    // .map(|res| {
-    //     let response = match res {
-    //         WasmResult::Reply(payload) => Decode!(&payload, Result<(), SwapError>).unwrap(),
-    //         _ => panic!("\n🛑 get requester principals canister id failed\n"),
-    //     };
-    //     response
-    // })
-    // .unwrap();
-    // ic_cdk::println!("🧪 Swap Request from bob principal to alice canister: {:?}", res);
-    // assert!(res.is_ok());
-
-    // let res = pocket_ic
-    // .update_call(
-    //     alice_canister_id,
-    //     alice_principal,
-    //     "swap_request_action",
-    //     candid::encode_one(SwapRequestActions::Reject { 
-    //         token_pairs: TokenPairs{
-    //             token_a: SwapTokenData{
-    //                 ledger: bob_ledger_canister,
-    //                 amt: 100u32.into()
-    //             },
-    //             token_b: SwapTokenData{
-    //                 ledger: ledger_canister,
-    //                 amt: 10u32.into()
-    //             }
-    //         }, 
-    //         requester: bob })
-    //     .unwrap(),
-    // )
-    // .map(|res| {
-    //     let response = match res {
-    //         WasmResult::Reply(payload) => Decode!(&payload, Result<(), SwapError>).unwrap(),
-    //         _ => panic!("\n🛑 get requester principals canister id failed\n"),
-    //     };
-    //     response
-    // })
-    // .unwrap();
-    // ic_cdk::println!("🧪 Rejecting the swap from alice pricpal to alice canister: {:?}", res);
-    // assert!(res.is_ok());
-
-    // let res = pocket_ic
-    // .update_call(
-    //     bob_canister_id,
-    //     bob,
-    //     "cancel_swap_request",
-    //     candid::encode_one(TokenPairs{
-    //         token_a: SwapTokenData{
-    //             ledger: bob_ledger_canister,
-    //             amt: 100u32.into()
-    //         },
-    //         token_b: SwapTokenData{
-    //             ledger: ledger_canister,
-    //             amt: 10u32.into()
-    //         }
-    //     })
-    //     .unwrap(),
-    // )
-    // .map(|res| {
-    //     let response = match res {
-    //         WasmResult::Reply(payload) => Decode!(&payload, Result<(), SwapError>).unwrap(),
-    //         _ => panic!("\n🛑 get requester principals canister id failed\n"),
-    //     };
-    //     response
-    // })
-    // .unwrap();
-    // ic_cdk::println!("🧪 Cancelling the Swap Request after done: {:?}", res);
-    // assert!(res.is_ok());
 }
