@@ -3,7 +3,7 @@ mod mock_ledger;
 use candid::{Nat, Principal};
 use mock_ledger::{mock_ledger_intf::{Account, ApproveArgs, TransferArg}, LEDGER_FEE, LEDGER_MINT_AMOUNT};
 use pocket_ic::PocketIc;
-use shared_utils::{canister_specific::individual_user_template::types::{pump_n_dump::{GameDirection, ParticipatedGameInfo, PumpNDumpStateDiff, PumpsAndDumps}, session::SessionType}, common::types::known_principal::{KnownPrincipalMap, KnownPrincipalType}, constant::{GDOLLR_TO_E8S, GLOBAL_SUPER_ADMIN_USER_ID}};
+use shared_utils::{canister_specific::individual_user_template::types::{pump_n_dump::{BalanceInfo, GameDirection, ParticipatedGameInfo, PumpNDumpStateDiff, PumpsAndDumps}, session::SessionType}, common::types::known_principal::{KnownPrincipalMap, KnownPrincipalType}, constant::{GDOLLR_TO_E8S, GLOBAL_SUPER_ADMIN_USER_ID}};
 use test_utils::setup::{env::pocket_ic_env::{execute_query, execute_update, execute_update_no_res, execute_update_no_res_multi, get_new_pocket_ic_env}, test_constants::{get_global_super_admin_principal_id, get_mock_user_alice_principal_id, get_mock_user_charlie_principal_id}};
 
 struct PumpNDumpHarness {
@@ -111,12 +111,12 @@ impl PumpNDumpHarness {
         new_canister
     }
 
-    pub fn gdollr_balance(&self, individual_canister: Principal) -> Nat {
+    pub fn game_balance(&self, individual_canister: Principal) -> BalanceInfo {
         execute_query(
             &self.pic,
             Principal::anonymous(),
             individual_canister,
-            "gdollr_balance",
+            "pd_balance_info",
             &()
         )
     }
@@ -174,16 +174,6 @@ impl PumpNDumpHarness {
             &()
         )
     }
-
-    pub fn withdrawable_balance(&self, individual_canister: Principal) -> Nat {
-        execute_query(
-            &self.pic,
-            Principal::anonymous(),
-            individual_canister,
-            "withdrawable_balance",
-            &()
-        )
-    }
 }
 
 #[test]
@@ -192,11 +182,11 @@ fn newly_registered_user_should_have_1000_gdollr() {
     let alice = get_mock_user_alice_principal_id();
     let alice_canister = harness.provision_individual_canister(alice);
 
-    let gdollr_bal = harness.gdollr_balance(alice_canister);
+    let gdollr_bal = harness.game_balance(alice_canister).balance;
 
     assert_eq!(gdollr_bal, Nat::from(1e9 as u64));
 
-    let withdrawable_bal = harness.withdrawable_balance(alice_canister);
+    let withdrawable_bal = harness.game_balance(alice_canister).withdrawable;
     assert_eq!(withdrawable_bal, Nat::from(0u32));
 }
 
@@ -251,8 +241,7 @@ fn claim_gdollr_and_stake_gdollr_should_work() {
         }
     );
 
-    let past_gdollr_bal = harness.gdollr_balance(alice_canister);
-    let past_withdrawable_bal = harness.withdrawable_balance(alice_canister);
+    let past_game_bal = harness.game_balance(alice_canister);
 
     execute_update::<_, Result<(), String>>(
         &harness.pic,
@@ -265,10 +254,9 @@ fn claim_gdollr_and_stake_gdollr_should_work() {
     let new_bal = harness.ledger_balance(alice);
     assert_eq!(new_bal, past_bal);
 
-    let new_gdollr_bal = harness.gdollr_balance(alice_canister);
-    let new_withdrawable_bal = harness.withdrawable_balance(alice_canister);
-    assert_eq!(new_gdollr_bal - past_gdollr_bal, to_claim);
-    assert_eq!(new_withdrawable_bal - past_withdrawable_bal, to_claim);
+    let new_game_bal = harness.game_balance(alice_canister);
+    assert_eq!(new_game_bal.balance - past_game_bal.balance, to_claim);
+    assert_eq!(new_game_bal.withdrawable - past_game_bal.withdrawable, to_claim);
 }
 
 #[test]
@@ -279,7 +267,7 @@ fn reconcile_user_state_should_work() {
     let alice_canister = harness.provision_individual_canister(alice);
 
     // Test Addition
-    let past_bal = harness.gdollr_balance(alice_canister);
+    let past_bal = harness.game_balance(alice_canister).balance;
     let past_pd = harness.pumps_and_dumps(alice_canister);
     let past_game_count = harness.played_game_count(alice_canister);
     let past_earnings = harness.net_earnings(alice_canister);
@@ -313,7 +301,7 @@ fn reconcile_user_state_should_work() {
 
     harness.reconcile_user_state(alice_canister, &state_diffs);
 
-    let new_bal = harness.gdollr_balance(alice_canister);
+    let new_bal = harness.game_balance(alice_canister).balance;
     assert_eq!(new_bal.clone() - past_bal, total_reward);
     let new_pd = harness.pumps_and_dumps(alice_canister);
     let new_game_count = harness.played_game_count(alice_canister);
@@ -337,7 +325,7 @@ fn reconcile_user_state_should_work() {
     let to_deduct = GDOLLR_TO_E8S;
 
     harness.reconcile_user_state(alice_canister, &state_diffs);
-    let new_bal = harness.gdollr_balance(alice_canister);
+    let new_bal = harness.game_balance(alice_canister).balance;
     assert_eq!(past_bal - new_bal.clone(), to_deduct);
 
     // Test Creator Reward
@@ -348,7 +336,7 @@ fn reconcile_user_state_should_work() {
     ];
 
     harness.reconcile_user_state(alice_canister, &state_diffs);
-    let new_bal = harness.gdollr_balance(alice_canister);
+    let new_bal = harness.game_balance(alice_canister).balance;
 
     assert_eq!(new_bal - past_bal, to_add);
 }

@@ -30,10 +30,10 @@ impl Storable for NatStore {
 
 #[derive(Serialize, Deserialize)]
 pub struct PumpAndDumpGame {
-    /// balance that is only available for gameplay
-    pub game_only_balance: Nat,
-    /// balance that can be swapped for DOLLR
-    pub withdrawable_balance: Nat,
+    /// Amount that has been obtained from airdrops (lifetime)
+    pub net_airdrop: Nat,
+    /// user balance
+    pub balance: Nat,
     pub referral_reward: Nat,
     pub onboarding_reward: Nat,
     pub games: Vec<ParticipatedGameInfo>,
@@ -48,8 +48,8 @@ pub struct PumpAndDumpGame {
 impl Default for PumpAndDumpGame {
     fn default() -> Self {
         Self {
-            game_only_balance: 0u32.into(),
-            withdrawable_balance: 0u32.into(),
+            net_airdrop: 0u32.into(),
+            balance: 0u32.into(),
             // 1000 gDOLLR
             referral_reward: Nat::from(1e9 as u64),
             // 1000 DOLLR
@@ -64,8 +64,16 @@ impl Default for PumpAndDumpGame {
 }
 
 impl PumpAndDumpGame {
-    /// balance the user can use to play the game
-    pub fn playable_balance(&self) -> Nat {
-        self.game_only_balance.clone() + self.withdrawable_balance.clone()
+    pub fn add_reward_from_airdrop(&mut self, amount: Nat) {
+        self.net_airdrop += amount.clone();
+        self.balance += amount;
+    }
+
+    pub fn withdrawable_balance(&self) -> Nat {
+        if self.net_airdrop >= self.balance {
+            0u32.into()
+        } else {
+            self.balance.clone() - self.net_airdrop.clone()
+        }
     }
 }
