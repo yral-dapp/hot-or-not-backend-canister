@@ -1026,8 +1026,8 @@ fn creator_dao_tests() {
         bob_canister_id,
         bob,
         "swap_request_action",
-        candid::encode_one(SwapRequestActions::Accept { 
-            token_pairs: TokenPairs{
+        candid::Encode!(
+            &TokenPairs{
                 token_a: SwapTokenData{
                     ledger: ledger_canister,
                     amt: 100u32.into()
@@ -1037,8 +1037,8 @@ fn creator_dao_tests() {
                     amt: 10u32.into()
                 }
             }, 
-            requester: alice_principal })
-        .unwrap(),
+            &alice_principal
+        ).unwrap()
     )
     .map(|res| {
         let response = match res {
