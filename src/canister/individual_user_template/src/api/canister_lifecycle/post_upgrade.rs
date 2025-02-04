@@ -38,22 +38,22 @@ fn restore_data_from_stable_memory() {
         *canister_data_ref_cell.borrow_mut() = canister_data;
     });
 
-    upgrade_reader.read(&mut heap_data_len_bytes).unwrap();
-    heap_data_len = u32::from_le_bytes(heap_data_len_bytes) as usize;
+    // upgrade_reader.read(&mut heap_data_len_bytes).unwrap();
+    // heap_data_len = u32::from_le_bytes(heap_data_len_bytes) as usize;
 
-    let mut pump_n_dump_data_bytes = vec![0; heap_data_len];
-    upgrade_reader.read(&mut pump_n_dump_data_bytes).unwrap();
+    // let mut pump_n_dump_data_bytes = vec![0; heap_data_len];
+    // upgrade_reader.read(&mut pump_n_dump_data_bytes).unwrap();
 
-    match de::from_reader(&*pump_n_dump_data_bytes) {
-        Ok(pd_data) => {
-            PUMP_N_DUMP.with_borrow_mut(|pd| {
-                *pd = pd_data;
-            });
-        },
-        Err(e) => {
-            ic_cdk::println!("WARN: pump and data not available during upgrade, assuming uninit {e}")
-        }
-    };
+    // match de::from_reader(&*pump_n_dump_data_bytes) {
+    //     Ok(pd_data) => {
+    //         PUMP_N_DUMP.with_borrow_mut(|pd| {
+    //             *pd = pd_data;
+    //         });
+    //     },
+    //     Err(e) => {
+    //         ic_cdk::println!("WARN: pump and data not available during upgrade, assuming uninit {e}")
+    //     }
+    // };
 }
 
 fn save_upgrade_args_to_memory() {
@@ -88,11 +88,17 @@ fn save_upgrade_args_to_memory() {
     });
 }
 
-fn migrate_excessive_tokens(){
+fn migrate_excessive_tokens() {
     CANISTER_DATA.with(|canister_data_ref_cell| {
         let mut canister_data_ref_cell = canister_data_ref_cell.borrow_mut();
-        if canister_data_ref_cell.my_token_balance.utility_token_balance > 18_00_00_00_00_00_00_00_00_00 {
-            canister_data_ref_cell.my_token_balance.utility_token_balance = 1000;
+        if canister_data_ref_cell
+            .my_token_balance
+            .utility_token_balance
+            > 18_00_00_00_00_00_00_00_00_00
+        {
+            canister_data_ref_cell
+                .my_token_balance
+                .utility_token_balance = 1000;
         }
     });
 }
