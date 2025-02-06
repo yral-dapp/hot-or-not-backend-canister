@@ -59,6 +59,6 @@ fn get_rewarded_for_referral(referrer: Principal, referree: Principal) {
     });
 
     PUMP_N_DUMP.with_borrow_mut(|pd| {
-        pd.game_only_balance += pd.referral_reward.clone();
+        pd.add_reward_from_airdrop(pd.referral_reward.clone());
     });
 }
