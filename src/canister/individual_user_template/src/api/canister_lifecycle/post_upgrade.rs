@@ -35,20 +35,20 @@ fn restore_data_from_stable_memory() {
     let canister_data =
         de::from_reader(&*canister_data_bytes).expect("Failed to deserialize heap data");
 
-    let session_type = CANISTER_DATA.with_borrow_mut(|cdata| {
-        *cdata = canister_data;
-        cdata.session_type
-    });
-
     // TODO: remove this once upgrades are complete
+    let is_user_owned = CANISTER_DATA.with_borrow_mut(|cdata| {
+        *cdata = canister_data;
+        cdata.profile.principal_id.is_some()
+    });
     PUMP_N_DUMP.with_borrow_mut(|pd| {
         pd.liquidity_pools.clear_new();
-        if session_type == Some(SessionType::RegisteredSession) {
+        if is_user_owned {
             pd.add_reward_from_airdrop(
                 pd.onboarding_reward.clone()
             );
         }
     });
+    // TODO end
 
     // TODO: enable this once upgrades are complete
     // upgrade_reader.read(&mut heap_data_len_bytes).unwrap();
