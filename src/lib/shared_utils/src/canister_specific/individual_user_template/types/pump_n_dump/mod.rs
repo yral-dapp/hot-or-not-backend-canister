@@ -28,3 +28,10 @@ pub struct PumpsAndDumps {
     pub pumps: Nat,
     pub dumps: Nat,
 }
+
+#[derive(Serialize, Deserialize, Clone, CandidType)]
+pub struct BalanceInfo {
+    pub net_airdrop_reward: Nat,
+    pub balance: Nat,
+    pub withdrawable: Nat,
+}

@@ -1,7 +1,7 @@
 use candid::{Nat, Principal};
 use ic_cdk::{query, update};
 use icrc_ledger_types::{icrc1::account::Account, icrc2::transfer_from::{TransferFromArgs, TransferFromError}};
-use shared_utils::{canister_specific::individual_user_template::types::{pump_n_dump::{ParticipatedGameInfo, PumpNDumpStateDiff, PumpsAndDumps}, session::SessionType}, common::{types::known_principal::KnownPrincipalType, utils::permissions::is_caller_global_admin_v2}, constant::GDOLLR_TO_E8S, pagination};
+use shared_utils::{canister_specific::individual_user_template::types::{pump_n_dump::{BalanceInfo, ParticipatedGameInfo, PumpNDumpStateDiff, PumpsAndDumps}, session::SessionType}, common::{types::known_principal::KnownPrincipalType, utils::permissions::is_caller_global_admin_v2}, constant::GDOLLR_TO_E8S, pagination};
 
 use crate::{data_model::pump_n_dump::NatStore, CANISTER_DATA, PUMP_N_DUMP};
 
@@ -20,10 +20,10 @@ pub async fn redeem_gdollr(amount: Nat) -> Result<(), String> {
     })?;
 
     PUMP_N_DUMP.with_borrow_mut(|pd| {
-        if pd.withdrawable_balance < amount {
+        if pd.withdrawable_balance() < amount {
             return Err("Not enough balance".to_string());
         }
-        pd.withdrawable_balance -= amount.clone();
+        pd.balance -= amount.clone();
         Ok(())
     })?;
 
@@ -36,7 +36,7 @@ pub async fn redeem_gdollr(amount: Nat) -> Result<(), String> {
     match res {
         Ok((Err(e),)) | Err((_, e)) => {
             PUMP_N_DUMP.with_borrow_mut(|pd| {
-                pd.withdrawable_balance += amount
+                pd.balance += amount
             });
             Err(e)
         },
@@ -68,18 +68,8 @@ pub fn reconcile_user_state(games: Vec<PumpNDumpStateDiff>) -> Result<(), String
             }
         }
         to_deduct *= GDOLLR_TO_E8S;
-        let withdrawable_bal = &mut pd.withdrawable_balance;
-        *withdrawable_bal += to_add.clone();
-
-        let game_only_bal = &mut pd.game_only_balance;
-        if &to_deduct <= game_only_bal {
-            *game_only_bal -= to_deduct;
-        } else {
-            let deduct_from_withdrawable = to_deduct - game_only_bal.clone();
-            *game_only_bal = 0u32.into();
-            assert!(&deduct_from_withdrawable <= withdrawable_bal);
-            *withdrawable_bal -= deduct_from_withdrawable;
-        }
+        pd.balance += to_add.clone();
+        pd.balance -= to_deduct;
 
         pd.net_earnings += to_add;
 
@@ -141,7 +131,7 @@ pub async fn stake_dollr_for_gdollr(amount: Nat) -> Result<(), String> {
     res.0.map_err(|e| format!("{e:?}"))?;
 
     PUMP_N_DUMP.with_borrow_mut(|pd| {
-        pd.withdrawable_balance += amount;
+        pd.balance += amount;
     });
 
     Ok(())
@@ -176,13 +166,12 @@ pub fn played_game_info_with_pagination_cursor(from_inclusive_index: u64, limit:
 }
 
 #[query]
-pub fn gdollr_balance() -> Nat {
-    PUMP_N_DUMP.with_borrow(|pd| pd.playable_balance())
-}
-
-#[query]
-pub fn withdrawable_balance() -> Nat {
-    PUMP_N_DUMP.with_borrow(|pd| pd.withdrawable_balance.clone())
+pub fn pd_balance_info() -> BalanceInfo {
+    PUMP_N_DUMP.with_borrow(|pd| BalanceInfo {
+        net_airdrop_reward: pd.net_airdrop.clone(),
+        balance: pd.balance.clone(),
+        withdrawable: pd.withdrawable_balance(),
+    })
 }
 
 #[query]

@@ -16,6 +16,7 @@ type AirdropError = variant {
 type AirdropInfo = record {
   principals_who_successfully_claimed : vec record { principal; ClaimStatus };
 };
+
 type ApproveError = variant {
   GenericError : record { message : text; error_code : nat };
   TemporarilyUnavailable;
@@ -27,6 +28,13 @@ type ApproveError = variant {
   Expired : record { ledger_time : nat64 };
   InsufficientFunds : record { balance : nat };
 };
+
+type BalanceInfo = record {
+  balance : nat;
+  withdrawable : nat;
+  net_airdrop_reward : nat;
+};
+
 type BetDetails = record {
   bet_direction : BetDirection;
   bet_maker_canister_id : principal;
@@ -625,7 +633,6 @@ service : (IndividualUserTemplateInitArgs) -> {
   deployed_cdao_canisters : () -> (vec DeployedCdaoCanisters) query;
   do_i_follow_this_user : (FolloweeArg) -> (Result_9) query;
   download_snapshot : (nat64, nat64) -> (blob) query;
-  gdollr_balance : () -> (nat) query;
   get_bet_details_for_a_user_on_a_post : (principal, nat64) -> (
       Result_10,
     ) query;
@@ -683,6 +690,7 @@ service : (IndividualUserTemplateInitArgs) -> {
   load_snapshot : () -> ();
   net_earnings : () -> (nat) query;
   once_reenqueue_timers_for_pending_bet_outcomes : () -> (Result_20);
+  pd_balance_info : () -> (BalanceInfo) query;
   played_game_count : () -> (nat64) query;
   played_game_info_with_pagination_cursor : (nat64, nat64) -> (Result_21) query;
   pumps_and_dumps : () -> (PumpsAndDumps) query;
@@ -735,7 +743,6 @@ service : (IndividualUserTemplateInitArgs) -> {
   update_watch_history : (WatchHistoryItem) -> (Result_24);
   update_well_known_principal : (KnownPrincipalType, principal) -> ();
   upgrade_creator_dao_governance_canisters : (blob) -> (Result_1);
-  withdrawable_balance : () -> (nat) query;
   write_key_value_pair : (nat64, text, text) -> (Result_6);
   write_multiple_key_value_pairs : (nat64, vec record { text; text }) -> (
       Result_7,

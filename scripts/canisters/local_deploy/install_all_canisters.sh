@@ -20,6 +20,7 @@ while getopts "sih" arg; do
 done
 
 scripts/canisters/local_deploy/setup_icp_ledger.sh
+scripts/canisters/local_deploy/setup_dollr_ledger.sh
 scripts/canisters/local_deploy/create_sns_wasm.sh
 
 dfx canister create --no-wallet individual_user_template
@@ -66,6 +67,10 @@ dfx canister install post_cache --argument "(record {
       variant { CanisterIdSnsWasm };
       principal \"$(dfx canister id sns_wasm)\";
     };
+    record {
+      variant { CanisterIdSnsLedger };
+      principal \"$(dfx canister id dollr_mock_ledger)\";
+    };
   };
   version= \"v1.0.0\"
 })"
@@ -92,6 +97,10 @@ dfx canister install user_index --argument "(record {
       variant { CanisterIdSnsWasm };
       principal \"$(dfx canister id sns_wasm)\";
     };
+    record {
+      variant { CanisterIdSnsLedger };
+      principal \"$(dfx canister id dollr_mock_ledger)\";
+    };
   };
   access_control_map = opt vec {
     record {
@@ -106,4 +115,14 @@ scripts/canisters/local_deploy/create_pool_of_individual_canister_user_index.sh
 dfx canister update-settings user_index --set-controller $(dfx canister id platform_orchestrator) --yes 
 dfx canister call platform_orchestrator register_new_subnet_orchestrator  "(principal \"$(dfx canister id user_index)\", true)"
 
-
+dfx canister call dollr_mock_ledger "icrc1_transfer" "(record {
+  to = record {
+    owner = principal \"$(dfx canister id user_index)\";
+    subaccount = null;
+  };
+  fee = null;
+  memo = null;
+  from_subaccount = null;
+  created_at_time = null;
+  amount = 9999990000;
+})"

@@ -6,7 +6,7 @@ use std::borrow::BorrowMut;
 
 use crate::{data_model::memory, PUMP_N_DUMP};
 
-use shared_utils::canister_specific::individual_user_template::types::arg::IndividualUserTemplateInitArgs;
+use shared_utils::canister_specific::individual_user_template::types::{arg::IndividualUserTemplateInitArgs, session::SessionType};
 
 use crate::{
     api::hot_or_not_bet::reenqueue_timers_for_pending_bet_outcomes::reenqueue_timers_for_pending_bet_outcomes,
@@ -34,10 +34,23 @@ fn restore_data_from_stable_memory() {
 
     let canister_data =
         de::from_reader(&*canister_data_bytes).expect("Failed to deserialize heap data");
-    CANISTER_DATA.with(|canister_data_ref_cell| {
-        *canister_data_ref_cell.borrow_mut() = canister_data;
-    });
 
+    // TODO: remove this once upgrades are complete
+    let is_user_owned = CANISTER_DATA.with_borrow_mut(|cdata| {
+        *cdata = canister_data;
+        cdata.profile.principal_id.is_some()
+    });
+    PUMP_N_DUMP.with_borrow_mut(|pd| {
+        pd.liquidity_pools.clear_new();
+        if is_user_owned {
+            pd.add_reward_from_airdrop(
+                pd.onboarding_reward.clone()
+            );
+        }
+    });
+    // TODO end
+
+    // TODO: enable this once upgrades are complete
     // upgrade_reader.read(&mut heap_data_len_bytes).unwrap();
     // heap_data_len = u32::from_le_bytes(heap_data_len_bytes) as usize;
 
