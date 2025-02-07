@@ -7,41 +7,24 @@ pub mod test_swap_flow;
 
 use ic_ledger_types::Memo;
 use ic_sns_governance::pb::v1::governance::Version;
-use ic_sns_governance::pb::v1::{
-    manage_neuron, neuron, Account, GetRunningSnsVersionRequest, GetRunningSnsVersionResponse,
-    ListNeurons, ListNeuronsResponse, ManageNeuron, ManageNeuronResponse,
-};
-use ic_sns_init::pb::v1::{
-    sns_init_payload::InitialTokenDistribution, AirdropDistribution, DeveloperDistribution,
-    FractionalDeveloperVotingPower, NeuronDistribution, SnsInitPayload, SwapDistribution,
-    TreasuryDistribution,
-};
-use ic_sns_swap::pb::v1::{
-    GetInitRequest, GetInitResponse, NeuronBasketConstructionParameters, NewSaleTicketRequest,
-    NewSaleTicketResponse, RefreshBuyerTokensRequest, RefreshBuyerTokensResponse,
-};
+use ic_sns_governance::pb::v1::{GetRunningSnsVersionRequest, GetRunningSnsVersionResponse};
 use sha2::{Digest, Sha256};
 use shared_utils::canister_specific::individual_user_template::types::cdao::{SwapTokenData, TokenPairs};
 use shared_utils::canister_specific::individual_user_template::types::error::{AirdropError, SwapError};
 use test_utils::setup::test_constants::get_mock_user_bob_principal_id;
 use shared_utils::constant::{
-    GLOBAL_SUPER_ADMIN_USER_ID, GLOBAL_SUPER_ADMIN_USER_ID_V1, SNS_TOKEN_ARCHIVE_MODULE_HASH, SNS_TOKEN_GOVERNANCE_MODULE_HASH, SNS_TOKEN_INDEX_MODULE_HASH, SNS_TOKEN_LEDGER_MODULE_HASH, SNS_TOKEN_ROOT_MODULE_HASH, SNS_TOKEN_SWAP_MODULE_HASH
+    SNS_TOKEN_ARCHIVE_MODULE_HASH, SNS_TOKEN_GOVERNANCE_MODULE_HASH, SNS_TOKEN_INDEX_MODULE_HASH, SNS_TOKEN_LEDGER_MODULE_HASH, SNS_TOKEN_ROOT_MODULE_HASH, SNS_TOKEN_SWAP_MODULE_HASH
 };
 use shared_utils::types::creator_dao_stats::CreatorDaoTokenStats;
-use types::{Allowance, AllowanceArgs, ApproveArgs, ApproveError};
-use std::time::{Duration, UNIX_EPOCH};
-use std::{collections::HashMap, fmt::Debug, str::FromStr, time::SystemTime, vec};
+use std::{collections::HashMap, fmt::Debug, vec};
 use utils::{setup_default_sns_creator_token, setup_sns_w_canister_for_creator_dao};
 
 use candid::{encode_args, CandidType, Decode, Encode, Nat, Principal};
-use ic_base_types::PrincipalId;
-use icp_ledger::Subaccount;
 use pocket_ic::WasmResult;
 use serde::{Deserialize, Serialize};
 use shared_utils::{
-    canister_specific::individual_user_template::{
-        types::cdao::DeployedCdaoCanisters, types::error::CdaoDeployError,
-    },
+    canister_specific::individual_user_template::
+        types::cdao::DeployedCdaoCanisters,
     common::types::known_principal::KnownPrincipalType,
     constant::SNS_WASM_W_PRINCIPAL_ID,
 };
