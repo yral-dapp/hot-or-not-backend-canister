@@ -3,7 +3,7 @@ use ic_cdk_macros::update;
 use icrc_ledger_types::icrc2::transfer_from::{TransferFromArgs, TransferFromError};
 use serde::Deserialize;
 use shared_utils::{canister_specific::individual_user_template::types::{cdao::TokenPairs, error::SwapError}, common::utils::permissions::is_caller_global_admin};
-
+use crate::util::guard::is_caller_profile_owner;
 use crate::{api::profile::get_profile_details_v2::get_profile_details_v2, CANISTER_DATA};
 
 #[derive(CandidType, Deserialize, PartialEq, Eq, Debug)]
@@ -12,7 +12,7 @@ struct SupportedStandards{
     url: String
 }
 
-#[update]
+#[update(guard = "is_caller_profile_owner")]
 pub async fn swap_request_action(token_pairs: TokenPairs, requester: Principal) -> Result<(), SwapError>{
     //auth
     if ic_cdk::caller() != get_profile_details_v2().principal_id{
