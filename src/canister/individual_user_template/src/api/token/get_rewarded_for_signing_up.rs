@@ -57,6 +57,6 @@ fn get_rewarded_for_signing_up() {
     });
 
     PUMP_N_DUMP.with_borrow_mut(|pd| {
-        pd.game_only_balance += pd.onboarding_reward.clone();
+        pd.add_reward_from_airdrop(pd.onboarding_reward.clone());
     });
 }
