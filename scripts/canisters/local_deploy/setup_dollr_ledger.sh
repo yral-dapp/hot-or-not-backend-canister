@@ -8,7 +8,7 @@ dfx deploy --specified-id 6rdgd-kyaaa-aaaaq-aaavq-cai dollr_mock_ledger --argume
       token_symbol = \"DOLLR\";
       token_name = \"DOLLR\";
       decimals = null;
-      transfer_fee = 100_000_000_000;
+      transfer_fee = 10_000;
       metadata = vec {};
       minting_account = record {
         owner = principal \"$LEDGER_ACCOUNT_ID\";
