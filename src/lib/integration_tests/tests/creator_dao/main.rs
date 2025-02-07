@@ -9,8 +9,7 @@ use ic_ledger_types::Memo;
 use ic_sns_governance::pb::v1::governance::Version;
 use ic_sns_governance::pb::v1::{GetRunningSnsVersionRequest, GetRunningSnsVersionResponse};
 use sha2::{Digest, Sha256};
-use shared_utils::canister_specific::individual_user_template::types::cdao::{SwapTokenData, TokenPairs};
-use shared_utils::canister_specific::individual_user_template::types::error::{AirdropError, SwapError};
+use shared_utils::canister_specific::individual_user_template::types::error::AirdropError;
 use test_utils::setup::test_constants::get_mock_user_bob_principal_id;
 use shared_utils::constant::{
     SNS_TOKEN_ARCHIVE_MODULE_HASH, SNS_TOKEN_GOVERNANCE_MODULE_HASH, SNS_TOKEN_INDEX_MODULE_HASH, SNS_TOKEN_LEDGER_MODULE_HASH, SNS_TOKEN_ROOT_MODULE_HASH, SNS_TOKEN_SWAP_MODULE_HASH
