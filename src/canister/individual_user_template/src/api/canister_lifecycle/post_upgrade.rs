@@ -35,38 +35,26 @@ fn restore_data_from_stable_memory() {
     let canister_data =
         de::from_reader(&*canister_data_bytes).expect("Failed to deserialize heap data");
 
-    // TODO: remove this once upgrades are complete
-    let is_user_owned = CANISTER_DATA.with_borrow_mut(|cdata| {
+    CANISTER_DATA.with_borrow_mut(|cdata| {
         *cdata = canister_data;
-        cdata.profile.principal_id.is_some()
     });
-    PUMP_N_DUMP.with_borrow_mut(|pd| {
-        pd.liquidity_pools.clear_new();
-        if is_user_owned {
-            pd.add_reward_from_airdrop(
-                pd.onboarding_reward.clone()
-            );
+
+    upgrade_reader.read(&mut heap_data_len_bytes).unwrap();
+    heap_data_len = u32::from_le_bytes(heap_data_len_bytes) as usize;
+
+    let mut pump_n_dump_data_bytes = vec![0; heap_data_len];
+    upgrade_reader.read(&mut pump_n_dump_data_bytes).unwrap();
+
+    match de::from_reader(&*pump_n_dump_data_bytes) {
+        Ok(pd_data) => {
+            PUMP_N_DUMP.with_borrow_mut(|pd| {
+                *pd = pd_data;
+            });
+        },
+        Err(e) => {
+            ic_cdk::println!("WARN: pump and data not available during upgrade, assuming uninit {e}")
         }
-    });
-    // TODO end
-
-    // TODO: enable this once upgrades are complete
-    // upgrade_reader.read(&mut heap_data_len_bytes).unwrap();
-    // heap_data_len = u32::from_le_bytes(heap_data_len_bytes) as usize;
-
-    // let mut pump_n_dump_data_bytes = vec![0; heap_data_len];
-    // upgrade_reader.read(&mut pump_n_dump_data_bytes).unwrap();
-
-    // match de::from_reader(&*pump_n_dump_data_bytes) {
-    //     Ok(pd_data) => {
-    //         PUMP_N_DUMP.with_borrow_mut(|pd| {
-    //             *pd = pd_data;
-    //         });
-    //     },
-    //     Err(e) => {
-    //         ic_cdk::println!("WARN: pump and data not available during upgrade, assuming uninit {e}")
-    //     }
-    // };
+    };
 }
 
 fn save_upgrade_args_to_memory() {
