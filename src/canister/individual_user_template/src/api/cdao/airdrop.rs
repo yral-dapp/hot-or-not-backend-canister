@@ -32,18 +32,18 @@ async fn request_airdrop(
 
     set_airdrop_claiming(token_root, current_caller);
 
-    request_airdrop_internal(token_root, current_caller, memo, amount)
-        .await
-        .inspect_err(|_| {
-            CANISTER_DATA.with_borrow_mut(|cans_data| {
-                cans_data
-                    .cdao_canisters
-                    .iter_mut()
-                    .find(|cdao| cdao.root == token_root)
-                    .map(|cdao| cdao.airdrop_info.set_airdrop_unclaimed(current_caller))
-                    .unwrap(); // can safely unwrap updating the states for the airdrop for the user creates it in place if not exists
-            });
-        })?; // rollback to unclaimed if error
+    // request_airdrop_internal(token_root, current_caller, memo, amount)
+    //     .await
+    //     .inspect_err(|_| {
+    //         CANISTER_DATA.with_borrow_mut(|cans_data| {
+    //             cans_data
+    //                 .cdao_canisters
+    //                 .iter_mut()
+    //                 .find(|cdao| cdao.root == token_root)
+    //                 .map(|cdao| cdao.airdrop_info.set_airdrop_unclaimed(current_caller))
+    //                 .unwrap(); // can safely unwrap updating the states for the airdrop for the user creates it in place if not exists
+    //         });
+    //     })?; // rollback to unclaimed if error
 
     set_airdrop_claimed(token_root, current_caller);
     Ok(())
