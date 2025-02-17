@@ -28,11 +28,6 @@ async fn request_airdrop(
         return Err(AirdropError::CanisterPrincipalDoNotMatch);
     }
 
-    if !is_airdrop_unclaimed(token_root, &current_caller)? {
-        // assertion for token owner is checked here will return err if deployed sns cans not found
-        return Err(AirdropError::AlreadyClaimedAirdrop);
-    }
-
     let amount = amount.min(100_000_000_000u64.into()); // 1000 * 10^8
     if amount < 10_000_000_000u64 {
         // 100 * 10^8
@@ -41,18 +36,18 @@ async fn request_airdrop(
 
     set_airdrop_claiming(token_root, current_caller);
 
-    request_airdrop_internal(token_root, current_caller, memo, amount)
-        .await
-        .inspect_err(|_| {
-            CANISTER_DATA.with_borrow_mut(|cans_data| {
-                cans_data
-                    .cdao_canisters
-                    .iter_mut()
-                    .find(|cdao| cdao.root == token_root)
-                    .map(|cdao| cdao.airdrop_info.set_airdrop_unclaimed(current_caller))
-                    .unwrap(); // can safely unwrap updating the states for the airdrop for the user creates it in place if not exists
-            });
-        })?; // rollback to unclaimed if error
+    // request_airdrop_internal(token_root, current_caller, memo, amount)
+    //     .await
+    //     .inspect_err(|_| {
+    //         CANISTER_DATA.with_borrow_mut(|cans_data| {
+    //             cans_data
+    //                 .cdao_canisters
+    //                 .iter_mut()
+    //                 .find(|cdao| cdao.root == token_root)
+    //                 .map(|cdao| cdao.airdrop_info.set_airdrop_unclaimed(current_caller))
+    //                 .unwrap(); // can safely unwrap updating the states for the airdrop for the user creates it in place if not exists
+    //         });
+    //     })?; // rollback to unclaimed if error
 
     set_airdrop_claimed(token_root, current_caller);
     Ok(())
