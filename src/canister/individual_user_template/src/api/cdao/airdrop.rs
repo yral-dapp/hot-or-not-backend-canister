@@ -29,10 +29,6 @@ async fn request_airdrop(
     }
 
     let amount = amount.min(100_000_000_000u64.into()); // 1000 * 10^8
-    if amount < 10_000_000_000u64 {
-        // 100 * 10^8
-        return Err(AirdropError::RequestedAmountTooLow);
-    }
 
     set_airdrop_claiming(token_root, current_caller);
 
