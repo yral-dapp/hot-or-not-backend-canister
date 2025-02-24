@@ -79,6 +79,7 @@ fn hot_or_not_timely_update_test() {
         upgrade_version_number: None,
         url_to_send_canister_metrics_to: None,
         version: "1".to_string(),
+        pump_dump_onboarding_reward: None,
     };
     let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
 

@@ -210,6 +210,13 @@ async fn upgrade_user_canister(
     version: String,
     individual_user_wasm: Vec<u8>,
 ) -> Result<(), String> {
+    let pump_dump_onboarding_reward = Some(
+        CANISTER_DATA
+            .with_borrow(|cdata| {
+                cdata.pump_dump_onboarding_reward.clone()
+            })
+    );
+
     canister_management::upgrade_individual_user_canister(
         canister_id,
         CanisterInstallMode::Upgrade(None),
@@ -219,6 +226,7 @@ async fn upgrade_user_canister(
             upgrade_version_number: None,
             url_to_send_canister_metrics_to: None,
             version,
+            pump_dump_onboarding_reward,
         },
         individual_user_wasm,
     )

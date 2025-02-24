@@ -38,7 +38,6 @@ pub fn is_caller_global_admin_v2(known_principals: &KnownPrincipalMap) -> Result
     Err("Unauthorize".into())
 }
 
-
 pub fn is_caller_controller() -> Result<(), String> {
     if !is_controller(&caller()) {
         return Err("Unauthorize".into());

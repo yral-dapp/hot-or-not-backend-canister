@@ -63,6 +63,12 @@ fn save_upgrade_args_to_memory() {
     )
     .0;
 
+    PUMP_N_DUMP.with_borrow_mut(|pd| {
+        if let Some(onboarding_reward) = upgrade_args.pump_dump_onboarding_reward.clone() {
+            pd.onboarding_reward = onboarding_reward;
+        }
+    });
+
     CANISTER_DATA.with(|canister_data_ref_cell| {
         let mut canister_data_ref_cell = canister_data_ref_cell.borrow_mut();
 

@@ -196,6 +196,7 @@ service : (UserIndexInitArgs) -> {
       text,
       principal,
     ) -> (Result_5);
+  update_pd_onboarding_reward_for_all_individual_users : (nat) -> (Result_3);
   update_profile_owner_for_individual_canisters : () -> ();
   update_restart_timers_hon_game : () -> (text);
   update_well_known_principal : (KnownPrincipalType, principal) -> ();
