@@ -36,6 +36,7 @@ mod upgrade_specific_individual_canister;
 pub mod upload_wasms;
 pub mod fixup_individual_canisters_in_a_subnet;
 pub mod fixup_individual_cainsters_in_the_network;
+mod pump_dump;
 
 #[query]
 pub fn get_version() -> String {

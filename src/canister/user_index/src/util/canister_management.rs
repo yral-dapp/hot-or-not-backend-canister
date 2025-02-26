@@ -117,6 +117,9 @@ pub async fn install_canister_wasm(
     let configuration = CANISTER_DATA
         .with(|canister_data_ref_cell| canister_data_ref_cell.borrow().configuration.clone());
 
+    let pump_dump_onboarding_reward = Some(CANISTER_DATA
+        .with_borrow(|cdata| cdata.pump_dump_onboarding_reward.clone()));
+
     let individual_user_tempalate_init_args = IndividualUserTemplateInitArgs {
         profile_owner,
         known_principal_ids: Some(CANISTER_DATA.with(|canister_data_ref_cell| {
@@ -129,6 +132,7 @@ pub async fn install_canister_wasm(
         upgrade_version_number: Some(0),
         version,
         url_to_send_canister_metrics_to: Some(configuration.url_to_send_canister_metrics_to),
+        pump_dump_onboarding_reward,
     };
 
     // * encode argument for user canister init lifecycle method
@@ -157,6 +161,9 @@ pub async fn reinstall_canister_wasm(
     let configuration = CANISTER_DATA
         .with(|canister_data_ref_cell| canister_data_ref_cell.borrow().configuration.clone());
 
+    let pump_dump_onboarding_reward = Some(CANISTER_DATA
+        .with_borrow(|cdata| cdata.pump_dump_onboarding_reward.clone()));
+
     let individual_user_tempalate_init_args = IndividualUserTemplateInitArgs {
         profile_owner,
         known_principal_ids: Some(CANISTER_DATA.with(|canister_data_ref_cell| {
@@ -169,6 +176,7 @@ pub async fn reinstall_canister_wasm(
         upgrade_version_number: Some(0),
         version,
         url_to_send_canister_metrics_to: Some(configuration.url_to_send_canister_metrics_to),
+        pump_dump_onboarding_reward,
     };
 
     // * encode argument for user canister init lifecycle method

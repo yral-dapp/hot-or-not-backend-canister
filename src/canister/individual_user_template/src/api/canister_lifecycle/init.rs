@@ -1,9 +1,15 @@
-use crate::{data_model::CanisterData, CANISTER_DATA};
+use crate::{data_model::CanisterData, CANISTER_DATA, PUMP_N_DUMP};
 use ic_cdk_macros::init;
 use shared_utils::canister_specific::individual_user_template::types::arg::IndividualUserTemplateInitArgs;
 
 #[init]
 fn init(init_args: IndividualUserTemplateInitArgs) {
+    PUMP_N_DUMP.with_borrow_mut(|pd| {
+        if let Some(onboarding_reward) = init_args.pump_dump_onboarding_reward.clone() {
+            pd.onboarding_reward = onboarding_reward;
+        }
+    });
+
     CANISTER_DATA.with(|canister_data_ref_cell| {
         let mut data = canister_data_ref_cell.borrow_mut();
         init_impl(init_args, &mut data);
@@ -60,6 +66,7 @@ mod test {
                 "http://metrics-url.com/receive-metrics".to_string(),
             ),
             version: String::from("v1.0.0"),
+            pump_dump_onboarding_reward: None,
         };
         let mut data = CanisterData::default();
 
