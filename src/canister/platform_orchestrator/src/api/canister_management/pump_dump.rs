@@ -1,11 +1,10 @@
 use candid::Nat;
 use futures::{stream::FuturesUnordered, StreamExt};
 use ic_cdk::update;
-use shared_utils::common::utils::permissions::is_caller_global_admin;
 
-use crate::CANISTER_DATA;
+use crate::{CANISTER_DATA, guard::is_caller::is_caller_global_admin_or_controller};
 
-#[update(guard = "is_caller_global_admin")]
+#[update(guard = "is_caller_global_admin_or_controller")]
 pub fn update_pd_onboarding_reward_for_all_subnets(new_reward: Nat) -> Result<(), String> {
     let mut update_futs = CANISTER_DATA.with_borrow(|cdata| {
         let update_futs = cdata
