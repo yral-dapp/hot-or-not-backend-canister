@@ -45,7 +45,7 @@ impl AirdropInfo {
 
     pub fn is_airdrop_claimed(&self, user_principal_id: &Principal) -> Result<bool, String> {
         match self.get_claim_status(user_principal_id)? {
-            ClaimStatus::Claimed(_) | ClaimStatus::Claiming => Ok(true),
+            ClaimStatus::ClaimedWithTimestamp(_) | ClaimStatus::Claiming => Ok(true),
             _ => Ok(false),
         }
     }
@@ -87,7 +87,7 @@ impl AirdropInfo {
     pub fn set_airdrop_claimed(&mut self, user_principal_id: Principal) {
         self.set_claim_status_or_insert_with_claim_status_if_not_exist(
             &user_principal_id,
-            ClaimStatus::Claimed(Some(api::time() / 1000000)),
+            ClaimStatus::ClaimedWithTimestamp(api::time() / 1000000),
         )
     }
 
@@ -110,6 +110,7 @@ impl AirdropInfo {
 pub enum ClaimStatus {
     #[default]
     Unclaimed,
-    Claimed(#[serde(default)] Option<u64>),
+    Claimed,
+    ClaimedWithTimestamp(u64),
     Claiming,
 }
