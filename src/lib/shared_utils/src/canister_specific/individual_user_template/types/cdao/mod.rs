@@ -110,6 +110,6 @@ impl AirdropInfo {
 pub enum ClaimStatus {
     #[default]
     Unclaimed,
-    Claimed(Option<u64>),
+    Claimed(#[serde(default)] Option<u64>),
     Claiming,
 }
