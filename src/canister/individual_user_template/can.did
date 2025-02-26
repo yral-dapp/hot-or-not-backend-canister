@@ -72,7 +72,12 @@ type CdaoTokenError = variant {
   Transfer : TransferError;
   Unauthenticated;
 };
-type ClaimStatus = variant { Unclaimed; Claiming; Claimed };
+type ClaimStatus = variant {
+  Unclaimed;
+  Claiming;
+  Claimed;
+  ClaimedWithTimestamp : nat64;
+};
 type Committed = record {
   total_direct_participation_icp_e8s : opt nat64;
   total_neurons_fund_participation_icp_e8s : opt nat64;

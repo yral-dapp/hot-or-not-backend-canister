@@ -28,16 +28,7 @@ async fn request_airdrop(
         return Err(AirdropError::CanisterPrincipalDoNotMatch);
     }
 
-    if !is_airdrop_unclaimed(token_root, &current_caller)? {
-        // assertion for token owner is checked here will return err if deployed sns cans not found
-        return Err(AirdropError::AlreadyClaimedAirdrop);
-    }
-
     let amount = amount.min(100_000_000_000u64.into()); // 1000 * 10^8
-    if amount < 10_000_000_000u64 {
-        // 100 * 10^8
-        return Err(AirdropError::RequestedAmountTooLow);
-    }
 
     set_airdrop_claiming(token_root, current_caller);
 
