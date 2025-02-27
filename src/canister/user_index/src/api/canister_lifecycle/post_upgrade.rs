@@ -3,10 +3,7 @@ use ciborium::de;
 use ic_cdk::api::call::ArgDecoderConfig;
 use ic_cdk_macros::post_upgrade;
 use ic_stable_structures::Memory;
-use shared_utils::{
-    canister_specific::user_index::types::{args::UserIndexInitArgs, UpgradeStatus},
-    common::utils::system_time,
-};
+use shared_utils::canister_specific::user_index::types::args::UserIndexInitArgs;
 
 use crate::{data_model::memory, CANISTER_DATA};
 
@@ -19,17 +16,11 @@ fn post_upgrade() {
 fn update_version_from_args() {
     let (upgrade_args,) =
         ic_cdk::api::call::arg_data::<(UserIndexInitArgs,)>(ArgDecoderConfig::default());
-    CANISTER_DATA.with(|canister_data_ref| {
-        let last_upgrade_status = canister_data_ref.borrow().last_run_upgrade_status.clone();
-        let upgrade_status = UpgradeStatus {
-            last_run_on: system_time::get_current_system_time_from_ic(),
-            failed_canister_ids: vec![],
-            version_number: last_upgrade_status.version_number,
-            successful_upgrade_count: 0,
-            version: upgrade_args.version,
-        };
-        canister_data_ref.borrow_mut().last_run_upgrade_status = upgrade_status;
-    })
+    CANISTER_DATA.with_borrow_mut(|canister_data| {
+        let version_details = &mut canister_data.version_details;
+        version_details.version = upgrade_args.version;
+        version_details.version_number += 1;
+    });
 }
 
 fn restore_data_from_stable_memory() {

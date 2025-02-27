@@ -7,9 +7,9 @@ use shared_utils::canister_specific::user_index::types::{
     BroadcastCallStatus, RecycleStatus, UpgradeStatus,
 };
 use shared_utils::common::types::known_principal::KnownPrincipalType;
+use shared_utils::common::types::version_details::VersionDetails;
 use shared_utils::common::types::wasm::{CanisterWasm, WasmType};
 use shared_utils::common::utils::default_pump_dump_onboarding_reward;
-
 
 use crate::CANISTER_DATA;
 
@@ -43,6 +43,8 @@ pub struct CanisterData {
     pub recycle_status: RecycleStatus,
     #[serde(default)]
     pub last_broadcast_call_status: BroadcastCallStatus,
+    #[serde(default)]
+    pub version_details: VersionDetails,
     #[serde(default = "default_pump_dump_onboarding_reward")]
     pub pump_dump_onboarding_reward: Nat,
 }
@@ -60,6 +62,7 @@ impl Default for CanisterData {
             backup_canister_pool: Default::default(),
             recycle_status: Default::default(),
             last_broadcast_call_status: Default::default(),
+            version_details: VersionDetails::default(),
             pump_dump_onboarding_reward: default_pump_dump_onboarding_reward(),
         }
     }
