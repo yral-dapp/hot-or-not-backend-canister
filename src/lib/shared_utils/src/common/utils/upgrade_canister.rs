@@ -26,7 +26,7 @@ fn try_stopping_canister_with_retries(
         match stop_canister_result {
             Ok(()) => Ok(()),
             Err(e) => {
-                if max_retries == 0 {
+                if max_retries > 0 {
                     Box::pin(try_stopping_canister_with_retries(
                         canister_id,
                         max_retries - 1,
