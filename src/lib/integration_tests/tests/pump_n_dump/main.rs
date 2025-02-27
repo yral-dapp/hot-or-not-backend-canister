@@ -176,10 +176,10 @@ impl PumpNDumpHarness {
     }
 
     pub fn update_pd_onboarding_reward_for_all_subnets(&self, new_reward: Nat) {
-        let global_admin = Principal::from_text(GLOBAL_SUPER_ADMIN_USER_ID).unwrap();
+        let platform_admin = self.known_principals[&KnownPrincipalType::UserIdGlobalSuperAdmin];
         execute_update_no_res(
             &self.pic,
-            global_admin,
+            platform_admin,
             self.known_principals[&KnownPrincipalType::CanisterIdPlatformOrchestrator],
             "update_pd_onboarding_reward_for_all_subnets",
             &new_reward
