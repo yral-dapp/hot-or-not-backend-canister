@@ -11,6 +11,7 @@ pub struct IndividualUserTemplateInitArgs {
     pub upgrade_version_number: Option<u64>,
     pub url_to_send_canister_metrics_to: Option<String>,
     pub version: String,
+    #[serde(default)]
     pub pump_dump_onboarding_reward: Option<Nat>,
 }
 

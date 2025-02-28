@@ -16,7 +16,7 @@ use shared_utils::{
             profile::UserProfileDetailsForFrontend,
         }, platform_orchestrator::types::args::PlatformOrchestratorInitArgs, post_cache::types::arg::PostCacheInitArgs
     },
-    common::types::{known_principal::KnownPrincipalType, utility_token::token_event::TokenEvent},
+    common::{types::{known_principal::KnownPrincipalType, utility_token::token_event::TokenEvent}, utils::default_pump_dump_onboarding_reward},
     constant::RECLAIM_CANISTER_PRINCIPAL_ID,
     types::canister_specific::individual_user_template::error_types::GetUserUtilityTokenTransactionHistoryError,
 };
@@ -82,7 +82,7 @@ fn download_snapshot_test() {
         upgrade_version_number: None,
         url_to_send_canister_metrics_to: None,
         version: "1".to_string(),
-        pump_dump_onboarding_reward: None,
+        pump_dump_onboarding_reward: Some(default_pump_dump_onboarding_reward()),
     };
     let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
 
@@ -104,7 +104,7 @@ fn download_snapshot_test() {
         upgrade_version_number: None,
         url_to_send_canister_metrics_to: None,
         version: "1".to_string(),
-        pump_dump_onboarding_reward: None,
+        pump_dump_onboarding_reward: Some(default_pump_dump_onboarding_reward()),
     };
     let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
 
@@ -126,7 +126,7 @@ fn download_snapshot_test() {
         upgrade_version_number: None,
         url_to_send_canister_metrics_to: None,
         version: "1".to_string(),
-        pump_dump_onboarding_reward: None,
+        pump_dump_onboarding_reward: Some(default_pump_dump_onboarding_reward()),
     };
     let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
 
@@ -456,7 +456,7 @@ fn download_snapshot_test() {
         upgrade_version_number: None,
         url_to_send_canister_metrics_to: None,
         version: "1".to_string(),
-        pump_dump_onboarding_reward: None,
+        pump_dump_onboarding_reward: Some(default_pump_dump_onboarding_reward()),
     };
     let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
     match pic.upgrade_canister(
@@ -478,7 +478,7 @@ fn download_snapshot_test() {
         upgrade_version_number: None,
         url_to_send_canister_metrics_to: None,
         version: "1".to_string(),
-        pump_dump_onboarding_reward: None,
+        pump_dump_onboarding_reward: Some(default_pump_dump_onboarding_reward()),
     };
     let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
     match pic.upgrade_canister(
@@ -500,7 +500,7 @@ fn download_snapshot_test() {
         upgrade_version_number: None,
         url_to_send_canister_metrics_to: None,
         version: "1".to_string(),
-        pump_dump_onboarding_reward: None,
+        pump_dump_onboarding_reward: Some(default_pump_dump_onboarding_reward()),
     };
     let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
     match pic.upgrade_canister(
@@ -876,7 +876,7 @@ fn download_snapshot_test() {
         upgrade_version_number: None,
         url_to_send_canister_metrics_to: None,
         version: "1".to_string(),
-        pump_dump_onboarding_reward: None,
+        pump_dump_onboarding_reward: Some(default_pump_dump_onboarding_reward()),
     };
     let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
 
@@ -897,7 +897,7 @@ fn download_snapshot_test() {
         upgrade_version_number: None,
         url_to_send_canister_metrics_to: None,
         version: "1".to_string(),
-        pump_dump_onboarding_reward: None,
+        pump_dump_onboarding_reward: Some(default_pump_dump_onboarding_reward()),
     };
     let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
 
@@ -918,7 +918,7 @@ fn download_snapshot_test() {
         upgrade_version_number: None,
         url_to_send_canister_metrics_to: None,
         version: "1".to_string(),
-        pump_dump_onboarding_reward: None,
+        pump_dump_onboarding_reward: Some(default_pump_dump_onboarding_reward()),
     };
     let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
 

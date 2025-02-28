@@ -13,7 +13,7 @@ use shared_utils::{
         },
         post_cache::types::arg::PostCacheInitArgs,
     },
-    common::types::known_principal::KnownPrincipalType,
+    common::{types::known_principal::KnownPrincipalType, utils::default_pump_dump_onboarding_reward},
 };
 use test_utils::setup::test_constants::{
     get_mock_user_alice_principal_id, get_mock_user_bob_principal_id,
@@ -91,7 +91,7 @@ fn reconcile_scores_test() {
         upgrade_version_number: None,
         url_to_send_canister_metrics_to: None,
         version: "1".to_string(),
-        pump_dump_onboarding_reward: None,
+        pump_dump_onboarding_reward: Some(default_pump_dump_onboarding_reward()),
     };
     let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
 
@@ -113,7 +113,7 @@ fn reconcile_scores_test() {
         upgrade_version_number: None,
         url_to_send_canister_metrics_to: None,
         version: "1".to_string(),
-        pump_dump_onboarding_reward: None,
+        pump_dump_onboarding_reward: Some(default_pump_dump_onboarding_reward()),
     };
     let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
 
@@ -135,7 +135,7 @@ fn reconcile_scores_test() {
         upgrade_version_number: None,
         url_to_send_canister_metrics_to: None,
         version: "1".to_string(),
-        pump_dump_onboarding_reward: None,
+        pump_dump_onboarding_reward: Some(default_pump_dump_onboarding_reward()),
     };
     let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
 
@@ -157,7 +157,7 @@ fn reconcile_scores_test() {
         upgrade_version_number: None,
         url_to_send_canister_metrics_to: None,
         version: "1".to_string(),
-        pump_dump_onboarding_reward: None,
+        pump_dump_onboarding_reward: Some(default_pump_dump_onboarding_reward()),
     };
     let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
 
@@ -967,7 +967,7 @@ fn reconcile_scores_test() {
         upgrade_version_number: None,
         url_to_send_canister_metrics_to: None,
         version: "1".to_string(),
-        pump_dump_onboarding_reward: None,
+        pump_dump_onboarding_reward: Some(default_pump_dump_onboarding_reward()),
     };
     let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
 
@@ -989,7 +989,7 @@ fn reconcile_scores_test() {
         upgrade_version_number: None,
         url_to_send_canister_metrics_to: None,
         version: "1".to_string(),
-        pump_dump_onboarding_reward: None,
+        pump_dump_onboarding_reward: Some(default_pump_dump_onboarding_reward()),
     };
     let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
 
@@ -1011,7 +1011,7 @@ fn reconcile_scores_test() {
         upgrade_version_number: None,
         url_to_send_canister_metrics_to: None,
         version: "1".to_string(),
-        pump_dump_onboarding_reward: None,
+        pump_dump_onboarding_reward: Some(default_pump_dump_onboarding_reward()),
     };
     let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
 
@@ -1033,7 +1033,7 @@ fn reconcile_scores_test() {
         upgrade_version_number: None,
         url_to_send_canister_metrics_to: None,
         version: "1".to_string(),
-        pump_dump_onboarding_reward: None,
+        pump_dump_onboarding_reward: Some(default_pump_dump_onboarding_reward()),
     };
     let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
 

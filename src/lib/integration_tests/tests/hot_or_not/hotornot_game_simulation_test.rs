@@ -16,7 +16,7 @@ use shared_utils::{
         },
         post_cache::types::arg::PostCacheInitArgs,
     },
-    common::types::known_principal::{self, KnownPrincipalType},
+    common::{types::known_principal::{self, KnownPrincipalType}, utils::default_pump_dump_onboarding_reward},
 };
 use test_utils::setup::{
     env::pocket_ic_env::get_new_pocket_ic_env,
@@ -90,7 +90,7 @@ fn hotornot_game_simulation_test() {
         upgrade_version_number: None,
         url_to_send_canister_metrics_to: None,
         version: "1".to_string(),
-        pump_dump_onboarding_reward: None,
+        pump_dump_onboarding_reward: Some(default_pump_dump_onboarding_reward()),
     };
     let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
 
@@ -112,7 +112,7 @@ fn hotornot_game_simulation_test() {
         upgrade_version_number: None,
         url_to_send_canister_metrics_to: None,
         version: "1".to_string(),
-        pump_dump_onboarding_reward: None,
+        pump_dump_onboarding_reward: Some(default_pump_dump_onboarding_reward()),
     };
     let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
 
@@ -134,7 +134,7 @@ fn hotornot_game_simulation_test() {
         upgrade_version_number: None,
         url_to_send_canister_metrics_to: None,
         version: "1".to_string(),
-        pump_dump_onboarding_reward: None,
+        pump_dump_onboarding_reward: Some(default_pump_dump_onboarding_reward()),
     };
     let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
 
@@ -156,7 +156,7 @@ fn hotornot_game_simulation_test() {
         upgrade_version_number: None,
         url_to_send_canister_metrics_to: None,
         version: "1".to_string(),
-        pump_dump_onboarding_reward: None,
+        pump_dump_onboarding_reward: Some(default_pump_dump_onboarding_reward()),
     };
     let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
 
