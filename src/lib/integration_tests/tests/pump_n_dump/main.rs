@@ -174,6 +174,17 @@ impl PumpNDumpHarness {
             &()
         )
     }
+
+    pub fn update_pd_onboarding_reward_for_all_subnets(&self, new_reward: Nat) {
+        let platform_admin = self.known_principals[&KnownPrincipalType::UserIdGlobalSuperAdmin];
+        execute_update_no_res(
+            &self.pic,
+            platform_admin,
+            self.known_principals[&KnownPrincipalType::CanisterIdPlatformOrchestrator],
+            "update_pd_onboarding_reward_for_all_subnets",
+            &new_reward
+        );
+    }
 }
 
 #[test]
@@ -339,4 +350,20 @@ fn reconcile_user_state_should_work() {
     let new_bal = harness.game_balance(alice_canister).balance;
 
     assert_eq!(new_bal - past_bal, to_add);
+}
+
+#[test]
+fn onboarding_reward_should_update() {
+    let harness = PumpNDumpHarness::default();
+
+    // 4000 DOLR
+    let new_reward = Nat::from(4 * 1e9 as u64);
+    harness.update_pd_onboarding_reward_for_all_subnets(new_reward.clone());
+
+    let alice = get_mock_user_alice_principal_id();
+    let alice_canister = harness.provision_individual_canister(alice);
+
+    let bal = harness.game_balance(alice_canister);
+    assert_eq!(bal.balance, new_reward);
+    assert_eq!(bal.net_airdrop_reward, new_reward);
 }

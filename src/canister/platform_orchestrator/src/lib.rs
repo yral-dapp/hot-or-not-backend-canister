@@ -1,4 +1,4 @@
-use candid::Principal;
+use candid::{Principal, Nat};
 use std::cell::RefCell;
 
 use std::collections::HashSet;

@@ -4,7 +4,7 @@ use candid::{Nat, Principal};
 use ic_stable_structures::{storable::Bound, StableBTreeMap, Storable};
 use num_bigint::BigUint;
 use serde::{Deserialize, Serialize};
-use shared_utils::canister_specific::individual_user_template::types::pump_n_dump::ParticipatedGameInfo;
+use shared_utils::{canister_specific::individual_user_template::types::pump_n_dump::ParticipatedGameInfo, common::utils::default_pump_dump_onboarding_reward};
 
 use super::memory::{get_lp_memory, Memory};
 
@@ -52,8 +52,7 @@ impl Default for PumpAndDumpGame {
             balance: 0u32.into(),
             // 1000 gDOLLR
             referral_reward: Nat::from(1e9 as u64),
-            // 1000 DOLLR
-            onboarding_reward: Nat::from(1e9 as u64),
+            onboarding_reward: default_pump_dump_onboarding_reward(),
             liquidity_pools: _default_lp(),
             games: vec![],
             total_pumps: 0u32.into(),

@@ -1,7 +1,17 @@
 use candid::{Nat, Principal};
 use ic_cdk::{query, update};
 use icrc_ledger_types::{icrc1::account::Account, icrc2::transfer_from::{TransferFromArgs, TransferFromError}};
-use shared_utils::{canister_specific::individual_user_template::types::{pump_n_dump::{BalanceInfo, ParticipatedGameInfo, PumpNDumpStateDiff, PumpsAndDumps}, session::SessionType}, common::{types::known_principal::KnownPrincipalType, utils::permissions::is_caller_global_admin_v2}, constant::GDOLLR_TO_E8S, pagination};
+use shared_utils::{
+    canister_specific::individual_user_template::types::{
+        pump_n_dump::{BalanceInfo, ParticipatedGameInfo, PumpNDumpStateDiff, PumpsAndDumps},
+        session::SessionType
+    },
+    common::{
+        types::known_principal::KnownPrincipalType,
+        utils::permissions::{is_caller_global_admin_v2, is_caller_controller},
+    },
+    constant::GDOLLR_TO_E8S, pagination
+};
 
 use crate::{data_model::pump_n_dump::NatStore, CANISTER_DATA, PUMP_N_DUMP};
 
@@ -133,6 +143,13 @@ pub async fn stake_dollr_for_gdollr(amount: Nat) -> Result<(), String> {
     PUMP_N_DUMP.with_borrow_mut(|pd| {
         pd.balance += amount;
     });
+
+    Ok(())
+}
+
+#[update(guard = "is_caller_controller")]
+pub fn update_pd_onboarding_reward(new_reward: Nat) -> Result<(), String> {
+    PUMP_N_DUMP.with_borrow_mut(|pd| pd.onboarding_reward = new_reward);
 
     Ok(())
 }
