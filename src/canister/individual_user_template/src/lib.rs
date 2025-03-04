@@ -18,11 +18,11 @@ use icrc_ledger_types::icrc1::transfer::Memo;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
         arg::{FolloweeArg, IndividualUserTemplateInitArgs, PlaceBetArg},
-        cdao::DeployedCdaoCanisters,
+        cdao::{DeployedCdaoCanisters, TokenPairs},
         device_id::DeviceIdentity,
         error::{
-            AirdropError, BetOnCurrentlyViewingPostError, CdaoDeployError, CdaoTokenError,
-            FollowAnotherUserProfileError, GetPostsOfUserProfileError,
+            BetOnCurrentlyViewingPostError, CdaoDeployError, CdaoTokenError,
+            FollowAnotherUserProfileError, GetPostsOfUserProfileError, AirdropError, SwapError
         },
         follow::{FollowEntryDetail, FollowEntryId},
         hot_or_not::{BetDetails, BetOutcomeForBetMaker, BettingStatus, PlacedBetDetail},
@@ -60,6 +60,7 @@ pub mod data_model;
 mod util;
 
 thread_local! {
+    
     static CANISTER_DATA: RefCell<CanisterData> = RefCell::default();
     static SNAPSHOT_DATA: RefCell<Vec<u8>> = RefCell::default();
     static PUMP_N_DUMP: RefCell<PumpAndDumpGame> = RefCell::default();

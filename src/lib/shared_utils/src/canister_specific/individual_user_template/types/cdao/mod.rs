@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
-use candid::{CandidType, Principal};
+use candid::{CandidType, Nat, Principal};
 use serde::{Deserialize, Serialize};
 
-#[derive(CandidType, PartialEq, Eq, Debug, Serialize, Deserialize, Clone)]
+#[derive(CandidType, PartialEq, Debug, Serialize, Deserialize, Clone)]
 pub struct DeployedCdaoCanisters {
     pub governance: Principal,
     pub ledger: Principal,
@@ -13,6 +13,9 @@ pub struct DeployedCdaoCanisters {
 
     #[serde(default)]
     pub airdrop_info: AirdropInfo,
+
+    #[serde(default)]
+    pub last_swapped_price: Option<f64>
 }
 
 impl DeployedCdaoCanisters {
@@ -111,4 +114,16 @@ pub enum ClaimStatus {
     Unclaimed,
     Claimed,
     Claiming,
+}
+
+#[derive(CandidType, Deserialize, PartialEq, Eq, Debug)]
+pub struct SwapTokenData{
+    pub ledger: Principal,
+    pub amt: Nat
+}
+
+#[derive(CandidType, Deserialize, PartialEq, Eq, Debug)]
+pub struct TokenPairs{
+    pub token_a: SwapTokenData,
+    pub token_b: SwapTokenData
 }

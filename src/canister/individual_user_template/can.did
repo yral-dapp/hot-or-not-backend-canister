@@ -16,11 +16,25 @@ type AirdropError = variant {
 type AirdropInfo = record {
   principals_who_successfully_claimed : vec record { principal; ClaimStatus };
 };
+
+type ApproveError = variant {
+  GenericError : record { message : text; error_code : nat };
+  TemporarilyUnavailable;
+  Duplicate : record { duplicate_of : nat };
+  BadFee : record { expected_fee : nat };
+  AllowanceChanged : record { current_allowance : nat };
+  CreatedInFuture : record { ledger_time : nat64 };
+  TooOld;
+  Expired : record { ledger_time : nat64 };
+  InsufficientFunds : record { balance : nat };
+};
+
 type BalanceInfo = record {
   balance : nat;
   withdrawable : nat;
   net_airdrop_reward : nat;
 };
+
 type BetDetails = record {
   bet_direction : BetDirection;
   bet_maker_canister_id : principal;
@@ -84,6 +98,7 @@ type DeployedCdaoCanisters = record {
   airdrop_info : AirdropInfo;
   root : principal;
   swap : principal;
+  last_swapped_price : opt float64;
   ledger : principal;
   index : principal;
   governance : principal;
@@ -403,13 +418,14 @@ type Result_24 = variant { Ok : text; Err : text };
 type Result_25 = variant { Ok : IndividualUserCreatorDaoEntry; Err : text };
 type Result_26 = variant { Committed : Committed; Aborted : record {} };
 type Result_27 = variant { Ok : Ok; Err : GovernanceError };
-type Result_28 = variant { Ok; Err : CdaoTokenError };
-type Result_29 = variant {
+type Result_28 = variant { Ok; Err : SwapError };
+type Result_29 = variant { Ok; Err : CdaoTokenError };
+type Result_3 = variant { Ok : bool; Err : CdaoTokenError };
+type Result_30 = variant {
   Ok : UserProfileDetailsForFrontend;
   Err : UpdateProfileDetailsError;
 };
-type Result_3 = variant { Ok : bool; Err : CdaoTokenError };
-type Result_30 = variant { Ok; Err : UpdateProfileSetUniqueUsernameError };
+type Result_31 = variant { Ok; Err : UpdateProfileSetUniqueUsernameError };
 type Result_4 = variant {
   Ok : BettingStatus;
   Err : BetOnCurrentlyViewingPostError;
@@ -487,6 +503,18 @@ type SwapDistribution = record {
   total_e8s : nat64;
   initial_swap_amount_e8s : nat64;
 };
+type SwapError = variant {
+  SwapAllocationExhausted;
+  ApproveError : ApproveError;
+  TransferFromError : TransferFromError;
+  CallError : record { RejectionCode; text };
+  IsNotTokenCreator;
+  NoController;
+  InvalidLedger;
+  UnsupportedToken;
+  Unauthenticated;
+};
+type SwapTokenData = record { amt : nat; ledger : principal };
 type SystemTime = record {
   nanos_since_epoch : nat32;
   secs_since_epoch : nat64;
@@ -515,9 +543,21 @@ type TokenEvent = variant {
     amount : nat64;
   };
 };
+type TokenPairs = record { token_a : SwapTokenData; token_b : SwapTokenData };
 type TransferError = variant {
   GenericError : record { message : text; error_code : nat };
   TemporarilyUnavailable;
+  BadBurn : record { min_burn_amount : nat };
+  Duplicate : record { duplicate_of : nat };
+  BadFee : record { expected_fee : nat };
+  CreatedInFuture : record { ledger_time : nat64 };
+  TooOld;
+  InsufficientFunds : record { balance : nat };
+};
+type TransferFromError = variant {
+  GenericError : record { message : text; error_code : nat };
+  TemporarilyUnavailable;
+  InsufficientAllowance : record { allowance : nat };
   BadBurn : record { min_burn_amount : nat };
   Duplicate : record { duplicate_of : nat };
   BadFee : record { expected_fee : nat };
@@ -672,12 +712,14 @@ service : (IndividualUserTemplateInitArgs) -> {
       SettleNeuronsFundParticipationRequest,
     ) -> (SettleNeuronsFundParticipationResponse);
   stake_dollr_for_gdollr : (nat) -> (Result_1);
+  swap_request_action : (TokenPairs, principal) -> (Result_28);
   transfer_token_to_user_canister : (principal, principal, opt blob, nat) -> (
-      Result_28,
+      Result_29,
     );
   transfer_tokens_and_posts : (principal, principal) -> (Result_22);
   update_last_access_time : () -> (Result_24);
   update_last_canister_functionality_access_time : () -> ();
+  update_last_swap_price : (principal, float64) -> ();
   update_ml_feed_cache : (vec MLFeedCacheItem) -> (Result_24);
   update_pd_onboarding_reward : (nat) -> (Result_1);
   update_post_add_view_details : (nat64, PostViewDetailsFromFrontend) -> ();
@@ -686,10 +728,10 @@ service : (IndividualUserTemplateInitArgs) -> {
   update_post_status : (nat64, PostStatus) -> ();
   update_post_toggle_like_status_by_caller : (nat64) -> (bool);
   update_profile_display_details : (UserProfileUpdateDetailsFromFrontend) -> (
-      Result_29,
+      Result_30,
     );
   update_profile_owner : (opt principal) -> (Result_1);
-  update_profile_set_unique_username_once : (text) -> (Result_30);
+  update_profile_set_unique_username_once : (text) -> (Result_31);
   update_profiles_i_follow_toggle_list_with_specified_profile : (
       FolloweeArg,
     ) -> (Result_9);

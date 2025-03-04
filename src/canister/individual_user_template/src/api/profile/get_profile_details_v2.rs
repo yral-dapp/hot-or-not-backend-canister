@@ -3,7 +3,7 @@ use ic_cdk_macros::query;
 use shared_utils::canister_specific::individual_user_template::types::profile::UserProfileDetailsForFrontendV2;
 
 #[query]
-fn get_profile_details_v2() -> UserProfileDetailsForFrontendV2 {
+pub fn get_profile_details_v2() -> UserProfileDetailsForFrontendV2 {
     CANISTER_DATA.with_borrow(|canister_data_ref_cell| {
         let profile = canister_data_ref_cell.profile.clone();
         let token_balance = &canister_data_ref_cell.my_token_balance;

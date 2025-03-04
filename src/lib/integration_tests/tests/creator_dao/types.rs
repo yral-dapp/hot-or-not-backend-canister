@@ -2,7 +2,7 @@
 // You may want to manually adjust some of the types.
 #![allow(dead_code, unused_imports)]
 use candid::{self, CandidType, Decode, Deserialize, Encode, Nat, Principal};
-use ic_cdk::api::call::CallResult as Result;
+use ic_cdk::api::call::{CallResult as Result, RejectionCode};
 use serde_bytes;
 
 #[derive(CandidType, Deserialize)]
@@ -181,7 +181,7 @@ pub struct ApproveArgs {
   pub spender: Account,
 }
 
-#[derive(CandidType, Deserialize)]
+#[derive(CandidType, Deserialize, Debug)]
 pub enum ApproveError {
   GenericError{ message: String, error_code: candid::Nat },
   TemporarilyUnavailable,

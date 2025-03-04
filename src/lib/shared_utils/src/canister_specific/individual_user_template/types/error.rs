@@ -1,6 +1,6 @@
 use candid::{CandidType, Deserialize};
 use ic_cdk::api::call::RejectionCode;
-use icrc_ledger_types::icrc1::transfer::TransferError;
+use icrc_ledger_types::{icrc1::transfer::TransferError, icrc2::{approve::ApproveError, transfer_from::TransferFromError}};
 
 #[derive(CandidType, Deserialize, PartialEq, Eq, Debug)]
 pub enum GetPostsOfUserProfileError {
@@ -87,5 +87,23 @@ pub enum AirdropError {
 impl From<(RejectionCode, String)> for AirdropError {
     fn from(value: (RejectionCode, String)) -> Self {
         AirdropError::CallError(value.0, value.1)
+    }
+}
+
+#[derive(CandidType, Deserialize, PartialEq, Eq, Debug)]
+pub enum SwapError{
+    InvalidLedger,
+    SwapAllocationExhausted,
+    UnsupportedToken,
+    Unauthenticated,
+    CallError(RejectionCode, String),
+    ApproveError(ApproveError),
+    IsNotTokenCreator,
+    NoController,
+    TransferFromError(TransferFromError)
+}
+impl From<(RejectionCode, String)> for SwapError {
+    fn from(value: (RejectionCode, String)) -> Self {
+        SwapError::CallError(value.0, value.1)
     }
 }
