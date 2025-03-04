@@ -1,5 +1,5 @@
 use candid::{Nat, Principal};
-use futures::{stream::FuturesUnordered, StreamExt};
+use futures::{stream, StreamExt};
 use ic_cdk::update;
 use icrc_ledger_types::icrc1::{account::Account, transfer::{TransferArg, TransferError}};
 
@@ -51,13 +51,19 @@ pub async fn redeem_gdollr(to_principal: Principal, amount: Nat) -> Result<(), S
 pub fn update_pd_onboarding_reward_for_all_individual_users(new_reward: Nat) -> Result<(), String> {
     let mut update_futs = CANISTER_DATA.with_borrow_mut(|cdata| {
         cdata.pump_dump_onboarding_reward = new_reward.clone();
-        cdata.available_canisters.iter().map(|can| {
-            ic_cdk::call::<_, ()>(
-                *can,
-                "update_pd_onboarding_reward",
-                (new_reward.clone(),),
-            )
-        }).collect::<FuturesUnordered<_>>()
+        let cans = cdata
+            .available_canisters
+            .clone()
+            .into_iter()
+            .map(move |can| {
+                ic_cdk::call::<_, ()>(
+                    can,
+                    "update_pd_onboarding_reward",
+                    (new_reward.clone(),),
+                )
+        });
+        let stream = stream::iter(cans);
+        stream.buffer_unordered(10)
     });
 
     ic_cdk::spawn(async move {

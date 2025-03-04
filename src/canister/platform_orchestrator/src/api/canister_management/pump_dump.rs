@@ -1,5 +1,5 @@
 use candid::Nat;
-use futures::{stream::FuturesUnordered, StreamExt};
+use futures::{stream, StreamExt};
 use ic_cdk::update;
 
 use crate::{CANISTER_DATA, guard::is_caller::is_caller_global_admin_or_controller};
@@ -9,16 +9,18 @@ pub fn update_pd_onboarding_reward_for_all_subnets(new_reward: Nat) -> Result<()
     let mut update_futs = CANISTER_DATA.with_borrow(|cdata| {
         let update_futs = cdata
             .all_subnet_orchestrator_canisters_list
-            .iter()
-            .map(|can| {
+            .clone()
+            .into_iter()
+            .map(move |can| {
                 ic_cdk::call::<_, ()>(
-                    *can,
+                    can,
                     "update_pd_onboarding_reward_for_all_individual_users",
                     (new_reward.clone(),)
                 )
-            }).collect::<FuturesUnordered<_>>();
+            });
+        let stream = stream::iter(update_futs);
 
-        Ok::<_, String>(update_futs)
+        Ok::<_, String>(stream.buffer_unordered(10))
     })?;
 
     ic_cdk::spawn(async move {
