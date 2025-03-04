@@ -1,3 +1,5 @@
+use candid::Nat;
+
 pub mod permissions;
 pub mod stable_memory_serializer_deserializer;
 pub mod system_time;
@@ -28,4 +30,9 @@ pub fn get_heap_memory_size() -> u64 {
     {
         0
     }
+}
+
+pub fn default_pump_dump_onboarding_reward() -> Nat {
+    // 1000 DOLLR
+    Nat::from(1e9 as u64)
 }

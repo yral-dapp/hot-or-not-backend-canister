@@ -49,6 +49,10 @@ async fn upgrade_specific_individual_user_canister_with_latest_wasm(
             .unwrap()
     });
 
+    let pump_dump_onboarding_reward = Some(CANISTER_DATA.with_borrow(|cdata| {
+        cdata.pump_dump_onboarding_reward.clone()
+    }));
+
     recharge_canister_for_installing_wasm(user_canister_id).await?;
 
     match canister_management::upgrade_individual_user_canister(
@@ -60,6 +64,7 @@ async fn upgrade_specific_individual_user_canister_with_latest_wasm(
             upgrade_version_number: Some(saved_upgrade_status.version_number + 1),
             url_to_send_canister_metrics_to: Some(configuration.url_to_send_canister_metrics_to),
             version: individual_canister_wasm.version,
+            pump_dump_onboarding_reward,
         },
         individual_canister_wasm.wasm_blob,
     )

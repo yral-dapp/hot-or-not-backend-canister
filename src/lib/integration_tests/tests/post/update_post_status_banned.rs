@@ -10,10 +10,10 @@ use shared_utils::{
         },
         post_cache::types::arg::PostCacheInitArgs,
     },
-    common::types::{
+    common::{types::{
         known_principal::KnownPrincipalType,
         top_posts::post_score_index_item::{PostScoreIndexItemV1, PostStatus},
-    },
+    }, utils::default_pump_dump_onboarding_reward},
     types::canister_specific::post_cache::error_types::TopPostsFetchError,
 };
 use test_utils::setup::test_constants::{
@@ -86,6 +86,7 @@ fn update_post_status_banned() {
         upgrade_version_number: None,
         url_to_send_canister_metrics_to: None,
         version: "1".to_string(),
+        pump_dump_onboarding_reward: Some(default_pump_dump_onboarding_reward()),
     };
     let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
 

@@ -1,6 +1,6 @@
 use std::collections::{BTreeMap, HashSet};
 
-use candid::{Deserialize, Principal};
+use candid::{Deserialize, Nat, Principal};
 use ic_stable_structures::StableBTreeMap;
 use serde::Serialize;
 use shared_utils::canister_specific::user_index::types::{
@@ -9,6 +9,7 @@ use shared_utils::canister_specific::user_index::types::{
 use shared_utils::common::types::known_principal::KnownPrincipalType;
 use shared_utils::common::types::version_details::VersionDetails;
 use shared_utils::common::types::wasm::{CanisterWasm, WasmType};
+use shared_utils::common::utils::default_pump_dump_onboarding_reward;
 
 use crate::CANISTER_DATA;
 
@@ -44,6 +45,8 @@ pub struct CanisterData {
     pub last_broadcast_call_status: BroadcastCallStatus,
     #[serde(default)]
     pub version_details: VersionDetails,
+    #[serde(default = "default_pump_dump_onboarding_reward")]
+    pub pump_dump_onboarding_reward: Nat,
 }
 
 impl Default for CanisterData {
@@ -60,6 +63,7 @@ impl Default for CanisterData {
             recycle_status: Default::default(),
             last_broadcast_call_status: Default::default(),
             version_details: VersionDetails::default(),
+            pump_dump_onboarding_reward: default_pump_dump_onboarding_reward(),
         }
     }
 }
