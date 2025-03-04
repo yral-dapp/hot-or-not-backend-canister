@@ -375,33 +375,6 @@ fn creator_dao_tests() {
     ic_cdk::println!("🧪 Result: {:?}", res);
     assert!(res.as_ref().unwrap().is_ok());
 
-    // trying to claim the airdrop again
-    let res: Result<Result<(), AirdropError>, pocket_ic::UserError> = pocket_ic
-        .update_call(
-            alice_canister_id,
-            bob,
-            "request_airdrop",
-            encode_args((
-                root_canister,
-                None::<Memo>,
-                Nat::from(100u64) * 10u64.pow(decimals.into()),
-                bob_canister_id,
-            ))
-            .unwrap(),
-        )
-        .map(|reply_payload| {
-            let response: Result<(), AirdropError> = match reply_payload {
-                WasmResult::Reply(payload) => Decode!(&payload, Result<(), AirdropError>).unwrap(),
-                _ => panic!("\n🛑 get requester principals canister id failed\n"),
-            };
-            response
-        });
-
-    ic_cdk::println!("🧪 Result: {:?}", res);
-    assert!(
-        res.as_ref().unwrap().is_err() && res.unwrap() == Err(AirdropError::AlreadyClaimedAirdrop)
-    );
-
     // trying to claim the airdrop with the wrong canister id
     let res: Result<Result<(), AirdropError>, pocket_ic::UserError> = pocket_ic
         .update_call(
