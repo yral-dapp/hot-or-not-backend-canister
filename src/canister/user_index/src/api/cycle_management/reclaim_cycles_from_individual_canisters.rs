@@ -26,5 +26,16 @@ async fn impl_reclaim_cycles_from_individual_canisters_and_send_to_platform_orch
     let reclaim_cycles_from_canister_futures = canister_ids
         .into_iter()
         .map(|canister_id| call::<_, ()>(canister_id, "return_cycles_to_user_index_canister", ()));
-    run_task_concurrently(reclaim_cycles_from_canister_futures, 10, |_| {}, || false).await;
+
+    run_task_concurrently(
+        reclaim_cycles_from_canister_futures,
+        10,
+        |res| {
+            if let Err(e) = res {
+                ic_cdk::println!("failed to reclaim cycles. Error: {:?} {}", e.0, e.1)
+            }
+        },
+        || false,
+    )
+    .await;
 }

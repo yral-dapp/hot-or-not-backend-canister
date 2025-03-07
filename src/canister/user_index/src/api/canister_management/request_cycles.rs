@@ -25,7 +25,7 @@ async fn request_cycles(cycle_amount: u128) -> Result<(), String> {
         return Err("Unauthorized".into());
     }
 
-    let recharge_amount = u128::max(cycle_amount, 5_000_000_000_000);
+    let recharge_amount = u128::min(cycle_amount, 5_000_000_000_000);
 
     let _ = check_and_request_cycles_from_platform_orchestrator().await;
 

@@ -6,13 +6,16 @@ use ic_cdk::{
 };
 use ic_cdk_macros::update;
 
-use crate::{util::types::individual_user_canister::IndividualUserCanister, CANISTER_DATA};
+use crate::{
+    util::types::registered_individual_user_canister::RegisteredIndividualUserCanister,
+    CANISTER_DATA,
+};
 
 #[update]
 pub async fn receive_empty_canister_from_individual_canister(
     canister_ids: Vec<Principal>,
 ) -> Result<(), String> {
-    let _individual_canister = IndividualUserCanister::new(caller())?;
+    let _individual_canister = RegisteredIndividualUserCanister::new(caller())?;
 
     canister_ids
         .iter()
