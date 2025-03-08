@@ -9,10 +9,7 @@ use shared_utils::common::{
     types::known_principal::KnownPrincipalType, utils::task::run_task_concurrently,
 };
 
-use crate::{
-    api::canister_management::set_controller_as_subnet_orchestrator::set_controller_as_subnet_orchestrator,
-    CANISTER_DATA,
-};
+use crate::CANISTER_DATA;
 
 pub(crate) struct SubnetOrchestrator {
     canister_id: Principal,

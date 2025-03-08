@@ -4,7 +4,10 @@ use shared_utils::common::utils::{
     permissions::is_caller_controller_or_global_admin, task::run_task_concurrently,
 };
 
-use crate::{util::types::individual_user_canister::IndividualUserCanister, CANISTER_DATA};
+use crate::{
+    util::types::registered_individual_user_canister::RegisteredIndividualUserCanister,
+    CANISTER_DATA,
+};
 
 #[update(guard = "is_caller_controller_or_global_admin")]
 pub fn delete_all_sns_creator_token_in_the_network() {
@@ -20,7 +23,8 @@ pub fn delete_all_sns_creator_token_in_the_network() {
         individual_user_canisters
             .into_iter()
             .map(|individual_canister_id| async move {
-                let individual_canister = IndividualUserCanister::new(individual_canister_id)?;
+                let individual_canister =
+                    RegisteredIndividualUserCanister::new(individual_canister_id)?;
                 individual_canister.delete_all_sns_creator_token().await
             });
 

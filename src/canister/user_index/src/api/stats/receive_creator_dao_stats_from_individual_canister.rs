@@ -6,13 +6,16 @@ use ic_cdk_macros::update;
 use candid::Principal;
 use shared_utils::common::types::known_principal::KnownPrincipalType;
 
-use crate::{util::types::individual_user_canister::IndividualUserCanister, CANISTER_DATA};
+use crate::{
+    util::types::registered_individual_user_canister::RegisteredIndividualUserCanister,
+    CANISTER_DATA,
+};
 
 #[update]
 pub fn receive_creator_dao_stats_from_individual_canister(
     root_canister_ids: HashSet<Principal>,
 ) -> Result<(), String> {
-    let individual_user = IndividualUserCanister::new(caller())?;
+    let individual_user = RegisteredIndividualUserCanister::new(caller())?;
 
     let platform_orchestrator_canister_id = CANISTER_DATA.with_borrow(|canister_data| {
         canister_data

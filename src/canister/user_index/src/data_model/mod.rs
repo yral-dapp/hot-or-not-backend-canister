@@ -11,6 +11,7 @@ use shared_utils::common::types::version_details::VersionDetails;
 use shared_utils::common::types::wasm::{CanisterWasm, WasmType};
 use shared_utils::common::utils::default_pump_dump_onboarding_reward;
 
+use crate::util::types::subnet_orchestrator_operation::SubnetOrchestratorOperation;
 use crate::CANISTER_DATA;
 
 use self::memory::get_wasm_memory;
@@ -47,6 +48,8 @@ pub struct CanisterData {
     pub version_details: VersionDetails,
     #[serde(default = "default_pump_dump_onboarding_reward")]
     pub pump_dump_onboarding_reward: Nat,
+    #[serde(default)]
+    pub on_going_operation: HashSet<SubnetOrchestratorOperation>,
 }
 
 impl Default for CanisterData {
@@ -64,6 +67,7 @@ impl Default for CanisterData {
             last_broadcast_call_status: Default::default(),
             version_details: VersionDetails::default(),
             pump_dump_onboarding_reward: default_pump_dump_onboarding_reward(),
+            on_going_operation: HashSet::new(),
         }
     }
 }
