@@ -669,6 +669,7 @@ service : (IndividualUserTemplateInitArgs) -> {
   redeem_gdollr : (nat) -> (Result_1);
   request_airdrop : (principal, opt blob, nat, principal) -> (Result_23);
   request_airdrop_cent : (nat) -> ();
+  request_airdrop_cent_claim_time : () -> (opt nat64) query;
   reset_ml_feed_cache : () -> (Result_24);
   return_cycles_to_user_index_canister : (opt nat) -> ();
   save_snapshot_json : () -> (nat32);

@@ -1,6 +1,6 @@
 use candid::{Nat, Principal};
 use ic_base_types::PrincipalId;
-use ic_cdk_macros::update;
+use ic_cdk_macros::{query, update};
 use ic_sns_root::pb::v1::{ListSnsCanistersRequest, ListSnsCanistersResponse};
 use icrc_ledger_types::icrc1::{
     account::Account,
@@ -47,13 +47,6 @@ async fn request_airdrop(
 
     set_airdrop_claimed(token_root, current_caller);
     Ok(())
-}
-
-#[update]
-async fn request_airdrop_cent(amount: Nat) {
-    PUMP_N_DUMP.with_borrow_mut(|pd| {
-        pd.add_reward_from_airdrop(amount);
-    });
 }
 
 async fn request_airdrop_internal(
@@ -160,4 +153,16 @@ fn set_airdrop_claimed(token_root: Principal, current_caller: Principal) {
             cdao.airdrop_info.set_airdrop_claimed(current_caller)
         }
     })
+}
+
+#[update]
+async fn request_airdrop_cent(amount: Nat) {
+    PUMP_N_DUMP.with_borrow_mut(|pd| {
+        pd.add_reward_from_airdrop(amount);
+    });
+}
+
+#[query]
+async fn request_airdrop_cent_claim_time() -> Option<u64> {
+    PUMP_N_DUMP.with_borrow(|pd| pd.last_airdrop_time)
 }
