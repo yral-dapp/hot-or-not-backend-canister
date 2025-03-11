@@ -1,6 +1,7 @@
 use std::borrow::Cow;
 
 use candid::{Nat, Principal};
+use ic_cdk::api;
 use ic_stable_structures::{storable::Bound, StableBTreeMap, Storable};
 use num_bigint::BigUint;
 use serde::{Deserialize, Serialize};
@@ -8,8 +9,7 @@ use shared_utils::{canister_specific::individual_user_template::types::pump_n_du
 
 use super::memory::{get_lp_memory, Memory};
 
-pub fn _default_lp(
-) -> StableBTreeMap<Principal, NatStore, Memory> {
+pub fn _default_lp() -> StableBTreeMap<Principal, NatStore, Memory> {
     StableBTreeMap::init(get_lp_memory())
 }
 
@@ -32,6 +32,9 @@ impl Storable for NatStore {
 pub struct PumpAndDumpGame {
     /// Amount that has been obtained from airdrops (lifetime)
     pub net_airdrop: Nat,
+
+    #[serde(default)]
+    pub last_airdrop_time: Option<u64>,
     /// user balance
     pub balance: Nat,
     pub referral_reward: Nat,
@@ -49,6 +52,7 @@ impl Default for PumpAndDumpGame {
     fn default() -> Self {
         Self {
             net_airdrop: 0u32.into(),
+            last_airdrop_time: None,
             balance: 0u32.into(),
             // 1000 gDOLLR
             referral_reward: Nat::from(1e9 as u64),
@@ -66,6 +70,7 @@ impl PumpAndDumpGame {
     pub fn add_reward_from_airdrop(&mut self, amount: Nat) {
         self.net_airdrop += amount.clone();
         self.balance += amount;
+        self.last_airdrop_time = Some(api::time() / 1000000);
     }
 
     pub fn withdrawable_balance(&self) -> Nat {

@@ -10,7 +10,7 @@ use shared_utils::canister_specific::individual_user_template::types::{
     error::AirdropError, profile::UserProfileDetailsForFrontendV2,
 };
 
-use crate::{util::cycles::notify_to_recharge_canister, CANISTER_DATA};
+use crate::{util::cycles::notify_to_recharge_canister, CANISTER_DATA, PUMP_N_DUMP};
 
 // TODO: Add checks to verify if the user_canister is from our network of yral canisters
 #[update]
@@ -47,6 +47,13 @@ async fn request_airdrop(
 
     set_airdrop_claimed(token_root, current_caller);
     Ok(())
+}
+
+#[update]
+async fn request_airdrop_cent(amount: Nat) {
+    PUMP_N_DUMP.with_borrow_mut(|pd| {
+        pd.add_reward_from_airdrop(amount);
+    });
 }
 
 async fn request_airdrop_internal(
