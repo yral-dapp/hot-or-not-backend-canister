@@ -21,18 +21,23 @@ use shared_utils::{
         ml_data::{
             MLData, MLFeedCacheItem, SuccessHistoryItem, SuccessHistoryItemV1, WatchHistoryItem,
         },
-        post::{FeedScore, Post, PostViewStatistics},
-        profile::UserProfile,
+        post::{FeedScore, Post, PostDetailsForFrontend, PostViewStatistics},
+        profile::{UserProfile, UserProfileDetailsForFrontend},
         session::SessionType,
         token::TokenBalance,
     },
-    common::types::{
-        app_primitive_type::PostId,
-        known_principal::KnownPrincipalMap,
-        top_posts::{post_score_index::PostScoreIndex, post_score_index_item::PostStatus},
-        version_details::VersionDetails,
+    common::{
+        types::{
+            app_primitive_type::PostId,
+            known_principal::KnownPrincipalMap,
+            top_posts::{post_score_index::PostScoreIndex, post_score_index_item::PostStatus},
+            version_details::VersionDetails,
+        },
+        utils::system_time,
     },
 };
+
+use crate::api::post;
 
 use self::memory::{
     get_bet_details_memory, get_post_principal_memory, get_room_details_memory,
@@ -98,6 +103,62 @@ pub struct CanisterData {
     pub ml_data: MLData,
     #[serde(default)]
     pub empty_canisters: AllotedEmptyCanister,
+}
+
+impl CanisterData {
+    pub(crate) fn delete_post(&mut self, post_id: u64) -> Result<(), String> {
+        let post = self
+            .all_created_posts
+            .get_mut(&post_id)
+            .ok_or("Post not found".to_owned())?;
+
+        match post.status {
+            PostStatus::Deleted => Err("Post not found".to_owned()),
+            _ => {
+                post.status = PostStatus::Deleted;
+                Ok(())
+            }
+        }
+    }
+
+    fn get_post(&self, post_id: u64) -> Result<Post, String> {
+        let post = self.all_created_posts.get(&post_id).unwrap();
+        if post.status.eq(&PostStatus::Deleted) {
+            return Err("Post not found".to_owned());
+        }
+        Ok(post.clone())
+    }
+
+    pub(crate) fn get_post_for_frontend(
+        &self,
+        post_id: u64,
+        caller: Principal,
+    ) -> PostDetailsForFrontend {
+        let post = self.get_post(post_id).unwrap();
+        let profile = &self.profile;
+        let followers = &self.principals_that_follow_me;
+        let following = &self.principals_i_follow;
+        let token_balance = &self.my_token_balance;
+
+        post.get_post_details_for_frontend_for_this_post(
+            UserProfileDetailsForFrontend {
+                display_name: profile.display_name.clone(),
+                followers_count: followers.len() as u64,
+                following_count: following.len() as u64,
+                principal_id: profile.principal_id.unwrap(),
+                profile_picture_url: profile.profile_picture_url.clone(),
+                profile_stats: profile.profile_stats,
+                unique_user_name: profile.unique_user_name.clone(),
+                lifetime_earnings: token_balance.lifetime_earnings,
+                referrer_details: profile.referrer_details.clone(),
+            },
+            caller,
+            &system_time::get_current_system_time_from_ic(),
+            &self.room_details_map,
+            &self.post_principal_map,
+            &self.slot_details_map,
+        )
+    }
 }
 
 #[derive(Serialize, Deserialize, Default)]
