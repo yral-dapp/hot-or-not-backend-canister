@@ -595,6 +595,7 @@ service : (IndividualUserTemplateInitArgs) -> {
   delete_all_creator_token : () -> ();
   delete_key_value_pair : (nat64, text) -> (Result_6);
   delete_multiple_key_value_pairs : (nat64, vec text) -> (Result_7);
+  delete_post : (nat64) -> (Result_1);
   deploy_cdao_sns : (SnsInitPayload, nat64) -> (Result_8);
   deployed_cdao_canisters : () -> (vec DeployedCdaoCanisters) query;
   do_i_follow_this_user : (FolloweeArg) -> (Result_9) query;

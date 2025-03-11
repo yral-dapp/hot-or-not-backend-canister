@@ -1,30 +1,9 @@
-use shared_utils::common::types::known_principal::KnownPrincipalType;
+use ic_cdk_macros::update;
 
-use crate::CANISTER_DATA;
+use crate::{util::guards::is_caller_profile_owner, CANISTER_DATA};
 
-// For feed_filter_upgrade_test
-// #[ic_cdk::update]
-// #[candid::candid_method(update)]
-// fn delete_post_temp(id: u64) {
-//     CANISTER_DATA.with(|canister_data_ref_cell| {
-//         let api_caller = ic_cdk::caller();
-
-//         let global_super_admin_principal_id = CANISTER_DATA.with(|canister_data_ref_cell| {
-//             canister_data_ref_cell
-//                 .borrow()
-//                 .known_principal_ids
-//                 .get(&KnownPrincipalType::UserIdGlobalSuperAdmin)
-//                 .cloned()
-//                 .unwrap()
-//         });
-
-//         if api_caller != global_super_admin_principal_id {
-//             return;
-//         }
-
-//         canister_data_ref_cell
-//             .borrow_mut()
-//             .all_created_posts
-//             .remove(&id);
-//     });
-// }
+/// Returns error in case post is not found
+#[update(guard = "is_caller_profile_owner")]
+fn delete_post(post_id: u64) -> Result<(), String> {
+    CANISTER_DATA.with_borrow_mut(|canister_data| canister_data.delete_post(post_id))
+}

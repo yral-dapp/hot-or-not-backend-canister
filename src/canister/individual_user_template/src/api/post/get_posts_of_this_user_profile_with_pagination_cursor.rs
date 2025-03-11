@@ -59,7 +59,10 @@ fn get_posts_of_this_user_profile_with_pagination_cursor_impl(
     let res_posts = canister_data
         .all_created_posts
         .iter()
-        .filter(|(_, post)| post.status != PostStatus::BannedDueToUserReporting)
+        .filter(|(_, post)| {
+            post.status != PostStatus::BannedDueToUserReporting
+                && post.status != PostStatus::Deleted
+        })
         .rev()
         .skip(from_inclusive_index as usize)
         .take(limit as usize)
@@ -195,6 +198,21 @@ mod test {
                 hashtags: Vec::new(),
                 video_uid: String::from(""),
                 status: PostStatus::ReadyToView,
+                created_at: SystemTime::now(),
+                likes: HashSet::new(),
+                share_count: 0,
+                view_stats: PostViewStatistics::default(),
+                home_feed_score: FeedScore::default(),
+                hot_or_not_details: None,
+                is_nsfw: false,
+                slots_left_to_be_computed: (1..=48).collect(),
+            },
+            Post {
+                id: 7,
+                description: "test post".into(),
+                hashtags: Vec::new(),
+                video_uid: String::from(""),
+                status: PostStatus::Deleted,
                 created_at: SystemTime::now(),
                 likes: HashSet::new(),
                 share_count: 0,
