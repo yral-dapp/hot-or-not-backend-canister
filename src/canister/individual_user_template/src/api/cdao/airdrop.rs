@@ -1,6 +1,6 @@
 use candid::{Nat, Principal};
 use ic_base_types::PrincipalId;
-use ic_cdk_macros::update;
+use ic_cdk_macros::{query, update};
 use ic_sns_root::pb::v1::{ListSnsCanistersRequest, ListSnsCanistersResponse};
 use icrc_ledger_types::icrc1::{
     account::Account,
@@ -10,7 +10,7 @@ use shared_utils::canister_specific::individual_user_template::types::{
     error::AirdropError, profile::UserProfileDetailsForFrontendV2,
 };
 
-use crate::{util::cycles::notify_to_recharge_canister, CANISTER_DATA};
+use crate::{util::cycles::notify_to_recharge_canister, CANISTER_DATA, PUMP_N_DUMP};
 
 // TODO: Add checks to verify if the user_canister is from our network of yral canisters
 #[update]
@@ -153,4 +153,16 @@ fn set_airdrop_claimed(token_root: Principal, current_caller: Principal) {
             cdao.airdrop_info.set_airdrop_claimed(current_caller)
         }
     })
+}
+
+#[update]
+async fn request_airdrop_cent(amount: Nat) {
+    PUMP_N_DUMP.with_borrow_mut(|pd| {
+        pd.add_reward_from_airdrop(amount);
+    });
+}
+
+#[query]
+async fn request_airdrop_cent_claim_time() -> Option<u64> {
+    PUMP_N_DUMP.with_borrow(|pd| pd.last_airdrop_time)
 }
