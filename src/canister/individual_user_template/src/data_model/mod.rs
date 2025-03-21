@@ -9,31 +9,34 @@ use memory::{get_success_history_memory, get_token_list_memory, get_watch_histor
 use serde::Serialize;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
+        arg::PlaceBetArg,
         cdao::DeployedCdaoCanisters,
         configuration::IndividualUserConfiguration,
         device_id::DeviceIdentity,
+        error::BetOnCurrentlyViewingPostError,
         follow::FollowData,
         hot_or_not::{
-            BetDetails, GlobalBetId, GlobalRoomId, PlacedBetDetail, RoomDetailsV1, RoomId,
-            SlotDetailsV1, SlotId, StablePrincipal,
+            BetDetails, BetOutcomeForBetMaker, BettingStatus, GlobalBetId, GlobalRoomId,
+            PlacedBetDetail, RoomDetailsV1, SlotDetailsV1, SlotId, StablePrincipal,
         },
         migration::MigrationInfo,
         ml_data::{
             MLData, MLFeedCacheItem, SuccessHistoryItem, SuccessHistoryItemV1, WatchHistoryItem,
         },
-        post::{FeedScore, Post, PostDetailsForFrontend, PostViewStatistics},
+        post::{Post, PostDetailsForFrontend},
         profile::{UserProfile, UserProfileDetailsForFrontend},
         session::SessionType,
-        token::TokenBalance,
+        token::{TokenBalance, TokenTransactions},
     },
     common::{
         types::{
             app_primitive_type::PostId,
             known_principal::KnownPrincipalMap,
             top_posts::{post_score_index::PostScoreIndex, post_score_index_item::PostStatus},
+            utility_token::token_event::{HotOrNotOutcomePayoutEvent, StakeEvent, TokenEvent},
             version_details::VersionDetails,
         },
-        utils::system_time,
+        utils::system_time::{self, get_current_system_time},
     },
 };
 
@@ -49,6 +52,159 @@ use kv_storage::AppStorage;
 pub mod kv_storage;
 pub mod memory;
 pub mod pump_n_dump;
+
+pub(crate) trait HotOrNotGame {
+    fn validate_incoming_bet(
+        &self,
+        token: &dyn TokenTransactions,
+        bet_maker_principal: Principal,
+        place_bet_arg: &PlaceBetArg,
+    ) -> Result<(), BetOnCurrentlyViewingPostError>;
+    async fn place_bet(
+        &mut self,
+        bet_maker_principal: Principal,
+        place_bet_arg: PlaceBetArg,
+        token: &mut dyn TokenTransactions,
+    ) -> Result<BettingStatus, BetOnCurrentlyViewingPostError>;
+    fn receive_earnings_for_the_bet(
+        &mut self,
+        earnings_amount: u128,
+        hot_or_not_outcome_details: HotOrNotOutcomePayoutEvent,
+        timestamp: SystemTime,
+    );
+}
+
+impl HotOrNotGame for CanisterData {
+    async fn place_bet(
+        &mut self,
+        bet_marker_principal: Principal,
+        place_bet_arg: PlaceBetArg,
+        token: &mut dyn TokenTransactions,
+    ) -> Result<BettingStatus, BetOnCurrentlyViewingPostError> {
+        self.validate_incoming_bet(token, bet_marker_principal, &place_bet_arg)?;
+
+        let current_time = get_current_system_time();
+
+        token.handle_token_event(TokenEvent::Stake {
+            amount: place_bet_arg.bet_amount,
+            details: StakeEvent::BetOnHotOrNotPost {
+                post_canister_id: place_bet_arg.post_canister_id,
+                post_id: place_bet_arg.post_id,
+                bet_amount: place_bet_arg.bet_amount,
+                bet_direction: place_bet_arg.bet_direction,
+            },
+            timestamp: current_time,
+        });
+
+        let response = ic_cdk::call::<_, (Result<BettingStatus, BetOnCurrentlyViewingPostError>,)>(
+            place_bet_arg.post_canister_id,
+            "receive_bet_from_bet_makers_canister",
+            (place_bet_arg.clone(), self.profile.principal_id.unwrap()),
+        )
+        .await
+        .map_err(|_| {
+            token.handle_token_event(TokenEvent::Stake {
+                amount: place_bet_arg.bet_amount,
+                details: StakeEvent::BetFailureRefund {
+                    bet_amount: place_bet_arg.bet_amount,
+                    post_id: place_bet_arg.post_id,
+                    post_canister_id: place_bet_arg.post_canister_id,
+                    bet_direction: place_bet_arg.bet_direction,
+                },
+                timestamp: current_time,
+            });
+            BetOnCurrentlyViewingPostError::PostCreatorCanisterCallFailed
+        })?
+        .0?;
+
+        match response {
+            BettingStatus::BettingClosed => {
+                token.handle_token_event(TokenEvent::Stake {
+                    amount: place_bet_arg.bet_amount,
+                    details: StakeEvent::BetFailureRefund {
+                        bet_amount: place_bet_arg.bet_amount,
+                        post_id: place_bet_arg.post_id,
+                        post_canister_id: place_bet_arg.post_canister_id,
+                        bet_direction: place_bet_arg.bet_direction,
+                    },
+                    timestamp: get_current_system_time(),
+                });
+                return Err(BetOnCurrentlyViewingPostError::BettingClosed);
+            }
+            BettingStatus::BettingOpen {
+                ongoing_slot,
+                ongoing_room,
+                ..
+            } => {
+                let all_hot_or_not_bets_placed = &mut self.all_hot_or_not_bets_placed;
+                all_hot_or_not_bets_placed.insert(
+                    (place_bet_arg.post_canister_id, place_bet_arg.post_id),
+                    PlacedBetDetail {
+                        canister_id: place_bet_arg.post_canister_id,
+                        post_id: place_bet_arg.post_id,
+                        slot_id: ongoing_slot,
+                        room_id: ongoing_room,
+                        bet_direction: place_bet_arg.bet_direction,
+                        bet_placed_at: current_time,
+                        amount_bet: place_bet_arg.bet_amount,
+                        outcome_received: BetOutcomeForBetMaker::default(),
+                    },
+                );
+            }
+        }
+
+        Ok(response)
+    }
+
+    fn receive_earnings_for_the_bet(
+        &mut self,
+        earnings_amount: u128,
+        hot_or_not_outcome_details: HotOrNotOutcomePayoutEvent,
+        timestamp: SystemTime,
+    ) {
+        self.my_token_balance
+            .handle_token_event(TokenEvent::HotOrNotOutcomePayout {
+                amount: earnings_amount as u64,
+                details: hot_or_not_outcome_details,
+                timestamp,
+            });
+    }
+
+    fn validate_incoming_bet(
+        &self,
+        token: &dyn TokenTransactions,
+        bet_maker_principal: Principal,
+        place_bet_arg: &PlaceBetArg,
+    ) -> Result<(), BetOnCurrentlyViewingPostError> {
+        if bet_maker_principal == Principal::anonymous() {
+            return Err(BetOnCurrentlyViewingPostError::UserNotLoggedIn);
+        }
+
+        let profile_owner = self
+            .profile
+            .principal_id
+            .ok_or(BetOnCurrentlyViewingPostError::UserPrincipalNotSet)?;
+
+        if bet_maker_principal != profile_owner {
+            return Err(BetOnCurrentlyViewingPostError::Unauthorized);
+        }
+
+        let utlility_token_balance = token.get_current_token_balance();
+
+        if utlility_token_balance < place_bet_arg.bet_amount as u128 {
+            return Err(BetOnCurrentlyViewingPostError::InsufficientBalance);
+        }
+
+        if self
+            .all_hot_or_not_bets_placed
+            .contains_key(&(place_bet_arg.post_canister_id, place_bet_arg.post_id))
+        {
+            return Err(BetOnCurrentlyViewingPostError::UserAlreadyParticipatedInThisPost);
+        }
+
+        Ok(())
+    }
+}
 
 #[derive(Deserialize, Serialize)]
 pub struct CanisterData {

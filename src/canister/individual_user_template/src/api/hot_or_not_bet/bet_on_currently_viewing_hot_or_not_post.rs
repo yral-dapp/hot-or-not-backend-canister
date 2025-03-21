@@ -14,8 +14,8 @@ use shared_utils::{
 
 use crate::{
     api::canister_management::update_last_access_time::update_last_canister_functionality_access_time,
-    data_model::CanisterData,
-    util::cycles::{notify_to_recharge_canister, recharge_canister},
+    data_model::{CanisterData, HotOrNotGame},
+    util::cycles::notify_to_recharge_canister,
     CANISTER_DATA,
 };
 
@@ -28,82 +28,15 @@ async fn bet_on_currently_viewing_post(
     let bet_maker_principal_id = ic_cdk::caller();
     let current_time = system_time::get_current_system_time_from_ic();
 
-    CANISTER_DATA.with(|canister_data_ref_cell| {
-        validate_incoming_bet(
-            &canister_data_ref_cell.borrow(),
-            &bet_maker_principal_id,
-            &place_bet_arg,
+    let future = CANISTER_DATA.with_borrow_mut(|canister_data| {
+        canister_data.place_bet(
+            bet_maker_principal_id,
+            place_bet_arg,
+            canister_data.my_token_balance.into(),
         )
-    })?;
+    });
 
-    update_last_canister_functionality_access_time();
-    update_token_balance_before_bet_happens(place_bet_arg.bet_amount);
-
-    let response = ic_cdk::call::<_, (Result<BettingStatus, BetOnCurrentlyViewingPostError>,)>(
-        place_bet_arg.post_canister_id,
-        "receive_bet_from_bet_makers_canister",
-        (
-            place_bet_arg.clone(),
-            CANISTER_DATA.with(|canister_data_ref_cell| {
-                canister_data_ref_cell
-                    .borrow()
-                    .profile
-                    .principal_id
-                    .unwrap()
-            }),
-        ),
-    )
-    .await
-    .map_err(|_| {
-        update_token_balance_after_bet_placement_fails(place_bet_arg.bet_amount);
-        BetOnCurrentlyViewingPostError::PostCreatorCanisterCallFailed
-    })?
-    .0?;
-
-    match response {
-        BettingStatus::BettingClosed => {
-            update_token_balance_after_bet_placement_fails(place_bet_arg.bet_amount);
-            return Err(BetOnCurrentlyViewingPostError::BettingClosed);
-        }
-        BettingStatus::BettingOpen {
-            ongoing_slot,
-            ongoing_room,
-            ..
-        } => {
-            CANISTER_DATA.with(|canister_data_ref_cell| {
-                let canister_data = &mut canister_data_ref_cell.borrow_mut();
-
-                let my_token_balance = &mut canister_data.my_token_balance;
-                my_token_balance.handle_token_event(TokenEvent::Stake {
-                    amount: place_bet_arg.bet_amount,
-                    details: StakeEvent::BetOnHotOrNotPost {
-                        post_canister_id: place_bet_arg.post_canister_id,
-                        post_id: place_bet_arg.post_id,
-                        bet_amount: place_bet_arg.bet_amount,
-                        bet_direction: place_bet_arg.bet_direction.clone(),
-                    },
-                    timestamp: current_time,
-                });
-
-                let all_hot_or_not_bets_placed = &mut canister_data.all_hot_or_not_bets_placed;
-                all_hot_or_not_bets_placed.insert(
-                    (place_bet_arg.post_canister_id, place_bet_arg.post_id),
-                    PlacedBetDetail {
-                        canister_id: place_bet_arg.post_canister_id,
-                        post_id: place_bet_arg.post_id,
-                        slot_id: ongoing_slot,
-                        room_id: ongoing_room,
-                        bet_direction: place_bet_arg.bet_direction,
-                        bet_placed_at: current_time,
-                        amount_bet: place_bet_arg.bet_amount,
-                        outcome_received: BetOutcomeForBetMaker::default(),
-                    },
-                );
-            });
-        }
-    }
-
-    Ok(response)
+    future.await
 }
 
 // this #[update] is for local testing only see: src/lib/integration_tests/tests/upgrade/excessive_tokens_test.rs
@@ -189,8 +122,7 @@ mod test {
 
         canister_data.profile.principal_id = Some(get_mock_user_alice_principal_id());
 
-        let result = validate_incoming_bet(
-            &canister_data,
+        let result = canister_data.validate_incoming_bet(
             &get_mock_user_bob_principal_id(),
             &PlaceBetArg {
                 post_canister_id: get_mock_user_alice_canister_id(),
@@ -198,12 +130,12 @@ mod test {
                 bet_amount: 100,
                 bet_direction: BetDirection::Hot,
             },
+            canister_data.my_token_balance.into(),
         );
 
         assert_eq!(result, Err(BetOnCurrentlyViewingPostError::Unauthorized));
 
-        let result = validate_incoming_bet(
-            &canister_data,
+        let result = canister_data.validate_incoming_bet(
             &get_mock_user_alice_principal_id(),
             &PlaceBetArg {
                 post_canister_id: get_mock_user_alice_canister_id(),
@@ -211,6 +143,7 @@ mod test {
                 bet_amount: 100,
                 bet_direction: BetDirection::Hot,
             },
+            canister_data.my_token_balance.into(),
         );
 
         assert_eq!(
@@ -220,8 +153,7 @@ mod test {
 
         canister_data.my_token_balance.utility_token_balance = 1000;
 
-        let result = validate_incoming_bet(
-            &canister_data,
+        let result = canister_data.validate_incoming_bet(
             &get_mock_user_alice_principal_id(),
             &PlaceBetArg {
                 post_canister_id: get_mock_user_alice_canister_id(),
@@ -229,6 +161,7 @@ mod test {
                 bet_amount: 100,
                 bet_direction: BetDirection::Hot,
             },
+            canister_data.my_token_balance,
         );
 
         assert_eq!(result, Ok(()));
@@ -247,8 +180,7 @@ mod test {
             },
         );
 
-        let result = validate_incoming_bet(
-            &canister_data,
+        let result = canister_data.validate_incoming_bet(
             &get_mock_user_alice_principal_id(),
             &PlaceBetArg {
                 post_canister_id: get_mock_user_alice_canister_id(),
@@ -256,6 +188,7 @@ mod test {
                 bet_amount: 100,
                 bet_direction: BetDirection::Hot,
             },
+            canister_data.my_token_balance,
         );
 
         assert_eq!(

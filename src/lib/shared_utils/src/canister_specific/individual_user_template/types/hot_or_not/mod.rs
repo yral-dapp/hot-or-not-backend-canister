@@ -59,7 +59,7 @@ pub struct BetDetail {
     bet_made_at: SystemTime,
 }
 
-#[derive(CandidType, Clone, Deserialize, Serialize, Debug, PartialEq, Eq)]
+#[derive(CandidType, Clone, Deserialize, Serialize, Debug, PartialEq, Eq, Copy)]
 pub enum BetDirection {
     Hot,
     Not,

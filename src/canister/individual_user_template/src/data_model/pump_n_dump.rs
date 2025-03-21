@@ -4,12 +4,16 @@ use candid::{Nat, Principal};
 use ic_stable_structures::{storable::Bound, StableBTreeMap, Storable};
 use num_bigint::BigUint;
 use serde::{Deserialize, Serialize};
-use shared_utils::{canister_specific::individual_user_template::types::pump_n_dump::ParticipatedGameInfo, common::utils::default_pump_dump_onboarding_reward};
+use shared_utils::{
+    canister_specific::individual_user_template::types::{
+        hot_or_not::BetDirection, pump_n_dump::ParticipatedGameInfo,
+    },
+    common::utils::default_pump_dump_onboarding_reward,
+};
 
 use super::memory::{get_lp_memory, Memory};
 
-pub fn _default_lp(
-) -> StableBTreeMap<Principal, NatStore, Memory> {
+pub fn _default_lp() -> StableBTreeMap<Principal, NatStore, Memory> {
     StableBTreeMap::init(get_lp_memory())
 }
 
@@ -19,7 +23,7 @@ impl Storable for NatStore {
     const BOUND: Bound = Bound::Unbounded;
 
     fn to_bytes(&self) -> Cow<[u8]> {
-        self.0.0.to_bytes_be().into()
+        self.0 .0.to_bytes_be().into()
     }
 
     fn from_bytes(bytes: Cow<[u8]>) -> Self {

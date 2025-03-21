@@ -68,6 +68,12 @@ pub enum StakeEvent {
         bet_amount: u64,
         bet_direction: BetDirection,
     },
+    BetFailureRefund {
+        bet_amount: u64,
+        post_id: u64,
+        post_canister_id: Principal,
+        bet_direction: BetDirection,
+    },
 }
 
 #[derive(Clone, CandidType, Deserialize, Serialize, Debug, PartialEq, Eq)]

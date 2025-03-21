@@ -9,23 +9,17 @@ use crate::common::types::utility_token::token_event::{
     HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE, HOT_OR_NOT_BET_WINNINGS_MULTIPLIER,
 };
 
-#[derive(Default, Clone, Deserialize, CandidType, Debug, Serialize)]
-pub struct TokenBalance {
-    pub utility_token_balance: u64,
-    pub utility_token_transaction_history: BTreeMap<u64, TokenEvent>,
-    pub lifetime_earnings: u64,
+pub trait TokenTransactions {
+    fn get_current_token_balance(&self) -> u128;
+    fn handle_token_event(&mut self, token_event: TokenEvent);
 }
 
-impl TokenBalance {
-    pub fn get_utility_token_balance(&self) -> u64 {
-        self.utility_token_balance
+impl TokenTransactions for TokenBalance {
+    fn get_current_token_balance(&self) -> u128 {
+        self.utility_token_balance as u128
     }
 
-    pub fn get_utility_token_transaction_history(&self) -> &BTreeMap<u64, TokenEvent> {
-        &self.utility_token_transaction_history
-    }
-
-    pub fn handle_token_event(&mut self, token_event: TokenEvent) {
+    fn handle_token_event(&mut self, token_event: TokenEvent) {
         match &token_event {
             TokenEvent::Mint { details, .. } => match details {
                 MintEvent::NewUserSignup { .. } => {
@@ -45,10 +39,14 @@ impl TokenBalance {
                 self.utility_token_balance += amount;
             }
             TokenEvent::Stake { details, .. } => match details {
-                StakeEvent::BetOnHotOrNotPost { .. } => {
-                    // self.utility_token_balance -= bet_amount;
+                StakeEvent::BetOnHotOrNotPost { bet_amount, .. } => {
+                    self.utility_token_balance -= bet_amount;
+                }
+                StakeEvent::BetFailureRefund { bet_amount, .. } => {
+                    self.utility_token_balance += bet_amount;
                 }
             },
+
             TokenEvent::HotOrNotOutcomePayout { details, .. } => match details {
                 HotOrNotOutcomePayoutEvent::CommissionFromHotOrNotBet {
                     room_pot_total_amount,
@@ -83,14 +81,18 @@ impl TokenBalance {
         self.utility_token_transaction_history
             .insert(last_key + 1, token_event);
     }
+}
 
-    // this is being done to handle concurrency issues inside canister
-    pub fn adjust_balance_pre_bet(&mut self, bet_amount: u64) {
-        self.utility_token_balance -= bet_amount;
-    }
+#[derive(Default, Clone, Deserialize, CandidType, Debug, Serialize)]
+pub struct TokenBalance {
+    pub utility_token_balance: u64,
+    pub utility_token_transaction_history: BTreeMap<u64, TokenEvent>,
+    pub lifetime_earnings: u64,
+}
 
-    pub fn adjust_balance_for_failed_bet_placement(&mut self, bet_amount: u64) {
-        self.utility_token_balance += bet_amount;
+impl TokenBalance {
+    pub fn get_utility_token_transaction_history(&self) -> &BTreeMap<u64, TokenEvent> {
+        &self.utility_token_transaction_history
     }
 }
 

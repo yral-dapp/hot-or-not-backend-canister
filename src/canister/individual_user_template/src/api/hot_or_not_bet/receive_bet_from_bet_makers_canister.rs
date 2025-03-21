@@ -49,6 +49,7 @@ fn receive_bet_from_bet_makers_canister(
         );
     });
 
+    //TODO: remove the post cache call we don't need this as such
     update_scores_and_share_with_post_cache_if_difference_beyond_threshold(&place_bet_arg.post_id);
 
     Ok(status)
