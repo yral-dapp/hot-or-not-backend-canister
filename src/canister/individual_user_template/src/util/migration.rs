@@ -10,6 +10,7 @@ use shared_utils::{
         migration::{MigrationErrors, MigrationInfo},
         post::{Post, PostDetailsFromFrontend},
         session::SessionType,
+        token::TokenTransactions,
     },
     common::{
         types::{known_principal::KnownPrincipalType, utility_token::token_event::TokenEvent},

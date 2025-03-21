@@ -1,7 +1,9 @@
 use ic_cdk_macros::update;
 
 use shared_utils::{
-    canister_specific::individual_user_template::types::hot_or_not::BetOutcomeForBetMaker,
+    canister_specific::individual_user_template::types::{
+        hot_or_not::BetOutcomeForBetMaker, token::TokenTransactions,
+    },
     common::{
         types::{
             app_primitive_type::PostId,

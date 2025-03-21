@@ -3,12 +3,15 @@ use crate::{
     util::cycles::notify_to_recharge_canister, CANISTER_DATA, PUMP_N_DUMP,
 };
 use ic_cdk_macros::update;
-use shared_utils::common::{
-    types::{
-        known_principal::KnownPrincipalType,
-        utility_token::token_event::{MintEvent, TokenEvent},
+use shared_utils::{
+    canister_specific::individual_user_template::types::token::TokenTransactions,
+    common::{
+        types::{
+            known_principal::KnownPrincipalType,
+            utility_token::token_event::{MintEvent, TokenEvent},
+        },
+        utils::system_time,
     },
-    utils::system_time,
 };
 
 #[update]

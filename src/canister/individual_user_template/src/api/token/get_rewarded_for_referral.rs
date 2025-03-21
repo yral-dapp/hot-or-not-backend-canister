@@ -4,12 +4,15 @@ use crate::{
 };
 use candid::Principal;
 use ic_cdk_macros::update;
-use shared_utils::common::{
-    types::{
-        known_principal::KnownPrincipalType,
-        utility_token::token_event::{MintEvent, TokenEvent},
+use shared_utils::{
+    canister_specific::individual_user_template::types::token::TokenTransactions,
+    common::{
+        types::{
+            known_principal::KnownPrincipalType,
+            utility_token::token_event::{MintEvent, TokenEvent},
+        },
+        utils::system_time,
     },
-    utils::system_time,
 };
 
 #[update]
@@ -55,7 +58,6 @@ fn get_rewarded_for_referral(referrer: Principal, referree: Principal) {
             },
             timestamp: current_time,
         });
-
     });
 
     PUMP_N_DUMP.with_borrow_mut(|pd| {

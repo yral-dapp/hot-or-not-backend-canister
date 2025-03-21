@@ -18,7 +18,7 @@ use crate::common::types::{
 use super::{
     error::BetOnCurrentlyViewingPostError,
     post::{FeedScore, Post},
-    token::TokenBalance,
+    token::{TokenBalance, TokenTransactions},
 };
 
 #[derive(CandidType, PartialEq, Eq, Debug, Serialize, Deserialize)]

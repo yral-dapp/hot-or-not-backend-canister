@@ -4,7 +4,7 @@ use std::{
 };
 
 use candid::{Deserialize, Principal};
-use ic_cdk::api::management_canister::provisional::CanisterId;
+use ic_cdk::api::{call::CallResult, management_canister::provisional::CanisterId};
 use memory::{get_success_history_memory, get_token_list_memory, get_watch_history_memory};
 use serde::Serialize;
 use shared_utils::{
@@ -60,11 +60,20 @@ pub(crate) trait HotOrNotGame {
         bet_maker_principal: Principal,
         place_bet_arg: &PlaceBetArg,
     ) -> Result<(), BetOnCurrentlyViewingPostError>;
-    async fn place_bet(
+    fn prepare_for_bet(
         &mut self,
         bet_maker_principal: Principal,
-        place_bet_arg: PlaceBetArg,
+        place_bet_arg: &PlaceBetArg,
         token: &mut dyn TokenTransactions,
+        current_timestamp: SystemTime,
+    ) -> Result<(), BetOnCurrentlyViewingPostError>;
+
+    fn process_place_bet_status(
+        &mut self,
+        bet_response: CallResult<(Result<BettingStatus, BetOnCurrentlyViewingPostError>,)>,
+        place_bet_arg: &PlaceBetArg,
+        token: &mut dyn TokenTransactions,
+        current_timestamp: SystemTime,
     ) -> Result<BettingStatus, BetOnCurrentlyViewingPostError>;
     fn receive_earnings_for_the_bet(
         &mut self,
@@ -75,15 +84,14 @@ pub(crate) trait HotOrNotGame {
 }
 
 impl HotOrNotGame for CanisterData {
-    async fn place_bet(
+    fn prepare_for_bet(
         &mut self,
         bet_marker_principal: Principal,
-        place_bet_arg: PlaceBetArg,
+        place_bet_arg: &PlaceBetArg,
         token: &mut dyn TokenTransactions,
-    ) -> Result<BettingStatus, BetOnCurrentlyViewingPostError> {
+        current_timestamp: SystemTime,
+    ) -> Result<(), BetOnCurrentlyViewingPostError> {
         self.validate_incoming_bet(token, bet_marker_principal, &place_bet_arg)?;
-
-        let current_time = get_current_system_time();
 
         token.handle_token_event(TokenEvent::Stake {
             amount: place_bet_arg.bet_amount,
@@ -93,31 +101,37 @@ impl HotOrNotGame for CanisterData {
                 bet_amount: place_bet_arg.bet_amount,
                 bet_direction: place_bet_arg.bet_direction,
             },
-            timestamp: current_time,
+            timestamp: current_timestamp,
         });
 
-        let response = ic_cdk::call::<_, (Result<BettingStatus, BetOnCurrentlyViewingPostError>,)>(
-            place_bet_arg.post_canister_id,
-            "receive_bet_from_bet_makers_canister",
-            (place_bet_arg.clone(), self.profile.principal_id.unwrap()),
-        )
-        .await
-        .map_err(|_| {
-            token.handle_token_event(TokenEvent::Stake {
-                amount: place_bet_arg.bet_amount,
-                details: StakeEvent::BetFailureRefund {
-                    bet_amount: place_bet_arg.bet_amount,
-                    post_id: place_bet_arg.post_id,
-                    post_canister_id: place_bet_arg.post_canister_id,
-                    bet_direction: place_bet_arg.bet_direction,
-                },
-                timestamp: current_time,
-            });
-            BetOnCurrentlyViewingPostError::PostCreatorCanisterCallFailed
-        })?
-        .0?;
+        Ok(())
+    }
 
-        match response {
+    fn process_place_bet_status(
+        &mut self,
+        bet_response: CallResult<(Result<BettingStatus, BetOnCurrentlyViewingPostError>,)>,
+        place_bet_arg: &PlaceBetArg,
+        token: &mut dyn TokenTransactions,
+        current_timestamp: SystemTime,
+    ) -> Result<BettingStatus, BetOnCurrentlyViewingPostError> {
+        let bet_response = bet_response
+            .map_err(|e| BetOnCurrentlyViewingPostError::PostCreatorCanisterCallFailed)
+            .map(|res| res.0)
+            .and_then(|inner| inner)
+            .inspect_err(|_| {
+                token.handle_token_event(TokenEvent::Stake {
+                    amount: place_bet_arg.bet_amount,
+                    details: StakeEvent::BetFailureRefund {
+                        bet_amount: place_bet_arg.bet_amount,
+                        post_id: place_bet_arg.post_id,
+                        post_canister_id: place_bet_arg.post_canister_id,
+                        bet_direction: place_bet_arg.bet_direction,
+                    },
+                    timestamp: current_timestamp,
+                });
+            })?;
+
+        match bet_response {
             BettingStatus::BettingClosed => {
                 token.handle_token_event(TokenEvent::Stake {
                     amount: place_bet_arg.bet_amount,
@@ -145,7 +159,7 @@ impl HotOrNotGame for CanisterData {
                         slot_id: ongoing_slot,
                         room_id: ongoing_room,
                         bet_direction: place_bet_arg.bet_direction,
-                        bet_placed_at: current_time,
+                        bet_placed_at: current_timestamp,
                         amount_bet: place_bet_arg.bet_amount,
                         outcome_received: BetOutcomeForBetMaker::default(),
                     },
@@ -153,7 +167,7 @@ impl HotOrNotGame for CanisterData {
             }
         }
 
-        Ok(response)
+        Ok(bet_response)
     }
 
     fn receive_earnings_for_the_bet(
