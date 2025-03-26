@@ -18,10 +18,7 @@ use shared_utils::{
     },
 };
 
-use crate::{
-    api::post::add_post_v2::{self, add_post_to_memory},
-    CANISTER_DATA,
-};
+use crate::CANISTER_DATA;
 
 #[derive(PartialEq, Clone, Copy)]
 pub enum SubnetType {
@@ -208,7 +205,7 @@ impl IndividualUser {
 
             let current_system_time = get_current_system_time();
             transfer_posts.iter().for_each(|post| {
-                add_post_to_memory(canister_data, post, &current_system_time);
+                canister_data.add_post_to_memory(post, &current_system_time);
             });
         })
     }
@@ -241,9 +238,9 @@ impl IndividualUser {
 
 async fn transfer_posts_task(profile_principal: Principal, to_individual_user: IndividualUser) {
     let posts: Vec<Post> = CANISTER_DATA
-        .with_borrow(|canister_data| canister_data.all_created_posts.clone())
-        .into_iter()
-        .map(|v| v.1)
+        .with_borrow(|canister_data| canister_data.get_all_posts_cloned())
+        .iter()
+        .map(|v| v.1.clone())
         .collect();
 
     let post_chunks = posts.chunks(10);

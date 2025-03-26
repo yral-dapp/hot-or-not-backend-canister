@@ -531,7 +531,7 @@ impl Post {
         &mut self,
         post_canister_id: &CanisterId,
         slot_id: &u8,
-        token_balance: &mut TokenBalance,
+        token_balance: &mut dyn TokenTransactions,
         current_time: &SystemTime,
         room_details_map: &mut ic_stable_structures::btreemap::BTreeMap<
             GlobalRoomId,

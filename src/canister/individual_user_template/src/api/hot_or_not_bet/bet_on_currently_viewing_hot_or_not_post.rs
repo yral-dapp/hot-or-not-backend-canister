@@ -32,13 +32,16 @@ async fn bet_on_currently_viewing_post(
     let bet_maker_principal_id = ic_cdk::caller();
     let current_time = system_time::get_current_system_time_from_ic();
 
-    CANISTER_DATA.with(|canister_data| {
-        let result = canister_data.borrow_mut().prepare_for_bet(
+    CANISTER_DATA.with_borrow_mut(|canister_data| {
+        let mut my_token_balance = canister_data.my_token_balance.clone();
+        let result = canister_data.prepare_for_bet(
             bet_maker_principal_id,
             &place_bet_arg,
-            &mut canister_data.borrow_mut().my_token_balance,
+            &mut my_token_balance,
             current_time,
         );
+        canister_data.my_token_balance = my_token_balance;
+
         result
     })?;
 

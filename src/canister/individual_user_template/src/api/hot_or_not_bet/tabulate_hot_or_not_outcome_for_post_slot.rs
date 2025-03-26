@@ -7,11 +7,16 @@ use shared_utils::{
     },
     common::{
         types::known_principal::KnownPrincipalType,
-        utils::{system_time, task::run_task_concurrently},
+        utils::{
+            system_time::{self, get_current_system_time},
+            task::run_task_concurrently,
+        },
     },
 };
 
-use crate::{util::cycles::request_cycles_from_subnet_orchestrator, CANISTER_DATA};
+use crate::{
+    data_model::HotOrNotGame, util::cycles::request_cycles_from_subnet_orchestrator, CANISTER_DATA,
+};
 
 async fn recharge_based_on_number_of_bets_placed(total_bets_placed: u64) {
     let cycles = 10_000_000_000 * total_bets_placed;
@@ -43,29 +48,15 @@ pub async fn tabulate_hot_or_not_outcome_for_post_slot(post_id: u64, slot_id: u8
     recharge_based_on_number_of_bets_placed(total_bets_placed_in_the_slot).await;
 
     CANISTER_DATA.with_borrow_mut(|canister_data| {
-        let current_time = system_time::get_current_system_time_from_ic();
-        let this_canister_id = ic_cdk::id();
-
-        let Some(post_to_tabulate_results_for) = canister_data.all_created_posts.get_mut(&post_id)
-        else {
-            return;
-        };
-
-        let token_balance = &mut canister_data.my_token_balance;
-
-        post_to_tabulate_results_for.tabulate_hot_or_not_outcome_for_slot_v1(
-            &this_canister_id,
-            &slot_id,
-            token_balance,
-            &current_time,
-            &mut canister_data.room_details_map,
-            &mut canister_data.bet_details_map,
+        let current_timestamp = get_current_system_time();
+        let mut token = canister_data.my_token_balance.clone();
+        canister_data.tabulate_hot_or_not_outcome_for_post_slot(
+            post_id,
+            slot_id,
+            &mut token,
+            current_timestamp,
         );
-
-        canister_data
-            .all_created_posts
-            .get_mut(&post_id)
-            .map(|post| post.slots_left_to_be_computed.remove(&slot_id));
+        canister_data.my_token_balance = token;
     });
 
     ic_cdk::println!("Computed outcome for post:{post_id} and slot:{slot_id}");
@@ -76,7 +67,7 @@ pub async fn tabulate_hot_or_not_outcome_for_post_slot(post_id: u64, slot_id: u8
 pub async fn inform_participants_of_outcome(post_id: u64, slot_id: u8) {
     ic_cdk::println!("Informating participant for post: {post_id} and slot: {slot_id}");
     let Some(post) = CANISTER_DATA.with_borrow(|canister_data| {
-        let post = canister_data.all_created_posts.get(&post_id);
+        let post = canister_data.get_post(&post_id);
         post.cloned()
     }) else {
         return;

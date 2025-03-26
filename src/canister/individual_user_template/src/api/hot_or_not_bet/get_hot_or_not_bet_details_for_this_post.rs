@@ -33,7 +33,7 @@ fn get_hot_or_not_bet_details_for_this_post_impl(
     request_maker: &Principal,
     post_id: u64,
 ) -> BettingStatus {
-    let post = canister_data.all_created_posts.get(&post_id).unwrap();
+    let post = canister_data.get_post(&post_id).unwrap();
 
     post.get_hot_or_not_betting_status_for_this_post_v1(
         current_time,
@@ -66,24 +66,21 @@ mod test {
         let mut canister_data = CanisterData::default();
         let post_id = 0;
 
-        canister_data.all_created_posts.insert(
-            0,
-            Post {
-                id: 0,
-                is_nsfw: false,
-                description: "Singing and dancing".to_string(),
-                hashtags: vec!["sing".to_string(), "dance".to_string()],
-                video_uid: "video#0001".to_string(),
-                status: PostStatus::ReadyToView,
-                created_at: SystemTime::now(),
-                likes: HashSet::new(),
-                share_count: 0,
-                view_stats: PostViewStatistics::default(),
-                home_feed_score: FeedScore::default(),
-                hot_or_not_details: Some(HotOrNotDetails::default()),
-                slots_left_to_be_computed: Default::default(),
-            },
-        );
+        canister_data.add_post(Post {
+            id: 0,
+            is_nsfw: false,
+            description: "Singing and dancing".to_string(),
+            hashtags: vec!["sing".to_string(), "dance".to_string()],
+            video_uid: "video#0001".to_string(),
+            status: PostStatus::ReadyToView,
+            created_at: SystemTime::now(),
+            likes: HashSet::new(),
+            share_count: 0,
+            view_stats: PostViewStatistics::default(),
+            home_feed_score: FeedScore::default(),
+            hot_or_not_details: Some(HotOrNotDetails::default()),
+            slots_left_to_be_computed: Default::default(),
+        });
 
         let result = get_hot_or_not_bet_details_for_this_post_impl(
             &canister_data,

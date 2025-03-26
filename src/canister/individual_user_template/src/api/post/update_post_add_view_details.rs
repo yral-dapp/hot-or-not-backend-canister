@@ -6,8 +6,6 @@ use crate::{
     util::cycles::notify_to_recharge_canister, CANISTER_DATA,
 };
 
-use super::update_scores_and_share_with_post_cache_if_difference_beyond_threshold::update_scores_and_share_with_post_cache_if_difference_beyond_threshold;
-
 #[update]
 fn update_post_add_view_details(id: u64, details: PostViewDetailsFromFrontend) {
     notify_to_recharge_canister();
@@ -16,18 +14,12 @@ fn update_post_add_view_details(id: u64, details: PostViewDetailsFromFrontend) {
     CANISTER_DATA.with(|canister_data_ref_cell| {
         let mut post_to_update = canister_data_ref_cell
             .borrow_mut()
-            .all_created_posts
-            .get(&id)
+            .get_post(&id)
             .unwrap()
             .clone();
 
         post_to_update.add_view_details(&details);
 
-        canister_data_ref_cell
-            .borrow_mut()
-            .all_created_posts
-            .insert(id, post_to_update);
+        canister_data_ref_cell.borrow_mut().add_post(post_to_update);
     });
-
-    update_scores_and_share_with_post_cache_if_difference_beyond_threshold(&id);
 }
