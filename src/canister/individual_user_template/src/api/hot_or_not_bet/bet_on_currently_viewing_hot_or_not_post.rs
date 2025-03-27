@@ -48,13 +48,17 @@ async fn bet_on_currently_viewing_post(
     let call_result =
         call_post_maker_canister_to_place_bet(bet_maker_principal_id, &place_bet_arg).await;
 
-    CANISTER_DATA.with(|canister_data| {
-        canister_data.borrow_mut().process_place_bet_status(
+    CANISTER_DATA.with_borrow_mut(|canister_data| {
+        let mut my_token_balance = canister_data.my_token_balance.clone();
+        let result = canister_data.process_place_bet_status(
             call_result,
             &place_bet_arg,
-            &mut canister_data.borrow_mut().my_token_balance,
+            &mut my_token_balance,
             current_time,
-        )
+        );
+
+        canister_data.my_token_balance = my_token_balance;
+        result
     })
 }
 

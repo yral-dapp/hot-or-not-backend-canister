@@ -14,16 +14,24 @@ use shared_utils::{
             hot_or_not::{BetDirection, BettingStatus, PlacedBetDetail},
             post::{PostDetailsForFrontend, PostDetailsFromFrontend},
             profile::UserProfileDetailsForFrontend,
-        }, platform_orchestrator::types::args::PlatformOrchestratorInitArgs, post_cache::types::arg::PostCacheInitArgs
+        },
+        platform_orchestrator::types::args::PlatformOrchestratorInitArgs,
+        post_cache::types::arg::PostCacheInitArgs,
     },
-    common::{types::{known_principal::KnownPrincipalType, utility_token::token_event::TokenEvent}, utils::default_pump_dump_onboarding_reward},
+    common::{
+        types::{known_principal::KnownPrincipalType, utility_token::token_event::TokenEvent},
+        utils::default_pump_dump_onboarding_reward,
+    },
     constant::RECLAIM_CANISTER_PRINCIPAL_ID,
     types::canister_specific::individual_user_template::error_types::GetUserUtilityTokenTransactionHistoryError,
 };
-use test_utils::setup::{env::pocket_ic_env::get_new_pocket_ic_env, test_constants::{
-    get_mock_user_alice_principal_id, get_mock_user_bob_principal_id,
-    get_mock_user_charlie_principal_id, get_mock_user_dan_principal_id,
-}};
+use test_utils::setup::{
+    env::pocket_ic_env::get_new_pocket_ic_env,
+    test_constants::{
+        get_mock_user_alice_principal_id, get_mock_user_bob_principal_id,
+        get_mock_user_charlie_principal_id, get_mock_user_dan_principal_id,
+    },
+};
 
 const INDIVIDUAL_TEMPLATE_WASM_PATH: &str =
     "../../../target/wasm32-unknown-unknown/release/individual_user_template.wasm.gz";
@@ -695,7 +703,7 @@ fn download_snapshot_test() {
         .query_call(
             alice_individual_template_canister_id,
             alice_principal_id,
-            "get_posts_of_this_user_profile_with_pagination",
+            "get_posts_of_this_user_profile_with_pagination_cursor",
             candid::encode_args((0 as u64, 5 as u64)).unwrap(),
         )
         .map(|reply_payload| {
@@ -935,7 +943,7 @@ fn download_snapshot_test() {
         .query_call(
             alice2_individual_template_canister_id,
             alice_principal_id,
-            "get_posts_of_this_user_profile_with_pagination",
+            "get_posts_of_this_user_profile_with_pagination_cursor",
             candid::encode_args((0 as u64, 5 as u64)).unwrap(),
         )
         .map(|reply_payload| {
@@ -1090,7 +1098,7 @@ fn download_snapshot_test() {
         .query_call(
             alice2_individual_template_canister_id,
             alice_principal_id,
-            "get_posts_of_this_user_profile_with_pagination",
+            "get_posts_of_this_user_profile_with_pagination_cursor",
             candid::encode_args((0 as u64, 5 as u64)).unwrap(),
         )
         .map(|reply_payload| {
@@ -1262,7 +1270,7 @@ fn post_cache_canister_wasm() -> Vec<u8> {
 }
 
 #[test]
-fn all_canister_snapshot_tests(){
+fn all_canister_snapshot_tests() {
     let (pocket_ic, known_principal) = get_new_pocket_ic_env();
     let platform_canister_id = known_principal
         .get(&KnownPrincipalType::CanisterIdPlatformOrchestrator)
@@ -1325,28 +1333,38 @@ fn all_canister_snapshot_tests(){
     }
 
     let reclaim_principal_id = Principal::from_text(RECLAIM_CANISTER_PRINCIPAL_ID).unwrap();
-    
-    let response = pocket_ic.update_call(platform_canister_id, reclaim_principal_id, "save_snapshot_json", Encode!().unwrap()).unwrap();
-    let snapshot_len: u32 = match response{
+
+    let response = pocket_ic
+        .update_call(
+            platform_canister_id,
+            reclaim_principal_id,
+            "save_snapshot_json",
+            Encode!().unwrap(),
+        )
+        .unwrap();
+    let snapshot_len: u32 = match response {
         WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-        _ => panic!(
-            "\n🛑 save_snapshot_json failed for platform orchestrator\n"
-        ),
+        _ => panic!("\n🛑 save_snapshot_json failed for platform orchestrator\n"),
     };
 
     let mut data: Vec<u8> = Vec::new();
     let mut offset: u64 = 0;
     let chunk_size = 100_000;
 
-    while offset < snapshot_len as u64{
+    while offset < snapshot_len as u64 {
         let length = std::cmp::min(chunk_size, snapshot_len as u64 - offset);
 
-        let response = pocket_ic.query_call(platform_canister_id, reclaim_principal_id, "download_snapshot", Encode!(&offset, &length).unwrap()).unwrap();
-        let chunk: Vec<u8> = match response{
+        let response = pocket_ic
+            .query_call(
+                platform_canister_id,
+                reclaim_principal_id,
+                "download_snapshot",
+                Encode!(&offset, &length).unwrap(),
+            )
+            .unwrap();
+        let chunk: Vec<u8> = match response {
             WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-            _ => panic!(
-                "\n🛑 download_snapshot platform orchestrator failed for {offset}\n"
-            ),
+            _ => panic!("\n🛑 download_snapshot platform orchestrator failed for {offset}\n"),
         };
 
         data.extend_from_slice(&chunk);
@@ -1359,39 +1377,64 @@ fn all_canister_snapshot_tests(){
     let mut offset: u64 = 0;
     let chunk_size: u64 = 100_000;
 
-    while offset < snapshot_len{
+    while offset < snapshot_len {
         let length = std::cmp::min(chunk_size, snapshot_len - offset);
         let chunk = &data[(offset as usize)..((offset + length) as usize)];
 
-        if pocket_ic.update_call(platform_canister_id, reclaim_principal_id, "receive_and_save_snaphot", Encode!(&offset, &chunk).unwrap()).is_err(){
+        if pocket_ic
+            .update_call(
+                platform_canister_id,
+                reclaim_principal_id,
+                "receive_and_save_snaphot",
+                Encode!(&offset, &chunk).unwrap(),
+            )
+            .is_err()
+        {
             panic!("\n🛑 receive_and_save_snaphot failed for platform orchestrator\n")
         };
         offset += length;
     }
 
-    pocket_ic.update_call(platform_canister_id, reclaim_principal_id, "load_snapshot", Encode!(&()).unwrap()).unwrap();
+    pocket_ic
+        .update_call(
+            platform_canister_id,
+            reclaim_principal_id,
+            "load_snapshot",
+            Encode!(&()).unwrap(),
+        )
+        .unwrap();
 
-    let response = pocket_ic.update_call(user_index_canister_id, reclaim_principal_id, "save_snapshot_json", Encode!().unwrap()).unwrap();
-    let snapshot_len: u32 = match response{
+    let response = pocket_ic
+        .update_call(
+            user_index_canister_id,
+            reclaim_principal_id,
+            "save_snapshot_json",
+            Encode!().unwrap(),
+        )
+        .unwrap();
+    let snapshot_len: u32 = match response {
         WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-        _ => panic!(
-            "\n🛑 save_snapshot failed for user index\n"
-        ),
+        _ => panic!("\n🛑 save_snapshot failed for user index\n"),
     };
 
     let mut data: Vec<u8> = Vec::new();
     let mut offset: u64 = 0;
     let chunk_size = 100_000;
 
-    while offset < snapshot_len as u64{
+    while offset < snapshot_len as u64 {
         let length = std::cmp::min(chunk_size, snapshot_len as u64 - offset);
 
-        let response = pocket_ic.query_call(user_index_canister_id, reclaim_principal_id, "download_snapshot", Encode!(&offset, &length).unwrap()).unwrap();
-        let chunk: Vec<u8> = match response{
+        let response = pocket_ic
+            .query_call(
+                user_index_canister_id,
+                reclaim_principal_id,
+                "download_snapshot",
+                Encode!(&offset, &length).unwrap(),
+            )
+            .unwrap();
+        let chunk: Vec<u8> = match response {
             WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-            _ => panic!(
-                "\n🛑 download_snapshot failed for user index\n"
-            ),
+            _ => panic!("\n🛑 download_snapshot failed for user index\n"),
         };
 
         data.extend_from_slice(&chunk);
@@ -1404,17 +1447,33 @@ fn all_canister_snapshot_tests(){
     let mut offset: u64 = 0;
     let chunk_size: u64 = 100_000;
 
-    while offset < snapshot_len{
+    while offset < snapshot_len {
         let length = std::cmp::min(chunk_size, snapshot_len - offset);
         let chunk = &data[(offset as usize)..((offset + length) as usize)];
 
-        if pocket_ic.update_call(user_index_canister_id, reclaim_principal_id, "receive_and_save_snaphot", Encode!(&offset, &chunk).unwrap()).is_err(){
+        if pocket_ic
+            .update_call(
+                user_index_canister_id,
+                reclaim_principal_id,
+                "receive_and_save_snaphot",
+                Encode!(&offset, &chunk).unwrap(),
+            )
+            .is_err()
+        {
             panic!("\n🛑receive_and_save_snaphot failed for user index\n")
         };
         offset += length;
     }
 
-    if pocket_ic.update_call(user_index_canister_id, reclaim_principal_id, "load_snapshot", Encode!(&()).unwrap()).is_err(){
+    if pocket_ic
+        .update_call(
+            user_index_canister_id,
+            reclaim_principal_id,
+            "load_snapshot",
+            Encode!(&()).unwrap(),
+        )
+        .is_err()
+    {
         panic!("\n🛑Load snapshot failed for user index\n")
     };
 }

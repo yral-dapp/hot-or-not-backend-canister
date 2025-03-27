@@ -494,23 +494,19 @@ impl CanisterData {
     }
 
     fn get_post_mut(posts: &mut BTreeMap<u64, Post>, post_id: u64) -> Option<&mut Post> {
-        posts
-            .get_mut(&post_id)
-            .map(|post| match post.status {
-                PostStatus::BannedDueToUserReporting => Some(post),
-                _ => None,
-            })
-            .flatten()
+        posts.get_mut(&post_id).and_then(|post| match post.status {
+            PostStatus::Deleted => None,
+            _ => Some(post),
+        })
     }
 
     pub fn get_post(&self, post_id: &u64) -> Option<&Post> {
         self.all_created_posts
             .get(post_id)
-            .map(|post| match post.status {
-                PostStatus::BannedDueToUserReporting => Some(post),
-                _ => None,
+            .and_then(|post| match post.status {
+                PostStatus::Deleted => None,
+                _ => Some(post),
             })
-            .flatten()
     }
 
     pub(crate) fn get_post_for_frontend(

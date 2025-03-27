@@ -479,7 +479,10 @@ type SnsInitPayload = record {
   min_icp_e8s : opt nat64;
   max_direct_participation_icp_e8s : opt nat64;
 };
-type StakeEvent = variant { BetOnHotOrNotPost : PlaceBetArg };
+type StakeEvent = variant {
+  BetOnHotOrNotPost : PlaceBetArg;
+  BetFailureRefund : PlaceBetArg;
+};
 type SuccessHistoryItemV1 = record {
   post_id : nat64;
   percentage_watched : float32;
@@ -587,9 +590,6 @@ service : (IndividualUserTemplateInitArgs) -> {
   add_post_v2 : (PostDetailsFromFrontend) -> (Result_2);
   add_token : (principal) -> (Result_3);
   bet_on_currently_viewing_post : (PlaceBetArg) -> (Result_4);
-  check_and_update_scores_and_share_with_post_cache_if_difference_beyond_threshold : (
-      vec nat64,
-    ) -> ();
   clear_snapshot : () -> ();
   create_a_namespace : (text) -> (Result_5);
   delete_all_creator_token : () -> ();
@@ -616,9 +616,6 @@ service : (IndividualUserTemplateInitArgs) -> {
   get_last_access_time : () -> (Result_12) query;
   get_last_canister_functionality_access_time : () -> (Result_12) query;
   get_ml_feed_cache_paginated : (nat64, nat64) -> (vec MLFeedCacheItem) query;
-  get_posts_of_this_user_profile_with_pagination : (nat64, nat64) -> (
-      Result_13,
-    ) query;
   get_posts_of_this_user_profile_with_pagination_cursor : (nat64, nat64) -> (
       Result_13,
     ) query;
