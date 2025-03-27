@@ -3,12 +3,14 @@ use ic_cdk_macros::update;
 use candid::Principal;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
-        arg::PlaceBetArg, error::BetOnCurrentlyViewingPostError, hot_or_not::BettingStatus,
+        arg::PlaceBetArg,
+        error::BetOnCurrentlyViewingPostError,
+        hot_or_not::{BettingStatus, HotOrNotGame},
     },
     common::utils::system_time::get_current_system_time,
 };
 
-use crate::{data_model::HotOrNotGame, util::cycles::notify_to_recharge_canister, CANISTER_DATA};
+use crate::{util::cycles::notify_to_recharge_canister, CANISTER_DATA};
 
 #[update]
 fn receive_bet_from_bet_makers_canister(

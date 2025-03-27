@@ -3,7 +3,7 @@ use ic_cdk::api::canister_balance;
 use shared_utils::{
     canister_specific::individual_user_template::types::hot_or_not::{
         BetDirection, BetMakerInformedStatus, BetOutcomeForBetMaker, BetPayout, GlobalBetId,
-        GlobalRoomId, RoomBetPossibleOutcomes,
+        GlobalRoomId, HotOrNotGame, RoomBetPossibleOutcomes,
     },
     common::{
         types::known_principal::KnownPrincipalType,
@@ -14,9 +14,7 @@ use shared_utils::{
     },
 };
 
-use crate::{
-    data_model::HotOrNotGame, util::cycles::request_cycles_from_subnet_orchestrator, CANISTER_DATA,
-};
+use crate::{util::cycles::request_cycles_from_subnet_orchestrator, CANISTER_DATA};
 
 async fn recharge_based_on_number_of_bets_placed(total_bets_placed: u64) {
     let cycles = 10_000_000_000 * total_bets_placed;

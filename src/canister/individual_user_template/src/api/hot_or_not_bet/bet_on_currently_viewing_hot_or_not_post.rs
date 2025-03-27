@@ -7,7 +7,7 @@ use shared_utils::{
     canister_specific::individual_user_template::types::{
         arg::PlaceBetArg,
         error::BetOnCurrentlyViewingPostError,
-        hot_or_not::{BetOutcomeForBetMaker, BettingStatus, PlacedBetDetail},
+        hot_or_not::{BetOutcomeForBetMaker, BettingStatus, HotOrNotGame, PlacedBetDetail},
         token::{self, TokenTransactions},
     },
     common::{
@@ -16,12 +16,7 @@ use shared_utils::{
     },
 };
 
-use crate::{
-    api::canister_management::update_last_access_time::update_last_canister_functionality_access_time,
-    data_model::{CanisterData, HotOrNotGame},
-    util::cycles::notify_to_recharge_canister,
-    CANISTER_DATA,
-};
+use crate::{util::cycles::notify_to_recharge_canister, CANISTER_DATA};
 
 #[update]
 async fn bet_on_currently_viewing_post(
@@ -82,6 +77,8 @@ mod test {
         get_mock_user_alice_canister_id, get_mock_user_alice_principal_id,
         get_mock_user_bob_principal_id,
     };
+
+    use crate::CanisterData;
 
     use super::*;
 

@@ -18,7 +18,8 @@ use shared_utils::{
         follow::FollowData,
         hot_or_not::{
             BetDetails, BetDirection, BetOutcomeForBetMaker, BettingStatus, GlobalBetId,
-            GlobalRoomId, PlacedBetDetail, RoomDetailsV1, SlotDetailsV1, SlotId, StablePrincipal,
+            GlobalRoomId, HotOrNotGame, PlacedBetDetail, RoomDetailsV1, SlotDetailsV1, SlotId,
+            StablePrincipal,
         },
         migration::MigrationInfo,
         ml_data::{
@@ -54,53 +55,6 @@ use kv_storage::AppStorage;
 pub mod kv_storage;
 pub mod memory;
 pub mod pump_n_dump;
-
-pub(crate) trait HotOrNotGame {
-    fn validate_incoming_bet(
-        &self,
-        token: &dyn TokenTransactions,
-        bet_maker_principal: Principal,
-        place_bet_arg: &PlaceBetArg,
-    ) -> Result<(), BetOnCurrentlyViewingPostError>;
-    fn prepare_for_bet(
-        &mut self,
-        bet_maker_principal: Principal,
-        place_bet_arg: &PlaceBetArg,
-        token: &mut dyn TokenTransactions,
-        current_timestamp: SystemTime,
-    ) -> Result<(), BetOnCurrentlyViewingPostError>;
-
-    fn process_place_bet_status(
-        &mut self,
-        bet_response: CallResult<(Result<BettingStatus, BetOnCurrentlyViewingPostError>,)>,
-        place_bet_arg: &PlaceBetArg,
-        token: &mut dyn TokenTransactions,
-        current_timestamp: SystemTime,
-    ) -> Result<BettingStatus, BetOnCurrentlyViewingPostError>;
-
-    fn recieve_bet_from_bet_maker_canister(
-        &mut self,
-        bet_maker_principal_id: Principal,
-        bet_maker_canister_id: Principal,
-        place_bet_arg: &PlaceBetArg,
-        current_timestamp: SystemTime,
-    ) -> Result<BettingStatus, BetOnCurrentlyViewingPostError>;
-
-    fn tabulate_hot_or_not_outcome_for_post_slot(
-        &mut self,
-        post_id: u64,
-        slot_id: u8,
-        token: &mut dyn TokenTransactions,
-        current_timestamp: SystemTime,
-    );
-
-    fn receive_earnings_for_the_bet(
-        &mut self,
-        earnings_amount: u128,
-        hot_or_not_outcome_details: HotOrNotOutcomePayoutEvent,
-        timestamp: SystemTime,
-    );
-}
 
 impl HotOrNotGame for CanisterData {
     fn prepare_for_bet(
