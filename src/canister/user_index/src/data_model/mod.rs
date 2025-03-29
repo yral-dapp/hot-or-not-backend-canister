@@ -47,7 +47,7 @@ pub struct CanisterData {
     #[serde(default)]
     pub version_details: VersionDetails,
     #[serde(default = "default_pump_dump_onboarding_reward")]
-    pub pump_dump_onboarding_reward: Nat,
+    pub pump_dump_onboarding_reward: u128,
     #[serde(default)]
     pub on_going_operation: HashSet<SubnetOrchestratorOperation>,
 }

@@ -60,7 +60,15 @@ fn get_rewarded_for_referral(referrer: Principal, referree: Principal) {
         });
     });
 
-    PUMP_N_DUMP.with_borrow_mut(|pd| {
-        pd.add_reward_from_airdrop(pd.referral_reward.clone());
+    PUMP_N_DUMP.with_borrow_mut(|pump_and_dump| {
+        let referral_reward = pump_and_dump.referral_reward;
+        pump_and_dump.handle_token_event(TokenEvent::Mint {
+            amount: referral_reward as u64,
+            details: MintEvent::Referral {
+                referee_user_principal_id: referrer,
+                referrer_user_principal_id: referree,
+            },
+            timestamp: current_time,
+        });
     });
 }

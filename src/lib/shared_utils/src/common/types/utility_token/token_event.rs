@@ -3,8 +3,9 @@ use std::time::SystemTime;
 use candid::{CandidType, Deserialize, Principal};
 use serde::Serialize;
 
-use crate::canister_specific::individual_user_template::types::hot_or_not::{
-    BetDirection, BetOutcomeForBetMaker,
+use crate::canister_specific::individual_user_template::types::{
+    hot_or_not::{BetDirection, BetOutcomeForBetMaker},
+    pump_n_dump::GameDirection,
 };
 
 #[derive(Clone, CandidType, Deserialize, Debug, PartialEq, Eq, Serialize)]
@@ -20,6 +21,12 @@ pub enum TokenEvent {
         to_account: Principal,
         timestamp: SystemTime,
     },
+
+    Withdraw {
+        amount: u128,
+        event_type: WithdrawEvent,
+    },
+
     Receive {
         amount: u64,
         from_account: Principal,
@@ -30,11 +37,33 @@ pub enum TokenEvent {
         details: StakeEvent,
         timestamp: SystemTime,
     },
+
+    PumpDumpOutcomePayout {
+        amount: u128,
+        payout_type: PumpDumpOutcomePayoutEvent,
+    },
+
     HotOrNotOutcomePayout {
         amount: u64,
         details: HotOrNotOutcomePayoutEvent,
         timestamp: SystemTime,
     },
+}
+
+#[derive(Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Debug, CandidType)]
+pub enum WithdrawEvent {
+    WithdrawRequest,
+    WithdrawRequestFailed,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, CandidType)]
+pub enum PumpDumpOutcomePayoutEvent {
+    RewardFromPumpDumpGame {
+        game_direction: GameDirection,
+        token_root_canister_id: Principal,
+    },
+
+    CreatorRewardFromPumpDumpGame,
 }
 
 impl TokenEvent {
@@ -43,6 +72,7 @@ impl TokenEvent {
             TokenEvent::Mint { details, .. } => match details {
                 MintEvent::NewUserSignup { .. } => 1000,
                 MintEvent::Referral { .. } => 500,
+                _ => 0,
             },
             _ => 0,
         }
@@ -57,6 +87,10 @@ pub enum MintEvent {
     Referral {
         referee_user_principal_id: Principal,
         referrer_user_principal_id: Principal,
+    },
+
+    Airdrop {
+        amount: u64,
     },
 }
 
@@ -73,6 +107,11 @@ pub enum StakeEvent {
         post_id: u64,
         post_canister_id: Principal,
         bet_direction: BetDirection,
+    },
+    BetOnPumpDump {
+        pumps: u64,
+        dumps: u64,
+        root_canister_id: Principal,
     },
 }
 

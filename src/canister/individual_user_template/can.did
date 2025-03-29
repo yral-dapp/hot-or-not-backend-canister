@@ -234,6 +234,7 @@ type MigrationInfo = variant {
   MigratedToYral : record { account_principal : principal };
 };
 type MintEvent = variant {
+  Airdrop : record { amount : nat64 };
   NewUserSignup : record { new_user_principal_id : principal };
   Referral : record {
     referrer_user_principal_id : principal;
@@ -367,6 +368,13 @@ type PostViewStatistics = record {
   threshold_view_count : nat64;
 };
 type Principals = record { principals : vec principal };
+type PumpDumpOutcomePayoutEvent = variant {
+  CreatorRewardFromPumpDumpGame;
+  RewardFromPumpDumpGame : record {
+    game_direction : GameDirection;
+    token_root_canister_id : principal;
+  };
+};
 type PumpNDumpStateDiff = variant {
   Participant : ParticipatedGameInfo;
   CreatorReward : nat;
@@ -481,6 +489,11 @@ type SnsInitPayload = record {
 };
 type StakeEvent = variant {
   BetOnHotOrNotPost : PlaceBetArg;
+  BetOnPumpDump : record {
+    root_canister_id : principal;
+    pumps : nat64;
+    dumps : nat64;
+  };
   BetFailureRefund : PlaceBetArg;
 };
 type SuccessHistoryItemV1 = record {
@@ -500,6 +513,7 @@ type SystemTime = record {
   secs_since_epoch : nat64;
 };
 type TokenEvent = variant {
+  Withdraw : record { amount : nat; event_type : WithdrawEvent };
   Stake : record {
     timestamp : SystemTime;
     details : StakeEvent;
@@ -507,6 +521,10 @@ type TokenEvent = variant {
   };
   Burn;
   Mint : record { timestamp : SystemTime; details : MintEvent; amount : nat64 };
+  PumpDumpOutcomePayout : record {
+    payout_type : PumpDumpOutcomePayoutEvent;
+    amount : nat;
+  };
   Transfer : record {
     to_account : principal;
     timestamp : SystemTime;
@@ -584,6 +602,7 @@ type WatchHistoryItem = record {
   publisher_canister_id : principal;
   cf_video_id : text;
 };
+type WithdrawEvent = variant { WithdrawRequest; WithdrawRequestFailed };
 service : (IndividualUserTemplateInitArgs) -> {
   add_device_id : (text) -> (Result);
   add_dollr_to_liquidity_pool : (principal, nat) -> (Result_1);

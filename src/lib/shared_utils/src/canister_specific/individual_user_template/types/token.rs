@@ -5,7 +5,7 @@ use serde::Serialize;
 use serde_json_any_key::*;
 
 use crate::common::types::utility_token::token_event::{
-    HotOrNotOutcomePayoutEvent, MintEvent, StakeEvent, TokenEvent,
+    HotOrNotOutcomePayoutEvent, MintEvent, PumpDumpOutcomePayoutEvent, StakeEvent, TokenEvent,
     HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE, HOT_OR_NOT_BET_WINNINGS_MULTIPLIER,
 };
 
@@ -30,6 +30,10 @@ impl TokenTransactions for TokenBalance {
                     self.utility_token_balance += token_event.get_token_amount_for_token_event();
                     self.lifetime_earnings += token_event.get_token_amount_for_token_event();
                 }
+                MintEvent::Airdrop { amount } => {
+                    self.utility_token_balance += amount;
+                    self.lifetime_earnings += amount;
+                }
             },
             TokenEvent::Burn => {}
             TokenEvent::Transfer { amount, .. } => {
@@ -38,12 +42,21 @@ impl TokenTransactions for TokenBalance {
             TokenEvent::Receive { amount, .. } => {
                 self.utility_token_balance += amount;
             }
-            TokenEvent::Stake { details, .. } => match details {
+            TokenEvent::Stake {
+                details, amount, ..
+            } => match details {
                 StakeEvent::BetOnHotOrNotPost { bet_amount, .. } => {
                     self.utility_token_balance -= bet_amount;
                 }
                 StakeEvent::BetFailureRefund { bet_amount, .. } => {
                     self.utility_token_balance += bet_amount;
+                }
+                StakeEvent::BetOnPumpDump {
+                    pumps,
+                    dumps,
+                    root_canister_id,
+                } => {
+                    self.utility_token_balance -= amount;
                 }
             },
 
@@ -65,6 +78,21 @@ impl TokenTransactions for TokenBalance {
                         get_earnings_amount_from_winnings_amount(winnings_amount);
                 }
             },
+            TokenEvent::PumpDumpOutcomePayout {
+                amount,
+                payout_type,
+            } => match payout_type {
+                PumpDumpOutcomePayoutEvent::CreatorRewardFromPumpDumpGame => {
+                    self.utility_token_balance += *amount as u64;
+                    self.lifetime_earnings += *amount as u64;
+                }
+                PumpDumpOutcomePayoutEvent::RewardFromPumpDumpGame { .. } => {
+                    self.utility_token_balance += *amount as u64;
+                    self.lifetime_earnings += *amount as u64;
+                }
+            },
+
+            TokenEvent::Withdraw { .. } => {}
         }
 
         let utility_token_transaction_history = &mut self.utility_token_transaction_history;
@@ -96,7 +124,7 @@ impl TokenBalance {
     }
 }
 
-fn get_earnings_amount_from_winnings_amount(winnings_amount: &u64) -> u64 {
+pub fn get_earnings_amount_from_winnings_amount(winnings_amount: &u64) -> u64 {
     let comission_subtracted_bet_amount = winnings_amount / HOT_OR_NOT_BET_WINNINGS_MULTIPLIER;
     let bet_amount = comission_subtracted_bet_amount * 100
         / (100 - HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE);

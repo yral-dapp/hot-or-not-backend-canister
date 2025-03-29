@@ -6,9 +6,16 @@ use num_bigint::BigUint;
 use serde::{Deserialize, Serialize};
 use shared_utils::{
     canister_specific::individual_user_template::types::{
-        hot_or_not::BetDirection, pump_n_dump::ParticipatedGameInfo,
+        pump_n_dump::{ParticipatedGameInfo, PumpsAndDumps},
+        token::{get_earnings_amount_from_winnings_amount, TokenTransactions},
     },
-    common::utils::default_pump_dump_onboarding_reward,
+    common::{
+        types::utility_token::token_event::{
+            HotOrNotOutcomePayoutEvent, MintEvent, PumpDumpOutcomePayoutEvent, StakeEvent,
+            TokenEvent, WithdrawEvent, HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE,
+        },
+        utils::default_pump_dump_onboarding_reward,
+    },
 };
 
 use super::memory::{get_lp_memory, Memory};
@@ -35,15 +42,15 @@ impl Storable for NatStore {
 #[derive(Serialize, Deserialize)]
 pub struct PumpAndDumpGame {
     /// Amount that has been obtained from airdrops (lifetime)
-    pub net_airdrop: Nat,
+    pub net_airdrop: u128,
     /// user balance
-    pub balance: Nat,
-    pub referral_reward: Nat,
-    pub onboarding_reward: Nat,
+    pub balance: u128,
+    pub referral_reward: u128,
+    pub onboarding_reward: u128,
     pub games: Vec<ParticipatedGameInfo>,
-    pub total_pumps: Nat,
-    pub total_dumps: Nat,
-    pub net_earnings: Nat,
+    pub total_pumps: u128,
+    pub total_dumps: u128,
+    pub net_earnings: u128,
     // Root canister: dollr locked
     #[serde(skip, default = "_default_lp")]
     pub liquidity_pools: StableBTreeMap<Principal, NatStore, Memory>,
@@ -55,7 +62,7 @@ impl Default for PumpAndDumpGame {
             net_airdrop: 0u32.into(),
             balance: 0u32.into(),
             // 1000 gDOLLR
-            referral_reward: Nat::from(1e9 as u64),
+            referral_reward: 1e9 as u128,
             onboarding_reward: default_pump_dump_onboarding_reward(),
             liquidity_pools: _default_lp(),
             games: vec![],
@@ -67,16 +74,121 @@ impl Default for PumpAndDumpGame {
 }
 
 impl PumpAndDumpGame {
-    pub fn add_reward_from_airdrop(&mut self, amount: Nat) {
-        self.net_airdrop += amount.clone();
-        self.balance += amount;
+    pub fn withdrawable_balance(&self) -> u128 {
+        if self.net_airdrop >= self.balance {
+            0
+        } else {
+            self.balance - self.net_airdrop
+        }
     }
 
-    pub fn withdrawable_balance(&self) -> Nat {
-        if self.net_airdrop >= self.balance {
-            0u32.into()
-        } else {
-            self.balance.clone() - self.net_airdrop.clone()
+    pub fn get_net_earnings(&self) -> u128 {
+        self.net_earnings
+    }
+
+    pub fn get_net_airdrop(&self) -> u128 {
+        self.net_airdrop
+    }
+
+    pub fn get_pumps_dumps(&self) -> PumpsAndDumps {
+        PumpsAndDumps {
+            pumps: self.total_pumps,
+            dumps: self.total_dumps,
+        }
+    }
+}
+
+impl TokenTransactions for PumpAndDumpGame {
+    fn get_current_token_balance(&self) -> u128 {
+        self.balance
+    }
+
+    fn handle_token_event(&mut self, token_event: TokenEvent) {
+        match token_event {
+            TokenEvent::Mint {
+                details, amount, ..
+            } => match details {
+                MintEvent::NewUserSignup { .. } => {
+                    self.balance += amount as u128;
+                    self.net_earnings += amount as u128;
+                }
+                MintEvent::Referral { .. } => {
+                    self.net_airdrop += amount as u128;
+                    self.balance += amount as u128;
+                    self.net_earnings += amount as u128;
+                }
+                MintEvent::Airdrop { amount } => {
+                    self.balance += amount as u128;
+                    self.net_earnings += amount as u128;
+                }
+            },
+            TokenEvent::Burn => {}
+            TokenEvent::Transfer { amount, .. } => {
+                self.balance -= amount as u128;
+            }
+            TokenEvent::Receive { amount, .. } => {
+                self.balance += amount as u128;
+            }
+            TokenEvent::Stake {
+                details, amount, ..
+            } => match details {
+                StakeEvent::BetOnHotOrNotPost { bet_amount, .. } => {
+                    self.balance -= bet_amount as u128;
+                }
+                StakeEvent::BetFailureRefund { bet_amount, .. } => {
+                    self.balance += bet_amount as u128;
+                }
+                StakeEvent::BetOnPumpDump {
+                    pumps,
+                    dumps,
+                    root_canister_id,
+                } => {
+                    self.balance -= amount as u128;
+                    self.total_pumps += pumps as u128;
+                    self.total_dumps += dumps as u128;
+                }
+            },
+            TokenEvent::HotOrNotOutcomePayout { details, .. } => match details {
+                HotOrNotOutcomePayoutEvent::CommissionFromHotOrNotBet {
+                    room_pot_total_amount,
+                    ..
+                } => {
+                    self.balance += (room_pot_total_amount
+                        * HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE
+                        / 100) as u128;
+                    self.net_earnings += (room_pot_total_amount
+                        * HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE
+                        / 100) as u128;
+                }
+                HotOrNotOutcomePayoutEvent::WinningsEarnedFromBet {
+                    winnings_amount, ..
+                } => {
+                    self.balance += winnings_amount as u128;
+                    self.net_earnings +=
+                        get_earnings_amount_from_winnings_amount(&winnings_amount) as u128;
+                }
+            },
+            TokenEvent::Withdraw { amount, event_type } => match event_type {
+                WithdrawEvent::WithdrawRequest => {
+                    self.balance -= amount;
+                }
+                WithdrawEvent::WithdrawRequestFailed => {
+                    self.balance += amount;
+                }
+            },
+            TokenEvent::PumpDumpOutcomePayout {
+                amount,
+                payout_type,
+            } => match payout_type {
+                PumpDumpOutcomePayoutEvent::RewardFromPumpDumpGame { .. } => {
+                    self.balance += amount;
+                    self.net_earnings += amount;
+                }
+                PumpDumpOutcomePayoutEvent::CreatorRewardFromPumpDumpGame => {
+                    self.balance += amount;
+                    self.net_earnings += amount;
+                }
+            },
         }
     }
 }

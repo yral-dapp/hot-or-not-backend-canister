@@ -1,10 +1,31 @@
 mod mock_ledger;
 
 use candid::{Nat, Principal};
-use mock_ledger::{mock_ledger_intf::{Account, ApproveArgs, TransferArg}, LEDGER_FEE, LEDGER_MINT_AMOUNT};
+use mock_ledger::{
+    mock_ledger_intf::{Account, ApproveArgs, TransferArg},
+    LEDGER_FEE, LEDGER_MINT_AMOUNT,
+};
 use pocket_ic::PocketIc;
-use shared_utils::{canister_specific::individual_user_template::types::{pump_n_dump::{BalanceInfo, GameDirection, ParticipatedGameInfo, PumpNDumpStateDiff, PumpsAndDumps}, session::SessionType}, common::types::known_principal::{KnownPrincipalMap, KnownPrincipalType}, constant::{GDOLLR_TO_E8S, GLOBAL_SUPER_ADMIN_USER_ID}};
-use test_utils::setup::{env::pocket_ic_env::{execute_query, execute_update, execute_update_no_res, execute_update_no_res_multi, get_new_pocket_ic_env}, test_constants::{get_global_super_admin_principal_id, get_mock_user_alice_principal_id, get_mock_user_charlie_principal_id}};
+use shared_utils::{
+    canister_specific::individual_user_template::types::{
+        pump_n_dump::{
+            BalanceInfo, GameDirection, ParticipatedGameInfo, PumpNDumpStateDiff, PumpsAndDumps,
+        },
+        session::SessionType,
+    },
+    common::types::known_principal::{KnownPrincipalMap, KnownPrincipalType},
+    constant::{GDOLLR_TO_E8S, GLOBAL_SUPER_ADMIN_USER_ID},
+};
+use test_utils::setup::{
+    env::pocket_ic_env::{
+        execute_query, execute_update, execute_update_no_res, execute_update_no_res_multi,
+        get_new_pocket_ic_env,
+    },
+    test_constants::{
+        get_global_super_admin_principal_id, get_mock_user_alice_principal_id,
+        get_mock_user_charlie_principal_id,
+    },
+};
 
 struct PumpNDumpHarness {
     pic: PocketIc,
@@ -16,7 +37,8 @@ impl Default for PumpNDumpHarness {
     fn default() -> Self {
         let (pic, mut known_principals) = get_new_pocket_ic_env();
 
-        let platform_canister_id = known_principals[&KnownPrincipalType::CanisterIdPlatformOrchestrator];
+        let platform_canister_id =
+            known_principals[&KnownPrincipalType::CanisterIdPlatformOrchestrator];
 
         let super_admin = get_global_super_admin_principal_id();
         let charlie_global_admin = get_mock_user_charlie_principal_id();
@@ -26,7 +48,7 @@ impl Default for PumpNDumpHarness {
             super_admin,
             platform_canister_id,
             "add_principal_as_global_admin",
-            &charlie_global_admin
+            &charlie_global_admin,
         );
 
         let dollr_ledger = mock_ledger::deploy(&pic, charlie_global_admin);
@@ -35,10 +57,7 @@ impl Default for PumpNDumpHarness {
             super_admin,
             platform_canister_id,
             "update_global_known_principal",
-            (
-                KnownPrincipalType::CanisterIdSnsLedger,
-                dollr_ledger,
-            )
+            (KnownPrincipalType::CanisterIdSnsLedger, dollr_ledger),
         );
         known_principals.insert(KnownPrincipalType::CanisterIdSnsLedger, dollr_ledger);
 
@@ -49,8 +68,9 @@ impl Default for PumpNDumpHarness {
             charlie_global_admin,
             platform_canister_id,
             "provision_subnet_orchestrator_canister",
-            &app_subnets[1]
-        ).unwrap();
+            &app_subnets[1],
+        )
+        .unwrap();
 
         for _ in 0..50 {
             pic.tick();
@@ -71,7 +91,7 @@ impl Default for PumpNDumpHarness {
                 from_subaccount: None,
                 created_at_time: None,
                 amount: (LEDGER_MINT_AMOUNT - LEDGER_FEE).into(),
-            }
+            },
         );
 
         Self {
@@ -89,8 +109,9 @@ impl PumpNDumpHarness {
             owner,
             self.user_index,
             "get_requester_principals_canister_id_create_if_not_exists",
-            &()
-        ).unwrap();
+            &(),
+        )
+        .unwrap();
 
         // XX: hack, this is a canister bug, where individual user canister uses mainnet admin id, even in testing
         // for certain update calls
@@ -100,7 +121,7 @@ impl PumpNDumpHarness {
             super_admin,
             new_canister,
             "update_session_type",
-            &SessionType::RegisteredSession
+            &SessionType::RegisteredSession,
         );
         match update_res {
             Ok(_) => (),
@@ -117,7 +138,7 @@ impl PumpNDumpHarness {
             Principal::anonymous(),
             individual_canister,
             "pd_balance_info",
-            &()
+            &(),
         )
     }
 
@@ -130,7 +151,7 @@ impl PumpNDumpHarness {
             &Account {
                 owner: user,
                 subaccount: None,
-            }
+            },
         )
     }
 
@@ -150,11 +171,15 @@ impl PumpNDumpHarness {
             Principal::anonymous(),
             individual_canister,
             "played_game_count",
-            &()
+            &(),
         )
     }
 
-    pub fn reconcile_user_state(&self, individual_canister: Principal, state_diffs: &Vec<PumpNDumpStateDiff>) {
+    pub fn reconcile_user_state(
+        &self,
+        individual_canister: Principal,
+        state_diffs: &Vec<PumpNDumpStateDiff>,
+    ) {
         let global_admin = Principal::from_text(GLOBAL_SUPER_ADMIN_USER_ID).unwrap();
         execute_update::<_, Result<(), String>>(
             &self.pic,
@@ -162,7 +187,8 @@ impl PumpNDumpHarness {
             individual_canister,
             "reconcile_user_state",
             state_diffs,
-        ).unwrap();
+        )
+        .unwrap();
     }
 
     pub fn net_earnings(&self, individual_canister: Principal) -> Nat {
@@ -171,7 +197,7 @@ impl PumpNDumpHarness {
             Principal::anonymous(),
             individual_canister,
             "net_earnings",
-            &()
+            &(),
         )
     }
 
@@ -182,7 +208,7 @@ impl PumpNDumpHarness {
             platform_admin,
             self.known_principals[&KnownPrincipalType::CanisterIdPlatformOrchestrator],
             "update_pd_onboarding_reward_for_all_subnets",
-            &new_reward
+            &new_reward,
         );
     }
 }
@@ -208,30 +234,36 @@ fn claim_gdollr_and_stake_gdollr_should_work() {
     let alice = get_mock_user_alice_principal_id();
     let alice_canister = harness.provision_individual_canister(alice);
 
-    let to_claim = Nat::from(1e4 as u64);
+    let to_claim = 1e4 as u64;
 
     let past_bal = harness.ledger_balance(alice);
 
     let global_admin = Principal::from_text(GLOBAL_SUPER_ADMIN_USER_ID).unwrap();
 
-    harness.reconcile_user_state(alice_canister, &vec![
-        PumpNDumpStateDiff::CreatorReward(to_claim.clone() + LEDGER_FEE * 2)
-    ]);
-
+    harness.reconcile_user_state(
+        alice_canister,
+        &vec![PumpNDumpStateDiff::CreatorReward(
+            (to_claim + LEDGER_FEE * 2) as u128,
+        )],
+    );
 
     execute_update::<_, Result<(), String>>(
         &harness.pic,
         global_admin,
         alice_canister,
         "redeem_gdollr",
-        &(to_claim.clone() + LEDGER_FEE * 2), 
-    ).unwrap();
+        &(to_claim + LEDGER_FEE * 2),
+    )
+    .unwrap();
 
     let new_bal = harness.ledger_balance(alice);
 
-    assert_eq!(new_bal - past_bal.clone(), to_claim.clone() + LEDGER_FEE * 2);
+    assert_eq!(
+        new_bal - past_bal.clone(),
+        to_claim.clone() + LEDGER_FEE * 2
+    );
 
-    let amount = to_claim.clone() + LEDGER_FEE;
+    let amount = to_claim + LEDGER_FEE;
     execute_update_no_res(
         &harness.pic,
         alice,
@@ -242,14 +274,14 @@ fn claim_gdollr_and_stake_gdollr_should_work() {
             memo: None,
             from_subaccount: None,
             created_at_time: None,
-            amount,
+            amount: Nat::from(amount),
             expected_allowance: None,
             expires_at: None,
             spender: Account {
                 owner: alice_canister,
                 subaccount: None,
             },
-        }
+        },
     );
 
     let past_game_bal = harness.game_balance(alice_canister);
@@ -260,14 +292,21 @@ fn claim_gdollr_and_stake_gdollr_should_work() {
         alice_canister,
         "stake_dollr_for_gdollr",
         &to_claim,
-    ).unwrap();
+    )
+    .unwrap();
 
     let new_bal = harness.ledger_balance(alice);
     assert_eq!(new_bal, past_bal);
 
     let new_game_bal = harness.game_balance(alice_canister);
-    assert_eq!(new_game_bal.balance - past_game_bal.balance, to_claim);
-    assert_eq!(new_game_bal.withdrawable - past_game_bal.withdrawable, to_claim);
+    assert_eq!(
+        new_game_bal.balance - past_game_bal.balance,
+        to_claim as u128
+    );
+    assert_eq!(
+        new_game_bal.withdrawable - past_game_bal.withdrawable,
+        to_claim as u128
+    );
 }
 
 #[test]
@@ -286,23 +325,28 @@ fn reconcile_user_state_should_work() {
         ParticipatedGameInfo {
             pumps: 10,
             dumps: 10,
-            reward: Nat::from(50 * GDOLLR_TO_E8S),
+            reward: 50 * GDOLLR_TO_E8S as u128,
             token_root: Principal::anonymous(),
             game_direction: GameDirection::Pump,
         },
         ParticipatedGameInfo {
             pumps: 10,
             dumps: 10,
-            reward: Nat::from(50 * GDOLLR_TO_E8S),
+            reward: 50 * GDOLLR_TO_E8S as u128,
             token_root: Principal::anonymous(),
             game_direction: GameDirection::Dump,
-        }
+        },
     ];
-    let (pumps, dumps, mut total_reward) = games.iter().fold(
-        (0u64, 0u64, Nat::from(0u32)),
-        |acc, gdata| {
-            (acc.0 + gdata.pumps, acc.1 + gdata.dumps, acc.2 + gdata.reward.clone())
-    });
+    let (pumps, dumps, mut total_reward) =
+        games
+            .iter()
+            .fold((0u64, 0u64, Nat::from(0u32)), |acc, gdata| {
+                (
+                    acc.0 + gdata.pumps,
+                    acc.1 + gdata.dumps,
+                    acc.2 + gdata.reward.clone(),
+                )
+            });
     let earnings = total_reward.clone();
     total_reward -= (pumps + dumps) * GDOLLR_TO_E8S;
     let state_diffs: Vec<_> = games
@@ -316,40 +360,36 @@ fn reconcile_user_state_should_work() {
     assert_eq!(new_bal.clone() - past_bal, total_reward);
     let new_pd = harness.pumps_and_dumps(alice_canister);
     let new_game_count = harness.played_game_count(alice_canister);
-    assert_eq!(new_pd.pumps - past_pd.pumps, pumps);
-    assert_eq!(new_pd.dumps - past_pd.dumps, dumps);
+    assert_eq!(new_pd.pumps - past_pd.pumps, pumps as u128);
+    assert_eq!(new_pd.dumps - past_pd.dumps, dumps as u128);
     assert_eq!(new_game_count - past_game_count, state_diffs.len());
     let new_earnings = harness.net_earnings(alice_canister);
     assert_eq!(new_earnings - past_earnings, earnings);
 
     // Test Deduction
     let past_bal = new_bal;
-    let state_diffs = vec! [
-        PumpNDumpStateDiff::Participant(ParticipatedGameInfo {
-            pumps: 1,
-            dumps: 0,
-            reward: Nat::from(0u32),
-            token_root: Principal::anonymous(),
-            game_direction: GameDirection::Dump,
-        })
-    ];
+    let state_diffs = vec![PumpNDumpStateDiff::Participant(ParticipatedGameInfo {
+        pumps: 1,
+        dumps: 0,
+        reward: 0 as u128,
+        token_root: Principal::anonymous(),
+        game_direction: GameDirection::Dump,
+    })];
     let to_deduct = GDOLLR_TO_E8S;
 
     harness.reconcile_user_state(alice_canister, &state_diffs);
     let new_bal = harness.game_balance(alice_canister).balance;
-    assert_eq!(past_bal - new_bal.clone(), to_deduct);
+    assert_eq!(past_bal - new_bal.clone(), to_deduct as u128);
 
     // Test Creator Reward
     let past_bal = new_bal;
-    let to_add = Nat::from(1e4 as u64);
-    let state_diffs = vec![
-        PumpNDumpStateDiff::CreatorReward(to_add.clone())
-    ];
+    let to_add = 1e4 as u64;
+    let state_diffs = vec![PumpNDumpStateDiff::CreatorReward(to_add as u128)];
 
     harness.reconcile_user_state(alice_canister, &state_diffs);
     let new_bal = harness.game_balance(alice_canister).balance;
 
-    assert_eq!(new_bal - past_bal, to_add);
+    assert_eq!(new_bal - past_bal, to_add as u128);
 }
 
 #[test]

@@ -36,7 +36,10 @@ fn init_impl(init_args: IndividualUserTemplateInitArgs, data: &mut CanisterData)
 
 #[cfg(test)]
 mod test {
-    use shared_utils::common::{types::known_principal::{KnownPrincipalMap, KnownPrincipalType}, utils::default_pump_dump_onboarding_reward};
+    use shared_utils::common::{
+        types::known_principal::{KnownPrincipalMap, KnownPrincipalType},
+        utils::default_pump_dump_onboarding_reward,
+    };
     use test_utils::setup::test_constants::{
         get_global_super_admin_principal_id, get_mock_canister_id_user_index,
         get_mock_user_alice_principal_id,

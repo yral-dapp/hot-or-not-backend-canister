@@ -690,7 +690,9 @@ pub mod test_hot_or_not {
         get_mock_user_alice_canister_id, get_mock_user_alice_principal_id,
     };
 
-    use crate::canister_specific::individual_user_template::types::post::PostDetailsFromFrontend;
+    use crate::canister_specific::individual_user_template::types::{
+        post::PostDetailsFromFrontend, token::TokenBalance,
+    };
 
     use super::*;
     pub type Memory = VirtualMemory<DefaultMemoryImpl>;
