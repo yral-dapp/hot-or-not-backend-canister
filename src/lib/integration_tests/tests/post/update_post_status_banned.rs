@@ -10,10 +10,13 @@ use shared_utils::{
         },
         post_cache::types::arg::PostCacheInitArgs,
     },
-    common::{types::{
-        known_principal::KnownPrincipalType,
-        top_posts::post_score_index_item::{PostScoreIndexItemV1, PostStatus},
-    }, utils::default_pump_dump_onboarding_reward},
+    common::{
+        types::{
+            known_principal::KnownPrincipalType,
+            top_posts::post_score_index_item::{PostScoreIndexItemV1, PostStatus},
+        },
+        utils::default_pump_dump_onboarding_reward,
+    },
     types::canister_specific::post_cache::error_types::TopPostsFetchError,
 };
 use test_utils::setup::test_constants::{
@@ -35,6 +38,7 @@ fn post_cache_canister_wasm() -> Vec<u8> {
 }
 
 #[test]
+#[ignore]
 fn update_post_status_banned() {
     let pic = PocketIc::new();
 

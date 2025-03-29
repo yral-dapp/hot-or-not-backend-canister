@@ -110,6 +110,7 @@ impl TokenTransactions for PumpAndDumpGame {
             } => match details {
                 MintEvent::NewUserSignup { .. } => {
                     self.balance += amount as u128;
+                    self.net_airdrop += amount as u128;
                     self.net_earnings += amount as u128;
                 }
                 MintEvent::Referral { .. } => {
@@ -118,6 +119,7 @@ impl TokenTransactions for PumpAndDumpGame {
                     self.net_earnings += amount as u128;
                 }
                 MintEvent::Airdrop { amount } => {
+                    self.net_airdrop += amount as u128;
                     self.balance += amount as u128;
                     self.net_earnings += amount as u128;
                 }
