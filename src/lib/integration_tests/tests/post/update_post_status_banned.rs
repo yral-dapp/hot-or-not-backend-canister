@@ -5,8 +5,7 @@ use pocket_ic::{PocketIc, WasmResult};
 use shared_utils::{
     canister_specific::{
         individual_user_template::types::{
-            arg::IndividualUserTemplateInitArgs,
-            post::{Post, PostDetailsFromFrontend},
+            arg::IndividualUserTemplateInitArgs, post::PostDetailsFromFrontend,
         },
         post_cache::types::arg::PostCacheInitArgs,
     },

@@ -252,7 +252,7 @@ fn claim_gdollr_and_stake_gdollr_should_work() {
         global_admin,
         alice_canister,
         "redeem_gdollr",
-        &(to_claim + LEDGER_FEE * 2),
+        &((to_claim + LEDGER_FEE * 2) as u128),
     )
     .unwrap();
 
@@ -291,7 +291,7 @@ fn claim_gdollr_and_stake_gdollr_should_work() {
         alice,
         alice_canister,
         "stake_dollr_for_gdollr",
-        &to_claim,
+        &(to_claim as u128,
     )
     .unwrap();
 
