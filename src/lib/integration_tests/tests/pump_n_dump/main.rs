@@ -291,7 +291,7 @@ fn claim_gdollr_and_stake_gdollr_should_work() {
         alice,
         alice_canister,
         "stake_dollr_for_gdollr",
-        &(to_claim as u128,
+        &(to_claim as u128),
     )
     .unwrap();
 
