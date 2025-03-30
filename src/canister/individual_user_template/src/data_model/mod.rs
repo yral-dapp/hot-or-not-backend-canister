@@ -143,20 +143,6 @@ impl HotOrNotGame for CanisterData {
         Ok(bet_response)
     }
 
-    fn receive_earnings_for_the_bet(
-        &mut self,
-        earnings_amount: u128,
-        hot_or_not_outcome_details: HotOrNotOutcomePayoutEvent,
-        timestamp: SystemTime,
-    ) {
-        self.my_token_balance
-            .handle_token_event(TokenEvent::HotOrNotOutcomePayout {
-                amount: earnings_amount as u64,
-                details: hot_or_not_outcome_details,
-                timestamp,
-            });
-    }
-
     fn validate_incoming_bet(
         &self,
         token: &dyn TokenTransactions,
@@ -235,6 +221,66 @@ impl HotOrNotGame for CanisterData {
         self.all_created_posts
             .get_mut(&post_id)
             .map(|post| post.slots_left_to_be_computed.remove(&slot_id));
+    }
+
+    fn receive_earnings_for_the_bet(
+        &mut self,
+        post_id: u64,
+        post_creator_canister_id: Principal,
+        outcome: BetOutcomeForBetMaker,
+        token: &mut dyn TokenTransactions,
+        current_timestamp: SystemTime,
+    ) {
+        if self
+            .all_hot_or_not_bets_placed
+            .contains_key(&(post_creator_canister_id, post_id))
+        {
+            return;
+        }
+
+        if self
+            .all_hot_or_not_bets_placed
+            .get(&(post_creator_canister_id, post_id))
+            .unwrap()
+            .outcome_received
+            == BetOutcomeForBetMaker::AwaitingResult
+        {
+            return;
+        }
+
+        let all_hot_or_not_bets_placed = &mut self.all_hot_or_not_bets_placed;
+
+        all_hot_or_not_bets_placed
+            .entry((post_creator_canister_id, post_id))
+            .and_modify(|placed_bet_detail| {
+                placed_bet_detail.outcome_received = outcome.clone();
+            });
+
+        let placed_bet_detail = all_hot_or_not_bets_placed
+            .get(&(post_creator_canister_id, post_id))
+            .cloned()
+            .unwrap();
+
+        token.handle_token_event(TokenEvent::HotOrNotOutcomePayout {
+            amount: match outcome {
+                BetOutcomeForBetMaker::Draw(amount) => amount,
+                BetOutcomeForBetMaker::Won(amount) => amount,
+                _ => 0,
+            },
+            details: HotOrNotOutcomePayoutEvent::WinningsEarnedFromBet {
+                post_canister_id: post_creator_canister_id,
+                post_id,
+                slot_id: placed_bet_detail.slot_id,
+                room_id: placed_bet_detail.room_id,
+                winnings_amount: match outcome {
+                    BetOutcomeForBetMaker::Draw(amount) => amount,
+                    BetOutcomeForBetMaker::Won(amount) => amount,
+                    _ => 0,
+                },
+                event_outcome: outcome,
+            },
+            timestamp: current_timestamp,
+        });
     }
 }
 

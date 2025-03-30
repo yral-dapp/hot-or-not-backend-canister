@@ -63,9 +63,11 @@ pub trait HotOrNotGame {
 
     fn receive_earnings_for_the_bet(
         &mut self,
-        earnings_amount: u128,
-        hot_or_not_outcome_details: HotOrNotOutcomePayoutEvent,
-        timestamp: SystemTime,
+        post_id: u64,
+        post_creator_canister_id: Principal,
+        outcome: BetOutcomeForBetMaker,
+        token: &mut dyn TokenTransactions,
+        current_timestamp: SystemTime,
     );
 }
 
