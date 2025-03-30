@@ -243,7 +243,7 @@ impl HotOrNotGame for CanisterData {
             .get(&(post_creator_canister_id, post_id))
             .unwrap()
             .outcome_received
-            == BetOutcomeForBetMaker::AwaitingResult
+            != BetOutcomeForBetMaker::AwaitingResult
         {
             return;
         }
