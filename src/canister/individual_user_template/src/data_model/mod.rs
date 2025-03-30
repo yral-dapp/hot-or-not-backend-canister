@@ -231,7 +231,7 @@ impl HotOrNotGame for CanisterData {
         token: &mut dyn TokenTransactions,
         current_timestamp: SystemTime,
     ) {
-        if self
+        if !self
             .all_hot_or_not_bets_placed
             .contains_key(&(post_creator_canister_id, post_id))
         {
