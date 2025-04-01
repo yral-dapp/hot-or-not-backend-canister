@@ -71,6 +71,55 @@ pub trait HotOrNotGame {
     );
 }
 
+pub trait HotOrNotGameV1 {
+    fn validate_incoming_bet(
+        &self,
+        token: &dyn TokenTransactions,
+        bet_maker_principal: Principal,
+        place_bet_arg: &PlaceBetArg,
+    ) -> Result<(), BetOnCurrentlyViewingPostError>;
+    fn prepare_for_bet(
+        &mut self,
+        bet_maker_principal: Principal,
+        place_bet_arg: &PlaceBetArg,
+        token: &mut dyn TokenTransactions,
+        current_timestamp: SystemTime,
+    ) -> Result<(), BetOnCurrentlyViewingPostError>;
+
+    fn process_place_bet_status(
+        &mut self,
+        bet_response: CallResult<(Result<BettingStatus, BetOnCurrentlyViewingPostError>,)>,
+        place_bet_arg: &PlaceBetArg,
+        token: &mut dyn TokenTransactions,
+        current_timestamp: SystemTime,
+    ) -> Result<BettingStatus, BetOnCurrentlyViewingPostError>;
+
+    fn receive_bet_from_bet_maker_canister(
+        &mut self,
+        bet_maker_principal_id: Principal,
+        bet_maker_canister_id: Principal,
+        place_bet_arg: &PlaceBetArg,
+        current_timestamp: SystemTime,
+    ) -> Result<BettingStatus, BetOnCurrentlyViewingPostError>;
+
+    fn tabulate_hot_or_not_outcome_for_post_slot(
+        &mut self,
+        post_id: u64,
+        slot_id: u8,
+        token: &mut dyn TokenTransactions,
+        current_timestamp: SystemTime,
+    );
+
+    fn receive_earnings_for_the_bet(
+        &mut self,
+        post_id: u64,
+        post_creator_canister_id: Principal,
+        outcome: BetOutcomeForBetMaker,
+        token: &mut dyn TokenTransactions,
+        current_timestamp: SystemTime,
+    );
+}
+
 #[derive(CandidType, PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub enum BettingStatus {
     BettingOpen {

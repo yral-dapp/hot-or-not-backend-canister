@@ -17,7 +17,7 @@ use ic_sns_init::pb::v1::SnsInitPayload;
 use icrc_ledger_types::icrc1::transfer::Memo;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
-        arg::{FolloweeArg, IndividualUserTemplateInitArgs, PlaceBetArg},
+        arg::{BetMakerArg, FolloweeArg, IndividualUserTemplateInitArgs, PlaceBetArg},
         cdao::DeployedCdaoCanisters,
         device_id::DeviceIdentity,
         error::{
@@ -33,12 +33,10 @@ use shared_utils::{
             Post, PostDetailsForFrontend, PostDetailsFromFrontend, PostViewDetailsFromFrontend,
         },
         profile::{
-            UserCanisterDetails, UserProfileDetailsForFrontend,
-            UserProfileDetailsForFrontendV2, UserProfileUpdateDetailsFromFrontend,
+            UserCanisterDetails, UserProfileDetailsForFrontend, UserProfileDetailsForFrontendV2,
+            UserProfileUpdateDetailsFromFrontend,
         },
-        pump_n_dump::{
-            BalanceInfo, ParticipatedGameInfo, PumpNDumpStateDiff, PumpsAndDumps
-        },
+        pump_n_dump::{BalanceInfo, ParticipatedGameInfo, PumpNDumpStateDiff, PumpsAndDumps},
         session::SessionType,
     },
     common::types::{

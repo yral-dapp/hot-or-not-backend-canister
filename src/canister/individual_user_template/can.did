@@ -29,6 +29,10 @@ type BetDetails = record {
   payout : BetPayout;
 };
 type BetDirection = variant { Hot; Not };
+type BetMakerArg = record {
+  bet_maker_canister_id : principal;
+  bet_maker_principal_id : principal;
+};
 type BetMakerInformedStatus = variant { InformedSuccessfully; Failed : text };
 type BetOnCurrentlyViewingPostError = variant {
   UserPrincipalNotSet;
@@ -609,6 +613,7 @@ service : (IndividualUserTemplateInitArgs) -> {
   add_post_v2 : (PostDetailsFromFrontend) -> (Result_2);
   add_token : (principal) -> (Result_3);
   bet_on_currently_viewing_post : (PlaceBetArg) -> (Result_4);
+  bet_on_currently_viewing_post_v1 : (PlaceBetArg) -> (Result_4);
   clear_snapshot : () -> ();
   create_a_namespace : (text) -> (Result_5);
   delete_all_creator_token : () -> ();
@@ -622,15 +627,28 @@ service : (IndividualUserTemplateInitArgs) -> {
   get_bet_details_for_a_user_on_a_post : (principal, nat64) -> (
       Result_10,
     ) query;
+  get_bet_details_for_a_user_on_a_post_v1 : (principal, nat64) -> (
+      Result_10,
+    ) query;
   get_device_identities : () -> (vec DeviceIdentity) query;
   get_entire_individual_post_detail_by_id : (nat64) -> (Result_11) query;
   get_hot_or_not_bet_details_for_this_post : (nat64) -> (BettingStatus) query;
+  get_hot_or_not_bet_details_for_this_post_v1 : (nat64) -> (
+      BettingStatus,
+    ) query;
   get_hot_or_not_bets_placed_by_this_profile_with_pagination : (nat64) -> (
+      vec PlacedBetDetail,
+    ) query;
+  get_hot_or_not_bets_placed_by_this_profile_with_pagination_v1 : (nat64) -> (
       vec PlacedBetDetail,
     ) query;
   get_individual_hot_or_not_bet_placed_by_this_profile : (principal, nat64) -> (
       opt PlacedBetDetail,
     ) query;
+  get_individual_hot_or_not_bet_placed_by_this_profile_v1 : (
+      principal,
+      nat64,
+    ) -> (opt PlacedBetDetail) query;
   get_individual_post_details_by_id : (nat64) -> (PostDetailsForFrontend) query;
   get_last_access_time : () -> (Result_12) query;
   get_last_canister_functionality_access_time : () -> (Result_12) query;
@@ -680,7 +698,14 @@ service : (IndividualUserTemplateInitArgs) -> {
   read_key_value_pair : (nat64, text) -> (Result_6) query;
   receive_and_save_snaphot : (nat64, blob) -> ();
   receive_bet_from_bet_makers_canister : (PlaceBetArg, principal) -> (Result_4);
+  receive_bet_from_bet_makers_canister_v1 : (PlaceBetArg, BetMakerArg) -> (
+      Result_4,
+    );
   receive_bet_winnings_when_distributed : (nat64, BetOutcomeForBetMaker) -> ();
+  receive_bet_winnings_when_distributed_v1 : (
+      nat64,
+      BetOutcomeForBetMaker,
+    ) -> ();
   receive_data_from_hotornot : (principal, nat64, vec Post) -> (Result_22);
   reconcile_user_state : (vec PumpNDumpStateDiff) -> (Result_1);
   redeem_gdollr : (nat) -> (Result_1);

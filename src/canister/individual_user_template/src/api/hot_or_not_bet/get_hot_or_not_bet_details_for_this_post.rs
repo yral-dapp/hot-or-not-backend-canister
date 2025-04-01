@@ -12,6 +12,7 @@ use crate::{
     data_model::CanisterData, CANISTER_DATA,
 };
 
+#[deprecated]
 #[query]
 fn get_hot_or_not_bet_details_for_this_post(post_id: u64) -> BettingStatus {
     let request_maker = ic_cdk::caller();
@@ -27,6 +28,22 @@ fn get_hot_or_not_bet_details_for_this_post(post_id: u64) -> BettingStatus {
     })
 }
 
+#[query]
+fn get_hot_or_not_bet_details_for_this_post_v1(post_id: u64) -> BettingStatus {
+    let request_maker = ic_cdk::caller();
+    update_last_canister_functionality_access_time();
+
+    CANISTER_DATA.with(|canister_data_ref_cell| {
+        get_hot_or_not_bet_details_for_this_post_impl_v1(
+            &canister_data_ref_cell.borrow(),
+            &system_time::get_current_system_time_from_ic(),
+            &request_maker,
+            post_id,
+        )
+    })
+}
+
+#[deprecated]
 fn get_hot_or_not_bet_details_for_this_post_impl(
     canister_data: &CanisterData,
     current_time: &SystemTime,
@@ -41,6 +58,23 @@ fn get_hot_or_not_bet_details_for_this_post_impl(
         &canister_data.room_details_map,
         &canister_data.post_principal_map,
         &canister_data.slot_details_map,
+    )
+}
+
+fn get_hot_or_not_bet_details_for_this_post_impl_v1(
+    canister_data: &CanisterData,
+    current_time: &SystemTime,
+    request_maker: &Principal,
+    post_id: u64,
+) -> BettingStatus {
+    let post = canister_data.get_post(&post_id).unwrap();
+
+    post.get_hot_or_not_betting_status_for_this_post_v1(
+        current_time,
+        request_maker,
+        &canister_data.hot_or_not_bet_details.room_details_map,
+        &canister_data.hot_or_not_bet_details.post_principal_map,
+        &canister_data.hot_or_not_bet_details.slot_details_map,
     )
 }
 

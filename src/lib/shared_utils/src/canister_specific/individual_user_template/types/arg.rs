@@ -1,4 +1,5 @@
 use candid::{CandidType, Deserialize, Nat, Principal};
+use serde::Serialize;
 
 use crate::common::types::known_principal::KnownPrincipalMap;
 
@@ -21,6 +22,12 @@ pub struct PlaceBetArg {
     pub post_id: u64,
     pub bet_amount: u64,
     pub bet_direction: BetDirection,
+}
+
+#[derive(Deserialize, Serialize, CandidType, Clone, Copy)]
+pub struct BetMakerArg {
+    pub bet_maker_canister_id: Principal,
+    pub bet_maker_principal_id: Principal,
 }
 
 #[derive(CandidType, Deserialize, Clone)]

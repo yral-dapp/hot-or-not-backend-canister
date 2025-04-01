@@ -1,17 +1,19 @@
 use ic_cdk_macros::update;
 
-use candid::Principal;
+use candid::{CandidType, Principal};
+use serde::{Deserialize, Serialize};
 use shared_utils::{
     canister_specific::individual_user_template::types::{
-        arg::PlaceBetArg,
+        arg::{BetMakerArg, PlaceBetArg},
         error::BetOnCurrentlyViewingPostError,
-        hot_or_not::{BettingStatus, HotOrNotGame},
+        hot_or_not::{BettingStatus, HotOrNotGame, HotOrNotGameV1},
     },
-    common::utils::system_time::get_current_system_time,
+    common::utils::{permissions::is_caller_global_admin, system_time::get_current_system_time},
 };
 
-use crate::{util::cycles::notify_to_recharge_canister, CANISTER_DATA};
+use crate::{util::cycles::notify_to_recharge_canister, CANISTER_DATA, PUMP_N_DUMP};
 
+#[deprecated(note = "use receive_bet_from_bet_makers_canister_v2")]
 #[update]
 fn receive_bet_from_bet_makers_canister(
     place_bet_arg: PlaceBetArg,
@@ -23,9 +25,30 @@ fn receive_bet_from_bet_makers_canister(
     let bet_maker_canister_id = ic_cdk::caller();
 
     CANISTER_DATA.with_borrow_mut(|canister_data| {
-        canister_data.receive_bet_from_bet_maker_canister(
+        HotOrNotGame::receive_bet_from_bet_maker_canister(
+            canister_data,
             bet_maker_principal_id,
             bet_maker_canister_id,
+            &place_bet_arg,
+            current_timestamp,
+        )
+    })
+}
+
+#[update(guard = "is_caller_global_admin")]
+fn receive_bet_from_bet_makers_canister_v1(
+    place_bet_arg: PlaceBetArg,
+    bet_maker_arg: BetMakerArg,
+) -> Result<BettingStatus, BetOnCurrentlyViewingPostError> {
+    notify_to_recharge_canister();
+
+    let current_timestamp = get_current_system_time();
+
+    CANISTER_DATA.with_borrow_mut(|canister_data| {
+        HotOrNotGameV1::receive_bet_from_bet_maker_canister(
+            canister_data,
+            bet_maker_arg.bet_maker_principal_id,
+            bet_maker_arg.bet_maker_canister_id,
             &place_bet_arg,
             current_timestamp,
         )
@@ -63,7 +86,8 @@ mod test {
             &SystemTime::now(),
         ));
 
-        let result = canister_data.receive_bet_from_bet_maker_canister(
+        let result = HotOrNotGame::receive_bet_from_bet_maker_canister(
+            &mut canister_data,
             get_mock_user_alice_principal_id(),
             get_mock_user_alice_canister_id(),
             &PlaceBetArg {

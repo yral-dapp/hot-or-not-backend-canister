@@ -11,6 +11,7 @@ use crate::{
     CANISTER_DATA,
 };
 
+#[deprecated]
 #[query]
 fn get_individual_hot_or_not_bet_placed_by_this_profile(
     canister_id: CanisterId,
@@ -20,6 +21,22 @@ fn get_individual_hot_or_not_bet_placed_by_this_profile(
     CANISTER_DATA.with(|canister_data_ref_cell| {
         canister_data_ref_cell
             .borrow()
+            .all_hot_or_not_bets_placed
+            .get(&(canister_id, post_id))
+            .cloned()
+    })
+}
+
+#[query]
+fn get_individual_hot_or_not_bet_placed_by_this_profile_v1(
+    canister_id: CanisterId,
+    post_id: PostId,
+) -> Option<PlacedBetDetail> {
+    update_last_canister_functionality_access_time();
+    CANISTER_DATA.with(|canister_data_ref_cell| {
+        canister_data_ref_cell
+            .borrow()
+            .hot_or_not_bet_details
             .all_hot_or_not_bets_placed
             .get(&(canister_id, post_id))
             .cloned()
