@@ -23,7 +23,7 @@ fn receive_bet_from_bet_makers_canister(
     let bet_maker_canister_id = ic_cdk::caller();
 
     CANISTER_DATA.with_borrow_mut(|canister_data| {
-        canister_data.recieve_bet_from_bet_maker_canister(
+        canister_data.receive_bet_from_bet_maker_canister(
             bet_maker_principal_id,
             bet_maker_canister_id,
             &place_bet_arg,
@@ -63,7 +63,7 @@ mod test {
             &SystemTime::now(),
         ));
 
-        let result = canister_data.recieve_bet_from_bet_maker_canister(
+        let result = canister_data.receive_bet_from_bet_maker_canister(
             get_mock_user_alice_principal_id(),
             get_mock_user_alice_canister_id(),
             &PlaceBetArg {

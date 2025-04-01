@@ -178,7 +178,7 @@ impl HotOrNotGame for CanisterData {
         Ok(())
     }
 
-    fn recieve_bet_from_bet_maker_canister(
+    fn receive_bet_from_bet_maker_canister(
         &mut self,
         bet_maker_principal_id: Principal,
         bet_maker_canister_id: Principal,
