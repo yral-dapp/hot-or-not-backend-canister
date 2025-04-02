@@ -22,7 +22,9 @@ use crate::utils::{setup_default_sns_creator_token, setup_sns_w_canister_for_cre
 pub fn test_deletion_of_creator_tokens() {
     let (pocket_ic, known_principal) = get_new_pocket_ic_env();
 
-    let super_admin = get_global_super_admin_principal_id();
+    let super_admin = *known_principal
+        .get(&KnownPrincipalType::UserIdGlobalSuperAdmin)
+        .unwrap();
 
     let application_subnets = pocket_ic.topology().get_app_subnets();
 
