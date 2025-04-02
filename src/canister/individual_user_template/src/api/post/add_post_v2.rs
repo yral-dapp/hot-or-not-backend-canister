@@ -9,7 +9,9 @@ use shared_utils::{
 use crate::{
     api::{
         canister_management::update_last_access_time::update_last_canister_functionality_access_time,
-        hot_or_not_bet::tabulate_hot_or_not_outcome_for_post_slot::tabulate_hot_or_not_outcome_for_post_slot,
+        hot_or_not_bet::tabulate_hot_or_not_outcome_for_post_slot::{
+            tabulate_hot_or_not_outcome_for_post_slot, tabulate_hot_or_not_outcome_for_post_slot_v1,
+        },
     },
     data_model::CanisterData,
     util::cycles::notify_to_recharge_canister,
@@ -51,7 +53,11 @@ fn add_post_v2(post_details: PostDetailsFromFrontend) -> Result<u64, String> {
                 ic_cdk::spawn(tabulate_hot_or_not_outcome_for_post_slot(
                     post_id,
                     slot_number,
-                ))
+                ));
+                ic_cdk::spawn(tabulate_hot_or_not_outcome_for_post_slot_v1(
+                    post_id,
+                    slot_number,
+                ));
             },
         );
     });

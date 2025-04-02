@@ -95,14 +95,8 @@ async fn bet_on_currently_viewing_post_v1(
         })
     })?;
 
-    let call_result = call_post_maker_canister_to_place_bet_v1(
-        &place_bet_arg,
-        BetMakerArg {
-            bet_maker_canister_id: ic_cdk::id(),
-            bet_maker_principal_id: bet_maker_principal_id,
-        },
-    )
-    .await;
+    let call_result =
+        call_post_maker_canister_to_place_bet_v1(&place_bet_arg, bet_maker_principal_id).await;
 
     CANISTER_DATA.with_borrow_mut(|canister_data| {
         PUMP_N_DUMP.with_borrow_mut(|pump_and_dump_game| {
@@ -132,12 +126,12 @@ async fn call_post_maker_canister_to_place_bet(
 
 async fn call_post_maker_canister_to_place_bet_v1(
     place_bet_arg: &PlaceBetArg,
-    bet_maker_arg: BetMakerArg,
+    bet_maker_principal: Principal,
 ) -> CallResult<(Result<BettingStatus, BetOnCurrentlyViewingPostError>,)> {
     ic_cdk::call::<_, (Result<BettingStatus, BetOnCurrentlyViewingPostError>,)>(
         place_bet_arg.post_canister_id,
         "receive_bet_from_bet_makers_canister_v1",
-        (place_bet_arg.clone(), bet_maker_arg),
+        (place_bet_arg.clone(), bet_maker_principal),
     )
     .await
 }

@@ -64,7 +64,9 @@ pub async fn tabulate_hot_or_not_outcome_for_post_slot(post_id: u64, slot_id: u8
 }
 
 pub async fn tabulate_hot_or_not_outcome_for_post_slot_v1(post_id: u64, slot_id: u8) {
-    ic_cdk::println!("Computing outcome for post:{post_id} and slot:{slot_id} ");
+    ic_cdk::println!(
+        "Computing outcome for bets placed on post:{post_id} and slot:{slot_id} using cents"
+    );
 
     let total_bets_placed_in_the_slot = CANISTER_DATA.with_borrow(|canister_data| {
         let start_global_room_id = GlobalRoomId(post_id, slot_id, 1);
@@ -96,7 +98,7 @@ pub async fn tabulate_hot_or_not_outcome_for_post_slot_v1(post_id: u64, slot_id:
 
     ic_cdk::println!("Computed outcome for post:{post_id} and slot:{slot_id}");
 
-    inform_participants_of_outcome(post_id, slot_id).await;
+    inform_participants_of_outcome_v1(post_id, slot_id).await;
 }
 
 pub async fn inform_participants_of_outcome(post_id: u64, slot_id: u8) {
@@ -343,7 +345,7 @@ async fn receive_bet_winnings_when_distributed_v1(
 
     let res = ic_cdk::call::<_, ()>(
         bet_maker_canister_id,
-        "receive_bet_winnings_when_distributed",
+        "receive_bet_winnings_when_distributed_v1",
         (post_id, bet_outcome_for_bet_maker),
     )
     .await;

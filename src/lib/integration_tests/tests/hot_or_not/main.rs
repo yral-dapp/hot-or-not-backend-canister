@@ -1,4 +1,6 @@
 pub mod bet_maker_canister_tests;
+pub mod bet_maker_canister_tests_using_cents;
+pub mod hot_or_not_simulation_using_cents_test;
 pub mod hot_or_not_timely_index_update_test;
 pub mod hotornot_game_simulation_test;
 pub mod reconcile_scores_test;

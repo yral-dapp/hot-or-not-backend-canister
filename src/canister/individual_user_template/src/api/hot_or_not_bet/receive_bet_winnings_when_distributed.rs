@@ -54,7 +54,7 @@ fn receive_bet_winnings_when_distributed_v1(post_id: PostId, outcome: BetOutcome
     let current_time = system_time::get_current_system_time_from_ic();
 
     ic_cdk::println!(
-        "Recieved bet outcome from canister {} for post {}",
+        "Recieved cents bet outcome from canister {} for post {}",
         post_creator_canister_id.to_string(),
         post_id
     );

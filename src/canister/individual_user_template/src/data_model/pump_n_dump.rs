@@ -16,6 +16,7 @@ use shared_utils::{
         },
         utils::default_pump_dump_onboarding_reward,
     },
+    constant::GDOLLR_TO_E8S,
 };
 
 use super::memory::{get_lp_memory, Memory};

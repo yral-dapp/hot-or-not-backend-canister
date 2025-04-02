@@ -35,20 +35,21 @@ fn receive_bet_from_bet_makers_canister(
     })
 }
 
-#[update(guard = "is_caller_global_admin")]
+#[update]
 fn receive_bet_from_bet_makers_canister_v1(
     place_bet_arg: PlaceBetArg,
-    bet_maker_arg: BetMakerArg,
+    bet_maker_principal_id: Principal,
 ) -> Result<BettingStatus, BetOnCurrentlyViewingPostError> {
     notify_to_recharge_canister();
 
+    let bet_maker_canister_id = ic_cdk::caller();
     let current_timestamp = get_current_system_time();
 
     CANISTER_DATA.with_borrow_mut(|canister_data| {
         HotOrNotGameV1::receive_bet_from_bet_maker_canister(
             canister_data,
-            bet_maker_arg.bet_maker_principal_id,
-            bet_maker_arg.bet_maker_canister_id,
+            bet_maker_principal_id,
+            bet_maker_canister_id,
             &place_bet_arg,
             current_timestamp,
         )
