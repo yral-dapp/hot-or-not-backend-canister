@@ -29,10 +29,6 @@ type BetDetails = record {
   payout : BetPayout;
 };
 type BetDirection = variant { Hot; Not };
-type BetMakerArg = record {
-  bet_maker_canister_id : principal;
-  bet_maker_principal_id : principal;
-};
 type BetMakerInformedStatus = variant { InformedSuccessfully; Failed : text };
 type BetOnCurrentlyViewingPostError = variant {
   UserPrincipalNotSet;
@@ -698,7 +694,7 @@ service : (IndividualUserTemplateInitArgs) -> {
   read_key_value_pair : (nat64, text) -> (Result_6) query;
   receive_and_save_snaphot : (nat64, blob) -> ();
   receive_bet_from_bet_makers_canister : (PlaceBetArg, principal) -> (Result_4);
-  receive_bet_from_bet_makers_canister_v1 : (PlaceBetArg, BetMakerArg) -> (
+  receive_bet_from_bet_makers_canister_v1 : (PlaceBetArg, principal) -> (
       Result_4,
     );
   receive_bet_winnings_when_distributed : (nat64, BetOutcomeForBetMaker) -> ();
