@@ -27,7 +27,9 @@ pub fn test_skip_upgrading_creator_sns_governance_canister_if_version_is_present
         .cloned()
         .unwrap();
 
-    let super_admin = get_global_super_admin_principal_id();
+    let super_admin = *known_principal
+        .get(&KnownPrincipalType::UserIdGlobalSuperAdmin)
+        .unwrap();
 
     let application_subnets = pocket_ic.topology().get_app_subnets();
 

@@ -38,7 +38,9 @@ pub fn test_number_of_creator_tokens() {
         .cloned()
         .unwrap();
 
-    let super_admin = get_global_super_admin_principal_id();
+    let super_admin = *known_principal
+        .get(&KnownPrincipalType::UserIdGlobalSuperAdmin)
+        .unwrap();
 
     let application_subnets = pocket_ic.topology().get_app_subnets();
 
@@ -76,7 +78,7 @@ pub fn test_number_of_creator_tokens() {
         .map(|res| {
             let canister_id_result: Result<Principal, String> = match res {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("Canister call failed"),
+                WasmResult::Reject(e) => panic!("Canister call failed {}", e),
             };
             canister_id_result.unwrap()
         })
