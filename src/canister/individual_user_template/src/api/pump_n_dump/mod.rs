@@ -170,7 +170,7 @@ pub async fn stake_dollr_for_gdollr(amount: u128) -> Result<(), String> {
 }
 
 #[update(guard = "is_caller_controller")]
-pub fn update_pd_onboarding_reward(new_reward: u128) -> Result<(), String> {
+pub fn update_pd_onboarding_reward(new_reward: Nat) -> Result<(), String> {
     PUMP_N_DUMP.with_borrow_mut(|pd| pd.onboarding_reward = new_reward);
 
     Ok(())
@@ -210,12 +210,12 @@ pub fn played_game_info_with_pagination_cursor(
 pub fn pd_balance_info() -> BalanceInfo {
     PUMP_N_DUMP.with_borrow(|pd| BalanceInfo {
         net_airdrop_reward: pd.get_net_airdrop(),
-        balance: pd.get_current_token_balance(),
+        balance: (pd.get_current_token_balance()).into(),
         withdrawable: pd.withdrawable_balance(),
     })
 }
 
 #[query]
-pub fn net_earnings() -> u128 {
+pub fn net_earnings() -> Nat {
     PUMP_N_DUMP.with_borrow(|pd| pd.get_net_earnings())
 }

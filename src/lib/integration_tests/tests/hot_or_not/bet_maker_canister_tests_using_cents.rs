@@ -470,7 +470,7 @@ fn when_bet_maker_places_bet_on_a_post_it_is_assigned_a_slot_id_and_the_outcome_
         pocket_ic.tick();
     }
 
-    let bob_final_token_balance: u128 = pocket_ic
+    let bob_final_token_balance = pocket_ic
         .query_call(
             bob_canister_id,
             bob_princpal,
@@ -492,7 +492,7 @@ fn when_bet_maker_places_bet_on_a_post_it_is_assigned_a_slot_id_and_the_outcome_
         bob_initial_token_balance + bob_winnigs
     );
 
-    let charlie_final_token_balance: u128 = pocket_ic
+    let charlie_final_token_balance = pocket_ic
         .query_call(
             charlie_canister_id,
             charlie_principal,

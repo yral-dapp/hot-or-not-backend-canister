@@ -61,9 +61,9 @@ fn get_rewarded_for_referral(referrer: Principal, referree: Principal) {
     });
 
     PUMP_N_DUMP.with_borrow_mut(|pump_and_dump| {
-        let referral_reward = pump_and_dump.referral_reward;
+        let referral_reward = pump_and_dump.referral_reward.clone();
         pump_and_dump.handle_token_event(TokenEvent::Mint {
-            amount: referral_reward as u64,
+            amount: referral_reward.0.try_into().unwrap(),
             details: MintEvent::Referral {
                 referee_user_principal_id: referrer,
                 referrer_user_principal_id: referree,

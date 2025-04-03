@@ -43,15 +43,15 @@ impl Storable for NatStore {
 #[derive(Serialize, Deserialize)]
 pub struct PumpAndDumpGame {
     /// Amount that has been obtained from airdrops (lifetime)
-    pub net_airdrop: u128,
+    pub net_airdrop: Nat,
     /// user balance
-    pub balance: u128,
-    pub referral_reward: u128,
-    pub onboarding_reward: u128,
+    pub balance: Nat,
+    pub referral_reward: Nat,
+    pub onboarding_reward: Nat,
     pub games: Vec<ParticipatedGameInfo>,
-    pub total_pumps: u128,
-    pub total_dumps: u128,
-    pub net_earnings: u128,
+    pub total_pumps: Nat,
+    pub total_dumps: Nat,
+    pub net_earnings: Nat,
     // Root canister: dollr locked
     #[serde(skip, default = "_default_lp")]
     pub liquidity_pools: StableBTreeMap<Principal, NatStore, Memory>,
@@ -63,7 +63,7 @@ impl Default for PumpAndDumpGame {
             net_airdrop: 0u32.into(),
             balance: 0u32.into(),
             // 1000 gDOLLR
-            referral_reward: 1e9 as u128,
+            referral_reward: (1e9 as u64).into(),
             onboarding_reward: default_pump_dump_onboarding_reward(),
             liquidity_pools: _default_lp(),
             games: vec![],
@@ -75,33 +75,33 @@ impl Default for PumpAndDumpGame {
 }
 
 impl PumpAndDumpGame {
-    pub fn withdrawable_balance(&self) -> u128 {
+    pub fn withdrawable_balance(&self) -> Nat {
         if self.net_airdrop >= self.balance {
-            0
+            0_u32.into()
         } else {
-            self.balance - self.net_airdrop
+            self.balance.clone() - self.net_airdrop.clone()
         }
     }
 
-    pub fn get_net_earnings(&self) -> u128 {
-        self.net_earnings
+    pub fn get_net_earnings(&self) -> Nat {
+        self.net_earnings.clone()
     }
 
-    pub fn get_net_airdrop(&self) -> u128 {
-        self.net_airdrop
+    pub fn get_net_airdrop(&self) -> Nat {
+        self.net_airdrop.clone()
     }
 
     pub fn get_pumps_dumps(&self) -> PumpsAndDumps {
         PumpsAndDumps {
-            pumps: self.total_pumps,
-            dumps: self.total_dumps,
+            pumps: self.total_pumps.clone(),
+            dumps: self.total_dumps.clone(),
         }
     }
 }
 
 impl TokenTransactions for PumpAndDumpGame {
     fn get_current_token_balance(&self) -> u128 {
-        self.balance
+        self.balance.clone().0.try_into().unwrap()
     }
 
     fn handle_token_event(&mut self, token_event: TokenEvent) {

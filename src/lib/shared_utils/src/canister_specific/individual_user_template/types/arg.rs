@@ -13,7 +13,7 @@ pub struct IndividualUserTemplateInitArgs {
     pub url_to_send_canister_metrics_to: Option<String>,
     pub version: String,
     #[serde(default)]
-    pub pump_dump_onboarding_reward: Option<u128>,
+    pub pump_dump_onboarding_reward: Option<Nat>,
 }
 
 #[derive(Deserialize, CandidType, Clone)]

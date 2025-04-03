@@ -73,13 +73,13 @@ impl PumpNDumpStateDiff {
 
 #[derive(Serialize, Deserialize, Clone, CandidType)]
 pub struct PumpsAndDumps {
-    pub pumps: u128,
-    pub dumps: u128,
+    pub pumps: Nat,
+    pub dumps: Nat,
 }
 
 #[derive(Serialize, Deserialize, Clone, CandidType)]
 pub struct BalanceInfo {
-    pub net_airdrop_reward: u128,
-    pub balance: u128,
-    pub withdrawable: u128,
+    pub net_airdrop_reward: Nat,
+    pub balance: Nat,
+    pub withdrawable: Nat,
 }
