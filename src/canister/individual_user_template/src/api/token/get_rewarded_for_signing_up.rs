@@ -65,7 +65,7 @@ fn get_rewarded_for_signing_up() {
 
     PUMP_N_DUMP.with_borrow_mut(|pd| {
         let onboarding_reward = pd.onboarding_reward.clone();
-        pd.handle_token_event(TokenEvent::Mint {
+        pd.cents.handle_token_event(TokenEvent::Mint {
             amount: onboarding_reward.0.try_into().unwrap(),
             details: MintEvent::NewUserSignup {
                 new_user_principal_id: user_principal,

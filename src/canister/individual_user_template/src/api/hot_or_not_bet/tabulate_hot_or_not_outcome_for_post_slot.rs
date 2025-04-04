@@ -3,18 +3,16 @@ use ic_cdk::api::canister_balance;
 use shared_utils::{
     canister_specific::individual_user_template::types::hot_or_not::{
         BetDirection, BetMakerInformedStatus, BetOutcomeForBetMaker, BetPayout, GlobalBetId,
-        GlobalRoomId, HotOrNotGame, HotOrNotGameV1, RoomBetPossibleOutcomes,
+        GlobalRoomId, HotOrNotGame, RoomBetPossibleOutcomes,
     },
-    common::{
-        types::known_principal::KnownPrincipalType,
-        utils::{
-            system_time::{self, get_current_system_time},
-            task::run_task_concurrently,
-        },
-    },
+    common::utils::{system_time::get_current_system_time, task::run_task_concurrently},
 };
 
-use crate::{util::cycles::request_cycles_from_subnet_orchestrator, CANISTER_DATA, PUMP_N_DUMP};
+use crate::{
+    data_model::cents_hot_or_not_game::{self, CentsHotOrNotGame},
+    util::cycles::request_cycles_from_subnet_orchestrator,
+    CANISTER_DATA, PUMP_N_DUMP,
+};
 
 async fn recharge_based_on_number_of_bets_placed(total_bets_placed: u64) {
     let cycles = 10_000_000_000 * total_bets_placed;
@@ -47,15 +45,11 @@ pub async fn tabulate_hot_or_not_outcome_for_post_slot(post_id: u64, slot_id: u8
 
     CANISTER_DATA.with_borrow_mut(|canister_data| {
         let current_timestamp = get_current_system_time();
-        let mut token = canister_data.my_token_balance.clone();
-        HotOrNotGame::tabulate_hot_or_not_outcome_for_post_slot(
-            canister_data,
+        canister_data.tabulate_hot_or_not_outcome_for_post_slot(
             post_id,
             slot_id,
-            &mut token,
             current_timestamp,
         );
-        canister_data.my_token_balance = token;
     });
 
     ic_cdk::println!("Computed outcome for post:{post_id} and slot:{slot_id}");
@@ -83,14 +77,16 @@ pub async fn tabulate_hot_or_not_outcome_for_post_slot_v1(post_id: u64, slot_id:
 
     recharge_based_on_number_of_bets_placed(total_bets_placed_in_the_slot).await;
 
-    CANISTER_DATA.with_borrow_mut(|canister_data| {
-        let current_timestamp = get_current_system_time();
-        PUMP_N_DUMP.with_borrow_mut(|pump_and_dump| {
-            HotOrNotGameV1::tabulate_hot_or_not_outcome_for_post_slot(
+    PUMP_N_DUMP.with_borrow_mut(|token_bet_game| {
+        CANISTER_DATA.with_borrow_mut(|canister_data| {
+            let current_timestamp = get_current_system_time();
+            let mut cents_hot_or_not_game = CentsHotOrNotGame {
                 canister_data,
+                token_bet_game,
+            };
+            cents_hot_or_not_game.tabulate_hot_or_not_outcome_for_post_slot(
                 post_id,
                 slot_id,
-                pump_and_dump,
                 current_timestamp,
             )
         })
@@ -249,8 +245,8 @@ pub async fn inform_participants_of_outcome_v1(post_id: u64, slot_id: u8) {
     let start_global_room_id = GlobalRoomId(post.id, slot_id, 1);
     let end_global_room_id = GlobalRoomId(post.id, slot_id + 1, 1);
 
-    let room_details = CANISTER_DATA.with_borrow(|canister_data| {
-        let room_details = canister_data
+    let room_details = PUMP_N_DUMP.with_borrow(|token_bet_game| {
+        let room_details = token_bet_game
             .hot_or_not_bet_details
             .room_details_map
             .range(start_global_room_id..end_global_room_id)
@@ -262,8 +258,8 @@ pub async fn inform_participants_of_outcome_v1(post_id: u64, slot_id: u8) {
     let inform_bet_participants_grouped_by_room_futures: Vec<_> = room_details
         .iter()
         .map(|(global_room_id, room_detail)| {
-            let bet_details = CANISTER_DATA.with_borrow(|canister_data| {
-                canister_data
+            let bet_details = PUMP_N_DUMP.with_borrow(|token_bet_game| {
+                token_bet_game
                     .hot_or_not_bet_details
                     .bet_details_map
                     .iter()
@@ -364,14 +360,14 @@ async fn receive_bet_winnings_when_distributed_v1(
         );
     }
 
-    CANISTER_DATA.with_borrow_mut(|canister_data| {
-        let bet_details_option = canister_data
+    PUMP_N_DUMP.with_borrow_mut(|token_bet_game| {
+        let bet_details_option = token_bet_game
             .hot_or_not_bet_details
             .bet_details_map
             .get(&global_bet_id);
         bet_details_option.map(|mut bet_detail| {
             bet_detail.bet_maker_informed_status = bet_maker_informed_status;
-            canister_data
+            token_bet_game
                 .hot_or_not_bet_details
                 .bet_details_map
                 .insert(global_bet_id, bet_detail);

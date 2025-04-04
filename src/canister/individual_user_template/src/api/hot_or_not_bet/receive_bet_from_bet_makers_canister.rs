@@ -1,17 +1,19 @@
 use ic_cdk_macros::update;
 
-use candid::{CandidType, Principal};
-use serde::{Deserialize, Serialize};
+use candid::Principal;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
-        arg::{BetMakerArg, PlaceBetArg},
+        arg::PlaceBetArg,
         error::BetOnCurrentlyViewingPostError,
-        hot_or_not::{BettingStatus, HotOrNotGame, HotOrNotGameV1},
+        hot_or_not::{BettingStatus, HotOrNotGame},
     },
-    common::utils::{permissions::is_caller_global_admin, system_time::get_current_system_time},
+    common::utils::system_time::get_current_system_time,
 };
 
-use crate::{util::cycles::notify_to_recharge_canister, CANISTER_DATA, PUMP_N_DUMP};
+use crate::{
+    data_model::cents_hot_or_not_game::CentsHotOrNotGame,
+    util::cycles::notify_to_recharge_canister, CANISTER_DATA, PUMP_N_DUMP,
+};
 
 #[deprecated(note = "use receive_bet_from_bet_makers_canister_v2")]
 #[update]
@@ -25,8 +27,7 @@ fn receive_bet_from_bet_makers_canister(
     let bet_maker_canister_id = ic_cdk::caller();
 
     CANISTER_DATA.with_borrow_mut(|canister_data| {
-        HotOrNotGame::receive_bet_from_bet_maker_canister(
-            canister_data,
+        canister_data.receive_bet_from_bet_maker_canister(
             bet_maker_principal_id,
             bet_maker_canister_id,
             &place_bet_arg,
@@ -45,14 +46,19 @@ fn receive_bet_from_bet_makers_canister_v1(
     let bet_maker_canister_id = ic_cdk::caller();
     let current_timestamp = get_current_system_time();
 
-    CANISTER_DATA.with_borrow_mut(|canister_data| {
-        HotOrNotGameV1::receive_bet_from_bet_maker_canister(
-            canister_data,
-            bet_maker_principal_id,
-            bet_maker_canister_id,
-            &place_bet_arg,
-            current_timestamp,
-        )
+    PUMP_N_DUMP.with_borrow_mut(|token_bet_game| {
+        CANISTER_DATA.with_borrow_mut(|canister_data| {
+            let mut cents_hot_or_not_game = CentsHotOrNotGame {
+                canister_data,
+                token_bet_game,
+            };
+            cents_hot_or_not_game.receive_bet_from_bet_maker_canister(
+                bet_maker_principal_id,
+                bet_maker_canister_id,
+                &place_bet_arg,
+                current_timestamp,
+            )
+        })
     })
 }
 

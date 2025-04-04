@@ -5,26 +5,16 @@ use ic_cdk::api::call::CallResult;
 use ic_cdk_macros::update;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
-        arg::{BetMakerArg, PlaceBetArg},
+        arg::PlaceBetArg,
         error::BetOnCurrentlyViewingPostError,
-        hot_or_not::{
-            BetOutcomeForBetMaker, BettingStatus, HotOrNotGame, HotOrNotGameV1, PlacedBetDetail,
-        },
-        pump_n_dump,
-        token::{self, TokenTransactions},
+        hot_or_not::{BettingStatus, HotOrNotGame},
     },
-    common::{
-        types::utility_token::token_event::{StakeEvent, TokenEvent},
-        utils::{
-            permissions::{is_caller_global_admin, is_caller_global_admin_v2},
-            system_time,
-        },
-    },
+    common::utils::{permissions::is_caller_global_admin, system_time},
 };
 
 use crate::{
-    data_model::pump_n_dump::PumpAndDumpGame, util::cycles::notify_to_recharge_canister,
-    CANISTER_DATA, PUMP_N_DUMP,
+    data_model::cents_hot_or_not_game::CentsHotOrNotGame,
+    util::cycles::notify_to_recharge_canister, CANISTER_DATA, PUMP_N_DUMP,
 };
 
 #[deprecated(note = "use bet_on_currently_viewing_post_v1")]
@@ -38,15 +28,8 @@ async fn bet_on_currently_viewing_post(
     let current_time = system_time::get_current_system_time_from_ic();
 
     CANISTER_DATA.with_borrow_mut(|canister_data| {
-        let mut my_token_balance = canister_data.my_token_balance.clone();
-        let result = HotOrNotGame::prepare_for_bet(
-            canister_data,
-            bet_maker_principal_id,
-            &place_bet_arg,
-            &mut my_token_balance,
-            current_time,
-        );
-        canister_data.my_token_balance = my_token_balance;
+        let result =
+            canister_data.prepare_for_bet(bet_maker_principal_id, &place_bet_arg, current_time);
 
         result
     })?;
@@ -55,16 +38,9 @@ async fn bet_on_currently_viewing_post(
         call_post_maker_canister_to_place_bet(bet_maker_principal_id, &place_bet_arg).await;
 
     CANISTER_DATA.with_borrow_mut(|canister_data| {
-        let mut my_token_balance = canister_data.my_token_balance.clone();
-        let result = HotOrNotGame::process_place_bet_status(
-            canister_data,
-            call_result,
-            &place_bet_arg,
-            &mut my_token_balance,
-            current_time,
-        );
+        let result =
+            canister_data.process_place_bet_status(call_result, &place_bet_arg, current_time);
 
-        canister_data.my_token_balance = my_token_balance;
         result
     })
 }
@@ -83,13 +59,16 @@ async fn bet_on_currently_viewing_post_v1(
     })?;
     let current_time = system_time::get_current_system_time_from_ic();
 
-    CANISTER_DATA.with_borrow_mut(|canister_data| {
-        PUMP_N_DUMP.with_borrow_mut(|pump_and_dump_game| {
-            HotOrNotGameV1::prepare_for_bet(
+    PUMP_N_DUMP.with_borrow_mut(|token_bet_game| {
+        CANISTER_DATA.with_borrow_mut(|canister_data| {
+            let mut cents_hot_or_not_game = CentsHotOrNotGame {
                 canister_data,
+                token_bet_game,
+            };
+
+            cents_hot_or_not_game.prepare_for_bet(
                 bet_maker_principal_id,
                 &place_bet_arg,
-                pump_and_dump_game,
                 current_time,
             )
         })
@@ -98,13 +77,16 @@ async fn bet_on_currently_viewing_post_v1(
     let call_result =
         call_post_maker_canister_to_place_bet_v1(&place_bet_arg, bet_maker_principal_id).await;
 
-    CANISTER_DATA.with_borrow_mut(|canister_data| {
-        PUMP_N_DUMP.with_borrow_mut(|pump_and_dump_game| {
-            HotOrNotGameV1::process_place_bet_status(
+    PUMP_N_DUMP.with_borrow_mut(|token_bet_game| {
+        CANISTER_DATA.with_borrow_mut(|canister_data| {
+            let mut cents_hot_or_not_game = CentsHotOrNotGame {
                 canister_data,
+                token_bet_game,
+            };
+
+            cents_hot_or_not_game.process_place_bet_status(
                 call_result,
                 &place_bet_arg,
-                pump_and_dump_game,
                 current_time,
             )
         })
@@ -139,7 +121,9 @@ async fn call_post_maker_canister_to_place_bet_v1(
 mod test {
     use std::time::SystemTime;
 
-    use shared_utils::canister_specific::individual_user_template::types::hot_or_not::BetDirection;
+    use shared_utils::canister_specific::individual_user_template::types::hot_or_not::{
+        BetDirection, BetOutcomeForBetMaker, PlacedBetDetail,
+    };
     use test_utils::setup::test_constants::{
         get_mock_user_alice_canister_id, get_mock_user_alice_principal_id,
         get_mock_user_bob_principal_id,
@@ -153,9 +137,7 @@ mod test {
     fn test_validate_incoming_bet() {
         let mut canister_data = CanisterData::default();
 
-        let result = HotOrNotGame::validate_incoming_bet(
-            &canister_data,
-            &canister_data.my_token_balance,
+        let result = canister_data.validate_incoming_bet(
             Principal::anonymous(),
             &PlaceBetArg {
                 post_canister_id: get_mock_user_alice_canister_id(),
@@ -169,9 +151,7 @@ mod test {
 
         canister_data.profile.principal_id = Some(get_mock_user_alice_principal_id());
 
-        let result = HotOrNotGame::validate_incoming_bet(
-            &canister_data,
-            &canister_data.my_token_balance,
+        let result = canister_data.validate_incoming_bet(
             get_mock_user_bob_principal_id(),
             &PlaceBetArg {
                 post_canister_id: get_mock_user_alice_canister_id(),
@@ -183,9 +163,7 @@ mod test {
 
         assert_eq!(result, Err(BetOnCurrentlyViewingPostError::Unauthorized));
 
-        let result = HotOrNotGame::validate_incoming_bet(
-            &canister_data,
-            &canister_data.my_token_balance,
+        let result = canister_data.validate_incoming_bet(
             get_mock_user_alice_principal_id(),
             &PlaceBetArg {
                 post_canister_id: get_mock_user_alice_canister_id(),
@@ -202,9 +180,7 @@ mod test {
 
         canister_data.my_token_balance.utility_token_balance = 1000;
 
-        let result = HotOrNotGame::validate_incoming_bet(
-            &canister_data,
-            &canister_data.my_token_balance,
+        let result = canister_data.validate_incoming_bet(
             get_mock_user_alice_principal_id(),
             &PlaceBetArg {
                 post_canister_id: get_mock_user_alice_canister_id(),
@@ -230,9 +206,7 @@ mod test {
             },
         );
 
-        let result = HotOrNotGame::validate_incoming_bet(
-            &canister_data,
-            &canister_data.my_token_balance,
+        let result = canister_data.validate_incoming_bet(
             get_mock_user_alice_principal_id(),
             &PlaceBetArg {
                 post_canister_id: get_mock_user_alice_canister_id(),

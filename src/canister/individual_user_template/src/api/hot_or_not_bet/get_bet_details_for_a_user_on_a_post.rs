@@ -1,10 +1,11 @@
 use candid::Principal;
 use ic_cdk_macros::query;
-use shared_utils::canister_specific::individual_user_template::types::hot_or_not::{
-    BetDetails, StablePrincipal,
+use shared_utils::canister_specific::individual_user_template::types::{
+    hot_or_not::{BetDetails, StablePrincipal},
+    token,
 };
 
-use crate::CANISTER_DATA;
+use crate::{CANISTER_DATA, PUMP_N_DUMP};
 
 #[deprecated(note = "use get_bet_details_for_a_user_on_a_post_v1")]
 #[query]
@@ -31,12 +32,12 @@ pub fn get_bet_details_for_a_user_on_a_post_v1(
     user_principal: Principal,
     post_id: u64,
 ) -> Result<BetDetails, String> {
-    CANISTER_DATA.with_borrow(|canister_data| {
-        let room_id = canister_data
+    PUMP_N_DUMP.with_borrow(|token_bet_game| {
+        let room_id = token_bet_game
             .hot_or_not_bet_details
             .bet_details_map
             .iter()
-            .find(|(global_bet_id, bet_details)| {
+            .find(|(global_bet_id, _bet_details)| {
                 global_bet_id.0 .0 == post_id
                     && global_bet_id.1.eq(&StablePrincipal(user_principal))
             })

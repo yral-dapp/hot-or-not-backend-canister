@@ -1,22 +1,15 @@
 use ic_cdk_macros::update;
 
 use shared_utils::{
-    canister_specific::individual_user_template::types::{
-        hot_or_not::{BetOutcomeForBetMaker, HotOrNotGame, HotOrNotGameV1},
-        token::TokenTransactions,
+    canister_specific::individual_user_template::types::hot_or_not::{
+        BetOutcomeForBetMaker, HotOrNotGame,
     },
-    common::{
-        types::{
-            app_primitive_type::PostId,
-            utility_token::token_event::{HotOrNotOutcomePayoutEvent, TokenEvent},
-        },
-        utils::system_time,
-    },
+    common::{types::app_primitive_type::PostId, utils::system_time},
 };
 
 use crate::{
-    util::cycles::{notify_to_recharge_canister, recharge_canister},
-    CANISTER_DATA, PUMP_N_DUMP,
+    data_model::cents_hot_or_not_game::CentsHotOrNotGame,
+    util::cycles::notify_to_recharge_canister, CANISTER_DATA, PUMP_N_DUMP,
 };
 
 #[update]
@@ -33,16 +26,12 @@ fn receive_bet_winnings_when_distributed(post_id: PostId, outcome: BetOutcomeFor
     );
 
     CANISTER_DATA.with_borrow_mut(|canister_data| {
-        let mut utility_token = canister_data.my_token_balance.clone();
-        HotOrNotGame::receive_earnings_for_the_bet(
-            canister_data,
+        canister_data.receive_earnings_for_the_bet(
             post_id,
             post_creator_canister_id,
             outcome,
-            &mut utility_token,
             current_time,
         );
-        canister_data.my_token_balance = utility_token;
     })
 }
 
@@ -60,13 +49,15 @@ fn receive_bet_winnings_when_distributed_v1(post_id: PostId, outcome: BetOutcome
     );
 
     CANISTER_DATA.with_borrow_mut(|canister_data| {
-        PUMP_N_DUMP.with_borrow_mut(|pump_and_dump| {
-            HotOrNotGameV1::receive_earnings_for_the_bet(
+        PUMP_N_DUMP.with_borrow_mut(|token_bet_game| {
+            let mut cents_hot_or_not_game = CentsHotOrNotGame {
                 canister_data,
+                token_bet_game,
+            };
+            cents_hot_or_not_game.receive_earnings_for_the_bet(
                 post_id,
                 post_creator_canister_id,
                 outcome,
-                pump_and_dump,
                 current_time,
             );
         })

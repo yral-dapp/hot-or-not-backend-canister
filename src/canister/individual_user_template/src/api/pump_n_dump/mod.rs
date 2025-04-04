@@ -41,11 +41,11 @@ pub async fn redeem_gdollr(amount: u128) -> Result<(), String> {
     })?;
 
     PUMP_N_DUMP.with_borrow_mut(|pd| {
-        if pd.withdrawable_balance() < amount {
+        if pd.cents.withdrawable_balance() < amount {
             return Err("Not enough balance".to_string());
         }
 
-        pd.handle_token_event(TokenEvent::Withdraw {
+        pd.cents.handle_token_event(TokenEvent::Withdraw {
             amount,
             event_type: WithdrawEvent::WithdrawRequest,
         });
@@ -63,7 +63,7 @@ pub async fn redeem_gdollr(amount: u128) -> Result<(), String> {
     match res {
         Ok((Err(e),)) | Err((_, e)) => {
             PUMP_N_DUMP.with_borrow_mut(|pd| {
-                pd.handle_token_event(TokenEvent::Withdraw {
+                pd.cents.handle_token_event(TokenEvent::Withdraw {
                     amount,
                     event_type: WithdrawEvent::WithdrawRequestFailed,
                 })
@@ -83,12 +83,14 @@ pub fn reconcile_user_state(games: Vec<PumpNDumpStateDiff>) -> Result<(), String
             let token_events = game.get_token_events_from_pump_dump_state_diff();
 
             for token_event in token_events {
-                pump_and_dump.handle_token_event(token_event);
+                pump_and_dump.cents.handle_token_event(token_event);
             }
 
             match game {
                 PumpNDumpStateDiff::Participant(info) => {
                     pump_and_dump.games.push(info);
+                    pump_and_dump.total_dumps += info.dumps;
+                    pump_and_dump.total_pumps += info.pumps;
                 }
                 _ => {}
             }
@@ -159,7 +161,7 @@ pub async fn stake_dollr_for_gdollr(amount: u128) -> Result<(), String> {
     res.0.map_err(|e| format!("{e:?}"))?;
 
     PUMP_N_DUMP.with_borrow_mut(|pd| {
-        pd.handle_token_event(TokenEvent::Receive {
+        pd.cents.handle_token_event(TokenEvent::Receive {
             amount: amount as u64,
             from_account: caller,
             timestamp: get_current_system_time(),
@@ -209,13 +211,13 @@ pub fn played_game_info_with_pagination_cursor(
 #[query]
 pub fn pd_balance_info() -> BalanceInfo {
     PUMP_N_DUMP.with_borrow(|pd| BalanceInfo {
-        net_airdrop_reward: pd.get_net_airdrop(),
-        balance: (pd.get_current_token_balance()).into(),
-        withdrawable: pd.withdrawable_balance(),
+        net_airdrop_reward: pd.cents.get_net_airdrop(),
+        balance: (pd.cents.get_current_token_balance()).into(),
+        withdrawable: pd.cents.withdrawable_balance(),
     })
 }
 
 #[query]
 pub fn net_earnings() -> Nat {
-    PUMP_N_DUMP.with_borrow(|pd| pd.get_net_earnings())
+    PUMP_N_DUMP.with_borrow(|pd| pd.cents.get_net_earnings())
 }
