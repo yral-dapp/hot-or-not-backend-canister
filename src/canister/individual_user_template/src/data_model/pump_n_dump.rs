@@ -164,49 +164,6 @@ impl TokenBetGame {
     }
 }
 
-impl TokenBetGame {
-    pub fn register_hot_or_not_bet_for_post_v1(
-        &mut self,
-        post_id: u64,
-        bet_maker_principal_id: Principal,
-        bet_maker_canister_id: Principal,
-        place_bet_arg: &PlaceBetArg,
-        current_time_when_request_being_made: &SystemTime,
-    ) -> Result<BettingStatus, BetOnCurrentlyViewingPostError> {
-        CANISTER_DATA.with_borrow_mut(|canister_data| {
-            let post =
-                CanisterData::get_post_mut(&mut canister_data.all_created_posts, post_id).unwrap();
-            let PlaceBetArg {
-                bet_amount,
-                bet_direction,
-                ..
-            } = place_bet_arg;
-            let betting_status = post.place_hot_or_not_bet_v1(
-                &bet_maker_principal_id,
-                &bet_maker_canister_id,
-                *bet_amount,
-                bet_direction,
-                current_time_when_request_being_made,
-                &mut self.hot_or_not_bet_details.room_details_map,
-                &mut self.hot_or_not_bet_details.bet_details_map,
-                &mut self.hot_or_not_bet_details.post_principal_map,
-                &mut self.hot_or_not_bet_details.slot_details_map,
-            )?;
-
-            match *bet_direction {
-                BetDirection::Hot => {
-                    canister_data.profile.profile_stats.hot_bets_received += 1;
-                }
-                BetDirection::Not => {
-                    canister_data.profile.profile_stats.not_bets_received += 1;
-                }
-            }
-
-            Ok(betting_status)
-        })
-    }
-}
-
 pub fn _default_room_details_v2(
 ) -> ic_stable_structures::btreemap::BTreeMap<GlobalRoomId, RoomDetailsV1, Memory> {
     ic_stable_structures::btreemap::BTreeMap::init(get_room_details_memory_v2())

@@ -6,7 +6,9 @@ use shared_utils::{
     canister_specific::individual_user_template::types::{
         arg::PlaceBetArg,
         error::BetOnCurrentlyViewingPostError,
-        hot_or_not::{BetOutcomeForBetMaker, BettingStatus, HotOrNotGame, PlacedBetDetail},
+        hot_or_not::{
+            BetDirection, BetOutcomeForBetMaker, BettingStatus, HotOrNotGame, PlacedBetDetail,
+        },
         token::TokenTransactions,
     },
     common::{
@@ -17,9 +19,53 @@ use shared_utils::{
 
 use super::{pump_n_dump::TokenBetGame, CanisterData};
 
-pub struct CentsHotOrNotGame<'a> {
+pub(crate) struct CentsHotOrNotGame<'a> {
     pub token_bet_game: &'a mut TokenBetGame,
     pub canister_data: &'a mut CanisterData,
+}
+
+impl<'a> CentsHotOrNotGame<'a> {
+    pub fn register_hot_or_not_bet_for_post_v1(
+        &mut self,
+        post_id: u64,
+        bet_maker_principal_id: Principal,
+        bet_maker_canister_id: Principal,
+        place_bet_arg: &PlaceBetArg,
+        current_time_when_request_being_made: &SystemTime,
+    ) -> Result<BettingStatus, BetOnCurrentlyViewingPostError> {
+        let post =
+            CanisterData::get_post_mut(&mut self.canister_data.all_created_posts, post_id).unwrap();
+        let PlaceBetArg {
+            bet_amount,
+            bet_direction,
+            ..
+        } = place_bet_arg;
+        let betting_status = post.place_hot_or_not_bet_v1(
+            &bet_maker_principal_id,
+            &bet_maker_canister_id,
+            *bet_amount,
+            bet_direction,
+            current_time_when_request_being_made,
+            &mut self.token_bet_game.hot_or_not_bet_details.room_details_map,
+            &mut self.token_bet_game.hot_or_not_bet_details.bet_details_map,
+            &mut self
+                .token_bet_game
+                .hot_or_not_bet_details
+                .post_principal_map,
+            &mut self.token_bet_game.hot_or_not_bet_details.slot_details_map,
+        )?;
+
+        match *bet_direction {
+            BetDirection::Hot => {
+                self.canister_data.profile.profile_stats.hot_bets_received += 1;
+            }
+            BetDirection::Not => {
+                self.canister_data.profile.profile_stats.not_bets_received += 1;
+            }
+        }
+
+        Ok(betting_status)
+    }
 }
 
 impl<'a> HotOrNotGame for CentsHotOrNotGame<'a> {
@@ -160,7 +206,7 @@ impl<'a> HotOrNotGame for CentsHotOrNotGame<'a> {
         current_timestamp: SystemTime,
     ) -> Result<BettingStatus, BetOnCurrentlyViewingPostError> {
         let PlaceBetArg { post_id, .. } = place_bet_arg;
-        self.token_bet_game.register_hot_or_not_bet_for_post_v1(
+        self.register_hot_or_not_bet_for_post_v1(
             *post_id,
             bet_maker_principal_id,
             bet_maker_canister_id,
