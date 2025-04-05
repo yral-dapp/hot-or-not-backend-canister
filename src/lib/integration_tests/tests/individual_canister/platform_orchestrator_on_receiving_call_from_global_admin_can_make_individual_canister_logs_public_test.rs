@@ -21,7 +21,10 @@ pub fn platform_orchestrator_on_receiving_call_from_global_admin_can_make_indivi
         .copied()
         .unwrap();
 
-    let super_admin = get_global_super_admin_principal_id();
+    let super_admin = known_principal_map
+        .get(&KnownPrincipalType::UserIdGlobalSuperAdmin)
+        .copied()
+        .unwrap();
 
     let charlie_global_admin_principal = get_mock_user_charlie_canister_id();
 

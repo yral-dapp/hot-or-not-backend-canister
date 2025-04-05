@@ -40,7 +40,10 @@ impl Default for PumpNDumpHarness {
         let platform_canister_id =
             known_principals[&KnownPrincipalType::CanisterIdPlatformOrchestrator];
 
-        let super_admin = get_global_super_admin_principal_id();
+        let super_admin = known_principals
+            .get(&KnownPrincipalType::UserIdGlobalSuperAdmin)
+            .copied()
+            .unwrap();
         let charlie_global_admin = get_mock_user_charlie_principal_id();
 
         execute_update_no_res(
