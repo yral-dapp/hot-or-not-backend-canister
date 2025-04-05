@@ -204,14 +204,6 @@ mod test {
                 utility_token_transaction_history: utility_history,
                 lifetime_earnings: 1200,
             },
-            posts_index_sorted_by_home_feed_score: PostScoreIndexForSnapshot {
-                items_sorted_by_score: items_sorted_by_score.clone(),
-                item_presence_index: item_prescence_index.clone(),
-            },
-            posts_index_sorted_by_hot_or_not_feed_score: PostScoreIndexForSnapshot {
-                items_sorted_by_score: items_sorted_by_score.clone(),
-                item_presence_index: item_prescence_index.clone(),
-            },
             principals_i_follow: principal_list.clone(),
             principals_that_follow_me: principal_list,
             profile: UserProfile {

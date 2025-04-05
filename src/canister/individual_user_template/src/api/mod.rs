@@ -1,5 +1,6 @@
 pub mod canister_lifecycle;
 pub mod canister_management;
+pub mod cdao;
 pub mod cycle_management;
 pub mod follow;
 pub mod hot_or_not_bet;
@@ -12,6 +13,5 @@ pub mod profile;
 pub mod snapshot;
 pub mod token;
 pub mod well_known_principal;
-pub mod cdao;
-pub mod device_id_management;
+// pub mod device_id_management;
 pub mod pump_n_dump;
