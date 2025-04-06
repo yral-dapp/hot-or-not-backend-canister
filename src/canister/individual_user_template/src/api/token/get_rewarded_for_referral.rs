@@ -65,8 +65,8 @@ fn get_rewarded_for_referral(referrer: Principal, referree: Principal) {
         pump_and_dump.cents.handle_token_event(TokenEvent::Mint {
             amount: referral_reward.0.try_into().unwrap(),
             details: MintEvent::Referral {
-                referee_user_principal_id: referrer,
-                referrer_user_principal_id: referree,
+                referrer_user_principal_id: referrer,
+                referee_user_principal_id: referree,
             },
             timestamp: current_time,
         });
