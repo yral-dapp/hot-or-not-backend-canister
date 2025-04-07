@@ -15,7 +15,9 @@ use shared_utils::{
 
 use crate::{data_model::CanisterData, CANISTER_DATA};
 
-use super::tabulate_hot_or_not_outcome_for_post_slot::tabulate_hot_or_not_outcome_for_post_slot;
+use super::tabulate_hot_or_not_outcome_for_post_slot::{
+    tabulate_hot_or_not_outcome_for_post_slot, tabulate_hot_or_not_outcome_for_post_slot_v1,
+};
 
 pub fn reenqueue_timers_for_pending_bet_outcomes() {
     let current_time = system_time::get_current_system_time_from_ic();
@@ -48,12 +50,16 @@ fn reenqueue_timers_for_these_posts(
                         .unwrap_or_default(),
                     move || {
                         ic_cdk::spawn(tabulate_hot_or_not_outcome_for_post_slot(post_id, slot_id));
+                        ic_cdk::spawn(tabulate_hot_or_not_outcome_for_post_slot_v1(
+                            post_id, slot_id,
+                        ));
                     },
                 );
             })
     }
 }
 
+#[deprecated]
 #[update(guard = "is_caller_controller_or_global_admin")]
 async fn once_reenqueue_timers_for_pending_bet_outcomes() -> Result<Vec<(u64, u8)>, String> {
     let current_time = system_time::get_current_system_time_from_ic();
@@ -72,6 +78,7 @@ async fn once_reenqueue_timers_for_pending_bet_outcomes() -> Result<Vec<(u64, u8
     Ok(post_w_slot)
 }
 
+#[deprecated]
 fn once_reenqueue_timers_for_these_posts(post_slot_ids: Vec<(u64, u8)>) {
     for (post_id, slot_id) in post_slot_ids {
         let slot_number = slot_id;
@@ -89,6 +96,7 @@ fn once_reenqueue_timers_for_these_posts(post_slot_ids: Vec<(u64, u8)>) {
     }
 }
 
+#[deprecated]
 fn once_get_posts_that_have_pending_outcomes(
     canister_data: &CanisterData,
     current_time: &SystemTime,
