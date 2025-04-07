@@ -451,7 +451,9 @@ impl CanisterData {
     pub fn get_posts_that_have_pending_outcomes(&self) -> Vec<u64> {
         self.all_created_posts
             .iter()
-            .filter(|(_post_id, post)| !post.slots_left_to_be_computed.is_empty())
+            .filter(|(_post_id, post)| {
+                !post.slots_left_to_be_computed.is_empty() && post.status != PostStatus::Deleted
+            })
             .map(|(post_id, _post)| *post_id)
             .collect()
     }
