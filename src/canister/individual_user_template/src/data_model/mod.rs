@@ -624,8 +624,6 @@ impl Default for CanisterData {
             follow_data: FollowData::default(),
             known_principal_ids: KnownPrincipalMap::default(),
             my_token_balance: TokenBalance::default(),
-            // // posts_index_sorted_by_home_feed_score: PostScoreIndex::default(),
-            // posts_index_sorted_by_hot_or_not_feed_score: PostScoreIndex::default(),
             principals_i_follow: BTreeSet::new(),
             principals_that_follow_me: BTreeSet::new(),
             profile: UserProfile::default(),
@@ -637,11 +635,8 @@ impl Default for CanisterData {
             app_storage: AppStorage::default(),
             watch_history: _default_watch_history(),
             success_history: _default_success_history_v1(),
-            // device_identities: Vec::new(),
-            // ml_feed_cache: Vec::new(),
             cdao_canisters: Vec::new(),
             token_roots: _default_token_list(),
-            // ml_data: MLData::default(),
             empty_canisters: AllotedEmptyCanister::default(),
         }
     }
