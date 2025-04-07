@@ -1,24 +1,23 @@
+use std::cell::RefCell;
+
 use candid::Principal;
+use ic_cdk::api::call::CallResult;
 use ic_cdk_macros::update;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
         arg::PlaceBetArg,
         error::BetOnCurrentlyViewingPostError,
-        hot_or_not::{BetOutcomeForBetMaker, BettingStatus, PlacedBetDetail},
+        hot_or_not::{BettingStatus, HotOrNotGame},
     },
-    common::{
-        types::utility_token::token_event::{StakeEvent, TokenEvent},
-        utils::system_time,
-    },
+    common::utils::{permissions::is_caller_global_admin, system_time},
 };
 
 use crate::{
-    api::canister_management::update_last_access_time::update_last_canister_functionality_access_time,
-    data_model::CanisterData,
-    util::cycles::{notify_to_recharge_canister, recharge_canister},
-    CANISTER_DATA,
+    data_model::cents_hot_or_not_game::CentsHotOrNotGame,
+    util::cycles::notify_to_recharge_canister, CANISTER_DATA, PUMP_N_DUMP,
 };
 
+#[deprecated(note = "use bet_on_currently_viewing_post_v1")]
 #[update]
 async fn bet_on_currently_viewing_post(
     place_bet_arg: PlaceBetArg,
@@ -28,145 +27,109 @@ async fn bet_on_currently_viewing_post(
     let bet_maker_principal_id = ic_cdk::caller();
     let current_time = system_time::get_current_system_time_from_ic();
 
-    CANISTER_DATA.with(|canister_data_ref_cell| {
-        validate_incoming_bet(
-            &canister_data_ref_cell.borrow(),
-            &bet_maker_principal_id,
-            &place_bet_arg,
-        )
+    CANISTER_DATA.with_borrow_mut(|canister_data| {
+        let result =
+            canister_data.prepare_for_bet(bet_maker_principal_id, &place_bet_arg, current_time);
+
+        result
     })?;
 
-    update_last_canister_functionality_access_time();
-    update_token_balance_before_bet_happens(place_bet_arg.bet_amount);
+    let call_result =
+        call_post_maker_canister_to_place_bet(bet_maker_principal_id, &place_bet_arg).await;
 
-    let response = ic_cdk::call::<_, (Result<BettingStatus, BetOnCurrentlyViewingPostError>,)>(
+    CANISTER_DATA.with_borrow_mut(|canister_data| {
+        let result =
+            canister_data.process_place_bet_status(call_result, &place_bet_arg, current_time);
+
+        result
+    })
+}
+
+#[update(guard = "is_caller_global_admin")]
+async fn bet_on_currently_viewing_post_v1(
+    place_bet_arg: PlaceBetArg,
+) -> Result<BettingStatus, BetOnCurrentlyViewingPostError> {
+    notify_to_recharge_canister();
+
+    let bet_maker_principal_id = CANISTER_DATA.with_borrow_mut(|canister_data| {
+        canister_data
+            .profile
+            .principal_id
+            .ok_or(BetOnCurrentlyViewingPostError::UserPrincipalNotSet)
+    })?;
+    let current_time = system_time::get_current_system_time_from_ic();
+
+    PUMP_N_DUMP.with_borrow_mut(|token_bet_game| {
+        CANISTER_DATA.with_borrow_mut(|canister_data| {
+            let mut cents_hot_or_not_game = CentsHotOrNotGame {
+                canister_data,
+                token_bet_game,
+            };
+
+            cents_hot_or_not_game.prepare_for_bet(
+                bet_maker_principal_id,
+                &place_bet_arg,
+                current_time,
+            )
+        })
+    })?;
+
+    let call_result =
+        call_post_maker_canister_to_place_bet_v1(&place_bet_arg, bet_maker_principal_id).await;
+
+    PUMP_N_DUMP.with_borrow_mut(|token_bet_game| {
+        CANISTER_DATA.with_borrow_mut(|canister_data| {
+            let mut cents_hot_or_not_game = CentsHotOrNotGame {
+                canister_data,
+                token_bet_game,
+            };
+
+            cents_hot_or_not_game.process_place_bet_status(
+                call_result,
+                &place_bet_arg,
+                current_time,
+            )
+        })
+    })
+}
+
+#[deprecated(note = "use call_post_maker_canister_to_place_bet_v1")]
+async fn call_post_maker_canister_to_place_bet(
+    bet_maker_principal: Principal,
+    place_bet_arg: &PlaceBetArg,
+) -> CallResult<(Result<BettingStatus, BetOnCurrentlyViewingPostError>,)> {
+    ic_cdk::call::<_, (Result<BettingStatus, BetOnCurrentlyViewingPostError>,)>(
         place_bet_arg.post_canister_id,
         "receive_bet_from_bet_makers_canister",
-        (
-            place_bet_arg.clone(),
-            CANISTER_DATA.with(|canister_data_ref_cell| {
-                canister_data_ref_cell
-                    .borrow()
-                    .profile
-                    .principal_id
-                    .unwrap()
-            }),
-        ),
+        (place_bet_arg.clone(), bet_maker_principal),
     )
     .await
-    .map_err(|_| {
-        update_token_balance_after_bet_placement_fails(place_bet_arg.bet_amount);
-        BetOnCurrentlyViewingPostError::PostCreatorCanisterCallFailed
-    })?
-    .0?;
-
-    match response {
-        BettingStatus::BettingClosed => {
-            update_token_balance_after_bet_placement_fails(place_bet_arg.bet_amount);
-            return Err(BetOnCurrentlyViewingPostError::BettingClosed);
-        }
-        BettingStatus::BettingOpen {
-            ongoing_slot,
-            ongoing_room,
-            ..
-        } => {
-            CANISTER_DATA.with(|canister_data_ref_cell| {
-                let canister_data = &mut canister_data_ref_cell.borrow_mut();
-
-                let my_token_balance = &mut canister_data.my_token_balance;
-                my_token_balance.handle_token_event(TokenEvent::Stake {
-                    amount: place_bet_arg.bet_amount,
-                    details: StakeEvent::BetOnHotOrNotPost {
-                        post_canister_id: place_bet_arg.post_canister_id,
-                        post_id: place_bet_arg.post_id,
-                        bet_amount: place_bet_arg.bet_amount,
-                        bet_direction: place_bet_arg.bet_direction.clone(),
-                    },
-                    timestamp: current_time,
-                });
-
-                let all_hot_or_not_bets_placed = &mut canister_data.all_hot_or_not_bets_placed;
-                all_hot_or_not_bets_placed.insert(
-                    (place_bet_arg.post_canister_id, place_bet_arg.post_id),
-                    PlacedBetDetail {
-                        canister_id: place_bet_arg.post_canister_id,
-                        post_id: place_bet_arg.post_id,
-                        slot_id: ongoing_slot,
-                        room_id: ongoing_room,
-                        bet_direction: place_bet_arg.bet_direction,
-                        bet_placed_at: current_time,
-                        amount_bet: place_bet_arg.bet_amount,
-                        outcome_received: BetOutcomeForBetMaker::default(),
-                    },
-                );
-            });
-        }
-    }
-
-    Ok(response)
 }
 
-// this #[update] is for local testing only see: src/lib/integration_tests/tests/upgrade/excessive_tokens_test.rs
-// #[update]
-pub fn update_token_balance_before_bet_happens(bet_amount: u64) {
-    CANISTER_DATA.with_borrow_mut(|canister_data| {
-        canister_data
-            .my_token_balance
-            .adjust_balance_pre_bet(bet_amount);
-    });
-}
-
-fn update_token_balance_after_bet_placement_fails(bet_amount: u64) {
-    CANISTER_DATA.with_borrow_mut(|canister_data| {
-        canister_data
-            .my_token_balance
-            .adjust_balance_for_failed_bet_placement(bet_amount);
-    });
-}
-
-fn validate_incoming_bet(
-    canister_data: &CanisterData,
-    bet_maker_principal_id: &Principal,
+async fn call_post_maker_canister_to_place_bet_v1(
     place_bet_arg: &PlaceBetArg,
-) -> Result<(), BetOnCurrentlyViewingPostError> {
-    if *bet_maker_principal_id == Principal::anonymous() {
-        return Err(BetOnCurrentlyViewingPostError::UserNotLoggedIn);
-    }
-
-    let profile_owner = canister_data
-        .profile
-        .principal_id
-        .ok_or(BetOnCurrentlyViewingPostError::UserPrincipalNotSet)?;
-
-    if *bet_maker_principal_id != profile_owner {
-        return Err(BetOnCurrentlyViewingPostError::Unauthorized);
-    }
-
-    let utlility_token_balance = canister_data.my_token_balance.get_utility_token_balance();
-
-    if utlility_token_balance < place_bet_arg.bet_amount {
-        return Err(BetOnCurrentlyViewingPostError::InsufficientBalance);
-    }
-
-    if canister_data
-        .all_hot_or_not_bets_placed
-        .contains_key(&(place_bet_arg.post_canister_id, place_bet_arg.post_id))
-    {
-        return Err(BetOnCurrentlyViewingPostError::UserAlreadyParticipatedInThisPost);
-    }
-
-    Ok(())
+    bet_maker_principal: Principal,
+) -> CallResult<(Result<BettingStatus, BetOnCurrentlyViewingPostError>,)> {
+    ic_cdk::call::<_, (Result<BettingStatus, BetOnCurrentlyViewingPostError>,)>(
+        place_bet_arg.post_canister_id,
+        "receive_bet_from_bet_makers_canister_v1",
+        (place_bet_arg.clone(), bet_maker_principal),
+    )
+    .await
 }
-
 #[cfg(test)]
 mod test {
     use std::time::SystemTime;
 
-    use shared_utils::canister_specific::individual_user_template::types::hot_or_not::BetDirection;
+    use shared_utils::canister_specific::individual_user_template::types::hot_or_not::{
+        BetDirection, BetOutcomeForBetMaker, PlacedBetDetail,
+    };
     use test_utils::setup::test_constants::{
         get_mock_user_alice_canister_id, get_mock_user_alice_principal_id,
         get_mock_user_bob_principal_id,
     };
+
+    use crate::CanisterData;
 
     use super::*;
 
@@ -174,9 +137,8 @@ mod test {
     fn test_validate_incoming_bet() {
         let mut canister_data = CanisterData::default();
 
-        let result = validate_incoming_bet(
-            &canister_data,
-            &Principal::anonymous(),
+        let result = canister_data.validate_incoming_bet(
+            Principal::anonymous(),
             &PlaceBetArg {
                 post_canister_id: get_mock_user_alice_canister_id(),
                 post_id: 0,
@@ -189,9 +151,8 @@ mod test {
 
         canister_data.profile.principal_id = Some(get_mock_user_alice_principal_id());
 
-        let result = validate_incoming_bet(
-            &canister_data,
-            &get_mock_user_bob_principal_id(),
+        let result = canister_data.validate_incoming_bet(
+            get_mock_user_bob_principal_id(),
             &PlaceBetArg {
                 post_canister_id: get_mock_user_alice_canister_id(),
                 post_id: 0,
@@ -202,9 +163,8 @@ mod test {
 
         assert_eq!(result, Err(BetOnCurrentlyViewingPostError::Unauthorized));
 
-        let result = validate_incoming_bet(
-            &canister_data,
-            &get_mock_user_alice_principal_id(),
+        let result = canister_data.validate_incoming_bet(
+            get_mock_user_alice_principal_id(),
             &PlaceBetArg {
                 post_canister_id: get_mock_user_alice_canister_id(),
                 post_id: 0,
@@ -220,9 +180,8 @@ mod test {
 
         canister_data.my_token_balance.utility_token_balance = 1000;
 
-        let result = validate_incoming_bet(
-            &canister_data,
-            &get_mock_user_alice_principal_id(),
+        let result = canister_data.validate_incoming_bet(
+            get_mock_user_alice_principal_id(),
             &PlaceBetArg {
                 post_canister_id: get_mock_user_alice_canister_id(),
                 post_id: 0,
@@ -247,9 +206,8 @@ mod test {
             },
         );
 
-        let result = validate_incoming_bet(
-            &canister_data,
-            &get_mock_user_alice_principal_id(),
+        let result = canister_data.validate_incoming_bet(
+            get_mock_user_alice_principal_id(),
             &PlaceBetArg {
                 post_canister_id: get_mock_user_alice_canister_id(),
                 post_id: 0,

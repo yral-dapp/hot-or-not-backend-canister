@@ -9,14 +9,14 @@ use shared_utils::{
 use crate::{
     api::{
         canister_management::update_last_access_time::update_last_canister_functionality_access_time,
-        hot_or_not_bet::tabulate_hot_or_not_outcome_for_post_slot::tabulate_hot_or_not_outcome_for_post_slot,
+        hot_or_not_bet::tabulate_hot_or_not_outcome_for_post_slot::{
+            tabulate_hot_or_not_outcome_for_post_slot, tabulate_hot_or_not_outcome_for_post_slot_v1,
+        },
     },
     data_model::CanisterData,
-    util::cycles::{notify_to_recharge_canister, recharge_canister},
+    util::cycles::notify_to_recharge_canister,
     CANISTER_DATA,
 };
-
-use super::update_scores_and_share_with_post_cache_if_difference_beyond_threshold::update_scores_and_share_with_post_cache_if_difference_beyond_threshold;
 
 /// #### Access Control
 /// Only the user whose profile details are stored in this canister can create a post.
@@ -37,17 +37,14 @@ fn add_post_v2(post_details: PostDetailsFromFrontend) -> Result<u64, String> {
 
     update_last_canister_functionality_access_time();
 
-    let response = CANISTER_DATA.with(|canister_data_ref_cell| {
-        add_post_to_memory(
-            &mut canister_data_ref_cell.borrow_mut(),
+    let response = CANISTER_DATA.with_borrow_mut(|canister_data| {
+        canister_data.add_post_to_memory(
             &post_details,
             &system_time::get_current_system_time_from_ic(),
         )
     });
 
     let post_id = response;
-
-    update_scores_and_share_with_post_cache_if_difference_beyond_threshold(&post_id);
 
     (1..=48).for_each(|slot_number: u8| {
         ic_cdk_timers::set_timer(
@@ -56,28 +53,14 @@ fn add_post_v2(post_details: PostDetailsFromFrontend) -> Result<u64, String> {
                 ic_cdk::spawn(tabulate_hot_or_not_outcome_for_post_slot(
                     post_id,
                     slot_number,
-                ))
+                ));
+                ic_cdk::spawn(tabulate_hot_or_not_outcome_for_post_slot_v1(
+                    post_id,
+                    slot_number,
+                ));
             },
         );
     });
 
     Ok(post_id)
-}
-
-pub fn add_post_to_memory(
-    canister_data: &mut CanisterData,
-    post_details: &PostDetailsFromFrontend,
-    current_system_time: &SystemTime,
-) -> u64 {
-    let new_post = Post::new(
-        canister_data.all_created_posts.len() as u64,
-        post_details,
-        current_system_time,
-    );
-    let new_post_id = new_post.id;
-    canister_data
-        .all_created_posts
-        .insert(new_post.id, new_post);
-
-    new_post_id
 }

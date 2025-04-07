@@ -132,32 +132,35 @@ pub struct PostScoreIndexForSnapshot {
 impl From<&CanisterData> for CanisterDataForSnapshot {
     fn from(canister_data: &CanisterData) -> Self {
         let mut all_created_posts: BTreeMap<u64, PostForSnapshot> = BTreeMap::new();
-        canister_data.all_created_posts.iter().for_each(|(k, v)| {
-            let hot_or_not_details = v.hot_or_not_details.clone();
-            let hot_or_not_details_snapshot =
-                hot_or_not_details.map(|hot_or_not_details| HotOrNotDetailsForSnapshot {
-                    hot_or_not_feed_score: hot_or_not_details.hot_or_not_feed_score,
-                    aggregate_stats: hot_or_not_details.aggregate_stats.clone(),
-                });
+        canister_data
+            .get_all_posts_cloned()
+            .into_iter()
+            .for_each(|(k, v)| {
+                let hot_or_not_details = v.hot_or_not_details.clone();
+                let hot_or_not_details_snapshot =
+                    hot_or_not_details.map(|hot_or_not_details| HotOrNotDetailsForSnapshot {
+                        hot_or_not_feed_score: hot_or_not_details.hot_or_not_feed_score,
+                        aggregate_stats: hot_or_not_details.aggregate_stats.clone(),
+                    });
 
-            let post_details = PostForSnapshot {
-                id: v.id,
-                description: v.description.clone(),
-                hashtags: v.hashtags.clone(),
-                video_uid: v.video_uid.clone(),
-                status: v.status,
-                created_at: v.created_at,
-                likes: v.likes.clone(),
-                share_count: v.share_count,
-                view_stats: v.view_stats.clone(),
-                home_feed_score: v.home_feed_score.clone(),
-                hot_or_not_details: hot_or_not_details_snapshot,
-                is_nsfw: v.is_nsfw,
-                slots_left_to_be_computed: v.slots_left_to_be_computed.clone(),
-            };
+                let post_details = PostForSnapshot {
+                    id: v.id,
+                    description: v.description.clone(),
+                    hashtags: v.hashtags.clone(),
+                    video_uid: v.video_uid.clone(),
+                    status: v.status,
+                    created_at: v.created_at,
+                    likes: v.likes.clone(),
+                    share_count: v.share_count,
+                    view_stats: v.view_stats.clone(),
+                    home_feed_score: v.home_feed_score.clone(),
+                    hot_or_not_details: hot_or_not_details_snapshot,
+                    is_nsfw: v.is_nsfw,
+                    slots_left_to_be_computed: v.slots_left_to_be_computed.clone(),
+                };
 
-            all_created_posts.insert(k.clone(), post_details);
-        });
+                all_created_posts.insert(k, post_details);
+            });
 
         let mut room_details_map: BTreeMap<GlobalRoomId, RoomDetailsV1> = BTreeMap::new();
         canister_data.room_details_map.iter().for_each(|(k, v)| {
@@ -248,121 +251,164 @@ impl From<&CanisterData> for CanisterDataForSnapshot {
 }
 
 impl From<CanisterDataForSnapshot> for CanisterData {
-    fn from(canister_data: CanisterDataForSnapshot) -> Self {
+    fn from(canister_data_for_snapshot: CanisterDataForSnapshot) -> Self {
         let mut all_created_posts: BTreeMap<u64, Post> = BTreeMap::new();
-        canister_data.all_created_posts.iter().for_each(|(k, v)| {
-            let hot_or_not_details_snapshot = v.hot_or_not_details.clone();
-            let hot_or_not_details =
-                hot_or_not_details_snapshot.map(|hot_or_not_details_snapshot| HotOrNotDetails {
-                    hot_or_not_feed_score: hot_or_not_details_snapshot.hot_or_not_feed_score,
-                    aggregate_stats: hot_or_not_details_snapshot.aggregate_stats.clone(),
-                    slot_history: BTreeMap::new(),
-                });
+        canister_data_for_snapshot
+            .all_created_posts
+            .iter()
+            .for_each(|(k, v)| {
+                let hot_or_not_details_snapshot = v.hot_or_not_details.clone();
+                let hot_or_not_details =
+                    hot_or_not_details_snapshot.map(|hot_or_not_details_snapshot| {
+                        HotOrNotDetails {
+                            hot_or_not_feed_score: hot_or_not_details_snapshot
+                                .hot_or_not_feed_score,
+                            aggregate_stats: hot_or_not_details_snapshot.aggregate_stats.clone(),
+                            slot_history: BTreeMap::new(),
+                        }
+                    });
 
-            let post_details = Post {
-                id: v.id,
-                description: v.description.clone(),
-                hashtags: v.hashtags.clone(),
-                video_uid: v.video_uid.clone(),
-                status: v.status,
-                created_at: v.created_at,
-                likes: v.likes.clone(),
-                share_count: v.share_count,
-                view_stats: v.view_stats.clone(),
-                home_feed_score: v.home_feed_score.clone(),
-                hot_or_not_details: hot_or_not_details,
-                is_nsfw: v.is_nsfw,
-                slots_left_to_be_computed: v.slots_left_to_be_computed.clone(),
-            };
+                let post_details = Post {
+                    id: v.id,
+                    description: v.description.clone(),
+                    hashtags: v.hashtags.clone(),
+                    video_uid: v.video_uid.clone(),
+                    status: v.status,
+                    created_at: v.created_at,
+                    likes: v.likes.clone(),
+                    share_count: v.share_count,
+                    view_stats: v.view_stats.clone(),
+                    home_feed_score: v.home_feed_score.clone(),
+                    hot_or_not_details,
+                    is_nsfw: v.is_nsfw,
+                    slots_left_to_be_computed: v.slots_left_to_be_computed.clone(),
+                };
 
-            all_created_posts.insert(k.clone(), post_details);
-        });
+                all_created_posts.insert(k.clone(), post_details);
+            });
 
         let mut room_details_map = _default_room_details();
-        canister_data.room_details_map.iter().for_each(|(k, v)| {
-            room_details_map.insert(*k, v.clone());
-        });
+        canister_data_for_snapshot
+            .room_details_map
+            .iter()
+            .for_each(|(k, v)| {
+                room_details_map.insert(*k, v.clone());
+            });
 
         let mut bet_details_map = _default_bet_details();
-        canister_data.bet_details_map.iter().for_each(|(k, v)| {
-            bet_details_map.insert(k.clone(), v.clone());
-        });
+        canister_data_for_snapshot
+            .bet_details_map
+            .iter()
+            .for_each(|(k, v)| {
+                bet_details_map.insert(k.clone(), v.clone());
+            });
 
         let mut post_principal_map = _default_post_principal_map();
-        canister_data.post_principal_map.iter().for_each(|(k, v)| {
-            post_principal_map.insert(k.clone(), v.clone());
-        });
+        canister_data_for_snapshot
+            .post_principal_map
+            .iter()
+            .for_each(|(k, v)| {
+                post_principal_map.insert(k.clone(), v.clone());
+            });
 
         let mut slot_details_map = _default_slot_details_map();
-        canister_data.slot_details_map.iter().for_each(|(k, v)| {
-            slot_details_map.insert(*k, v.clone());
-        });
+        canister_data_for_snapshot
+            .slot_details_map
+            .iter()
+            .for_each(|(k, v)| {
+                slot_details_map.insert(*k, v.clone());
+            });
 
         let my_token_balance = TokenBalance {
-            utility_token_balance: canister_data.my_token_balance.utility_token_balance,
-            utility_token_transaction_history: canister_data
+            utility_token_balance: canister_data_for_snapshot
+                .my_token_balance
+                .utility_token_balance,
+            utility_token_transaction_history: canister_data_for_snapshot
                 .my_token_balance
                 .utility_token_transaction_history
                 .clone(),
-            lifetime_earnings: canister_data.my_token_balance.lifetime_earnings,
+            lifetime_earnings: canister_data_for_snapshot
+                .my_token_balance
+                .lifetime_earnings,
         };
 
         let follow_data = FollowData {
             follower: FollowList {
-                sorted_index: canister_data.follow_data.follower.sorted_index.clone(),
-                members: canister_data.follow_data.follower.members.clone(),
+                sorted_index: canister_data_for_snapshot
+                    .follow_data
+                    .follower
+                    .sorted_index
+                    .clone(),
+                members: canister_data_for_snapshot
+                    .follow_data
+                    .follower
+                    .members
+                    .clone(),
             },
             following: FollowList {
-                sorted_index: canister_data.follow_data.following.sorted_index.clone(),
-                members: canister_data.follow_data.following.members.clone(),
+                sorted_index: canister_data_for_snapshot
+                    .follow_data
+                    .following
+                    .sorted_index
+                    .clone(),
+                members: canister_data_for_snapshot
+                    .follow_data
+                    .following
+                    .members
+                    .clone(),
             },
         };
 
         let posts_index_sorted_by_home_feed_score = PostScoreIndex {
-            items_sorted_by_score: canister_data
+            items_sorted_by_score: canister_data_for_snapshot
                 .posts_index_sorted_by_home_feed_score
                 .items_sorted_by_score
                 .clone(),
-            item_presence_index: canister_data
+            item_presence_index: canister_data_for_snapshot
                 .posts_index_sorted_by_home_feed_score
                 .item_presence_index
                 .clone(),
         };
 
         let posts_index_sorted_by_hot_or_not_feed_score = PostScoreIndex {
-            items_sorted_by_score: canister_data
+            items_sorted_by_score: canister_data_for_snapshot
                 .posts_index_sorted_by_hot_or_not_feed_score
                 .items_sorted_by_score
                 .clone(),
-            item_presence_index: canister_data
+            item_presence_index: canister_data_for_snapshot
                 .posts_index_sorted_by_hot_or_not_feed_score
                 .item_presence_index
                 .clone(),
         };
 
-        Self {
-            all_created_posts,
-            room_details_map,
-            bet_details_map,
-            post_principal_map,
-            slot_details_map,
-            all_hot_or_not_bets_placed: canister_data.all_hot_or_not_bets_placed,
-            configuration: canister_data.configuration,
-            follow_data,
-            known_principal_ids: canister_data.known_principal_ids,
-            my_token_balance,
-            posts_index_sorted_by_home_feed_score,
-            posts_index_sorted_by_hot_or_not_feed_score,
-            principals_i_follow: canister_data.principals_i_follow,
-            principals_that_follow_me: canister_data.principals_that_follow_me,
-            profile: canister_data.profile,
-            version_details: canister_data.version_details,
-            session_type: canister_data.session_type,
-            last_access_time: canister_data.last_access_time,
-            last_canister_functionality_access_time: canister_data
-                .last_canister_functionality_access_time,
-            migration_info: canister_data.migration_info,
-            ..Default::default()
-        }
+        let mut canister_data = CanisterData::default();
+
+        canister_data.room_details_map = room_details_map;
+        canister_data.bet_details_map = bet_details_map;
+        canister_data.post_principal_map = post_principal_map;
+        canister_data.slot_details_map = slot_details_map;
+        canister_data.all_hot_or_not_bets_placed =
+            canister_data_for_snapshot.all_hot_or_not_bets_placed;
+        canister_data.configuration = canister_data_for_snapshot.configuration;
+        canister_data.follow_data = follow_data;
+        canister_data.known_principal_ids = canister_data_for_snapshot.known_principal_ids;
+        canister_data.my_token_balance = my_token_balance;
+        canister_data.posts_index_sorted_by_home_feed_score = posts_index_sorted_by_home_feed_score;
+        canister_data.posts_index_sorted_by_hot_or_not_feed_score =
+            posts_index_sorted_by_hot_or_not_feed_score;
+        canister_data.principals_i_follow = canister_data_for_snapshot.principals_i_follow;
+        canister_data.principals_that_follow_me =
+            canister_data_for_snapshot.principals_that_follow_me;
+        canister_data.profile = canister_data_for_snapshot.profile;
+        canister_data.version_details = canister_data_for_snapshot.version_details;
+        canister_data.session_type = canister_data_for_snapshot.session_type;
+        canister_data.last_access_time = canister_data_for_snapshot.last_access_time;
+        canister_data.last_canister_functionality_access_time =
+            canister_data_for_snapshot.last_canister_functionality_access_time;
+        canister_data.migration_info = canister_data_for_snapshot.migration_info;
+
+        canister_data.set_all_created_posts(all_created_posts);
+
+        canister_data
     }
 }

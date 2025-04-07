@@ -4,12 +4,15 @@ use crate::{
 };
 use candid::Principal;
 use ic_cdk_macros::update;
-use shared_utils::common::{
-    types::{
-        known_principal::KnownPrincipalType,
-        utility_token::token_event::{MintEvent, TokenEvent},
+use shared_utils::{
+    canister_specific::individual_user_template::types::token::TokenTransactions,
+    common::{
+        types::{
+            known_principal::KnownPrincipalType,
+            utility_token::token_event::{MintEvent, TokenEvent},
+        },
+        utils::system_time,
     },
-    utils::system_time,
 };
 
 #[update]
@@ -55,10 +58,17 @@ fn get_rewarded_for_referral(referrer: Principal, referree: Principal) {
             },
             timestamp: current_time,
         });
-
     });
 
-    PUMP_N_DUMP.with_borrow_mut(|pd| {
-        pd.add_reward_from_airdrop(pd.referral_reward.clone());
+    PUMP_N_DUMP.with_borrow_mut(|pump_and_dump| {
+        let referral_reward = pump_and_dump.referral_reward.clone();
+        pump_and_dump.cents.handle_token_event(TokenEvent::Mint {
+            amount: referral_reward.0.try_into().unwrap(),
+            details: MintEvent::Referral {
+                referrer_user_principal_id: referrer,
+                referee_user_principal_id: referree,
+            },
+            timestamp: current_time,
+        });
     });
 }

@@ -62,7 +62,7 @@ pub const SNS_TOKEN_ARCHIVE_MODULE_HASH: &'static str =
 pub const DOLLR_TO_GDOLLR: u64 = 100;
 // 1 DOLLR = 1e8 "e8s"
 // => 1 GDOLLR = 1e6 "e8s"
-pub const GDOLLR_TO_E8S: u64 = 1e6  as u64;
+pub const GDOLLR_TO_E8S: u64 = 1e6 as u64;
 
 pub fn get_backup_individual_user_canister_batch_size() -> u64 {
     match option_env!("DFX_NETWORK") {
@@ -125,7 +125,8 @@ pub const SNS_WASM_W_PRINCIPAL_ID: &'static str = "qaa6y-5yaaa-aaaaa-aaafa-cai";
 pub const GLOBAL_SUPER_ADMIN_USER_ID: &str =
     "7gaq2-4kttl-vtbt4-oo47w-igteo-cpk2k-57h3p-yioqe-wkawi-wz45g-jae";
 
-pub const GLOBAL_SUPER_ADMIN_USER_ID_V1: &str = "zg7n3-345by-nqf6o-3moz4-iwxql-l6gko-jqdz2-56juu-ja332-unymr-fqe";
+pub const GLOBAL_SUPER_ADMIN_USER_ID_V1: &str =
+    "zg7n3-345by-nqf6o-3moz4-iwxql-l6gko-jqdz2-56juu-ja332-unymr-fqe";
 pub const RECLAIM_CANISTER_PRINCIPAL_ID: &str =
     "7gaq2-4kttl-vtbt4-oo47w-igteo-cpk2k-57h3p-yioqe-wkawi-wz45g-jae";
 

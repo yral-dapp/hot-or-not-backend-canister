@@ -2,13 +2,17 @@ use crate::{
     api::canister_management::update_last_access_time::update_last_canister_functionality_access_time,
     util::cycles::notify_to_recharge_canister, CANISTER_DATA, PUMP_N_DUMP,
 };
+use candid::Principal;
 use ic_cdk_macros::update;
-use shared_utils::common::{
-    types::{
-        known_principal::KnownPrincipalType,
-        utility_token::token_event::{MintEvent, TokenEvent},
+use shared_utils::{
+    canister_specific::individual_user_template::types::token::TokenTransactions,
+    common::{
+        types::{
+            known_principal::KnownPrincipalType,
+            utility_token::token_event::{MintEvent, TokenEvent},
+        },
+        utils::system_time,
     },
-    utils::system_time,
 };
 
 #[update]
@@ -33,9 +37,12 @@ fn get_rewarded_for_signing_up() {
 
     let current_time = system_time::get_current_system_time_from_ic();
 
+    let mut user_principal = Principal::anonymous();
+
     CANISTER_DATA.with(|canister_data_ref_cell| {
         let mut canister_data_ref = canister_data_ref_cell.borrow_mut();
         let my_principal_id = canister_data_ref.profile.principal_id.unwrap();
+        user_principal = my_principal_id;
         let my_token_balance = &mut canister_data_ref.my_token_balance;
 
         let signup_reward_amount =
@@ -57,6 +64,13 @@ fn get_rewarded_for_signing_up() {
     });
 
     PUMP_N_DUMP.with_borrow_mut(|pd| {
-        pd.add_reward_from_airdrop(pd.onboarding_reward.clone());
+        let onboarding_reward = pd.onboarding_reward.clone();
+        pd.cents.handle_token_event(TokenEvent::Mint {
+            amount: onboarding_reward.0.try_into().unwrap(),
+            details: MintEvent::NewUserSignup {
+                new_user_principal_id: user_principal,
+            },
+            timestamp: current_time,
+        });
     });
 }

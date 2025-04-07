@@ -15,24 +15,17 @@ use shared_utils::{
 
 use crate::{data_model::CanisterData, CANISTER_DATA};
 
-use super::tabulate_hot_or_not_outcome_for_post_slot::tabulate_hot_or_not_outcome_for_post_slot;
+use super::tabulate_hot_or_not_outcome_for_post_slot::{
+    tabulate_hot_or_not_outcome_for_post_slot, tabulate_hot_or_not_outcome_for_post_slot_v1,
+};
 
 pub fn reenqueue_timers_for_pending_bet_outcomes() {
     let current_time = system_time::get_current_system_time_from_ic();
 
     CANISTER_DATA.with_borrow(|canister_data| {
-        let posts = get_posts_that_have_pending_outcomes(canister_data);
+        let posts = canister_data.get_posts_that_have_pending_outcomes();
         reenqueue_timers_for_these_posts(canister_data, posts, &current_time);
     })
-}
-
-fn get_posts_that_have_pending_outcomes(canister_data: &CanisterData) -> Vec<u64> {
-    canister_data
-        .all_created_posts
-        .iter()
-        .filter(|(_post_id, post)| !post.slots_left_to_be_computed.is_empty())
-        .map(|(post_id, _post)| *post_id)
-        .collect()
 }
 
 fn reenqueue_timers_for_these_posts(
@@ -41,7 +34,7 @@ fn reenqueue_timers_for_these_posts(
     current_time: &SystemTime,
 ) {
     for post_id in post_ids {
-        let post = canister_data.all_created_posts.get(&post_id).unwrap();
+        let post = canister_data.get_post(&post_id).unwrap();
 
         post.slots_left_to_be_computed
             .iter()
@@ -57,12 +50,16 @@ fn reenqueue_timers_for_these_posts(
                         .unwrap_or_default(),
                     move || {
                         ic_cdk::spawn(tabulate_hot_or_not_outcome_for_post_slot(post_id, slot_id));
+                        ic_cdk::spawn(tabulate_hot_or_not_outcome_for_post_slot_v1(
+                            post_id, slot_id,
+                        ));
                     },
                 );
             })
     }
 }
 
+#[deprecated]
 #[update(guard = "is_caller_controller_or_global_admin")]
 async fn once_reenqueue_timers_for_pending_bet_outcomes() -> Result<Vec<(u64, u8)>, String> {
     let current_time = system_time::get_current_system_time_from_ic();
@@ -81,6 +78,7 @@ async fn once_reenqueue_timers_for_pending_bet_outcomes() -> Result<Vec<(u64, u8
     Ok(post_w_slot)
 }
 
+#[deprecated]
 fn once_reenqueue_timers_for_these_posts(post_slot_ids: Vec<(u64, u8)>) {
     for (post_id, slot_id) in post_slot_ids {
         let slot_number = slot_id;
@@ -98,6 +96,7 @@ fn once_reenqueue_timers_for_these_posts(post_slot_ids: Vec<(u64, u8)>) {
     }
 }
 
+#[deprecated]
 fn once_get_posts_that_have_pending_outcomes(
     canister_data: &CanisterData,
     current_time: &SystemTime,
@@ -115,8 +114,7 @@ fn once_get_posts_that_have_pending_outcomes(
             let slot_id = global_room_id.1;
 
             let post_created_time = canister_data
-                .all_created_posts
-                .get(&global_room_id.0)
+                .get_post(&global_room_id.0)
                 .map(|post| post.created_at);
 
             if let Some(post_created_time) = post_created_time {
@@ -176,11 +174,9 @@ mod test {
             slots_left_to_be_computed: HashSet::new(),
         };
 
-        canister_data
-            .all_created_posts
-            .insert(canister_data.all_created_posts.len() as u64, post_0);
+        canister_data.add_post(post_0);
 
-        let posts_that_have_pending_outcomes = get_posts_that_have_pending_outcomes(&canister_data);
+        let posts_that_have_pending_outcomes = canister_data.get_posts_that_have_pending_outcomes();
 
         assert_eq!(posts_that_have_pending_outcomes.len(), 0);
 
@@ -202,11 +198,9 @@ mod test {
             slots_left_to_be_computed: (1..=48).collect(),
         };
 
-        canister_data
-            .all_created_posts
-            .insert(canister_data.all_created_posts.len() as u64, post_1);
+        canister_data.add_post(post_1);
 
-        let posts_that_have_pending_outcomes = get_posts_that_have_pending_outcomes(&canister_data);
+        let posts_that_have_pending_outcomes = canister_data.get_posts_that_have_pending_outcomes();
 
         assert_eq!(posts_that_have_pending_outcomes.len(), 1);
         assert_eq!(posts_that_have_pending_outcomes[0], 1);
@@ -229,11 +223,9 @@ mod test {
             slots_left_to_be_computed: (10..=48).collect(),
         };
 
-        canister_data
-            .all_created_posts
-            .insert(canister_data.all_created_posts.len() as u64, post_2);
+        canister_data.add_post(post_2);
 
-        let posts_that_have_pending_outcomes = get_posts_that_have_pending_outcomes(&canister_data);
+        let posts_that_have_pending_outcomes = canister_data.get_posts_that_have_pending_outcomes();
 
         assert_eq!(posts_that_have_pending_outcomes.len(), 2);
         assert_eq!(posts_that_have_pending_outcomes[0], 1);

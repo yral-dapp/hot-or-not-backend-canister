@@ -234,6 +234,7 @@ type MigrationInfo = variant {
   MigratedToYral : record { account_principal : principal };
 };
 type MintEvent = variant {
+  Airdrop : record { amount : nat64 };
   NewUserSignup : record { new_user_principal_id : principal };
   Referral : record {
     referrer_user_principal_id : principal;
@@ -367,6 +368,13 @@ type PostViewStatistics = record {
   threshold_view_count : nat64;
 };
 type Principals = record { principals : vec principal };
+type PumpDumpOutcomePayoutEvent = variant {
+  CreatorRewardFromPumpDumpGame;
+  RewardFromPumpDumpGame : record {
+    game_direction : GameDirection;
+    token_root_canister_id : principal;
+  };
+};
 type PumpNDumpStateDiff = variant {
   Participant : ParticipatedGameInfo;
   CreatorReward : nat;
@@ -479,7 +487,15 @@ type SnsInitPayload = record {
   min_icp_e8s : opt nat64;
   max_direct_participation_icp_e8s : opt nat64;
 };
-type StakeEvent = variant { BetOnHotOrNotPost : PlaceBetArg };
+type StakeEvent = variant {
+  BetOnHotOrNotPost : PlaceBetArg;
+  BetOnPumpDump : record {
+    root_canister_id : principal;
+    pumps : nat64;
+    dumps : nat64;
+  };
+  BetFailureRefund : PlaceBetArg;
+};
 type SuccessHistoryItemV1 = record {
   post_id : nat64;
   percentage_watched : float32;
@@ -497,6 +513,7 @@ type SystemTime = record {
   secs_since_epoch : nat64;
 };
 type TokenEvent = variant {
+  Withdraw : record { amount : nat; event_type : WithdrawEvent };
   Stake : record {
     timestamp : SystemTime;
     details : StakeEvent;
@@ -504,6 +521,10 @@ type TokenEvent = variant {
   };
   Burn;
   Mint : record { timestamp : SystemTime; details : MintEvent; amount : nat64 };
+  PumpDumpOutcomePayout : record {
+    payout_type : PumpDumpOutcomePayoutEvent;
+    amount : nat;
+  };
   Transfer : record {
     to_account : principal;
     timestamp : SystemTime;
@@ -581,15 +602,14 @@ type WatchHistoryItem = record {
   publisher_canister_id : principal;
   cf_video_id : text;
 };
+type WithdrawEvent = variant { WithdrawRequest; WithdrawRequestFailed };
 service : (IndividualUserTemplateInitArgs) -> {
   add_device_id : (text) -> (Result);
   add_dollr_to_liquidity_pool : (principal, nat) -> (Result_1);
   add_post_v2 : (PostDetailsFromFrontend) -> (Result_2);
   add_token : (principal) -> (Result_3);
   bet_on_currently_viewing_post : (PlaceBetArg) -> (Result_4);
-  check_and_update_scores_and_share_with_post_cache_if_difference_beyond_threshold : (
-      vec nat64,
-    ) -> ();
+  bet_on_currently_viewing_post_v1 : (PlaceBetArg) -> (Result_4);
   clear_snapshot : () -> ();
   create_a_namespace : (text) -> (Result_5);
   delete_all_creator_token : () -> ();
@@ -603,22 +623,32 @@ service : (IndividualUserTemplateInitArgs) -> {
   get_bet_details_for_a_user_on_a_post : (principal, nat64) -> (
       Result_10,
     ) query;
+  get_bet_details_for_a_user_on_a_post_v1 : (principal, nat64) -> (
+      Result_10,
+    ) query;
   get_device_identities : () -> (vec DeviceIdentity) query;
   get_entire_individual_post_detail_by_id : (nat64) -> (Result_11) query;
   get_hot_or_not_bet_details_for_this_post : (nat64) -> (BettingStatus) query;
+  get_hot_or_not_bet_details_for_this_post_v1 : (nat64) -> (
+      BettingStatus,
+    ) query;
   get_hot_or_not_bets_placed_by_this_profile_with_pagination : (nat64) -> (
+      vec PlacedBetDetail,
+    ) query;
+  get_hot_or_not_bets_placed_by_this_profile_with_pagination_v1 : (nat64) -> (
       vec PlacedBetDetail,
     ) query;
   get_individual_hot_or_not_bet_placed_by_this_profile : (principal, nat64) -> (
       opt PlacedBetDetail,
     ) query;
+  get_individual_hot_or_not_bet_placed_by_this_profile_v1 : (
+      principal,
+      nat64,
+    ) -> (opt PlacedBetDetail) query;
   get_individual_post_details_by_id : (nat64) -> (PostDetailsForFrontend) query;
   get_last_access_time : () -> (Result_12) query;
   get_last_canister_functionality_access_time : () -> (Result_12) query;
   get_ml_feed_cache_paginated : (nat64, nat64) -> (vec MLFeedCacheItem) query;
-  get_posts_of_this_user_profile_with_pagination : (nat64, nat64) -> (
-      Result_13,
-    ) query;
   get_posts_of_this_user_profile_with_pagination_cursor : (nat64, nat64) -> (
       Result_13,
     ) query;
@@ -664,7 +694,14 @@ service : (IndividualUserTemplateInitArgs) -> {
   read_key_value_pair : (nat64, text) -> (Result_6) query;
   receive_and_save_snaphot : (nat64, blob) -> ();
   receive_bet_from_bet_makers_canister : (PlaceBetArg, principal) -> (Result_4);
+  receive_bet_from_bet_makers_canister_v1 : (PlaceBetArg, principal) -> (
+      Result_4,
+    );
   receive_bet_winnings_when_distributed : (nat64, BetOutcomeForBetMaker) -> ();
+  receive_bet_winnings_when_distributed_v1 : (
+      nat64,
+      BetOutcomeForBetMaker,
+    ) -> ();
   receive_data_from_hotornot : (principal, nat64, vec Post) -> (Result_22);
   reconcile_user_state : (vec PumpNDumpStateDiff) -> (Result_1);
   redeem_gdollr : (nat) -> (Result_1);

@@ -1,27 +1,21 @@
 use ic_cdk_macros::update;
-use std::time::SystemTime;
 
 use candid::Principal;
-use ic_cdk::api::management_canister::provisional::CanisterId;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
         arg::PlaceBetArg,
         error::BetOnCurrentlyViewingPostError,
-        hot_or_not::{BetDirection, BettingStatus},
+        hot_or_not::{BettingStatus, HotOrNotGame},
     },
-    common::utils::system_time,
+    common::utils::system_time::get_current_system_time,
 };
 
 use crate::{
-    api::{
-        canister_management::update_last_access_time::update_last_canister_functionality_access_time,
-        post::update_scores_and_share_with_post_cache_if_difference_beyond_threshold::update_scores_and_share_with_post_cache_if_difference_beyond_threshold,
-    },
-    data_model::CanisterData,
-    util::cycles::{notify_to_recharge_canister, recharge_canister},
-    CANISTER_DATA,
+    data_model::cents_hot_or_not_game::CentsHotOrNotGame,
+    util::cycles::notify_to_recharge_canister, CANISTER_DATA, PUMP_N_DUMP,
 };
 
+#[deprecated(note = "use receive_bet_from_bet_makers_canister_v2")]
 #[update]
 fn receive_bet_from_bet_makers_canister(
     place_bet_arg: PlaceBetArg,
@@ -29,76 +23,49 @@ fn receive_bet_from_bet_makers_canister(
 ) -> Result<BettingStatus, BetOnCurrentlyViewingPostError> {
     notify_to_recharge_canister();
 
+    let current_timestamp = get_current_system_time();
     let bet_maker_canister_id = ic_cdk::caller();
-    update_last_canister_functionality_access_time();
 
-    let status = CANISTER_DATA.with(|canister_data_ref_cell| {
-        receive_bet_from_bet_makers_canister_impl(
-            &mut canister_data_ref_cell.borrow_mut(),
-            &bet_maker_principal_id,
-            &bet_maker_canister_id,
-            place_bet_arg.clone(),
-            &system_time::get_current_system_time_from_ic(),
+    CANISTER_DATA.with_borrow_mut(|canister_data| {
+        canister_data.receive_bet_from_bet_maker_canister(
+            bet_maker_principal_id,
+            bet_maker_canister_id,
+            &place_bet_arg,
+            current_timestamp,
         )
-    })?;
-
-    CANISTER_DATA.with(|canister_data_ref_cell| {
-        update_profile_stats_with_bet_placed(
-            &mut canister_data_ref_cell.borrow_mut(),
-            &place_bet_arg.bet_direction,
-        );
-    });
-
-    update_scores_and_share_with_post_cache_if_difference_beyond_threshold(&place_bet_arg.post_id);
-
-    Ok(status)
+    })
 }
 
-fn receive_bet_from_bet_makers_canister_impl(
-    canister_data: &mut CanisterData,
-    bet_maker_principal_id: &Principal,
-    bet_maker_canister_id: &CanisterId,
+#[update]
+fn receive_bet_from_bet_makers_canister_v1(
     place_bet_arg: PlaceBetArg,
-    current_time: &SystemTime,
+    bet_maker_principal_id: Principal,
 ) -> Result<BettingStatus, BetOnCurrentlyViewingPostError> {
-    let PlaceBetArg {
-        post_id,
-        bet_amount,
-        bet_direction,
-        ..
-    } = place_bet_arg;
+    notify_to_recharge_canister();
 
-    let post = canister_data.all_created_posts.get_mut(&post_id).unwrap();
+    let bet_maker_canister_id = ic_cdk::caller();
+    let current_timestamp = get_current_system_time();
 
-    post.place_hot_or_not_bet_v1(
-        bet_maker_principal_id,
-        bet_maker_canister_id,
-        bet_amount,
-        &bet_direction,
-        current_time,
-        &mut canister_data.room_details_map,
-        &mut canister_data.bet_details_map,
-        &mut canister_data.post_principal_map,
-        &mut canister_data.slot_details_map,
-    )
-}
-
-fn update_profile_stats_with_bet_placed(
-    canister_data: &mut CanisterData,
-    bet_direction: &BetDirection,
-) {
-    match *bet_direction {
-        BetDirection::Hot => {
-            canister_data.profile.profile_stats.hot_bets_received += 1;
-        }
-        BetDirection::Not => {
-            canister_data.profile.profile_stats.not_bets_received += 1;
-        }
-    }
+    PUMP_N_DUMP.with_borrow_mut(|token_bet_game| {
+        CANISTER_DATA.with_borrow_mut(|canister_data| {
+            let mut cents_hot_or_not_game = CentsHotOrNotGame {
+                canister_data,
+                token_bet_game,
+            };
+            cents_hot_or_not_game.receive_bet_from_bet_maker_canister(
+                bet_maker_principal_id,
+                bet_maker_canister_id,
+                &place_bet_arg,
+                current_timestamp,
+            )
+        })
+    })
 }
 
 #[cfg(test)]
 mod test {
+    use std::time::SystemTime;
+
     use shared_utils::canister_specific::individual_user_template::types::{
         hot_or_not::{BetDirection, GlobalBetId, GlobalRoomId, StablePrincipal},
         post::{Post, PostDetailsFromFrontend},
@@ -107,40 +74,39 @@ mod test {
         get_mock_user_alice_canister_id, get_mock_user_alice_principal_id,
     };
 
+    use crate::CanisterData;
+
     use super::*;
 
     #[test]
     fn test_receive_bet_from_bet_makers_canister_impl() {
         let mut canister_data = CanisterData::default();
-        canister_data.all_created_posts.insert(
+        canister_data.add_post(Post::new(
             0,
-            Post::new(
-                0,
-                &PostDetailsFromFrontend {
-                    is_nsfw: false,
-                    description: "Doggos and puppers".into(),
-                    hashtags: vec!["doggo".into(), "pupper".into()],
-                    video_uid: "abcd#1234".into(),
-                    creator_consent_for_inclusion_in_hot_or_not: true,
-                },
-                &SystemTime::now(),
-            ),
-        );
+            &PostDetailsFromFrontend {
+                is_nsfw: false,
+                description: "Doggos and puppers".into(),
+                hashtags: vec!["doggo".into(), "pupper".into()],
+                video_uid: "abcd#1234".into(),
+                creator_consent_for_inclusion_in_hot_or_not: true,
+            },
+            &SystemTime::now(),
+        ));
 
-        let result = receive_bet_from_bet_makers_canister_impl(
+        let result = HotOrNotGame::receive_bet_from_bet_maker_canister(
             &mut canister_data,
-            &get_mock_user_alice_principal_id(),
-            &get_mock_user_alice_canister_id(),
-            PlaceBetArg {
+            get_mock_user_alice_principal_id(),
+            get_mock_user_alice_canister_id(),
+            &PlaceBetArg {
                 post_canister_id: get_mock_user_alice_canister_id(),
                 post_id: 0,
                 bet_amount: 100,
                 bet_direction: BetDirection::Hot,
             },
-            &SystemTime::now(),
+            SystemTime::now(),
         );
 
-        let post = canister_data.all_created_posts.get(&0).unwrap();
+        let post = canister_data.get_post(&0).unwrap();
         let global_room_id = GlobalRoomId(0, 1, 1);
         let global_bet_id = GlobalBetId(
             global_room_id,

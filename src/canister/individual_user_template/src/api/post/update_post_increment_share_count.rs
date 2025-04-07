@@ -5,8 +5,6 @@ use crate::{
     util::cycles::notify_to_recharge_canister, CANISTER_DATA,
 };
 
-use super::update_scores_and_share_with_post_cache_if_difference_beyond_threshold::update_scores_and_share_with_post_cache_if_difference_beyond_threshold;
-
 #[update]
 fn update_post_increment_share_count(id: u64) -> u64 {
     notify_to_recharge_canister();
@@ -16,22 +14,16 @@ fn update_post_increment_share_count(id: u64) -> u64 {
     let response = CANISTER_DATA.with(|canister_data_ref_cell| {
         let mut post_to_update = canister_data_ref_cell
             .borrow_mut()
-            .all_created_posts
-            .get(&id)
+            .get_post(&id)
             .unwrap()
             .clone();
 
         let updated_share_count = post_to_update.increment_share_count();
 
-        canister_data_ref_cell
-            .borrow_mut()
-            .all_created_posts
-            .insert(id, post_to_update);
+        canister_data_ref_cell.borrow_mut().add_post(post_to_update);
 
         updated_share_count
     });
-
-    update_scores_and_share_with_post_cache_if_difference_beyond_threshold(&id);
 
     response
 }

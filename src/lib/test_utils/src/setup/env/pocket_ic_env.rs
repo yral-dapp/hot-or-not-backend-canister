@@ -3,14 +3,16 @@ use std::collections::{HashMap, HashSet};
 use candid::{utils::ArgumentEncoder, CandidType, Deserialize, Principal};
 use ic_cdk::api::management_canister::main::{CanisterId, LogVisibility};
 use ic_ledger_types::{AccountIdentifier, BlockIndex, Tokens, DEFAULT_SUBACCOUNT};
-use pocket_ic::{management_canister::CanisterSettings, PocketIc, PocketIcBuilder, UserError, WasmResult};
+use pocket_ic::{
+    management_canister::CanisterSettings, PocketIc, PocketIcBuilder, UserError, WasmResult,
+};
 use shared_utils::{
     canister_specific::platform_orchestrator::types::args::PlatformOrchestratorInitArgs,
     common::types::{
         known_principal::{KnownPrincipalMap, KnownPrincipalType},
         wasm::WasmType,
     },
-    constant::{NNS_CYCLE_MINTING_CANISTER, NNS_LEDGER_CANISTER_ID},
+    constant::{GLOBAL_SUPER_ADMIN_USER_ID_V1, NNS_CYCLE_MINTING_CANISTER, NNS_LEDGER_CANISTER_ID},
 };
 
 use crate::setup::test_constants::{
@@ -49,7 +51,7 @@ pub fn get_new_pocket_ic_env() -> (PocketIc, KnownPrincipalMap) {
 
     let mut known_principal = KnownPrincipalMap::new();
 
-    let super_admin = get_global_super_admin_principal_id();
+    let super_admin = Principal::from_text(GLOBAL_SUPER_ADMIN_USER_ID_V1).unwrap();
     known_principal.insert(KnownPrincipalType::UserIdGlobalSuperAdmin, super_admin);
 
     let application_subnets = pocket_ic.topology().get_app_subnets();
@@ -200,7 +202,12 @@ pub fn execute_query<P: CandidType, R: CandidType + for<'x> Deserialize<'x>>(
     method_name: &str,
     payload: &P,
 ) -> R {
-    unwrap_res(pic.query_call(canister_id, sender, method_name, candid::encode_one(payload).unwrap()))
+    unwrap_res(pic.query_call(
+        canister_id,
+        sender,
+        method_name,
+        candid::encode_one(payload).unwrap(),
+    ))
 }
 
 pub fn execute_query_multi<P: ArgumentEncoder, R: CandidType + for<'x> Deserialize<'x>>(
@@ -210,7 +217,12 @@ pub fn execute_query_multi<P: ArgumentEncoder, R: CandidType + for<'x> Deseriali
     method_name: &str,
     payload: P,
 ) -> R {
-    unwrap_res(pic.query_call(canister_id, sender, method_name, candid::encode_args(payload).unwrap()))
+    unwrap_res(pic.query_call(
+        canister_id,
+        sender,
+        method_name,
+        candid::encode_args(payload).unwrap(),
+    ))
 }
 
 pub fn execute_update<P: CandidType, R: CandidType + for<'x> Deserialize<'x>>(
@@ -220,7 +232,12 @@ pub fn execute_update<P: CandidType, R: CandidType + for<'x> Deserialize<'x>>(
     method_name: &str,
     payload: &P,
 ) -> R {
-   unwrap_res(pic.update_call(canister_id, sender, method_name, candid::encode_one(payload).unwrap()))
+    unwrap_res(pic.update_call(
+        canister_id,
+        sender,
+        method_name,
+        candid::encode_one(payload).unwrap(),
+    ))
 }
 
 pub fn execute_update_multi<P: ArgumentEncoder, R: CandidType + for<'x> Deserialize<'x>>(
@@ -228,9 +245,14 @@ pub fn execute_update_multi<P: ArgumentEncoder, R: CandidType + for<'x> Deserial
     sender: Principal,
     canister_id: CanisterId,
     method: &str,
-    payload: P
+    payload: P,
 ) -> R {
-    unwrap_res(pic.update_call(canister_id, sender, method, candid::encode_args(payload).unwrap()))
+    unwrap_res(pic.update_call(
+        canister_id,
+        sender,
+        method,
+        candid::encode_args(payload).unwrap(),
+    ))
 }
 
 pub fn execute_update_no_res<P: CandidType>(
@@ -240,7 +262,12 @@ pub fn execute_update_no_res<P: CandidType>(
     method: &str,
     payload: &P,
 ) {
-    let res = pic.update_call(canister_id, sender, method, candid::encode_one(payload).unwrap());
+    let res = pic.update_call(
+        canister_id,
+        sender,
+        method,
+        candid::encode_one(payload).unwrap(),
+    );
     if let WasmResult::Reject(error) = res.unwrap() {
         panic!("{error}");
     }
@@ -253,13 +280,20 @@ pub fn execute_update_no_res_multi<P: ArgumentEncoder>(
     method: &str,
     payload: P,
 ) {
-    let res = pic.update_call(canister_id, sender, method, candid::encode_args(payload).unwrap());
+    let res = pic.update_call(
+        canister_id,
+        sender,
+        method,
+        candid::encode_args(payload).unwrap(),
+    );
     if let WasmResult::Reject(error) = res.unwrap() {
         panic!("{error}");
     }
 }
 
-fn unwrap_res<R: CandidType + for<'x> Deserialize<'x>>(response: Result<WasmResult, UserError>) -> R {
+fn unwrap_res<R: CandidType + for<'x> Deserialize<'x>>(
+    response: Result<WasmResult, UserError>,
+) -> R {
     match response.unwrap() {
         WasmResult::Reply(bytes) => candid::decode_one(&bytes).unwrap(),
         WasmResult::Reject(error) => panic!("{error}"),

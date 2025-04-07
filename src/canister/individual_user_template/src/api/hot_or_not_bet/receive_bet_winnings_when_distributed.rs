@@ -1,19 +1,15 @@
 use ic_cdk_macros::update;
 
 use shared_utils::{
-    canister_specific::individual_user_template::types::hot_or_not::BetOutcomeForBetMaker,
-    common::{
-        types::{
-            app_primitive_type::PostId,
-            utility_token::token_event::{HotOrNotOutcomePayoutEvent, TokenEvent},
-        },
-        utils::system_time,
+    canister_specific::individual_user_template::types::hot_or_not::{
+        BetOutcomeForBetMaker, HotOrNotGame,
     },
+    common::{types::app_primitive_type::PostId, utils::system_time},
 };
 
 use crate::{
-    util::cycles::{notify_to_recharge_canister, recharge_canister},
-    CANISTER_DATA,
+    data_model::cents_hot_or_not_game::CentsHotOrNotGame,
+    util::cycles::notify_to_recharge_canister, CANISTER_DATA, PUMP_N_DUMP,
 };
 
 #[update]
@@ -29,63 +25,41 @@ fn receive_bet_winnings_when_distributed(post_id: PostId, outcome: BetOutcomeFor
         post_id
     );
 
-    if !CANISTER_DATA.with(|canister_data_ref_cell| {
-        canister_data_ref_cell
-            .borrow()
-            .all_hot_or_not_bets_placed
-            .contains_key(&(post_creator_canister_id, post_id))
-    }) {
-        return;
-    }
+    CANISTER_DATA.with_borrow_mut(|canister_data| {
+        canister_data.receive_earnings_for_the_bet(
+            post_id,
+            post_creator_canister_id,
+            outcome,
+            current_time,
+        );
+    })
+}
 
-    if !CANISTER_DATA.with(|canister_data_ref_cell| {
-        canister_data_ref_cell
-            .borrow()
-            .all_hot_or_not_bets_placed
-            .get(&(post_creator_canister_id, post_id))
-            .unwrap()
-            .outcome_received
-            == BetOutcomeForBetMaker::AwaitingResult
-    }) {
-        return;
-    }
+#[update]
+fn receive_bet_winnings_when_distributed_v1(post_id: PostId, outcome: BetOutcomeForBetMaker) {
+    notify_to_recharge_canister();
 
-    CANISTER_DATA.with(|canister_data_ref_cell| {
-        let mut canister_data = canister_data_ref_cell.borrow_mut();
+    let post_creator_canister_id = ic_cdk::caller();
+    let current_time = system_time::get_current_system_time_from_ic();
 
-        let all_hot_or_not_bets_placed = &mut canister_data.all_hot_or_not_bets_placed;
+    ic_cdk::println!(
+        "Recieved cents bet outcome from canister {} for post {}",
+        post_creator_canister_id.to_string(),
+        post_id
+    );
 
-        all_hot_or_not_bets_placed
-            .entry((post_creator_canister_id, post_id))
-            .and_modify(|placed_bet_detail| {
-                placed_bet_detail.outcome_received = outcome.clone();
-            });
-
-        let placed_bet_detail = all_hot_or_not_bets_placed
-            .get(&(post_creator_canister_id, post_id))
-            .cloned()
-            .unwrap();
-
-        let my_token_balance = &mut canister_data.my_token_balance;
-        my_token_balance.handle_token_event(TokenEvent::HotOrNotOutcomePayout {
-            amount: match outcome {
-                BetOutcomeForBetMaker::Draw(amount) => amount,
-                BetOutcomeForBetMaker::Won(amount) => amount,
-                _ => 0,
-            },
-            details: HotOrNotOutcomePayoutEvent::WinningsEarnedFromBet {
-                post_canister_id: post_creator_canister_id,
+    CANISTER_DATA.with_borrow_mut(|canister_data| {
+        PUMP_N_DUMP.with_borrow_mut(|token_bet_game| {
+            let mut cents_hot_or_not_game = CentsHotOrNotGame {
+                canister_data,
+                token_bet_game,
+            };
+            cents_hot_or_not_game.receive_earnings_for_the_bet(
                 post_id,
-                slot_id: placed_bet_detail.slot_id,
-                room_id: placed_bet_detail.room_id,
-                winnings_amount: match outcome {
-                    BetOutcomeForBetMaker::Draw(amount) => amount,
-                    BetOutcomeForBetMaker::Won(amount) => amount,
-                    _ => 0,
-                },
-                event_outcome: outcome,
-            },
-            timestamp: current_time,
-        });
-    });
+                post_creator_canister_id,
+                outcome,
+                current_time,
+            );
+        })
+    })
 }

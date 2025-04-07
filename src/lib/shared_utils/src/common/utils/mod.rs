@@ -34,5 +34,5 @@ pub fn get_heap_memory_size() -> u64 {
 
 pub fn default_pump_dump_onboarding_reward() -> Nat {
     // 1000 DOLLR
-    Nat::from(1e9 as u64)
+    (1e9 as u64).into()
 }

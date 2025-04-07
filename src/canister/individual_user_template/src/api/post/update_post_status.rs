@@ -8,8 +8,6 @@ use crate::{
     util::cycles::notify_to_recharge_canister, CANISTER_DATA,
 };
 
-use super::send_update_post_cache::send_update_post_cache;
-
 #[update]
 fn update_post_status(id: u64, status: PostStatus) {
     notify_to_recharge_canister();
@@ -34,18 +32,12 @@ fn update_post_status(id: u64, status: PostStatus) {
     CANISTER_DATA.with(|canister_data_ref_cell| {
         let mut post_to_update = canister_data_ref_cell
             .borrow_mut()
-            .all_created_posts
-            .get(&id)
+            .get_post(&id)
             .unwrap()
             .clone();
 
         post_to_update.update_status(status);
 
-        canister_data_ref_cell
-            .borrow_mut()
-            .all_created_posts
-            .insert(id, post_to_update);
+        canister_data_ref_cell.borrow_mut().add_post(post_to_update);
     });
-
-    send_update_post_cache(&id);
 }

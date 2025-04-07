@@ -30,8 +30,7 @@ pub fn get_entire_individual_post_detail_by_id(post_id: u64) -> Result<Post, ()>
     CANISTER_DATA.with(|canister_data_ref_cell| {
         let post = canister_data_ref_cell
             .borrow()
-            .all_created_posts
-            .get(&post_id)
+            .get_post(&post_id)
             .unwrap()
             .clone();
 

@@ -1,7 +1,7 @@
 use std::{borrow::Cow, cmp::Ordering, collections::BTreeMap, time::SystemTime};
 
 use candid::{CandidType, Decode, Deserialize, Encode, Principal};
-use ic_cdk::api::management_canister::provisional::CanisterId;
+use ic_cdk::api::{call::CallResult, management_canister::provisional::CanisterId};
 use ic_stable_structures::{
     memory_manager::VirtualMemory, storable::Bound, DefaultMemoryImpl, Storable,
 };
@@ -16,10 +16,55 @@ use crate::common::types::{
 };
 
 use super::{
+    arg::PlaceBetArg,
     error::BetOnCurrentlyViewingPostError,
     post::{FeedScore, Post},
-    token::TokenBalance,
+    token::TokenTransactions,
 };
+
+pub trait HotOrNotGame {
+    fn validate_incoming_bet(
+        &self,
+        bet_maker_principal: Principal,
+        place_bet_arg: &PlaceBetArg,
+    ) -> Result<(), BetOnCurrentlyViewingPostError>;
+    fn prepare_for_bet(
+        &mut self,
+        bet_maker_principal: Principal,
+        place_bet_arg: &PlaceBetArg,
+        current_timestamp: SystemTime,
+    ) -> Result<(), BetOnCurrentlyViewingPostError>;
+
+    fn process_place_bet_status(
+        &mut self,
+        bet_response: CallResult<(Result<BettingStatus, BetOnCurrentlyViewingPostError>,)>,
+        place_bet_arg: &PlaceBetArg,
+        current_timestamp: SystemTime,
+    ) -> Result<BettingStatus, BetOnCurrentlyViewingPostError>;
+
+    fn receive_bet_from_bet_maker_canister(
+        &mut self,
+        bet_maker_principal_id: Principal,
+        bet_maker_canister_id: Principal,
+        place_bet_arg: &PlaceBetArg,
+        current_timestamp: SystemTime,
+    ) -> Result<BettingStatus, BetOnCurrentlyViewingPostError>;
+
+    fn tabulate_hot_or_not_outcome_for_post_slot(
+        &mut self,
+        post_id: u64,
+        slot_id: u8,
+        current_timestamp: SystemTime,
+    );
+
+    fn receive_earnings_for_the_bet(
+        &mut self,
+        post_id: u64,
+        post_creator_canister_id: Principal,
+        outcome: BetOutcomeForBetMaker,
+        current_timestamp: SystemTime,
+    );
+}
 
 #[derive(CandidType, PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub enum BettingStatus {
@@ -59,7 +104,7 @@ pub struct BetDetail {
     bet_made_at: SystemTime,
 }
 
-#[derive(CandidType, Clone, Deserialize, Serialize, Debug, PartialEq, Eq)]
+#[derive(CandidType, Clone, Deserialize, Serialize, Debug, PartialEq, Eq, Copy)]
 pub enum BetDirection {
     Hot,
     Not,
@@ -531,7 +576,7 @@ impl Post {
         &mut self,
         post_canister_id: &CanisterId,
         slot_id: &u8,
-        token_balance: &mut TokenBalance,
+        token_balance: &mut dyn TokenTransactions,
         current_time: &SystemTime,
         room_details_map: &mut ic_stable_structures::btreemap::BTreeMap<
             GlobalRoomId,
@@ -642,7 +687,9 @@ pub mod test_hot_or_not {
         get_mock_user_alice_canister_id, get_mock_user_alice_principal_id,
     };
 
-    use crate::canister_specific::individual_user_template::types::post::PostDetailsFromFrontend;
+    use crate::canister_specific::individual_user_template::types::{
+        post::PostDetailsFromFrontend, token::TokenBalance,
+    };
 
     use super::*;
     pub type Memory = VirtualMemory<DefaultMemoryImpl>;

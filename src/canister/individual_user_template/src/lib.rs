@@ -6,7 +6,7 @@ use api::{
     profile::update_profile_display_details::UpdateProfileDetailsError,
 };
 use candid::{Nat, Principal};
-use data_model::pump_n_dump::PumpAndDumpGame;
+use data_model::pump_n_dump::{PumpAndDumpGame, TokenBetGame};
 use data_model::CanisterData;
 use ic_cdk::api::management_canister::provisional::CanisterId;
 use ic_cdk_macros::export_candid;
@@ -17,7 +17,7 @@ use ic_sns_init::pb::v1::SnsInitPayload;
 use icrc_ledger_types::icrc1::transfer::Memo;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
-        arg::{FolloweeArg, IndividualUserTemplateInitArgs, PlaceBetArg},
+        arg::{BetMakerArg, FolloweeArg, IndividualUserTemplateInitArgs, PlaceBetArg},
         cdao::DeployedCdaoCanisters,
         device_id::DeviceIdentity,
         error::{
@@ -33,12 +33,10 @@ use shared_utils::{
             Post, PostDetailsForFrontend, PostDetailsFromFrontend, PostViewDetailsFromFrontend,
         },
         profile::{
-            UserCanisterDetails, UserProfileDetailsForFrontend,
-            UserProfileDetailsForFrontendV2, UserProfileUpdateDetailsFromFrontend,
+            UserCanisterDetails, UserProfileDetailsForFrontend, UserProfileDetailsForFrontendV2,
+            UserProfileUpdateDetailsFromFrontend,
         },
-        pump_n_dump::{
-            BalanceInfo, ParticipatedGameInfo, PumpNDumpStateDiff, PumpsAndDumps
-        },
+        pump_n_dump::{BalanceInfo, ParticipatedGameInfo, PumpNDumpStateDiff, PumpsAndDumps},
         session::SessionType,
     },
     common::types::{
@@ -62,7 +60,7 @@ mod util;
 thread_local! {
     static CANISTER_DATA: RefCell<CanisterData> = RefCell::default();
     static SNAPSHOT_DATA: RefCell<Vec<u8>> = RefCell::default();
-    static PUMP_N_DUMP: RefCell<PumpAndDumpGame> = RefCell::default();
+    static PUMP_N_DUMP: RefCell<TokenBetGame> = RefCell::default();
 }
 
 export_candid!();

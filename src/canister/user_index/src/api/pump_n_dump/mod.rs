@@ -1,10 +1,13 @@
 use candid::{Nat, Principal};
 use futures::{stream, StreamExt};
 use ic_cdk::update;
-use icrc_ledger_types::icrc1::{account::Account, transfer::{TransferArg, TransferError}};
+use icrc_ledger_types::icrc1::{
+    account::Account,
+    transfer::{TransferArg, TransferError},
+};
+use shared_utils::common::utils::permissions::is_caller_controller;
 
 use crate::{data_model::get_sns_ledger, CANISTER_DATA};
-use shared_utils::common::utils::permissions::is_caller_controller;
 
 #[update]
 pub async fn redeem_gdollr(to_principal: Principal, amount: Nat) -> Result<(), String> {
@@ -14,7 +17,8 @@ pub async fn redeem_gdollr(to_principal: Principal, amount: Nat) -> Result<(), S
     CANISTER_DATA.with_borrow(|cdata| {
         // check if caller is authorized
         cdata
-            .user_principal_id_to_canister_id_map.get(&to_principal)
+            .user_principal_id_to_canister_id_map
+            .get(&to_principal)
             .ok_or_else(|| "Unauthorized".to_string())
             .and_then(|user_canister| {
                 if *user_canister == caller {
@@ -25,7 +29,7 @@ pub async fn redeem_gdollr(to_principal: Principal, amount: Nat) -> Result<(), S
             })
     })?;
 
-     ic_cdk::call::<_, (Result<Nat, TransferError>,)>(
+    ic_cdk::call::<_, (Result<Nat, TransferError>,)>(
         ledger_id,
         "icrc1_transfer",
         (TransferArg {
@@ -38,8 +42,9 @@ pub async fn redeem_gdollr(to_principal: Principal, amount: Nat) -> Result<(), S
             created_at_time: None,
             memo: None,
             amount: amount.clone(),
-        },)
-    ).await
+        },),
+    )
+    .await
     .map_err(|(_code, e)| e)?
     .0
     .map_err(|e| format!("transfer failed {e:?}"))?;
@@ -56,12 +61,8 @@ pub fn update_pd_onboarding_reward_for_all_individual_users(new_reward: Nat) -> 
             .clone()
             .into_iter()
             .map(move |can| {
-                ic_cdk::call::<_, ()>(
-                    can,
-                    "update_pd_onboarding_reward",
-                    (new_reward.clone(),),
-                )
-        });
+                ic_cdk::call::<_, ()>(can, "update_pd_onboarding_reward", (new_reward.clone(),))
+            });
         let stream = stream::iter(cans);
         stream.buffer_unordered(10)
     });
@@ -71,7 +72,8 @@ pub fn update_pd_onboarding_reward_for_all_individual_users(new_reward: Nat) -> 
             if let Err(e) = res {
                 ic_cdk::eprintln!(
                     "failed to update_pd_onboarding_reward. code: {:?}, err: {}",
-                    e.0, e.1
+                    e.0,
+                    e.1
                 )
             }
         }

@@ -13,6 +13,8 @@ use shared_utils::{
             },
             post::{PostDetailsForFrontend, PostDetailsFromFrontend},
             profile::UserProfileDetailsForFrontend,
+            pump_n_dump::BalanceInfo,
+            token,
         },
         post_cache::types::arg::PostCacheInitArgs,
     },
@@ -20,6 +22,7 @@ use shared_utils::{
         types::known_principal::{self, KnownPrincipalType},
         utils::default_pump_dump_onboarding_reward,
     },
+    constant::{GDOLLR_TO_E8S, GLOBAL_SUPER_ADMIN_USER_ID_V1},
 };
 use test_utils::setup::{
     env::pocket_ic_env::get_new_pocket_ic_env,
@@ -43,13 +46,13 @@ fn post_cache_canister_wasm() -> Vec<u8> {
 }
 
 #[test]
-fn hotornot_game_simulation_test() {
+fn hotornot_game_simulation_test_1() {
     let pic = PocketIc::new();
 
     let alice_principal_id = get_mock_user_alice_principal_id();
     let bob_principal_id = get_mock_user_bob_principal_id();
     let dan_principal_id = get_mock_user_dan_principal_id();
-    let admin_principal_id = get_mock_user_charlie_principal_id();
+    let admin_principal_id = Principal::from_text(GLOBAL_SUPER_ADMIN_USER_ID_V1).unwrap();
 
     let post_cache_canister_id = pic.create_canister();
     pic.add_cycles(post_cache_canister_id, 2_000_000_000_000);
@@ -247,14 +250,14 @@ fn hotornot_game_simulation_test() {
     let bob_place_bet_arg = PlaceBetArg {
         post_canister_id: alice_individual_template_canister_id,
         post_id: res1,
-        bet_amount: 100,
+        bet_amount: 100 * GDOLLR_TO_E8S,
         bet_direction: BetDirection::Hot,
     };
     let bet_status = pic
         .update_call(
             bob_individual_template_canister_id,
-            bob_principal_id,
-            "bet_on_currently_viewing_post",
+            admin_principal_id,
+            "bet_on_currently_viewing_post_v1",
             encode_one(bob_place_bet_arg).unwrap(),
         )
         .map(|reply_payload| {
@@ -272,14 +275,14 @@ fn hotornot_game_simulation_test() {
     let bob_place_bet_arg = PlaceBetArg {
         post_canister_id: alice_individual_template_canister_id,
         post_id: res2,
-        bet_amount: 100,
+        bet_amount: 100 * GDOLLR_TO_E8S,
         bet_direction: BetDirection::Not,
     };
     let bet_status = pic
         .update_call(
             bob_individual_template_canister_id,
-            bob_principal_id,
-            "bet_on_currently_viewing_post",
+            admin_principal_id,
+            "bet_on_currently_viewing_post_v1",
             encode_one(bob_place_bet_arg).unwrap(),
         )
         .map(|reply_payload| {
@@ -297,14 +300,14 @@ fn hotornot_game_simulation_test() {
     let dan_place_bet_arg = PlaceBetArg {
         post_canister_id: alice_individual_template_canister_id,
         post_id: res1,
-        bet_amount: 100,
+        bet_amount: 100 * GDOLLR_TO_E8S,
         bet_direction: BetDirection::Hot,
     };
     let bet_status = pic
         .update_call(
             dan_individual_template_canister_id,
-            dan_principal_id,
-            "bet_on_currently_viewing_post",
+            admin_principal_id,
+            "bet_on_currently_viewing_post_v1",
             encode_one(dan_place_bet_arg).unwrap(),
         )
         .map(|reply_payload| {
@@ -322,14 +325,14 @@ fn hotornot_game_simulation_test() {
     let dan_place_bet_arg = PlaceBetArg {
         post_canister_id: alice_individual_template_canister_id,
         post_id: res2,
-        bet_amount: 100,
+        bet_amount: 100 * GDOLLR_TO_E8S,
         bet_direction: BetDirection::Not,
     };
     let bet_status = pic
         .update_call(
             dan_individual_template_canister_id,
-            dan_principal_id,
-            "bet_on_currently_viewing_post",
+            admin_principal_id,
+            "bet_on_currently_viewing_post_v1",
             encode_one(dan_place_bet_arg).unwrap(),
         )
         .map(|reply_payload| {
@@ -347,14 +350,14 @@ fn hotornot_game_simulation_test() {
     let charlie_place_bet_arg = PlaceBetArg {
         post_canister_id: alice_individual_template_canister_id,
         post_id: res1,
-        bet_amount: 100,
+        bet_amount: 100 * GDOLLR_TO_E8S,
         bet_direction: BetDirection::Not,
     };
     let bet_status = pic
         .update_call(
             charlie_individual_template_canister_id,
             admin_principal_id,
-            "bet_on_currently_viewing_post",
+            "bet_on_currently_viewing_post_v1",
             encode_one(charlie_place_bet_arg).unwrap(),
         )
         .map(|reply_payload| {
@@ -372,14 +375,14 @@ fn hotornot_game_simulation_test() {
     let charlie_place_bet_arg = PlaceBetArg {
         post_canister_id: alice_individual_template_canister_id,
         post_id: res2,
-        bet_amount: 100,
+        bet_amount: 100 * GDOLLR_TO_E8S,
         bet_direction: BetDirection::Hot,
     };
     let bet_status = pic
         .update_call(
             charlie_individual_template_canister_id,
             admin_principal_id,
-            "bet_on_currently_viewing_post",
+            "bet_on_currently_viewing_post_v1",
             encode_one(charlie_place_bet_arg).unwrap(),
         )
         .map(|reply_payload| {
@@ -395,146 +398,82 @@ fn hotornot_game_simulation_test() {
 
     // Show alice rewards
 
-    let alice_rewards = pic
-        .query_call(
-            alice_individual_template_canister_id,
-            alice_principal_id,
-            "get_profile_details",
-            encode_one(()).unwrap(),
-        )
-        .map(|reply_payload| {
-            let profile: UserProfileDetailsForFrontend = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_rewards failed\n"),
-            };
-            profile
-        })
-        .unwrap();
-    println!("Alice rewards: {:?}", alice_rewards);
-
     let alice_token_balance = pic
         .query_call(
             alice_individual_template_canister_id,
             alice_principal_id,
-            "get_utility_token_balance",
+            "pd_balance_info",
             encode_one(()).unwrap(),
         )
         .map(|reply_payload| {
-            let token_balance: u64 = match reply_payload {
+            let token_balance: BalanceInfo = match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
                 _ => panic!("\n🛑 get_token_balance failed\n"),
             };
             token_balance
         })
-        .unwrap();
+        .unwrap()
+        .balance;
     println!("Alice token balance: {:?}", alice_token_balance);
 
     // Show bob rewards
-
-    let bob_rewards = pic
-        .query_call(
-            bob_individual_template_canister_id,
-            bob_principal_id,
-            "get_profile_details",
-            encode_one(()).unwrap(),
-        )
-        .map(|reply_payload| {
-            let profile: UserProfileDetailsForFrontend = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_rewards failed\n"),
-            };
-            profile
-        })
-        .unwrap();
-    println!("Bob rewards: {:?}", bob_rewards);
 
     let bob_token_balance = pic
         .query_call(
             bob_individual_template_canister_id,
             bob_principal_id,
-            "get_utility_token_balance",
+            "pd_balance_info",
             encode_one(()).unwrap(),
         )
         .map(|reply_payload| {
-            let token_balance: u64 = match reply_payload {
+            let token_balance: BalanceInfo = match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
                 _ => panic!("\n🛑 get_token_balance failed\n"),
             };
             token_balance
         })
-        .unwrap();
+        .unwrap()
+        .balance;
     println!("Bob token balance: {:?}", bob_token_balance);
 
     // Show dan rewards
-
-    let dan_rewards = pic
-        .query_call(
-            dan_individual_template_canister_id,
-            dan_principal_id,
-            "get_profile_details",
-            encode_one(()).unwrap(),
-        )
-        .map(|reply_payload| {
-            let profile: UserProfileDetailsForFrontend = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_rewards failed\n"),
-            };
-            profile
-        })
-        .unwrap();
-    println!("Dan rewards: {:?}", dan_rewards);
 
     let dan_token_balance = pic
         .query_call(
             dan_individual_template_canister_id,
             dan_principal_id,
-            "get_utility_token_balance",
+            "pd_balance_info",
             encode_one(()).unwrap(),
         )
         .map(|reply_payload| {
-            let token_balance: u64 = match reply_payload {
+            let token_balance: BalanceInfo = match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
                 _ => panic!("\n🛑 get_token_balance failed\n"),
             };
             token_balance
         })
-        .unwrap();
+        .unwrap()
+        .balance;
     println!("Dan token balance: {:?}", dan_token_balance);
 
     // Show charlie rewards
-
-    let charlie_rewards = pic
-        .query_call(
-            charlie_individual_template_canister_id,
-            admin_principal_id,
-            "get_profile_details",
-            encode_one(()).unwrap(),
-        )
-        .map(|reply_payload| {
-            let profile: UserProfileDetailsForFrontend = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_rewards failed\n"),
-            };
-            profile
-        })
-        .unwrap();
-    println!("Charlie rewards: {:?}", charlie_rewards);
 
     let charlie_token_balance = pic
         .query_call(
             charlie_individual_template_canister_id,
             admin_principal_id,
-            "get_utility_token_balance",
+            "pd_balance_info",
             encode_one(()).unwrap(),
         )
         .map(|reply_payload| {
-            let token_balance: u64 = match reply_payload {
+            let token_balance: BalanceInfo = match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
                 _ => panic!("\n🛑 get_token_balance failed\n"),
             };
             token_balance
         })
-        .unwrap();
+        .unwrap()
+        .balance;
     println!("Charlie token balance: {:?}", charlie_token_balance);
 
     // Forward timer
@@ -546,155 +485,87 @@ fn hotornot_game_simulation_test() {
 
     // Show alice rewards
 
-    let alice_rewards = pic
-        .query_call(
-            alice_individual_template_canister_id,
-            alice_principal_id,
-            "get_profile_details",
-            encode_one(()).unwrap(),
-        )
-        .map(|reply_payload| {
-            let profile: UserProfileDetailsForFrontend = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_rewards failed\n"),
-            };
-            profile
-        })
-        .unwrap();
-    println!("Alice rewards: {:?}", alice_rewards);
-    assert_eq!(alice_rewards.lifetime_earnings, 60);
-
     let alice_token_balance = pic
         .query_call(
             alice_individual_template_canister_id,
             alice_principal_id,
-            "get_utility_token_balance",
+            "pd_balance_info",
             encode_one(()).unwrap(),
         )
         .map(|reply_payload| {
-            let token_balance: u64 = match reply_payload {
+            let token_balance: BalanceInfo = match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
                 _ => panic!("\n🛑 get_token_balance failed\n"),
             };
             token_balance
         })
-        .unwrap();
+        .unwrap()
+        .balance;
     println!("Alice token balance: {:?}", alice_token_balance);
-    assert_eq!(alice_token_balance, 60);
+    assert_eq!(alice_token_balance, 60 * GDOLLR_TO_E8S as u128);
 
     // Show bob rewards
-
-    let bob_rewards = pic
-        .query_call(
-            bob_individual_template_canister_id,
-            bob_principal_id,
-            "get_profile_details",
-            encode_one(()).unwrap(),
-        )
-        .map(|reply_payload| {
-            let profile: UserProfileDetailsForFrontend = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_rewards failed\n"),
-            };
-            profile
-        })
-        .unwrap();
-    println!("Bob rewards: {:?}", bob_rewards);
-    assert_eq!(bob_rewards.lifetime_earnings, 1160);
 
     let bob_token_balance = pic
         .query_call(
             bob_individual_template_canister_id,
             bob_principal_id,
-            "get_utility_token_balance",
+            "pd_balance_info",
             encode_one(()).unwrap(),
         )
         .map(|reply_payload| {
-            let token_balance: u64 = match reply_payload {
+            let token_balance: BalanceInfo = match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
                 _ => panic!("\n🛑 get_token_balance failed\n"),
             };
             token_balance
         })
-        .unwrap();
+        .unwrap()
+        .balance;
     println!("Bob token balance: {:?}", bob_token_balance);
-    assert_eq!(bob_token_balance, 1160);
+    assert_eq!(bob_token_balance, 1160 * GDOLLR_TO_E8S as u128);
 
     // Show dan rewards
-
-    let dan_rewards = pic
-        .query_call(
-            dan_individual_template_canister_id,
-            dan_principal_id,
-            "get_profile_details",
-            encode_one(()).unwrap(),
-        )
-        .map(|reply_payload| {
-            let profile: UserProfileDetailsForFrontend = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_rewards failed\n"),
-            };
-            profile
-        })
-        .unwrap();
-    println!("Dan rewards: {:?}", dan_rewards);
-    assert_eq!(dan_rewards.lifetime_earnings, 1160);
 
     let dan_token_balance = pic
         .query_call(
             dan_individual_template_canister_id,
             dan_principal_id,
-            "get_utility_token_balance",
+            "pd_balance_info",
             encode_one(()).unwrap(),
         )
         .map(|reply_payload| {
-            let token_balance: u64 = match reply_payload {
+            let token_balance: BalanceInfo = match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
                 _ => panic!("\n🛑 get_token_balance failed\n"),
             };
             token_balance
         })
-        .unwrap();
+        .unwrap()
+        .balance;
     println!("Dan token balance: {:?}", dan_token_balance);
-    assert_eq!(dan_token_balance, 1160);
+    assert_eq!(dan_token_balance, 1160 * GDOLLR_TO_E8S as u128);
 
     // Show charlie rewards
-
-    let charlie_rewards = pic
-        .query_call(
-            charlie_individual_template_canister_id,
-            admin_principal_id,
-            "get_profile_details",
-            encode_one(()).unwrap(),
-        )
-        .map(|reply_payload| {
-            let profile: UserProfileDetailsForFrontend = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_rewards failed\n"),
-            };
-            profile
-        })
-        .unwrap();
-    println!("Charlie rewards: {:?}", charlie_rewards);
-    assert_eq!(charlie_rewards.lifetime_earnings, 1000);
 
     let charlie_token_balance = pic
         .query_call(
             charlie_individual_template_canister_id,
             admin_principal_id,
-            "get_utility_token_balance",
+            "pd_balance_info",
             encode_one(()).unwrap(),
         )
         .map(|reply_payload| {
-            let token_balance: u64 = match reply_payload {
+            let token_balance: BalanceInfo = match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
                 _ => panic!("\n🛑 get_token_balance failed\n"),
             };
             token_balance
         })
-        .unwrap();
+        .unwrap()
+        .balance;
     println!("Charlie token balance: {:?}", charlie_token_balance);
-    assert_eq!(charlie_token_balance, 800);
+    assert_eq!(charlie_token_balance, 800 * GDOLLR_TO_E8S as u128);
 
     // Bob creates a post
 
@@ -733,14 +604,14 @@ fn hotornot_game_simulation_test() {
     let alice_place_bet_arg = PlaceBetArg {
         post_canister_id: bob_individual_template_canister_id,
         post_id: res1,
-        bet_amount: 100,
+        bet_amount: 100 * GDOLLR_TO_E8S,
         bet_direction: BetDirection::Not,
     };
     let bet_status = pic
         .update_call(
             alice_individual_template_canister_id,
-            alice_principal_id,
-            "bet_on_currently_viewing_post",
+            admin_principal_id,
+            "bet_on_currently_viewing_post_v1",
             encode_one(alice_place_bet_arg).unwrap(),
         )
         .map(|reply_payload| {
@@ -758,14 +629,14 @@ fn hotornot_game_simulation_test() {
     let dan_place_bet_arg = PlaceBetArg {
         post_canister_id: bob_individual_template_canister_id,
         post_id: res1,
-        bet_amount: 100,
+        bet_amount: 100 * GDOLLR_TO_E8S,
         bet_direction: BetDirection::Not,
     };
     let bet_status = pic
         .update_call(
             dan_individual_template_canister_id,
-            dan_principal_id,
-            "bet_on_currently_viewing_post",
+            admin_principal_id,
+            "bet_on_currently_viewing_post_v1",
             encode_one(dan_place_bet_arg).unwrap(),
         )
         .map(|reply_payload| {
@@ -783,14 +654,14 @@ fn hotornot_game_simulation_test() {
     let charlie_place_bet_arg = PlaceBetArg {
         post_canister_id: bob_individual_template_canister_id,
         post_id: res1,
-        bet_amount: 100,
+        bet_amount: 100 * GDOLLR_TO_E8S,
         bet_direction: BetDirection::Hot,
     };
     let bet_status = pic
         .update_call(
             charlie_individual_template_canister_id,
             admin_principal_id,
-            "bet_on_currently_viewing_post",
+            "bet_on_currently_viewing_post_v1",
             encode_one(charlie_place_bet_arg).unwrap(),
         )
         .map(|reply_payload| {
@@ -811,155 +682,87 @@ fn hotornot_game_simulation_test() {
     }
     // Show alice rewards
 
-    let alice_rewards = pic
-        .query_call(
-            alice_individual_template_canister_id,
-            alice_principal_id,
-            "get_profile_details",
-            encode_one(()).unwrap(),
-        )
-        .map(|reply_payload| {
-            let profile: UserProfileDetailsForFrontend = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_rewards failed\n"),
-            };
-            profile
-        })
-        .unwrap();
-    println!("Alice rewards: {:?}", alice_rewards);
-    assert_eq!(alice_rewards.lifetime_earnings, 1140);
-
     let alice_token_balance = pic
         .query_call(
             alice_individual_template_canister_id,
             alice_principal_id,
-            "get_utility_token_balance",
+            "pd_balance_info",
             encode_one(()).unwrap(),
         )
         .map(|reply_payload| {
-            let token_balance: u64 = match reply_payload {
+            let token_balance: BalanceInfo = match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
                 _ => panic!("\n🛑 get_token_balance failed\n"),
             };
             token_balance
         })
-        .unwrap();
+        .unwrap()
+        .balance;
     println!("Alice token balance: {:?}", alice_token_balance);
-    assert_eq!(alice_token_balance, 1140);
+    assert_eq!(alice_token_balance, 1140 * GDOLLR_TO_E8S as u128);
 
     // Show bob rewards
-
-    let bob_rewards = pic
-        .query_call(
-            bob_individual_template_canister_id,
-            bob_principal_id,
-            "get_profile_details",
-            encode_one(()).unwrap(),
-        )
-        .map(|reply_payload| {
-            let profile: UserProfileDetailsForFrontend = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_rewards failed\n"),
-            };
-            profile
-        })
-        .unwrap();
-    println!("Bob rewards: {:?}", bob_rewards);
-    assert_eq!(bob_rewards.lifetime_earnings, 1190);
 
     let bob_token_balance = pic
         .query_call(
             bob_individual_template_canister_id,
             bob_principal_id,
-            "get_utility_token_balance",
+            "pd_balance_info",
             encode_one(()).unwrap(),
         )
         .map(|reply_payload| {
-            let token_balance: u64 = match reply_payload {
+            let token_balance: BalanceInfo = match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
                 _ => panic!("\n🛑 get_token_balance failed\n"),
             };
             token_balance
         })
-        .unwrap();
+        .unwrap()
+        .balance;
     println!("Bob token balance: {:?}", bob_token_balance);
-    assert_eq!(bob_token_balance, 1190);
+    assert_eq!(bob_token_balance, 1190 * GDOLLR_TO_E8S as u128);
 
     // Show dan rewards
-
-    let dan_rewards = pic
-        .query_call(
-            dan_individual_template_canister_id,
-            dan_principal_id,
-            "get_profile_details",
-            encode_one(()).unwrap(),
-        )
-        .map(|reply_payload| {
-            let profile: UserProfileDetailsForFrontend = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_rewards failed\n"),
-            };
-            profile
-        })
-        .unwrap();
-    println!("Dan rewards: {:?}", dan_rewards);
-    assert_eq!(dan_rewards.lifetime_earnings, 1240);
 
     let dan_token_balance = pic
         .query_call(
             dan_individual_template_canister_id,
             dan_principal_id,
-            "get_utility_token_balance",
+            "pd_balance_info",
             encode_one(()).unwrap(),
         )
         .map(|reply_payload| {
-            let token_balance: u64 = match reply_payload {
+            let token_balance: BalanceInfo = match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
                 _ => panic!("\n🛑 get_token_balance failed\n"),
             };
             token_balance
         })
-        .unwrap();
+        .unwrap()
+        .balance;
     println!("Dan token balance: {:?}", dan_token_balance);
-    assert_eq!(dan_token_balance, 1240);
+    assert_eq!(dan_token_balance, 1240 * GDOLLR_TO_E8S as u128);
 
     // Show charlie rewards
-
-    let charlie_rewards = pic
-        .query_call(
-            charlie_individual_template_canister_id,
-            admin_principal_id,
-            "get_profile_details",
-            encode_one(()).unwrap(),
-        )
-        .map(|reply_payload| {
-            let profile: UserProfileDetailsForFrontend = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_rewards failed\n"),
-            };
-            profile
-        })
-        .unwrap();
-    println!("Charlie rewards: {:?}", charlie_rewards);
-    assert_eq!(charlie_rewards.lifetime_earnings, 1000);
 
     let charlie_token_balance = pic
         .query_call(
             charlie_individual_template_canister_id,
             admin_principal_id,
-            "get_utility_token_balance",
+            "pd_balance_info",
             encode_one(()).unwrap(),
         )
         .map(|reply_payload| {
-            let token_balance: u64 = match reply_payload {
+            let token_balance: BalanceInfo = match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
                 _ => panic!("\n🛑 get_token_balance failed\n"),
             };
             token_balance
         })
-        .unwrap();
+        .unwrap()
+        .balance;
     println!("Charlie token balance: {:?}", charlie_token_balance);
-    assert_eq!(charlie_token_balance, 700);
+    assert_eq!(charlie_token_balance, 700 * GDOLLR_TO_E8S as u128);
 }
 
 #[test]
@@ -1079,7 +882,7 @@ fn hotornot_game_simulation_test_2() {
         let place_bet_arg = PlaceBetArg {
             post_canister_id: last_individual_template_canister_id,
             post_id: post_used_for_betting.id,
-            bet_amount: 100,
+            bet_amount: 100 * GDOLLR_TO_E8S,
             bet_direction: BetDirection::Hot,
         };
 
@@ -1089,8 +892,8 @@ fn hotornot_game_simulation_test_2() {
         let bet_status = pic
             .update_call(
                 individual_user_canister,
-                individual_user_principal,
-                "bet_on_currently_viewing_post",
+                global_admin,
+                "bet_on_currently_viewing_post_v1",
                 encode_one(place_bet_arg).unwrap(),
             )
             .map(|reply_payload| {
@@ -1119,18 +922,19 @@ fn hotornot_game_simulation_test_2() {
             .query_call(
                 individual_user_canister,
                 individual_user_principal,
-                "get_utility_token_balance",
+                "pd_balance_info",
                 encode_one(()).unwrap(),
             )
             .map(|reply_payload| {
-                let token_balance: u64 = match reply_payload {
+                let token_balance: BalanceInfo = match reply_payload {
                     WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
                     _ => panic!("\n🛑 get_token_balance failed\n"),
                 };
                 token_balance
             })
-            .unwrap();
-        assert_eq!(token_balance, 900);
+            .unwrap()
+            .balance;
+        assert_eq!(token_balance, 900 * GDOLLR_TO_E8S as u128);
 
         // ic_cdk::println!("Bet status: {:?}", bet_status);
         if i % 10 == 0 {
@@ -1148,76 +952,44 @@ fn hotornot_game_simulation_test_2() {
 
     // Check rewards
 
-    let last_rewards = pic
-        .query_call(
-            last_individual_template_canister_id,
-            last_individual_template_principal_id,
-            "get_profile_details",
-            encode_one(()).unwrap(),
-        )
-        .map(|reply_payload| {
-            let profile: UserProfileDetailsForFrontend = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_rewards failed\n"),
-            };
-            profile
-        })
-        .unwrap();
-    assert_eq!(last_rewards.lifetime_earnings, 2100);
-    // println!("Last rewards: {:?}", last_rewards.lifetime_earnings);
-
     let last_token_balance = pic
         .query_call(
             last_individual_template_canister_id,
             last_individual_template_principal_id,
-            "get_utility_token_balance",
+            "pd_balance_info",
             encode_one(()).unwrap(),
         )
         .map(|reply_payload| {
-            let token_balance: u64 = match reply_payload {
+            let token_balance: BalanceInfo = match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
                 _ => panic!("\n🛑 get_token_balance failed\n"),
             };
             token_balance
         })
-        .unwrap();
-    assert_eq!(last_token_balance, 2100);
+        .unwrap()
+        .balance;
+    assert_eq!(last_token_balance, 2100 * GDOLLR_TO_E8S as u128);
     // println!("Last token balance: {:?}", last_token_balance);
 
     for i in 1..=110 {
-        let rewards = pic
+        let token_info = pic
             .query_call(
                 individual_template_canister_ids[i - 1],
                 Principal::self_authenticating((i as usize).to_ne_bytes()),
-                "get_profile_details",
+                "pd_balance_info",
                 encode_one(()).unwrap(),
             )
             .map(|reply_payload| {
-                let profile: UserProfileDetailsForFrontend = match reply_payload {
-                    WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                    _ => panic!("\n🛑 get_rewards failed\n"),
-                };
-                profile
-            })
-            .unwrap();
-        assert_eq!(rewards.lifetime_earnings, 1080);
-
-        let token_balance = pic
-            .query_call(
-                individual_template_canister_ids[i - 1],
-                Principal::self_authenticating((i as usize).to_ne_bytes()),
-                "get_utility_token_balance",
-                encode_one(()).unwrap(),
-            )
-            .map(|reply_payload| {
-                let token_balance: u64 = match reply_payload {
+                let token_balance: BalanceInfo = match reply_payload {
                     WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
                     _ => panic!("\n🛑 get_token_balance failed\n"),
                 };
                 token_balance
             })
             .unwrap();
-        assert_eq!(token_balance, 1080);
+
+        assert_eq!(token_info.balance, 1080 * GDOLLR_TO_E8S as u128);
+
         // println!("Token balance for user {}: {:?}", i, token_balance);
     }
 }

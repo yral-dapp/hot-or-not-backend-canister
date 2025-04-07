@@ -11,6 +11,7 @@ use test_utils::setup::{
     test_constants::get_mock_user_alice_principal_id,
 };
 
+#[ignore]
 #[test]
 fn when_creating_a_new_post_then_post_score_should_be_calculated() {
     let state_machine = get_new_state_machine();

@@ -11,6 +11,7 @@ use shared_utils::common::{
 
 use crate::{data_model::CanisterData, CANISTER_DATA};
 
+#[deprecated]
 pub fn send_update_post_cache(post_id: &u64) {
     let current_time = system_time::get_current_system_time();
     let canisters_own_principal_id = ic_cdk::id();
@@ -67,8 +68,7 @@ pub fn update_local_cache_get_items(
     current_time: SystemTime,
     canisters_own_principal_id: Principal,
 ) -> (Option<PostScoreIndexItemV1>, Option<PostScoreIndexItemV1>) {
-    let all_posts = &mut canister_data.all_created_posts;
-    if !all_posts.contains_key(&post_id) {
+    if !canister_data.contains_post(&post_id) {
         return (None, None);
     }
     let mut home_feed_index_score_item: Option<PostScoreIndexItemV1> = None;

@@ -5,27 +5,21 @@ use serde::Serialize;
 use serde_json_any_key::*;
 
 use crate::common::types::utility_token::token_event::{
-    HotOrNotOutcomePayoutEvent, MintEvent, StakeEvent, TokenEvent,
+    HotOrNotOutcomePayoutEvent, MintEvent, PumpDumpOutcomePayoutEvent, StakeEvent, TokenEvent,
     HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE, HOT_OR_NOT_BET_WINNINGS_MULTIPLIER,
 };
 
-#[derive(Default, Clone, Deserialize, CandidType, Debug, Serialize)]
-pub struct TokenBalance {
-    pub utility_token_balance: u64,
-    pub utility_token_transaction_history: BTreeMap<u64, TokenEvent>,
-    pub lifetime_earnings: u64,
+pub trait TokenTransactions {
+    fn get_current_token_balance(&self) -> u128;
+    fn handle_token_event(&mut self, token_event: TokenEvent);
 }
 
-impl TokenBalance {
-    pub fn get_utility_token_balance(&self) -> u64 {
-        self.utility_token_balance
+impl TokenTransactions for TokenBalance {
+    fn get_current_token_balance(&self) -> u128 {
+        self.utility_token_balance as u128
     }
 
-    pub fn get_utility_token_transaction_history(&self) -> &BTreeMap<u64, TokenEvent> {
-        &self.utility_token_transaction_history
-    }
-
-    pub fn handle_token_event(&mut self, token_event: TokenEvent) {
+    fn handle_token_event(&mut self, token_event: TokenEvent) {
         match &token_event {
             TokenEvent::Mint { details, .. } => match details {
                 MintEvent::NewUserSignup { .. } => {
@@ -36,6 +30,10 @@ impl TokenBalance {
                     self.utility_token_balance += token_event.get_token_amount_for_token_event();
                     self.lifetime_earnings += token_event.get_token_amount_for_token_event();
                 }
+                MintEvent::Airdrop { amount } => {
+                    self.utility_token_balance += amount;
+                    self.lifetime_earnings += amount;
+                }
             },
             TokenEvent::Burn => {}
             TokenEvent::Transfer { amount, .. } => {
@@ -44,11 +42,24 @@ impl TokenBalance {
             TokenEvent::Receive { amount, .. } => {
                 self.utility_token_balance += amount;
             }
-            TokenEvent::Stake { details, .. } => match details {
-                StakeEvent::BetOnHotOrNotPost { .. } => {
-                    // self.utility_token_balance -= bet_amount;
+            TokenEvent::Stake {
+                details, amount, ..
+            } => match details {
+                StakeEvent::BetOnHotOrNotPost { bet_amount, .. } => {
+                    self.utility_token_balance -= bet_amount;
+                }
+                StakeEvent::BetFailureRefund { bet_amount, .. } => {
+                    self.utility_token_balance += bet_amount;
+                }
+                StakeEvent::BetOnPumpDump {
+                    pumps,
+                    dumps,
+                    root_canister_id,
+                } => {
+                    self.utility_token_balance -= amount;
                 }
             },
+
             TokenEvent::HotOrNotOutcomePayout { details, .. } => match details {
                 HotOrNotOutcomePayoutEvent::CommissionFromHotOrNotBet {
                     room_pot_total_amount,
@@ -67,6 +78,21 @@ impl TokenBalance {
                         get_earnings_amount_from_winnings_amount(winnings_amount);
                 }
             },
+            TokenEvent::PumpDumpOutcomePayout {
+                amount,
+                payout_type,
+            } => match payout_type {
+                PumpDumpOutcomePayoutEvent::CreatorRewardFromPumpDumpGame => {
+                    self.utility_token_balance += *amount as u64;
+                    self.lifetime_earnings += *amount as u64;
+                }
+                PumpDumpOutcomePayoutEvent::RewardFromPumpDumpGame { .. } => {
+                    self.utility_token_balance += *amount as u64;
+                    self.lifetime_earnings += *amount as u64;
+                }
+            },
+
+            TokenEvent::Withdraw { .. } => {}
         }
 
         let utility_token_transaction_history = &mut self.utility_token_transaction_history;
@@ -83,18 +109,22 @@ impl TokenBalance {
         self.utility_token_transaction_history
             .insert(last_key + 1, token_event);
     }
+}
 
-    // this is being done to handle concurrency issues inside canister
-    pub fn adjust_balance_pre_bet(&mut self, bet_amount: u64) {
-        self.utility_token_balance -= bet_amount;
-    }
+#[derive(Default, Clone, Deserialize, CandidType, Debug, Serialize)]
+pub struct TokenBalance {
+    pub utility_token_balance: u64,
+    pub utility_token_transaction_history: BTreeMap<u64, TokenEvent>,
+    pub lifetime_earnings: u64,
+}
 
-    pub fn adjust_balance_for_failed_bet_placement(&mut self, bet_amount: u64) {
-        self.utility_token_balance += bet_amount;
+impl TokenBalance {
+    pub fn get_utility_token_transaction_history(&self) -> &BTreeMap<u64, TokenEvent> {
+        &self.utility_token_transaction_history
     }
 }
 
-fn get_earnings_amount_from_winnings_amount(winnings_amount: &u64) -> u64 {
+pub fn get_earnings_amount_from_winnings_amount(winnings_amount: &u64) -> u64 {
     let comission_subtracted_bet_amount = winnings_amount / HOT_OR_NOT_BET_WINNINGS_MULTIPLIER;
     let bet_amount = comission_subtracted_bet_amount * 100
         / (100 - HOT_OR_NOT_BET_CREATOR_COMMISSION_PERCENTAGE);
@@ -105,6 +135,7 @@ fn get_earnings_amount_from_winnings_amount(winnings_amount: &u64) -> u64 {
 mod test {
     use super::*;
 
+    //TODO: fix this.
     mod test_handle_token_event {
         use std::time::SystemTime;
 
@@ -221,8 +252,7 @@ mod test {
                 timestamp: SystemTime::now(),
             });
 
-            // this event is special and does not change the balance
-            assert_eq!(token_balance.utility_token_balance, 1500);
+            assert_eq!(token_balance.utility_token_balance, 1400);
         }
     }
 

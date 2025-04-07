@@ -1,5 +1,8 @@
 pub mod bet_maker_canister_tests;
+pub mod bet_maker_canister_tests_using_cents;
+pub mod hot_or_not_simulation_using_cents_test;
 pub mod hot_or_not_timely_index_update_test;
 pub mod hotornot_game_simulation_test;
 pub mod reconcile_scores_test;
+pub mod test_hot_or_not_bets_placed_using_cents_are_computed_even_after_individual_canister_upgrade;
 pub mod when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_occur;
