@@ -234,7 +234,7 @@ async fn receive_bet_winnings_when_distributed(
 }
 
 pub async fn inform_participants_of_outcome_v1(post_id: u64, slot_id: u8) {
-    ic_cdk::println!("Informating participant for post: {post_id} and slot: {slot_id}");
+    ic_cdk::println!("Informing participant for post: {post_id} and slot: {slot_id}");
     let Some(post) = CANISTER_DATA.with_borrow(|canister_data| {
         let post = canister_data.get_post(&post_id);
         post.cloned()
