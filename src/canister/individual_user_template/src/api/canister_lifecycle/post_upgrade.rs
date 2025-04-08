@@ -6,7 +6,9 @@ use std::borrow::BorrowMut;
 
 use crate::{data_model::memory, PUMP_N_DUMP};
 
-use shared_utils::canister_specific::individual_user_template::types::{arg::IndividualUserTemplateInitArgs, session::SessionType};
+use shared_utils::canister_specific::individual_user_template::types::{
+    arg::IndividualUserTemplateInitArgs, session::SessionType,
+};
 
 use crate::{
     api::hot_or_not_bet::reenqueue_timers_for_pending_bet_outcomes::reenqueue_timers_for_pending_bet_outcomes,
@@ -45,16 +47,12 @@ fn restore_data_from_stable_memory() {
     let mut pump_n_dump_data_bytes = vec![0; heap_data_len];
     upgrade_reader.read(&mut pump_n_dump_data_bytes).unwrap();
 
-    match de::from_reader(&*pump_n_dump_data_bytes) {
-        Ok(pd_data) => {
-            PUMP_N_DUMP.with_borrow_mut(|pd| {
-                *pd = pd_data;
-            });
-        },
-        Err(e) => {
-            ic_cdk::println!("WARN: pump and data not available during upgrade, assuming uninit {e}")
-        }
-    };
+    let token_bet_data = de::from_reader(&*pump_n_dump_data_bytes)
+        .expect("Failed to deserialize pump and dump heap data");
+
+    PUMP_N_DUMP.with_borrow_mut(|token_bet_game| {
+        *token_bet_game = token_bet_data;
+    });
 }
 
 fn save_upgrade_args_to_memory() {
