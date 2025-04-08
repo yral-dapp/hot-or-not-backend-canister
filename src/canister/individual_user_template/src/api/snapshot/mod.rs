@@ -63,8 +63,6 @@ pub struct CanisterDataForSnapshot {
     #[serde(with = "any_key_map")]
     pub known_principal_ids: KnownPrincipalMap,
     pub my_token_balance: TokenBalanceForSnapshot,
-    pub posts_index_sorted_by_home_feed_score: PostScoreIndexForSnapshot,
-    pub posts_index_sorted_by_hot_or_not_feed_score: PostScoreIndexForSnapshot,
     pub principals_i_follow: BTreeSet<Principal>,
     pub principals_that_follow_me: BTreeSet<Principal>,
     pub profile: UserProfile,
@@ -202,28 +200,6 @@ impl From<&CanisterData> for CanisterDataForSnapshot {
             },
         };
 
-        let posts_index_sorted_by_home_feed_score = PostScoreIndexForSnapshot {
-            items_sorted_by_score: canister_data
-                .posts_index_sorted_by_home_feed_score
-                .items_sorted_by_score
-                .clone(),
-            item_presence_index: canister_data
-                .posts_index_sorted_by_home_feed_score
-                .item_presence_index
-                .clone(),
-        };
-
-        let posts_index_sorted_by_hot_or_not_feed_score = PostScoreIndexForSnapshot {
-            items_sorted_by_score: canister_data
-                .posts_index_sorted_by_hot_or_not_feed_score
-                .items_sorted_by_score
-                .clone(),
-            item_presence_index: canister_data
-                .posts_index_sorted_by_hot_or_not_feed_score
-                .item_presence_index
-                .clone(),
-        };
-
         Self {
             all_created_posts,
             room_details_map,
@@ -235,8 +211,6 @@ impl From<&CanisterData> for CanisterDataForSnapshot {
             follow_data,
             known_principal_ids: canister_data.known_principal_ids.clone(),
             my_token_balance,
-            posts_index_sorted_by_home_feed_score,
-            posts_index_sorted_by_hot_or_not_feed_score,
             principals_i_follow: canister_data.principals_i_follow.clone(),
             principals_that_follow_me: canister_data.principals_that_follow_me.clone(),
             profile: canister_data.profile.clone(),
@@ -359,28 +333,6 @@ impl From<CanisterDataForSnapshot> for CanisterData {
             },
         };
 
-        let posts_index_sorted_by_home_feed_score = PostScoreIndex {
-            items_sorted_by_score: canister_data_for_snapshot
-                .posts_index_sorted_by_home_feed_score
-                .items_sorted_by_score
-                .clone(),
-            item_presence_index: canister_data_for_snapshot
-                .posts_index_sorted_by_home_feed_score
-                .item_presence_index
-                .clone(),
-        };
-
-        let posts_index_sorted_by_hot_or_not_feed_score = PostScoreIndex {
-            items_sorted_by_score: canister_data_for_snapshot
-                .posts_index_sorted_by_hot_or_not_feed_score
-                .items_sorted_by_score
-                .clone(),
-            item_presence_index: canister_data_for_snapshot
-                .posts_index_sorted_by_hot_or_not_feed_score
-                .item_presence_index
-                .clone(),
-        };
-
         let mut canister_data = CanisterData::default();
 
         canister_data.room_details_map = room_details_map;
@@ -393,9 +345,6 @@ impl From<CanisterDataForSnapshot> for CanisterData {
         canister_data.follow_data = follow_data;
         canister_data.known_principal_ids = canister_data_for_snapshot.known_principal_ids;
         canister_data.my_token_balance = my_token_balance;
-        canister_data.posts_index_sorted_by_home_feed_score = posts_index_sorted_by_home_feed_score;
-        canister_data.posts_index_sorted_by_hot_or_not_feed_score =
-            posts_index_sorted_by_hot_or_not_feed_score;
         canister_data.principals_i_follow = canister_data_for_snapshot.principals_i_follow;
         canister_data.principals_that_follow_me =
             canister_data_for_snapshot.principals_that_follow_me;

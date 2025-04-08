@@ -305,8 +305,6 @@ pub(crate) struct CanisterData {
     pub follow_data: FollowData,
     pub known_principal_ids: KnownPrincipalMap,
     pub my_token_balance: TokenBalance,
-    pub posts_index_sorted_by_home_feed_score: PostScoreIndex,
-    pub posts_index_sorted_by_hot_or_not_feed_score: PostScoreIndex,
     pub principals_i_follow: BTreeSet<Principal>,
     pub principals_that_follow_me: BTreeSet<Principal>,
     pub profile: UserProfile,
@@ -326,16 +324,10 @@ pub(crate) struct CanisterData {
     #[serde(skip, default = "_default_success_history_v1")]
     pub success_history: ic_stable_structures::btreemap::BTreeMap<SuccessHistoryItemV1, (), Memory>,
     #[serde(default)]
-    pub device_identities: Vec<DeviceIdentity>,
-    #[serde(default)]
-    pub ml_feed_cache: Vec<MLFeedCacheItem>,
-    #[serde(default)]
     pub cdao_canisters: Vec<DeployedCdaoCanisters>,
     // list of root token canisters
     #[serde(skip, default = "_default_token_list")]
     pub token_roots: ic_stable_structures::btreemap::BTreeMap<Principal, (), Memory>,
-    #[serde(default)]
-    pub ml_data: MLData,
     #[serde(default)]
     pub empty_canisters: AllotedEmptyCanister,
 }
@@ -632,8 +624,6 @@ impl Default for CanisterData {
             follow_data: FollowData::default(),
             known_principal_ids: KnownPrincipalMap::default(),
             my_token_balance: TokenBalance::default(),
-            posts_index_sorted_by_home_feed_score: PostScoreIndex::default(),
-            posts_index_sorted_by_hot_or_not_feed_score: PostScoreIndex::default(),
             principals_i_follow: BTreeSet::new(),
             principals_that_follow_me: BTreeSet::new(),
             profile: UserProfile::default(),
@@ -645,11 +635,8 @@ impl Default for CanisterData {
             app_storage: AppStorage::default(),
             watch_history: _default_watch_history(),
             success_history: _default_success_history_v1(),
-            device_identities: Vec::new(),
-            ml_feed_cache: Vec::new(),
             cdao_canisters: Vec::new(),
             token_roots: _default_token_list(),
-            ml_data: MLData::default(),
             empty_canisters: AllotedEmptyCanister::default(),
         }
     }
