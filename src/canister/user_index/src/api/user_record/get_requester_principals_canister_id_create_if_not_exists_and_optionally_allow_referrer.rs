@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use crate::{
     util::canister_management::{
         check_and_request_cycles_from_platform_orchestrator, create_empty_user_canister,
@@ -118,7 +120,7 @@ async fn new_user_signup(user_id: Principal) -> Result<Principal, String> {
         .with_borrow_mut(|canister_data| {
             let mut available_canisters = canister_data.available_canisters.iter().cloned();
             let canister_id = available_canisters.next();
-            canister_data.available_canisters = available_canisters.collect(); // available canisters 
+            canister_data.available_canisters = available_canisters.collect(); // available canisters
             canister_id
         })
         .ok_or("Not Available".into());
@@ -205,10 +207,14 @@ async fn provision_new_available_canisters(individual_user_template_canister_was
             individual_user_template_canister_wasm.wasm_blob.clone();
 
         let canister_id = CANISTER_DATA.with_borrow_mut(|canister_data| {
-            let canister_id = canister_data.backup_canister_pool.iter().next().copied().unwrap();
+            let canister_id = canister_data
+                .backup_canister_pool
+                .iter()
+                .next()
+                .copied()
+                .unwrap();
             canister_data.backup_canister_pool.remove(&canister_id);
             canister_id
-
         });
 
         async move {
@@ -233,7 +239,16 @@ async fn provision_new_available_canisters(individual_user_template_canister_was
                 canister_data.available_canisters.insert(canister_id);
             }
             Err(e) => {
-                canister_data.backup_canister_pool.insert(e.0);
+                if !canister_data.available_canisters.contains(&e.0)
+                    && !canister_data
+                        .user_principal_id_to_canister_id_map
+                        .values()
+                        .copied()
+                        .collect::<HashSet<Principal>>()
+                        .contains(&e.0)
+                {
+                    canister_data.backup_canister_pool.insert(e.0);
+                }
                 ic_cdk::println!("Error installing wasm for canister {} {}", e.0, e.1);
             }
         })
