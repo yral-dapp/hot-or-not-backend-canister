@@ -1,10 +1,7 @@
 use std::cell::RefCell;
 use std::{collections::BTreeMap, time::SystemTime};
 
-use api::{
-    follow::update_profiles_that_follow_me_toggle_list_with_specified_profile::FollowerArg,
-    profile::update_profile_display_details::UpdateProfileDetailsError,
-};
+use api::profile::update_profile_display_details::UpdateProfileDetailsError;
 use candid::{Nat, Principal};
 use data_model::pump_n_dump::{PumpAndDumpGame, TokenBetGame};
 use data_model::CanisterData;

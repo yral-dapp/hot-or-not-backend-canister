@@ -185,30 +185,13 @@ mod test {
             post_principal_map: post_principal_map,
             slot_details_map: slot_details_map,
             all_hot_or_not_bets_placed: all_hot_or_not_bets_placed,
-            configuration: IndividualUserConfiguration {
-                url_to_send_canister_metrics_to: Some("dsfsd".to_string()),
-            },
-            follow_data: FollowDataForSnapshot {
-                follower: FollowListForSnapshot {
-                    sorted_index: follow_sorted_index.clone(),
-                    members: follow_members.clone(),
-                },
-                following: FollowListForSnapshot {
-                    sorted_index: follow_sorted_index,
-                    members: follow_members,
-                },
-            },
             known_principal_ids: known_principal_ids,
             my_token_balance: TokenBalanceForSnapshot {
                 utility_token_balance: 100,
                 utility_token_transaction_history: utility_history,
                 lifetime_earnings: 1200,
             },
-            principals_i_follow: principal_list.clone(),
-            principals_that_follow_me: principal_list,
             profile: UserProfile {
-                display_name: Some("dadfk".to_string()),
-                unique_user_name: Some("dadfk".to_string()),
                 principal_id: Some(temp_principal),
                 profile_picture_url: Some("dadfk".to_string()),
                 profile_stats: UserProfileGlobalStats {
@@ -223,7 +206,6 @@ mod test {
             },
             session_type: Some(SessionType::RegisteredSession),
             last_access_time: Some(SystemTime::now()),
-            last_canister_functionality_access_time: Some(SystemTime::now()),
             migration_info: MigrationInfo::NotMigrated,
         };
 

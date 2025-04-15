@@ -11,18 +11,13 @@ use shared_utils::{
     pagination::{self, PaginationError},
 };
 
-use crate::{
-    api::canister_management::update_last_access_time::update_last_canister_functionality_access_time,
-    data_model::CanisterData, CANISTER_DATA,
-};
+use crate::CANISTER_DATA;
 
 #[query]
 fn get_posts_of_this_user_profile_with_pagination_cursor(
     from_inclusive_index: u64,
     limit: u64,
 ) -> Result<Vec<PostDetailsForFrontend>, GetPostsOfUserProfileError> {
-    update_last_canister_functionality_access_time();
-
     let api_caller = ic_cdk::caller();
     let current_time = system_time::get_current_system_time_from_ic();
     CANISTER_DATA.with_borrow(|canister_data| {
@@ -46,6 +41,8 @@ mod test {
         },
         common::types::top_posts::post_score_index_item::PostStatus,
     };
+
+    use crate::CanisterData;
 
     use super::*;
 
