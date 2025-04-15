@@ -17,18 +17,18 @@ flowchart
   PostCreatorCanister[Post creator canister]
   UserOwnCanister[User own canister]
 
-  UserClient -- 1. Query post detail --> PostCreatorCanister
-  PostCreatorCanister -- 2. Respond with post details --> UserClient
-  UserClient -- 3. Try to bet --> UserOwnCanister
-  UserOwnCanister -- 4. Check eligibility <br>and forward details --> PostCreatorCanister
-  PostCreatorCanister -- 5. Add bet details<br> and respond --> UserOwnCanister
-  UserOwnCanister -- 6. Update internally <br> and send acknowledgement --> UserClient
-  PostCreatorCanister -- 7. Tabulate results --> PostCreatorCanister
-  PostCreatorCanister -- 8. Credit creator's <br>wallet --> PostCreatorCanister
-  PostCreatorCanister -- 9. Update user's canister <br> with outcome --> UserOwnCanister
-  UserOwnCanister -- 10. Credit/debit <br>user wallet --> UserOwnCanister
-  UserClient -- 11. Query outcome --> UserOwnCanister
-  UserClient -- 12. Query wallet --> UserOwnCanister
+  UserClient -- 1.Query post detail --> PostCreatorCanister
+  PostCreatorCanister -- 2.Respond with post details --> UserClient
+  UserClient -- 3.Try to bet --> UserOwnCanister
+  UserOwnCanister -- 4.Check eligibility <br>and forward details --> PostCreatorCanister
+  PostCreatorCanister -- 5.Add bet details<br> and respond --> UserOwnCanister
+  UserOwnCanister -- 6.Update internally <br> and send acknowledgement --> UserClient
+  PostCreatorCanister -- 7.Tabulate results --> PostCreatorCanister
+  PostCreatorCanister -- 8.Credit creator's <br>wallet --> PostCreatorCanister
+  PostCreatorCanister -- 9.Update user's canister <br> with outcome --> UserOwnCanister
+  UserOwnCanister -- 10.Credit/debit <br>user wallet --> UserOwnCanister
+  UserClient -- 11.Query outcome --> UserOwnCanister
+  UserClient -- 12.Query wallet --> UserOwnCanister
 ```
 
 ## Query post details
