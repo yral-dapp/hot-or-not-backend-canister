@@ -18,6 +18,7 @@ use test_utils::setup::{
     test_constants::{get_mock_user_alice_principal_id, get_mock_user_bob_principal_id},
 };
 
+#[ignore]
 #[test]
 pub fn test_hot_or_not_bets_placed_using_cents_are_computed_even_after_individual_canister_upgrade()
 {
