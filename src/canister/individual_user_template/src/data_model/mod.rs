@@ -17,19 +17,14 @@ use shared_utils::{
     canister_specific::individual_user_template::types::{
         arg::PlaceBetArg,
         cdao::DeployedCdaoCanisters,
-        configuration::IndividualUserConfiguration,
-        device_id::DeviceIdentity,
         error::{BetOnCurrentlyViewingPostError, GetPostsOfUserProfileError},
-        follow::FollowData,
         hot_or_not::{
             BetDetails, BetDirection, BetOutcomeForBetMaker, BettingStatus, GlobalBetId,
             GlobalRoomId, HotOrNotGame, PlacedBetDetail, RoomDetailsV1, SlotDetailsV1, SlotId,
             StablePrincipal,
         },
         migration::MigrationInfo,
-        ml_data::{
-            MLData, MLFeedCacheItem, SuccessHistoryItem, SuccessHistoryItemV1, WatchHistoryItem,
-        },
+        ml_data::{SuccessHistoryItem, SuccessHistoryItemV1, WatchHistoryItem},
         post::{Post, PostDetailsForFrontend, PostDetailsFromFrontend},
         profile::{UserProfile, UserProfileDetailsForFrontend},
         session::SessionType,
@@ -39,7 +34,7 @@ use shared_utils::{
         types::{
             app_primitive_type::PostId,
             known_principal::KnownPrincipalMap,
-            top_posts::{post_score_index::PostScoreIndex, post_score_index_item::PostStatus},
+            top_posts::post_score_index_item::PostStatus,
             utility_token::token_event::{HotOrNotOutcomePayoutEvent, StakeEvent, TokenEvent},
             version_details::VersionDetails,
         },
@@ -55,10 +50,7 @@ use self::memory::{
     get_slot_details_memory, Memory,
 };
 
-use kv_storage::AppStorage;
-
 pub mod cents_hot_or_not_game;
-pub mod kv_storage;
 pub mod memory;
 pub mod pump_n_dump;
 
@@ -301,12 +293,8 @@ pub(crate) struct CanisterData {
     pub slot_details_map:
         ic_stable_structures::btreemap::BTreeMap<(PostId, SlotId), SlotDetailsV1, Memory>,
     pub all_hot_or_not_bets_placed: BTreeMap<(CanisterId, PostId), PlacedBetDetail>,
-    pub configuration: IndividualUserConfiguration,
-    pub follow_data: FollowData,
     pub known_principal_ids: KnownPrincipalMap,
     pub my_token_balance: TokenBalance,
-    pub principals_i_follow: BTreeSet<Principal>,
-    pub principals_that_follow_me: BTreeSet<Principal>,
     pub profile: UserProfile,
     pub version_details: VersionDetails,
     #[serde(default)]
@@ -314,11 +302,7 @@ pub(crate) struct CanisterData {
     #[serde(default)]
     pub last_access_time: Option<SystemTime>,
     #[serde(default)]
-    pub last_canister_functionality_access_time: Option<SystemTime>,
-    #[serde(default)]
     pub migration_info: MigrationInfo,
-    #[serde(default)]
-    pub app_storage: AppStorage,
     #[serde(skip, default = "_default_watch_history")]
     pub watch_history: ic_stable_structures::btreemap::BTreeMap<WatchHistoryItem, (), Memory>,
     #[serde(skip, default = "_default_success_history_v1")]
@@ -412,19 +396,17 @@ impl CanisterData {
             .take(limit as usize)
             .map(|(id, post)| {
                 let profile = &self.profile;
-                let followers = &self.principals_that_follow_me;
-                let following = &self.principals_i_follow;
                 let token_balance = &self.my_token_balance;
 
                 post.get_post_details_for_frontend_for_this_post(
                     UserProfileDetailsForFrontend {
-                        display_name: profile.display_name.clone(),
-                        followers_count: followers.len() as u64,
-                        following_count: following.len() as u64,
+                        display_name: None,
+                        followers_count: 0,
+                        following_count: 0,
                         principal_id: profile.principal_id.unwrap(),
                         profile_picture_url: profile.profile_picture_url.clone(),
                         profile_stats: profile.profile_stats,
-                        unique_user_name: profile.unique_user_name.clone(),
+                        unique_user_name: None,
                         lifetime_earnings: token_balance.lifetime_earnings,
                         referrer_details: profile.referrer_details.clone(),
                     },
@@ -511,19 +493,17 @@ impl CanisterData {
     ) -> PostDetailsForFrontend {
         let post = self.get_post(&post_id).unwrap();
         let profile = &self.profile;
-        let followers = &self.principals_that_follow_me;
-        let following = &self.principals_i_follow;
         let token_balance = &self.my_token_balance;
 
         post.get_post_details_for_frontend_for_this_post(
             UserProfileDetailsForFrontend {
-                display_name: profile.display_name.clone(),
-                followers_count: followers.len() as u64,
-                following_count: following.len() as u64,
+                display_name: None,
+                followers_count: 0,
+                following_count: 0,
                 principal_id: profile.principal_id.unwrap(),
                 profile_picture_url: profile.profile_picture_url.clone(),
                 profile_stats: profile.profile_stats,
-                unique_user_name: profile.unique_user_name.clone(),
+                unique_user_name: None,
                 lifetime_earnings: token_balance.lifetime_earnings,
                 referrer_details: profile.referrer_details.clone(),
             },
@@ -620,19 +600,13 @@ impl Default for CanisterData {
             post_principal_map: _default_post_principal_map(),
             slot_details_map: _default_slot_details_map(),
             all_hot_or_not_bets_placed: BTreeMap::new(),
-            configuration: IndividualUserConfiguration::default(),
-            follow_data: FollowData::default(),
             known_principal_ids: KnownPrincipalMap::default(),
             my_token_balance: TokenBalance::default(),
-            principals_i_follow: BTreeSet::new(),
-            principals_that_follow_me: BTreeSet::new(),
             profile: UserProfile::default(),
             version_details: VersionDetails::default(),
             session_type: None,
             last_access_time: None,
-            last_canister_functionality_access_time: None,
             migration_info: MigrationInfo::NotMigrated,
-            app_storage: AppStorage::default(),
             watch_history: _default_watch_history(),
             success_history: _default_success_history_v1(),
             cdao_canisters: Vec::new(),

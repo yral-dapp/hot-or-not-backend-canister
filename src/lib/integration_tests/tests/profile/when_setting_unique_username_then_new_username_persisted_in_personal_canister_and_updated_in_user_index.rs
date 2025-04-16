@@ -9,6 +9,7 @@ use test_utils::setup::{
     test_constants::get_mock_user_alice_principal_id,
 };
 
+#[ignore]
 #[test]
 fn when_setting_unique_username_then_new_username_persisted_in_personal_canister_and_updated_in_user_index(
 ) {

@@ -83,13 +83,6 @@ fn save_upgrade_args_to_memory() {
         }
 
         canister_data_ref_cell.borrow_mut().version_details.version = upgrade_args.version;
-
-        if let Some(url_to_send_canister_metrics_to) = upgrade_args.url_to_send_canister_metrics_to
-        {
-            canister_data_ref_cell
-                .configuration
-                .url_to_send_canister_metrics_to = Some(url_to_send_canister_metrics_to);
-        }
     });
 }
 

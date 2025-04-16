@@ -8,7 +8,6 @@ use shared_utils::{
 };
 
 use crate::{
-    api::canister_management::update_last_access_time::update_last_canister_functionality_access_time,
     data_model::{
         cents_hot_or_not_game::{self, CentsHotOrNotGame},
         pump_n_dump::TokenBetGame,
@@ -21,7 +20,6 @@ use crate::{
 #[query]
 fn get_hot_or_not_bet_details_for_this_post(post_id: u64) -> BettingStatus {
     let request_maker = ic_cdk::caller();
-    update_last_canister_functionality_access_time();
 
     CANISTER_DATA.with(|canister_data_ref_cell| {
         get_hot_or_not_bet_details_for_this_post_impl(
@@ -36,8 +34,6 @@ fn get_hot_or_not_bet_details_for_this_post(post_id: u64) -> BettingStatus {
 #[query]
 fn get_hot_or_not_bet_details_for_this_post_v1(post_id: u64) -> BettingStatus {
     let request_maker = ic_cdk::caller();
-    update_last_canister_functionality_access_time();
-
     PUMP_N_DUMP.with_borrow_mut(|token_bet_game| {
         CANISTER_DATA.with_borrow_mut(|canister_data| {
             let cents_hot_or_not_game = CentsHotOrNotGame {
