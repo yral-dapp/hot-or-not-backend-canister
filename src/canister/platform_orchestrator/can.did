@@ -142,7 +142,6 @@ service : (PlatformOrchestratorInitArgs) -> {
   start_subnet_orchestrator_canister : (principal) -> (Result);
   stop_upgrades_for_individual_user_canisters : () -> (Result_1);
   subnet_orchestrator_maxed_out : () -> ();
-  update_canisters_last_functionality_access_time : () -> (Result_1);
   update_global_known_principal : (KnownPrincipalType, principal) -> (Result_1);
   update_pd_onboarding_reward_for_all_subnets : (nat) -> (Result);
   update_profile_owner_for_individual_canisters : () -> ();
