@@ -14,7 +14,7 @@ use shared_utils::{
             BetDetails, BetDirection, BettingStatus, GlobalBetId, GlobalRoomId, PlacedBetDetail,
             RoomDetailsV1, SlotDetailsV1, SlotId, StablePrincipal,
         },
-        pump_n_dump::{ParticipatedGameInfo, PumpsAndDumps},
+        pump_n_dump::{ParticipatedGameInfo, ParticipatedGameInfoV0, PumpsAndDumps},
     },
     common::{types::app_primitive_type::PostId, utils::default_pump_dump_onboarding_reward},
 };
@@ -84,7 +84,7 @@ pub struct PumpAndDumpGame {
     pub balance: Nat,
     pub referral_reward: Nat,
     pub onboarding_reward: Nat,
-    pub games: Vec<ParticipatedGameInfo>,
+    pub games: Vec<ParticipatedGameInfoV0>,
     pub total_pumps: Nat,
     pub total_dumps: Nat,
     pub net_earnings: Nat,
@@ -125,10 +125,17 @@ impl Default for TokenBetGame {
 
 impl From<PumpAndDumpGame> for TokenBetGame {
     fn from(pump_and_dump_game: PumpAndDumpGame) -> Self {
+        // Convert the Vec<ParticipatedGameInfoV0> to Vec<ParticipatedGameInfo>
+        let pariticipated_game_info = pump_and_dump_game
+            .games
+            .into_iter()
+            .map(|game| game.into())
+            .collect();
+
         Self {
             referral_reward: pump_and_dump_game.referral_reward,
             onboarding_reward: pump_and_dump_game.onboarding_reward,
-            games: pump_and_dump_game.games,
+            games: pariticipated_game_info,
             total_pumps: pump_and_dump_game.total_pumps,
             total_dumps: pump_and_dump_game.total_dumps,
             liquidity_pools: pump_and_dump_game.liquidity_pools,
