@@ -1,61 +1,55 @@
 use candid::Principal;
-use ic_test_state_machine_client::WasmResult;
+use pocket_ic::WasmResult;
 use shared_utils::{
     canister_specific::individual_user_template::types::profile::UserProfileDetailsForFrontend,
     common::types::known_principal::KnownPrincipalType,
 };
 use test_utils::setup::{
-    env::v1::{get_initialized_env_with_provisioned_known_canisters, get_new_state_machine},
+    env::pocket_ic_env::get_new_pocket_ic_env,
     test_constants::get_mock_user_alice_principal_id,
 };
 
 #[test]
 fn requesting_new_canister_for_a_user_sets_the_profile_owner() {
-    let state_machine = get_new_state_machine();
-    let known_principal_map = get_initialized_env_with_provisioned_known_canisters(&state_machine);
-    let user_index_canister_id = known_principal_map
+    let (pocket_ic, known_principal_map) = get_new_pocket_ic_env();
+    let user_index_canister_id: Principal = known_principal_map
         .get(&KnownPrincipalType::CanisterIdUserIndex)
+        .copied()
         .unwrap();
-    let alice_principal_id = get_mock_user_alice_principal_id();
+    let alice_principal_id: Principal = get_mock_user_alice_principal_id();
 
-    let alice_canister_id = state_machine
+    let alice_canister_id: Principal = pocket_ic
         .update_call(
-            *user_index_canister_id,
+            user_index_canister_id,
             alice_principal_id,
             "get_requester_principals_canister_id_create_if_not_exists",
             candid::encode_one(()).unwrap(),
         )
         .map(|reply_payload| {
-            let alice_canister_id: Result<Principal, String> = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!(
-                    "\n🛑 get_requester_principals_canister_id_create_if_not_exists failed\n"
-                ),
-            };
-            alice_canister_id
+            match reply_payload {
+                WasmResult::Reply(payload) => {
+                    let result: Result<Principal, String> = candid::decode_one(&payload).unwrap();
+                    result.unwrap()
+                }
+                _ => panic!("\n🛑 get_requester_principals_canister_id_create_if_not_exists failed\n"),
+            }
         })
-        .unwrap()
-        .unwrap();
+        .expect("Failed to call user_index_canister");
 
-    let profile_details_from_user_canister = state_machine
+    let profile_details: UserProfileDetailsForFrontend = pocket_ic
         .query_call(
             alice_canister_id,
             Principal::anonymous(),
             "get_profile_details",
-            candid::encode_args(()).unwrap(),
+            candid::encode_one(()).unwrap(),
         )
         .map(|reply_payload| {
-            let profile_details_from_user_canister: UserProfileDetailsForFrontend =
-                match reply_payload {
-                    WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                    _ => panic!("\n🛑 get_profile_details failed\n"),
-                };
-            profile_details_from_user_canister
+            match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 get_profile_details failed\n"),
+            }
         })
-        .unwrap();
+        .expect("Failed to query profile details");
 
-    assert_eq!(
-        profile_details_from_user_canister.principal_id,
-        alice_principal_id
-    );
+    assert_eq!(profile_details.principal_id, alice_principal_id);
 }

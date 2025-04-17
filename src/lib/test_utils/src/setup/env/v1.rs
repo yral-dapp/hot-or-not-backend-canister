@@ -21,7 +21,7 @@ use crate::setup::test_constants::{
 /// The path to the state machine binary to run the tests with
 pub static STATE_MACHINE_BINARY: &str = "../../../ic-test-state-machine";
 
-pub fn get_new_state_machine() -> StateMachine {
+pub fn get_new_state_machine_1() -> StateMachine {
     let path = match env::var_os("DFX_IC_STATE_MACHINE_TESTS_PATH") {
         None => STATE_MACHINE_BINARY.to_string(),
         Some(path) => path

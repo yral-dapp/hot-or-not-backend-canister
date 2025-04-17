@@ -1,13 +1,13 @@
 use std::time::Duration;
 
 use candid::Principal;
-use ic_test_state_machine_client::WasmResult;
+use pocket_ic::WasmResult;
 use shared_utils::{
     canister_specific::user_index::types::args::UserIndexInitArgs,
     common::types::known_principal::KnownPrincipalType,
 };
 use test_utils::setup::{
-    env::v1::{get_initialized_env_with_provisioned_known_canisters, get_new_state_machine},
+    env::pocket_ic_env::get_new_pocket_ic_env,
     test_constants::{
         get_canister_wasm, get_global_super_admin_principal_id, get_mock_user_alice_principal_id,
     },
@@ -15,35 +15,33 @@ use test_utils::setup::{
 
 #[ignore]
 #[test]
-fn when_canister_cycle_balance_is_below_the_configured_or_freezing_threshold_then_running_topup_function_in_user_index_canister_tops_up_the_canisters_that_need_it(
-) {
-    let state_machine = get_new_state_machine();
-    let known_principal_map = get_initialized_env_with_provisioned_known_canisters(&state_machine);
-    let user_index_canister_id = known_principal_map
+fn when_canister_cycle_balance_is_below_the_configured_or_freezing_threshold_then_running_topup_function_in_user_index_canister_tops_up_the_canisters_that_need_it() {
+    let (pocket_ic, known_principal_map) = get_new_pocket_ic_env();
+    let user_index_canister_id: Principal = known_principal_map
         .get(&KnownPrincipalType::CanisterIdUserIndex)
+        .copied()
         .unwrap();
-    let alice_principal_id = get_mock_user_alice_principal_id();
+    let alice_principal_id: Principal = get_mock_user_alice_principal_id();
 
-    let alice_canister_id = state_machine
+    let alice_canister_id: Principal = pocket_ic
         .update_call(
-            *user_index_canister_id,
+            user_index_canister_id,
             alice_principal_id,
             "get_requester_principals_canister_id_create_if_not_exists",
             candid::encode_one(()).unwrap(),
         )
         .map(|reply_payload| {
-            let alice_canister_id: Result<Principal, String> = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!(
-                    "\n🛑 get_requester_principals_canister_id_create_if_not_exists failed\n"
-                ),
-            };
-            alice_canister_id
+            match reply_payload {
+                WasmResult::Reply(payload) => {
+                    let result: Result<Principal, String> = candid::decode_one(&payload).unwrap();
+                    result.unwrap()
+                }
+                _ => panic!("\n🛑 get_requester_principals_canister_id_create_if_not_exists failed\n"),
+            }
         })
-        .unwrap()
-        .unwrap();
+        .expect("Failed to call user_index_canister");
 
-    let alice_starting_cycle_balance = state_machine
+    let alice_starting_cycle_balance: u128 = pocket_ic
         .update_call(
             alice_canister_id,
             Principal::anonymous(),
@@ -51,29 +49,28 @@ fn when_canister_cycle_balance_is_below_the_configured_or_freezing_threshold_the
             candid::encode_one(()).unwrap(),
         )
         .map(|reply_payload| {
-            let response: u128 = match reply_payload {
+            match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
                 _ => panic!("\n🛑 get_user_caniser_cycle_balance failed\n"),
-            };
-            response
+            }
         })
-        .unwrap();
+        .expect("Failed to get cycle balance");
 
     println!(
         "🧪 alice_starting_cycle_balance: {}",
         alice_starting_cycle_balance
     );
 
-    state_machine
+    pocket_ic
         .update_call(
             alice_canister_id,
-            *user_index_canister_id,
+            user_index_canister_id,
             "return_cycles_to_user_index_canister",
             candid::encode_one(Some(600_000_000_000_u128)).unwrap(),
         )
-        .unwrap();
+        .expect("Failed to return cycles");
 
-    let alice_reduced_cycle_balance = state_machine
+    let alice_reduced_cycle_balance: u128 = pocket_ic
         .update_call(
             alice_canister_id,
             Principal::anonymous(),
@@ -81,13 +78,12 @@ fn when_canister_cycle_balance_is_below_the_configured_or_freezing_threshold_the
             candid::encode_one(()).unwrap(),
         )
         .map(|reply_payload| {
-            let response: u128 = match reply_payload {
+            match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
                 _ => panic!("\n🛑 get_user_caniser_cycle_balance failed\n"),
-            };
-            response
+            }
         })
-        .unwrap();
+        .expect("Failed to get cycle balance");
 
     println!(
         "🧪 alice_reduced_cycle_balance: {}",
@@ -96,9 +92,9 @@ fn when_canister_cycle_balance_is_below_the_configured_or_freezing_threshold_the
 
     assert!(alice_starting_cycle_balance > alice_reduced_cycle_balance);
 
-    state_machine
+    pocket_ic
         .upgrade_canister(
-            *user_index_canister_id,
+            user_index_canister_id,
             get_canister_wasm(KnownPrincipalType::CanisterIdUserIndex),
             candid::encode_one(UserIndexInitArgs {
                 ..Default::default()
@@ -106,12 +102,12 @@ fn when_canister_cycle_balance_is_below_the_configured_or_freezing_threshold_the
             .unwrap(),
             Some(get_global_super_admin_principal_id()),
         )
-        .unwrap();
+        .expect("Failed to upgrade canister");
 
-    state_machine.advance_time(Duration::from_secs(30));
-    state_machine.tick();
+    pocket_ic.advance_time(Duration::from_secs(30));
+    pocket_ic.tick();
 
-    let alice_cycle_balance_after_user_index_upgrade = state_machine
+    let alice_cycle_balance_after_user_index_upgrade: u128 = pocket_ic
         .update_call(
             alice_canister_id,
             Principal::anonymous(),
@@ -119,13 +115,12 @@ fn when_canister_cycle_balance_is_below_the_configured_or_freezing_threshold_the
             candid::encode_one(()).unwrap(),
         )
         .map(|reply_payload| {
-            let response: u128 = match reply_payload {
+            match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
                 _ => panic!("\n🛑 get_user_caniser_cycle_balance failed\n"),
-            };
-            response
+            }
         })
-        .unwrap();
+        .expect("Failed to get cycle balance");
 
     println!(
         "🧪 alice_cycle_balance_after_user_index_upgrade: {}",
