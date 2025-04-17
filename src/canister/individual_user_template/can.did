@@ -479,7 +479,7 @@ type TokenEvent = variant {
   Mint : record { timestamp : SystemTime; details : MintEvent; amount : nat64 };
   PumpDumpOutcomePayout : record {
     payout_type : PumpDumpOutcomePayoutEvent;
-    amount : nat;
+    amount : nat64;
   };
   Transfer : record {
     to_account : principal;

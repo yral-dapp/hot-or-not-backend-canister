@@ -246,7 +246,7 @@ fn claim_gdollr_and_stake_gdollr_should_work() {
     harness.reconcile_user_state(
         alice_canister,
         &vec![PumpNDumpStateDiff::CreatorReward(
-            (to_claim + LEDGER_FEE * 2) as u128,
+            ((to_claim + LEDGER_FEE * 2) as u64).into(),
         )],
     );
 
@@ -328,14 +328,14 @@ fn reconcile_user_state_should_work() {
         ParticipatedGameInfo {
             pumps: 10,
             dumps: 10,
-            reward: 50 * GDOLLR_TO_E8S as u128,
+            reward: (50 * GDOLLR_TO_E8S).into(),
             token_root: Principal::anonymous(),
             game_direction: GameDirection::Pump,
         },
         ParticipatedGameInfo {
             pumps: 10,
             dumps: 10,
-            reward: 50 * GDOLLR_TO_E8S as u128,
+            reward: (50 * GDOLLR_TO_E8S).into(),
             token_root: Principal::anonymous(),
             game_direction: GameDirection::Dump,
         },
@@ -374,7 +374,7 @@ fn reconcile_user_state_should_work() {
     let state_diffs = vec![PumpNDumpStateDiff::Participant(ParticipatedGameInfo {
         pumps: 1,
         dumps: 0,
-        reward: 0 as u128,
+        reward: 0_u64.into(),
         token_root: Principal::anonymous(),
         game_direction: GameDirection::Dump,
     })];
@@ -387,7 +387,7 @@ fn reconcile_user_state_should_work() {
     // Test Creator Reward
     let past_bal = new_bal;
     let to_add = 1e4 as u64;
-    let state_diffs = vec![PumpNDumpStateDiff::CreatorReward(to_add as u128)];
+    let state_diffs = vec![PumpNDumpStateDiff::CreatorReward(to_add.into())];
 
     harness.reconcile_user_state(alice_canister, &state_diffs);
     let new_bal = harness.game_balance(alice_canister).balance;

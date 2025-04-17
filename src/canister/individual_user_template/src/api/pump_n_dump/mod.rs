@@ -86,13 +86,10 @@ pub fn reconcile_user_state(games: Vec<PumpNDumpStateDiff>) -> Result<(), String
                 pump_and_dump.cents.handle_token_event(token_event);
             }
 
-            match game {
-                PumpNDumpStateDiff::Participant(info) => {
-                    pump_and_dump.games.push(info);
-                    pump_and_dump.total_dumps += info.dumps;
-                    pump_and_dump.total_pumps += info.pumps;
-                }
-                _ => {}
+            if let PumpNDumpStateDiff::Participant(info) = game {
+                pump_and_dump.total_dumps += info.dumps;
+                pump_and_dump.total_pumps += info.pumps;
+                pump_and_dump.games.push(info);
             }
         }
 
