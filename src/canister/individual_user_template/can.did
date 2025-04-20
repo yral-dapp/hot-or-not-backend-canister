@@ -618,6 +618,7 @@ service : (IndividualUserTemplateInitArgs) -> {
   net_earnings : () -> (nat) query;
   once_reenqueue_timers_for_pending_bet_outcomes : () -> (Result_14);
   pd_balance_info : () -> (BalanceInfo) query;
+  pd_balance_info_v2 : () -> (BalanceInfo) query;
   played_game_count : () -> (nat64) query;
   played_game_info_with_pagination_cursor : (nat64, nat64) -> (Result_15) query;
   pumps_and_dumps : () -> (PumpsAndDumps) query;
@@ -634,6 +635,7 @@ service : (IndividualUserTemplateInitArgs) -> {
   receive_data_from_hotornot : (principal, nat64, vec Post) -> (Result_16);
   reconcile_user_state : (vec PumpNDumpStateDiff) -> (Result);
   redeem_gdollr : (nat) -> (Result);
+  redeem_gdollr_v2 : (nat) -> (Result);
   request_airdrop : (principal, opt blob, nat, principal) -> (Result_17);
   return_cycles_to_user_index_canister : (opt nat) -> ();
   save_snapshot_json : () -> (nat32);
