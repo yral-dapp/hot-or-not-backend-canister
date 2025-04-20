@@ -37,7 +37,6 @@ fn post_cache_canister_wasm() -> Vec<u8> {
 }
 
 #[test]
-#[ignore]
 fn update_post_status_banned() {
     let pic = PocketIc::new();
 
