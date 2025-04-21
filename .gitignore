@@ -14,3 +14,4 @@ argument
 !scripts/canisters/docker/minter.pem
 icp_index.wasm.gz
 icp_ledger.wasm.gz
+outputs/
