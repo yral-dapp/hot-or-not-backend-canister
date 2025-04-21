@@ -19,6 +19,8 @@ use crate::setup::test_constants::{
     get_global_super_admin_principal_id, v1::CANISTER_INITIAL_CYCLES_FOR_SPAWNING_CANISTERS,
 };
 
+use super::pocket_ic_init::get_initialized_env_with_provisioned_known_canisters;
+
 #[derive(CandidType)]
 struct NnsLedgerCanisterInitPayload {
     minting_account: String,
@@ -49,7 +51,9 @@ pub fn get_new_pocket_ic_env() -> (PocketIc, KnownPrincipalMap) {
         .with_system_subnet()
         .build();
 
-    let mut known_principal = KnownPrincipalMap::new();
+
+
+    let mut known_principal =  get_initialized_env_with_provisioned_known_canisters(&pocket_ic);;
 
     let super_admin = Principal::from_text(GLOBAL_SUPER_ADMIN_USER_ID_V1).unwrap();
     known_principal.insert(KnownPrincipalType::UserIdGlobalSuperAdmin, super_admin);
