@@ -7,7 +7,7 @@ use shared_utils::{
     common::types::known_principal::KnownPrincipalType,
 };
 use test_utils::setup::{
-    env::pocket_ic_env::get_new_pocket_ic_env,
+    env::{pocket_ic_env::get_new_pocket_ic_env, pocket_ic_init::get_initialized_env_with_provisioned_known_canisters},
     test_constants::{
         get_canister_wasm, get_global_super_admin_principal_id, get_mock_user_alice_principal_id,
     },
@@ -16,32 +16,33 @@ use test_utils::setup::{
 #[ignore]
 #[test]
 fn when_canister_cycle_balance_is_below_the_configured_or_freezing_threshold_then_running_topup_function_in_user_index_canister_tops_up_the_canisters_that_need_it() {
-    let (pocket_ic, known_principal_map) = get_new_pocket_ic_env();
-    let user_index_canister_id: Principal = known_principal_map
+    let (pocket_ic, _) = get_new_pocket_ic_env();
+    let known_principal_map = get_initialized_env_with_provisioned_known_canisters(&pocket_ic);
+    let user_index_canister_id = known_principal_map
         .get(&KnownPrincipalType::CanisterIdUserIndex)
-        .copied()
         .unwrap();
-    let alice_principal_id: Principal = get_mock_user_alice_principal_id();
+    let alice_principal_id = get_mock_user_alice_principal_id();
 
-    let alice_canister_id: Principal = pocket_ic
+    let alice_canister_id = pocket_ic
         .update_call(
-            user_index_canister_id,
+            *user_index_canister_id,
             alice_principal_id,
             "get_requester_principals_canister_id_create_if_not_exists",
             candid::encode_one(()).unwrap(),
         )
         .map(|reply_payload| {
-            match reply_payload {
-                WasmResult::Reply(payload) => {
-                    let result: Result<Principal, String> = candid::decode_one(&payload).unwrap();
-                    result.unwrap()
-                }
-                _ => panic!("\n🛑 get_requester_principals_canister_id_create_if_not_exists failed\n"),
-            }
+            let alice_canister_id: Result<Principal, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!(
+                    "\n🛑 get_requester_principals_canister_id_create_if_not_exists failed\n"
+                ),
+            };
+            alice_canister_id
         })
-        .expect("Failed to call user_index_canister");
+        .unwrap()
+        .unwrap();
 
-    let alice_starting_cycle_balance: u128 = pocket_ic
+    let alice_starting_cycle_balance = pocket_ic
         .update_call(
             alice_canister_id,
             Principal::anonymous(),
@@ -49,12 +50,13 @@ fn when_canister_cycle_balance_is_below_the_configured_or_freezing_threshold_the
             candid::encode_one(()).unwrap(),
         )
         .map(|reply_payload| {
-            match reply_payload {
+            let response: u128 = match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
                 _ => panic!("\n🛑 get_user_caniser_cycle_balance failed\n"),
-            }
+            };
+            response
         })
-        .expect("Failed to get cycle balance");
+        .unwrap();
 
     println!(
         "🧪 alice_starting_cycle_balance: {}",
@@ -64,13 +66,13 @@ fn when_canister_cycle_balance_is_below_the_configured_or_freezing_threshold_the
     pocket_ic
         .update_call(
             alice_canister_id,
-            user_index_canister_id,
+            *user_index_canister_id,
             "return_cycles_to_user_index_canister",
             candid::encode_one(Some(600_000_000_000_u128)).unwrap(),
         )
-        .expect("Failed to return cycles");
+        .unwrap();
 
-    let alice_reduced_cycle_balance: u128 = pocket_ic
+    let alice_reduced_cycle_balance = pocket_ic
         .update_call(
             alice_canister_id,
             Principal::anonymous(),
@@ -78,12 +80,13 @@ fn when_canister_cycle_balance_is_below_the_configured_or_freezing_threshold_the
             candid::encode_one(()).unwrap(),
         )
         .map(|reply_payload| {
-            match reply_payload {
+            let response: u128 = match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
                 _ => panic!("\n🛑 get_user_caniser_cycle_balance failed\n"),
-            }
+            };
+            response
         })
-        .expect("Failed to get cycle balance");
+        .unwrap();
 
     println!(
         "🧪 alice_reduced_cycle_balance: {}",
@@ -94,7 +97,7 @@ fn when_canister_cycle_balance_is_below_the_configured_or_freezing_threshold_the
 
     pocket_ic
         .upgrade_canister(
-            user_index_canister_id,
+            *user_index_canister_id,
             get_canister_wasm(KnownPrincipalType::CanisterIdUserIndex),
             candid::encode_one(UserIndexInitArgs {
                 ..Default::default()
@@ -102,12 +105,12 @@ fn when_canister_cycle_balance_is_below_the_configured_or_freezing_threshold_the
             .unwrap(),
             Some(get_global_super_admin_principal_id()),
         )
-        .expect("Failed to upgrade canister");
+        .unwrap();
 
     pocket_ic.advance_time(Duration::from_secs(30));
     pocket_ic.tick();
 
-    let alice_cycle_balance_after_user_index_upgrade: u128 = pocket_ic
+    let alice_cycle_balance_after_user_index_upgrade = pocket_ic
         .update_call(
             alice_canister_id,
             Principal::anonymous(),
@@ -115,12 +118,13 @@ fn when_canister_cycle_balance_is_below_the_configured_or_freezing_threshold_the
             candid::encode_one(()).unwrap(),
         )
         .map(|reply_payload| {
-            match reply_payload {
+            let response: u128 = match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
                 _ => panic!("\n🛑 get_user_caniser_cycle_balance failed\n"),
-            }
+            };
+            response
         })
-        .expect("Failed to get cycle balance");
+        .unwrap();
 
     println!(
         "🧪 alice_cycle_balance_after_user_index_upgrade: {}",

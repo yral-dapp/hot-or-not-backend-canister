@@ -53,7 +53,7 @@ pub fn get_new_pocket_ic_env() -> (PocketIc, KnownPrincipalMap) {
 
 
 
-    let mut known_principal =  get_initialized_env_with_provisioned_known_canisters(&pocket_ic);;
+    let mut known_principal = KnownPrincipalMap::new();
 
     let super_admin = Principal::from_text(GLOBAL_SUPER_ADMIN_USER_ID_V1).unwrap();
     known_principal.insert(KnownPrincipalType::UserIdGlobalSuperAdmin, super_admin);

@@ -7,39 +7,40 @@ use shared_utils::{
     common::types::known_principal::KnownPrincipalType,
 };
 use test_utils::setup::{
-    env::pocket_ic_env::get_new_pocket_ic_env,
+    env::{pocket_ic_env::get_new_pocket_ic_env, pocket_ic_init::get_initialized_env_with_provisioned_known_canisters},
     test_constants::get_mock_user_alice_principal_id,
 };
 
 #[ignore]
 #[test]
 fn when_creating_a_new_post_then_post_score_should_be_calculated() {
-    let (pocket_ic, known_principal_map) = get_new_pocket_ic_env();
-    let user_index_canister_id: Principal = known_principal_map
+    let (pocket_ic, _) = get_new_pocket_ic_env();
+    let known_principal_map = get_initialized_env_with_provisioned_known_canisters(&pocket_ic);
+    let user_index_canister_id = known_principal_map
         .get(&KnownPrincipalType::CanisterIdUserIndex)
-        .copied()
         .unwrap();
-    let alice_principal_id: Principal = get_mock_user_alice_principal_id();
+    let alice_principal_id = get_mock_user_alice_principal_id();
 
-    let alice_canister_id: Principal = pocket_ic
+    let alice_canister_id = pocket_ic
         .update_call(
-            user_index_canister_id,
+            *user_index_canister_id,
             alice_principal_id,
             "get_requester_principals_canister_id_create_if_not_exists",
             candid::encode_one(()).unwrap(),
         )
         .map(|reply_payload| {
-            match reply_payload {
-                WasmResult::Reply(payload) => {
-                    let result: Result<Principal, String> = candid::decode_one(&payload).unwrap();
-                    result.unwrap()
-                }
-                _ => panic!("\n🛑 get_requester_principals_canister_id_create_if_not_exists failed\n"),
-            }
+            let alice_canister_id: Result<Principal, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!(
+                    "\n🛑 get_requester_principals_canister_id_create_if_not_exists failed\n"
+                ),
+            };
+            alice_canister_id
         })
-        .expect("Failed to call user_index_canister");
+        .unwrap()
+        .unwrap();
 
-    let newly_created_post_id: u64 = pocket_ic
+    let newly_created_post_id = pocket_ic
         .update_call(
             alice_canister_id,
             alice_principal_id,
@@ -54,17 +55,15 @@ fn when_creating_a_new_post_then_post_score_should_be_calculated() {
             .unwrap(),
         )
         .map(|reply_payload| {
-            match reply_payload {
-                WasmResult::Reply(payload) => {
-                    let result: Result<u64, String> = candid::decode_one(&payload).unwrap();
-                    result.unwrap()
-                }
-                _ => panic!("\n🛑 add_post_v2 failed\n"),
-            }
+            let newly_created_post_id_result: Result<u64, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 add_post failed\n"),
+            };
+            newly_created_post_id_result.unwrap()
         })
-        .expect("Failed to add post");
+        .unwrap();
 
-    let post_score: u64 = pocket_ic
+    let post_score = pocket_ic
         .query_call(
             alice_canister_id,
             Principal::anonymous(),
@@ -72,15 +71,13 @@ fn when_creating_a_new_post_then_post_score_should_be_calculated() {
             candid::encode_args((newly_created_post_id,)).unwrap(),
         )
         .map(|reply_payload| {
-            match reply_payload {
-                WasmResult::Reply(payload) => {
-                    let post_details: PostDetailsForFrontend = candid::decode_one(&payload).unwrap();
-                    post_details.home_feed_ranking_score
-                }
+            let post_details: PostDetailsForFrontend = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
                 _ => panic!("\n🛑 get_individual_post_details_by_id failed\n"),
-            }
+            };
+            post_details.home_feed_ranking_score
         })
-        .expect("Failed to query post details");
+        .unwrap();
 
     assert!(post_score > 0);
 }

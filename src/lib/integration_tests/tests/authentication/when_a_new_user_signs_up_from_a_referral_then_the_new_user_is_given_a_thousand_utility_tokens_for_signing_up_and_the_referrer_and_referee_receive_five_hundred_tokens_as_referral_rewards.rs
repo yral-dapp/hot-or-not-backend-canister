@@ -18,7 +18,10 @@ use test_utils::setup::{
 
 #[test]
 fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousand_utility_tokens_for_signing_up_and_the_referrer_and_referee_receive_five_hundred_tokens_as_referral_rewards() {
-    let (pocket_ic, known_principal_map) = get_new_pocket_ic_env();
+    let (pocket_ic, _) = get_new_pocket_ic_env();
+    
+    let known_principal_map =  get_initialized_env_with_provisioned_known_canisters(&pocket_ic);
+    
     let user_index_canister_id: Principal = known_principal_map
         .get(&KnownPrincipalType::CanisterIdUserIndex)
         .copied()

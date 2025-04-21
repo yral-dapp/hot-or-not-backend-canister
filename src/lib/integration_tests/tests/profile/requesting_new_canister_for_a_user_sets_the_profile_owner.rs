@@ -5,51 +5,57 @@ use shared_utils::{
     common::types::known_principal::KnownPrincipalType,
 };
 use test_utils::setup::{
-    env::pocket_ic_env::get_new_pocket_ic_env,
+    env::{pocket_ic_env::get_new_pocket_ic_env, pocket_ic_init::get_initialized_env_with_provisioned_known_canisters},
     test_constants::get_mock_user_alice_principal_id,
 };
 
 #[test]
 fn requesting_new_canister_for_a_user_sets_the_profile_owner() {
-    let (pocket_ic, known_principal_map) = get_new_pocket_ic_env();
-    let user_index_canister_id: Principal = known_principal_map
+    let (pocket_ic, _) = get_new_pocket_ic_env();
+    let known_principal_map = get_initialized_env_with_provisioned_known_canisters(&pocket_ic);
+    let user_index_canister_id = known_principal_map
         .get(&KnownPrincipalType::CanisterIdUserIndex)
-        .copied()
         .unwrap();
-    let alice_principal_id: Principal = get_mock_user_alice_principal_id();
+    let alice_principal_id = get_mock_user_alice_principal_id();
 
-    let alice_canister_id: Principal = pocket_ic
+    let alice_canister_id = pocket_ic
         .update_call(
-            user_index_canister_id,
+            *user_index_canister_id,
             alice_principal_id,
             "get_requester_principals_canister_id_create_if_not_exists",
             candid::encode_one(()).unwrap(),
         )
         .map(|reply_payload| {
-            match reply_payload {
-                WasmResult::Reply(payload) => {
-                    let result: Result<Principal, String> = candid::decode_one(&payload).unwrap();
-                    result.unwrap()
-                }
-                _ => panic!("\n🛑 get_requester_principals_canister_id_create_if_not_exists failed\n"),
-            }
+            let alice_canister_id: Result<Principal, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!(
+                    "\n🛑 get_requester_principals_canister_id_create_if_not_exists failed\n"
+                ),
+            };
+            alice_canister_id
         })
-        .expect("Failed to call user_index_canister");
+        .unwrap()
+        .unwrap();
 
-    let profile_details: UserProfileDetailsForFrontend = pocket_ic
+    let profile_details_from_user_canister = pocket_ic
         .query_call(
             alice_canister_id,
             Principal::anonymous(),
             "get_profile_details",
-            candid::encode_one(()).unwrap(),
+            candid::encode_args(()).unwrap(),
         )
         .map(|reply_payload| {
-            match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_profile_details failed\n"),
-            }
+            let profile_details_from_user_canister: UserProfileDetailsForFrontend =
+                match reply_payload {
+                    WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                    _ => panic!("\n🛑 get_profile_details failed\n"),
+                };
+            profile_details_from_user_canister
         })
-        .expect("Failed to query profile details");
+        .unwrap();
 
-    assert_eq!(profile_details.principal_id, alice_principal_id);
+    assert_eq!(
+        profile_details_from_user_canister.principal_id,
+        alice_principal_id
+    );
 }
