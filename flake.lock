@@ -1,17 +1,18 @@
 {
   "nodes": {
-    "dfx-env": {
+    "ic-nix": {
       "flake": false,
       "locked": {
-        "lastModified": 1744244661,
-        "narHash": "sha256-0YaOsysfO3MBjf7qwAGvPAehFG37ZioKX7DFB8HQ9rk=",
+        "lastModified": 1718003597,
+        "narHash": "sha256-O+TEn3q342oi2igPjPWjSMJTjsY4gFoJG6SZ/9ngrAs=",
         "owner": "ninegua",
         "repo": "ic-nix",
-        "rev": "db1c599d2ba0ae14276741c25f42cecf9f6e4f09",
+        "rev": "e29bd893a32c1a9cb2f07cd73444750178c36843",
         "type": "github"
       },
       "original": {
         "owner": "ninegua",
+        "ref": "20240610",
         "repo": "ic-nix",
         "type": "github"
       }
@@ -34,7 +35,7 @@
     },
     "root": {
       "inputs": {
-        "dfx-env": "dfx-env",
+        "ic-nix": "ic-nix",
         "nixpkgs": "nixpkgs"
       }
     }

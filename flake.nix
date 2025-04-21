@@ -3,8 +3,8 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/1c3a28d84f970e7774af04372ade06399add182e";
-    dfx-env = {
-      url = "github:ninegua/ic-nix";
+    ic-nix = {
+      url = "github:ninegua/ic-nix/20240610";
       flake = false;
     };
   };
@@ -13,45 +13,33 @@
     {
       self,
       nixpkgs,
-      dfx-env,
+      ic-nix,
+      ...
     }:
     let
-      system = "x86_64-linux";
-      pkgs = import nixpkgs { inherit system; };
+      pkgs = nixpkgs.legacyPackages.x86_64-linux;
+      dfx-env = pkgs.callPackage "${ic-nix}/dfx-env.nix" {
+        force = true;
+      };
     in
     {
-      devShell.${system} = pkgs.mkShell {
-        nativeBuildInputs =
-          with pkgs;
-          [
-            rustup
-            pkg-config
-            openssl
-            protobuf
-            cmake
-            cachix
-            killall
-            jq
-            coreutils
-            bc
-            python3Full
-            libiconv
-            wget
-          ]
-          ++ (
-            if pkgs.stdenv.isDarwin then
-              [
-                darwin.apple_sdk.frameworks.Foundation
-                pkgs.darwin.libiconv
-              ]
-            else
-              [ ]
-          );
-        shellHook = ''
-          cargo install --root $out --force candid-extractor
-          ln -s $out/bin/candid-extractor $out/bin/candid-extractor
-          export PATH="$out/bin:$PATH"
-        '';
+      devShells.x86_64-linux.default = pkgs.mkShell {
+        buildInputs = [
+          dfx-env
+          pkgs.rustup
+          pkgs.pkg-config
+          pkgs.openssl
+          pkgs.protoc
+          pkgs.cmake
+          pkgs.cachix
+          pkgs.killall
+          pkgs.jq
+          pkgs.coreutils
+          pkgs.bc
+          pkgs.python3Full
+          pkgs.libiconv
+          pkgs.wget
+        ] ++ (if pkgs.stdenv.isDarwin then [ pkgs.darwin.libiconv ] else [ ]);
       };
     };
 }
