@@ -87,6 +87,13 @@ fn save_upgrade_args_to_memory() {
 }
 
 pub fn reconstruct_pump_and_dump_cents_token_from_participated_game_info() {
+    let should_run_reconstruct =
+        CANISTER_DATA.with_borrow(|canister_data| canister_data.profile.principal_id.is_none());
+
+    if !should_run_reconstruct {
+        return;
+    }
+
     PUMP_N_DUMP.with_borrow_mut(|token_bet_game| {
         token_bet_game
             .cents
