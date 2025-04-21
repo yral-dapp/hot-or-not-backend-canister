@@ -2,7 +2,7 @@
 
 use candid::Principal;
 use pocket_ic::WasmResult;
-use shared_utils::{canister_specific::individual_user_template::types::session::SessionType, common::types::known_principal::{self, KnownPrincipalType}};
+use shared_utils::{canister_specific::individual_user_template::types::session::SessionType, common::types::known_principal::KnownPrincipalType};
 use test_utils::setup::{
     env::{pocket_ic_env::get_new_pocket_ic_env, pocket_ic_init::get_initialized_env_with_provisioned_known_canisters},
     test_constants::get_mock_user_alice_principal_id,

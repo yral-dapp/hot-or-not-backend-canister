@@ -21,7 +21,7 @@ use test_utils::setup::{
 #[ignore]
 #[test]
 fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_occur() {
-    let (pocket_ic, known_principal_map) = get_new_pocket_ic_env();
+    let (pocket_ic, _) = get_new_pocket_ic_env();
     let known_principal_map = get_initialized_env_with_provisioned_known_canisters(&pocket_ic);
     let user_index_canister_id = *known_principal_map
         .get(&KnownPrincipalType::CanisterIdUserIndex)
@@ -169,7 +169,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
 
     assert_eq!(returned_posts.len(), 1);
 
-    let returned_post = returned_posts.get(0).unwrap();
+    let returned_post = returned_posts.first().unwrap();
     assert_eq!(returned_post.post_id, newly_created_post_id);
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
 
@@ -345,7 +345,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
 
     assert_eq!(alice_token_transaction_history.len(), 2);
     assert_eq!(
-        alice_token_transaction_history.get(0).unwrap().1,
+        alice_token_transaction_history.first().unwrap().1,
         TokenEvent::HotOrNotOutcomePayout {
             amount: 16,
             details: HotOrNotOutcomePayoutEvent::CommissionFromHotOrNotBet {
@@ -356,7 +356,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
                 room_pot_total_amount: 160
             },
             timestamp: if let TokenEvent::HotOrNotOutcomePayout { timestamp, .. } =
-                alice_token_transaction_history.get(0).unwrap().1.clone()
+                alice_token_transaction_history.first().unwrap().1.clone()
             {
                 timestamp
             } else {
@@ -414,7 +414,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
 
     assert_eq!(bob_token_transaction_history.len(), 3);
     assert_eq!(
-        bob_token_transaction_history.get(0).unwrap().1,
+        bob_token_transaction_history.first().unwrap().1,
         TokenEvent::HotOrNotOutcomePayout {
             amount: 90,
             details: HotOrNotOutcomePayoutEvent::WinningsEarnedFromBet {
@@ -426,7 +426,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
                 winnings_amount: 90
             },
             timestamp: if let TokenEvent::HotOrNotOutcomePayout { timestamp, .. } =
-                bob_token_transaction_history.get(0).unwrap().1.clone()
+                bob_token_transaction_history.first().unwrap().1.clone()
             {
                 timestamp
             } else {
@@ -503,7 +503,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
 
     assert_eq!(charlie_token_transaction_history.len(), 3);
     assert_eq!(
-        charlie_token_transaction_history.get(0).unwrap().1,
+        charlie_token_transaction_history.first().unwrap().1,
         TokenEvent::HotOrNotOutcomePayout {
             amount: 0,
             details: HotOrNotOutcomePayoutEvent::WinningsEarnedFromBet {
@@ -515,7 +515,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
                 winnings_amount: 0
             },
             timestamp: if let TokenEvent::HotOrNotOutcomePayout { timestamp, .. } =
-                charlie_token_transaction_history.get(0).unwrap().1.clone()
+                charlie_token_transaction_history.first().unwrap().1.clone()
             {
                 timestamp
             } else {
@@ -592,7 +592,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
 
     assert_eq!(dan_token_transaction_history.len(), 3);
     assert_eq!(
-        dan_token_transaction_history.get(0).unwrap().1,
+        dan_token_transaction_history.first().unwrap().1,
         TokenEvent::HotOrNotOutcomePayout {
             amount: 18,
             details: HotOrNotOutcomePayoutEvent::WinningsEarnedFromBet {
@@ -604,7 +604,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
                 winnings_amount: 18
             },
             timestamp: if let TokenEvent::HotOrNotOutcomePayout { timestamp, .. } =
-                dan_token_transaction_history.get(0).unwrap().1.clone()
+                dan_token_transaction_history.first().unwrap().1.clone()
             {
                 timestamp
             } else {

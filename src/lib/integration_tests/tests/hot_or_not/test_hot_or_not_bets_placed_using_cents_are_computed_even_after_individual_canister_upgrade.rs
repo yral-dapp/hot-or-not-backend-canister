@@ -118,7 +118,7 @@ pub fn test_hot_or_not_bets_placed_using_cents_are_computed_even_after_individua
 
     let place_bet_arg = PlaceBetArg {
         post_canister_id: alice_canister_id,
-        post_id: post_id,
+        post_id,
         bet_amount: 100 * GDOLLR_TO_E8S,
         bet_direction: BetDirection::Hot,
     };

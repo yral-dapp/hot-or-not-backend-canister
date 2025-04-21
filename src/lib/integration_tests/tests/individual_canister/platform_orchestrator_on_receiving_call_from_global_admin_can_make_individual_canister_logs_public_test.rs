@@ -4,7 +4,7 @@ use shared_utils::common::types::known_principal::KnownPrincipalType;
 use test_utils::setup::{
     env::pocket_ic_env::get_new_pocket_ic_env,
     test_constants::{
-        get_global_super_admin_principal_id, get_mock_user_alice_principal_id,
+         get_mock_user_alice_principal_id,
         get_mock_user_charlie_canister_id,
     },
 };
@@ -134,7 +134,7 @@ pub fn platform_orchestrator_on_receiving_call_from_global_admin_can_make_indivi
         .map(|wasm_result| {
             let res: Result<(), String> = match wasm_result {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                WasmResult::Reject(e) => {
+                WasmResult::Reject(_) => {
                     panic!("\n call to make_individual_canister_logs_private failed")
                 }
             };

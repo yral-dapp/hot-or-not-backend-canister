@@ -1,7 +1,7 @@
 use candid::Principal;
 use pocket_ic::WasmResult;
 use shared_utils::{
-    canister_specific::individual_user_template::types::{profile::UserProfileDetailsForFrontend, session::SessionType},
+    canister_specific::individual_user_template::types::session::SessionType,
     common::types::known_principal::KnownPrincipalType,
 };
 use test_utils::setup::{

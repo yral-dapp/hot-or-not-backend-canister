@@ -8,18 +8,15 @@ use shared_utils::{
             arg::{IndividualUserTemplateInitArgs, PlaceBetArg},
             error::BetOnCurrentlyViewingPostError,
             hot_or_not::{
-                BetDetails, BetDirection, BetMakerInformedStatus, BetPayout, BettingStatus,
-                PlacedBetDetail,
+                BetDirection, BettingStatus,
             },
             post::{PostDetailsForFrontend, PostDetailsFromFrontend},
-            profile::UserProfileDetailsForFrontend,
             pump_n_dump::BalanceInfo,
-            token,
         },
         post_cache::types::arg::PostCacheInitArgs,
     },
     common::{
-        types::known_principal::{self, KnownPrincipalType},
+        types::known_principal::KnownPrincipalType,
         utils::default_pump_dump_onboarding_reward,
     },
     constant::{GDOLLR_TO_E8S, GLOBAL_SUPER_ADMIN_USER_ID_V1},
@@ -28,7 +25,7 @@ use test_utils::setup::{
     env::pocket_ic_env::get_new_pocket_ic_env,
     test_constants::{
         get_mock_user_alice_principal_id, get_mock_user_bob_principal_id,
-        get_mock_user_charlie_principal_id, get_mock_user_dan_principal_id,
+         get_mock_user_dan_principal_id,
     },
 };
 
@@ -223,7 +220,7 @@ fn hotornot_game_simulation_test_1() {
         .unwrap();
 
     // Top up Bob's account
-    let reward = pic.update_call(
+    let _ = pic.update_call(
         bob_individual_template_canister_id,
         admin_principal_id,
         "get_rewarded_for_signing_up",
@@ -231,7 +228,7 @@ fn hotornot_game_simulation_test_1() {
     );
 
     // Top up Dan's account
-    let reward = pic.update_call(
+    let _ = pic.update_call(
         dan_individual_template_canister_id,
         admin_principal_id,
         "get_rewarded_for_signing_up",
@@ -239,7 +236,7 @@ fn hotornot_game_simulation_test_1() {
     );
 
     // Top up Charlie's account
-    let reward = pic.update_call(
+    let _ = pic.update_call(
         charlie_individual_template_canister_id,
         admin_principal_id,
         "get_rewarded_for_signing_up",
@@ -593,7 +590,7 @@ fn hotornot_game_simulation_test_1() {
         .unwrap();
 
     // Top up Alice's account
-    let reward = pic.update_call(
+    let _ = pic.update_call(
         alice_individual_template_canister_id,
         admin_principal_id,
         "get_rewarded_for_signing_up",
@@ -833,7 +830,7 @@ fn hotornot_game_simulation_test_2() {
 
     let last_individual_template_canister_id = individual_template_canister_ids.pop().unwrap();
     let last_individual_template_principal_id =
-        Principal::self_authenticating((111 as usize).to_ne_bytes());
+        Principal::self_authenticating((111_usize).to_ne_bytes());
 
     // Create a post
 
@@ -975,7 +972,7 @@ fn hotornot_game_simulation_test_2() {
         let token_info = pic
             .query_call(
                 individual_template_canister_ids[i - 1],
-                Principal::self_authenticating((i as usize).to_ne_bytes()),
+                Principal::self_authenticating((i).to_ne_bytes()),
                 "pd_balance_info",
                 encode_one(()).unwrap(),
             )
