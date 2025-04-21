@@ -19,8 +19,8 @@ use crate::{
 fn post_upgrade() {
     restore_data_from_stable_memory();
     save_upgrade_args_to_memory();
-    migrate_excessive_tokens();
     reenqueue_timers_for_pending_bet_outcomes();
+    reconstruct_pump_and_dump_cents_token_from_participated_game_info();
 }
 
 fn restore_data_from_stable_memory() {
@@ -86,17 +86,13 @@ fn save_upgrade_args_to_memory() {
     });
 }
 
-fn migrate_excessive_tokens() {
-    CANISTER_DATA.with(|canister_data_ref_cell| {
-        let mut canister_data_ref_cell = canister_data_ref_cell.borrow_mut();
-        if canister_data_ref_cell
-            .my_token_balance
-            .utility_token_balance
-            > 18_00_00_00_00_00_00_00_00_00
-        {
-            canister_data_ref_cell
-                .my_token_balance
-                .utility_token_balance = 1000;
-        }
+pub fn reconstruct_pump_and_dump_cents_token_from_participated_game_info() {
+    PUMP_N_DUMP.with_borrow_mut(|token_bet_game| {
+        token_bet_game
+            .cents
+            .reconstruct_cents_token_from_participated_game_info(
+                token_bet_game.onboarding_reward.clone(),
+                &token_bet_game.games,
+            );
     });
 }

@@ -9,7 +9,6 @@ use test_utils::setup::{
     test_constants::{get_mock_user_alice_canister_id, get_mock_user_charlie_principal_id},
 };
 
-#[ignore]
 #[test]
 fn test_updating_controller_before_upgrading_invidividual_canister() {
     let (pocket_ic, known_principal) = get_new_pocket_ic_env();

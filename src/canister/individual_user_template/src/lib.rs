@@ -3,7 +3,7 @@ use std::{collections::BTreeMap, time::SystemTime};
 
 use api::profile::update_profile_display_details::UpdateProfileDetailsError;
 use candid::{Nat, Principal};
-use data_model::pump_n_dump::{PumpAndDumpGame, TokenBetGame};
+use data_model::pump_n_dump::TokenBetGame;
 use data_model::CanisterData;
 use ic_cdk::api::management_canister::provisional::CanisterId;
 use ic_cdk_macros::export_candid;
