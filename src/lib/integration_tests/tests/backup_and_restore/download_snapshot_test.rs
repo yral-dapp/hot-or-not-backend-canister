@@ -35,7 +35,6 @@ const POST_CACHE_WASM_PATH: &str =
     "../../../target/wasm32-unknown-unknown/release/post_cache.wasm.gz";
 
 // #[cfg(feature = "bet_details_heap_to_stable_mem_upgrade")]
-#[ignore]
 #[test]
 fn download_snapshot_test() {
     let pic = PocketIc::new();
