@@ -16,9 +16,8 @@ use test_utils::setup::{
 
 #[test]
 fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousand_utility_tokens_for_signing_up_and_the_referrer_and_referee_receive_five_hundred_tokens_as_referral_rewards() {
-    let (pocket_ic, _) = get_new_pocket_ic_env();
-    
-    let known_principal_map = get_initialized_env_with_provisioned_known_canisters(&pocket_ic);
+    let (pocket_ic, known_principal_map) = get_new_pocket_ic_env();
+    let known_principal_map = get_initialized_env_with_provisioned_known_canisters(&pocket_ic, known_principal_map);
     let user_index_canister_id = known_principal_map
         .get(&KnownPrincipalType::CanisterIdUserIndex)
         .unwrap();
@@ -74,13 +73,14 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
         .map(|reply_payload| {
             let version: String = match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_utility_token_balance failed\n"),
+                e => panic!("\n🛑 get_utility_token_balance failed\n {e:?}"),
             };
             version
         })
         .unwrap();
 
-    assert!(alice_canister_version.eq("v1.0.0"));
+
+    assert!(alice_canister_version.eq("1.0.0"));
 
     // * getting canister id again to check if token value increased
     pocket_ic

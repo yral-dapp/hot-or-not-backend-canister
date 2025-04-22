@@ -11,8 +11,8 @@ use test_utils::setup::{
 
 #[test]
 fn when_a_new_user_signup_canister_is_marked_as_anonymous_login() {
-    let (pocket_ic, _) = get_new_pocket_ic_env();
-    let known_principal_map = get_initialized_env_with_provisioned_known_canisters(&pocket_ic);
+    let (pocket_ic, known_principal_map) = get_new_pocket_ic_env();
+    let known_principal_map = get_initialized_env_with_provisioned_known_canisters(&pocket_ic, known_principal_map);
     let user_index_canister_id = known_principal_map
         .get(&KnownPrincipalType::CanisterIdUserIndex)
         .unwrap();

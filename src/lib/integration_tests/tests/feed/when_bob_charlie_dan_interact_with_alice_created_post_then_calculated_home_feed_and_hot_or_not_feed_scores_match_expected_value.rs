@@ -25,8 +25,8 @@ use test_utils::setup::{
 #[test]
 #[ignore]
 fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_feed_and_hot_or_not_feed_scores_match_expected_value() {
-    let (pocket_ic, _) = get_new_pocket_ic_env();
-    let known_principal_map = get_initialized_env_with_provisioned_known_canisters(&pocket_ic);
+    let (pocket_ic, known_principal_map) = get_new_pocket_ic_env();
+    let known_principal_map = get_initialized_env_with_provisioned_known_canisters(&pocket_ic, known_principal_map);
     let user_index_canister_id = known_principal_map
         .get(&KnownPrincipalType::CanisterIdUserIndex)
         .unwrap();

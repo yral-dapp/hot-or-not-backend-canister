@@ -21,8 +21,8 @@ use test_utils::setup::{
 #[ignore]
 #[test]
 fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_occur() {
-    let (pocket_ic, _) = get_new_pocket_ic_env();
-    let known_principal_map = get_initialized_env_with_provisioned_known_canisters(&pocket_ic);
+    let (pocket_ic, known_principal_map) = get_new_pocket_ic_env();
+    let known_principal_map = get_initialized_env_with_provisioned_known_canisters(&pocket_ic, known_principal_map);
     let user_index_canister_id = *known_principal_map
         .get(&KnownPrincipalType::CanisterIdUserIndex)
         .unwrap();
