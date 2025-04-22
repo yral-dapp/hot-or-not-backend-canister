@@ -1,7 +1,7 @@
 use std::time::{Duration, SystemTime};
 
 use candid::Principal;
-use ic_test_state_machine_client::WasmResult;
+use pocket_ic::WasmResult;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
         arg::PlaceBetArg,
@@ -15,7 +15,7 @@ use shared_utils::{
     types::canister_specific::post_cache::error_types::TopPostsFetchError,
 };
 use test_utils::setup::{
-    env::v1::{get_initialized_env_with_provisioned_known_canisters, get_new_state_machine},
+    env::{pocket_ic_env::get_new_pocket_ic_env, pocket_ic_init::get_initialized_env_with_provisioned_known_canisters},
     test_constants::{
         get_mock_user_alice_principal_id, get_mock_user_bob_principal_id,
         get_mock_user_charlie_principal_id, get_mock_user_dan_principal_id,
@@ -24,10 +24,9 @@ use test_utils::setup::{
 
 #[test]
 #[ignore]
-fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_feed_and_hot_or_not_feed_scores_match_expected_value(
-) {
-    let state_machine = get_new_state_machine();
-    let known_principal_map = get_initialized_env_with_provisioned_known_canisters(&state_machine);
+fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_feed_and_hot_or_not_feed_scores_match_expected_value() {
+    let (pocket_ic, known_principal_map) = get_new_pocket_ic_env();
+    let known_principal_map = get_initialized_env_with_provisioned_known_canisters(&pocket_ic, known_principal_map);
     let user_index_canister_id = known_principal_map
         .get(&KnownPrincipalType::CanisterIdUserIndex)
         .unwrap();
@@ -44,7 +43,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
         user_index_canister_id.to_text()
     );
 
-    let alice_canister_id = state_machine
+    let alice_canister_id = pocket_ic
         .update_call(
             *user_index_canister_id,
             alice_principal_id,
@@ -63,7 +62,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
         .unwrap()
         .unwrap();
 
-    let bob_canister_id = state_machine
+    let bob_canister_id = pocket_ic
         .update_call(
             *user_index_canister_id,
             bob_principal_id,
@@ -82,7 +81,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
         .unwrap()
         .unwrap();
 
-    let charlie_canister_id = state_machine
+    let charlie_canister_id = pocket_ic
         .update_call(
             *user_index_canister_id,
             charlie_principal_id,
@@ -101,7 +100,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
         .unwrap()
         .unwrap();
 
-    let dan_canister_id = state_machine
+    let dan_canister_id = pocket_ic
         .update_call(
             *user_index_canister_id,
             dan_principal_id,
@@ -125,14 +124,14 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     let current_time = SystemTime::UNIX_EPOCH
         .checked_add(Duration::from_secs(1_678_438_993))
         .unwrap();
-    state_machine.set_time(current_time);
+    pocket_ic.set_time(current_time);
 
     let post_creation_time = SystemTime::UNIX_EPOCH
         .checked_add(Duration::new(1_678_438_993, 1))
         .unwrap();
 
     // * Post is created by Alice
-    let newly_created_post_id = state_machine
+    let newly_created_post_id = pocket_ic
         .update_call(
             alice_canister_id,
             alice_principal_id,
@@ -158,7 +157,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
 
     println!("🧪 newly_created_post_id: {:?}", newly_created_post_id);
 
-    let returned_posts: Vec<PostScoreIndexItem> = state_machine
+    let returned_posts: Vec<PostScoreIndexItem> = pocket_ic
         .query_call(
             *post_cache_canister_id,
             Principal::anonymous(),
@@ -181,7 +180,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     assert_eq!(returned_post.score, 3000);
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
 
-    let returned_posts: Vec<PostScoreIndexItem> = state_machine
+    let returned_posts: Vec<PostScoreIndexItem> = pocket_ic
         .query_call(
             *post_cache_canister_id,
             Principal::anonymous(),
@@ -207,14 +206,14 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     let bob_event_time = SystemTime::UNIX_EPOCH
         .checked_add(Duration::from_secs(1_678_447_993))
         .unwrap();
-    state_machine.set_time(bob_event_time);
+    pocket_ic.set_time(bob_event_time);
 
     // * Bob watches the video
     let bob_view_details = PostViewDetailsFromFrontend::WatchedMultipleTimes {
         watch_count: 4,
         percentage_watched: 23,
     };
-    let result = state_machine.update_call(
+    let result = pocket_ic.update_call(
         returned_post.publisher_canister_id,
         get_mock_user_bob_principal_id(),
         "update_post_add_view_details",
@@ -223,7 +222,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
 
     assert!(result.is_ok());
 
-    let returned_posts: Vec<PostScoreIndexItem> = state_machine
+    let returned_posts: Vec<PostScoreIndexItem> = pocket_ic
         .query_call(
             *post_cache_canister_id,
             Principal::anonymous(),
@@ -246,7 +245,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     assert_eq!(returned_post.score, 4_840);
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
 
-    let returned_posts: Vec<PostScoreIndexItem> = state_machine
+    let returned_posts: Vec<PostScoreIndexItem> = pocket_ic
         .query_call(
             *post_cache_canister_id,
             Principal::anonymous(),
@@ -270,7 +269,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
 
     // * Bob likes the post
-    let like_status = state_machine
+    let like_status = pocket_ic
         .update_call(
             returned_post.publisher_canister_id,
             get_mock_user_bob_principal_id(),
@@ -288,7 +287,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
 
     assert!(like_status);
 
-    let returned_posts: Vec<PostScoreIndexItem> = state_machine
+    let returned_posts: Vec<PostScoreIndexItem> = pocket_ic
         .query_call(
             *post_cache_canister_id,
             Principal::anonymous(),
@@ -311,7 +310,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     assert_eq!(returned_post.score, 6_840);
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
 
-    let returned_posts: Vec<PostScoreIndexItem> = state_machine
+    let returned_posts: Vec<PostScoreIndexItem> = pocket_ic
         .query_call(
             *post_cache_canister_id,
             Principal::anonymous(),
@@ -342,7 +341,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
         bet_direction: BetDirection::Hot,
     };
 
-    let bet_status = state_machine
+    let bet_status = pocket_ic
         .update_call(
             bob_canister_id,
             get_mock_user_bob_principal_id(),
@@ -371,7 +370,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
         }
     );
 
-    let returned_posts: Vec<PostScoreIndexItem> = state_machine
+    let returned_posts: Vec<PostScoreIndexItem> = pocket_ic
         .query_call(
             *post_cache_canister_id,
             Principal::anonymous(),
@@ -394,7 +393,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     assert_eq!(returned_post.score, 7_840);
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
 
-    let returned_posts: Vec<PostScoreIndexItem> = state_machine
+    let returned_posts: Vec<PostScoreIndexItem> = pocket_ic
         .query_call(
             *post_cache_canister_id,
             Principal::anonymous(),
@@ -420,14 +419,14 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     let charlie_event_time = SystemTime::UNIX_EPOCH
         .checked_add(Duration::from_secs(1_678_458_793))
         .unwrap();
-    state_machine.set_time(charlie_event_time);
+    pocket_ic.set_time(charlie_event_time);
 
     // * Charlie watches the video
     let charlie_view_details = PostViewDetailsFromFrontend::WatchedMultipleTimes {
         watch_count: 7,
         percentage_watched: 97,
     };
-    let result = state_machine.update_call(
+    let result = pocket_ic.update_call(
         returned_post.publisher_canister_id,
         get_mock_user_charlie_principal_id(),
         "update_post_add_view_details",
@@ -436,7 +435,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
 
     assert!(result.is_ok());
 
-    let returned_posts: Vec<PostScoreIndexItem> = state_machine
+    let returned_posts: Vec<PostScoreIndexItem> = pocket_ic
         .query_call(
             *post_cache_canister_id,
             Principal::anonymous(),
@@ -459,7 +458,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     assert_eq!(returned_post.score, 6_549);
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
 
-    let returned_posts: Vec<PostScoreIndexItem> = state_machine
+    let returned_posts: Vec<PostScoreIndexItem> = pocket_ic
         .query_call(
             *post_cache_canister_id,
             Principal::anonymous(),
@@ -490,7 +489,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
         bet_direction: BetDirection::Not,
     };
 
-    let bet_status = state_machine
+    let bet_status = pocket_ic
         .update_call(
             charlie_canister_id,
             get_mock_user_charlie_principal_id(),
@@ -518,7 +517,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
         }
     );
 
-    let returned_posts: Vec<PostScoreIndexItem> = state_machine
+    let returned_posts: Vec<PostScoreIndexItem> = pocket_ic
         .query_call(
             *post_cache_canister_id,
             Principal::anonymous(),
@@ -541,7 +540,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     assert_eq!(returned_post.score, 6_049);
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
 
-    let returned_posts: Vec<PostScoreIndexItem> = state_machine
+    let returned_posts: Vec<PostScoreIndexItem> = pocket_ic
         .query_call(
             *post_cache_canister_id,
             Principal::anonymous(),
@@ -567,14 +566,14 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     let dan_event_time = SystemTime::UNIX_EPOCH
         .checked_add(Duration::from_secs(1_678_469_593))
         .unwrap();
-    state_machine.set_time(dan_event_time);
+    pocket_ic.set_time(dan_event_time);
 
     // * Dan watches the video
     let dan_view_details = PostViewDetailsFromFrontend::WatchedMultipleTimes {
         watch_count: 2,
         percentage_watched: 11,
     };
-    let result = state_machine.update_call(
+    let result = pocket_ic.update_call(
         returned_post.publisher_canister_id,
         get_mock_user_dan_principal_id(),
         "update_post_add_view_details",
@@ -583,7 +582,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
 
     assert!(result.is_ok());
 
-    let returned_posts: Vec<PostScoreIndexItem> = state_machine
+    let returned_posts: Vec<PostScoreIndexItem> = pocket_ic
         .query_call(
             *post_cache_canister_id,
             Principal::anonymous(),
@@ -606,7 +605,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     assert_eq!(returned_post.score, 5_642);
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
 
-    let returned_posts: Vec<PostScoreIndexItem> = state_machine
+    let returned_posts: Vec<PostScoreIndexItem> = pocket_ic
         .query_call(
             *post_cache_canister_id,
             Principal::anonymous(),
@@ -630,7 +629,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
 
     // * Dan likes the post
-    let like_status = state_machine
+    let like_status = pocket_ic
         .update_call(
             returned_post.publisher_canister_id,
             get_mock_user_dan_principal_id(),
@@ -648,7 +647,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
 
     assert!(like_status);
 
-    let returned_posts: Vec<PostScoreIndexItem> = state_machine
+    let returned_posts: Vec<PostScoreIndexItem> = pocket_ic
         .query_call(
             *post_cache_canister_id,
             Principal::anonymous(),
@@ -671,7 +670,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     assert_eq!(returned_post.score, 6_267);
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
 
-    let returned_posts: Vec<PostScoreIndexItem> = state_machine
+    let returned_posts: Vec<PostScoreIndexItem> = pocket_ic
         .query_call(
             *post_cache_canister_id,
             Principal::anonymous(),
@@ -695,7 +694,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
 
     // * Dan shares the post
-    let incremented_share_count = state_machine
+    let incremented_share_count = pocket_ic
         .update_call(
             returned_post.publisher_canister_id,
             get_mock_user_dan_principal_id(),
@@ -713,7 +712,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
 
     assert_eq!(incremented_share_count, 1);
 
-    let returned_posts: Vec<PostScoreIndexItem> = state_machine
+    let returned_posts: Vec<PostScoreIndexItem> = pocket_ic
         .query_call(
             *post_cache_canister_id,
             Principal::anonymous(),
@@ -736,7 +735,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     assert_eq!(returned_post.score, 12_517);
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
 
-    let returned_posts: Vec<PostScoreIndexItem> = state_machine
+    let returned_posts: Vec<PostScoreIndexItem> = pocket_ic
         .query_call(
             *post_cache_canister_id,
             Principal::anonymous(),
@@ -767,7 +766,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
         bet_direction: BetDirection::Hot,
     };
 
-    let bet_status = state_machine
+    let bet_status = pocket_ic
         .update_call(
             dan_canister_id,
             get_mock_user_dan_principal_id(),
@@ -795,7 +794,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
         }
     );
 
-    let returned_posts: Vec<PostScoreIndexItem> = state_machine
+    let returned_posts: Vec<PostScoreIndexItem> = pocket_ic
         .query_call(
             *post_cache_canister_id,
             Principal::anonymous(),
@@ -818,7 +817,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     assert_eq!(returned_post.score, 12_683);
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
 
-    let returned_posts: Vec<PostScoreIndexItem> = state_machine
+    let returned_posts: Vec<PostScoreIndexItem> = pocket_ic
         .query_call(
             *post_cache_canister_id,
             Principal::anonymous(),
@@ -844,14 +843,14 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     let alice_event_time = SystemTime::UNIX_EPOCH
         .checked_add(Duration::from_secs(1_678_510_993))
         .unwrap();
-    state_machine.set_time(alice_event_time);
+    pocket_ic.set_time(alice_event_time);
 
     // * Alice watches the video
     let alice_view_details = PostViewDetailsFromFrontend::WatchedMultipleTimes {
         watch_count: 1,
         percentage_watched: 5,
     };
-    let result = state_machine.update_call(
+    let result = pocket_ic.update_call(
         returned_post.publisher_canister_id,
         get_mock_user_alice_principal_id(),
         "update_post_add_view_details",
@@ -860,7 +859,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
 
     assert!(result.is_ok());
 
-    let returned_posts: Vec<PostScoreIndexItem> = state_machine
+    let returned_posts: Vec<PostScoreIndexItem> = pocket_ic
         .query_call(
             *post_cache_canister_id,
             Principal::anonymous(),
@@ -883,7 +882,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     assert_eq!(returned_post.score, 9_810);
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
 
-    let returned_posts: Vec<PostScoreIndexItem> = state_machine
+    let returned_posts: Vec<PostScoreIndexItem> = pocket_ic
         .query_call(
             *post_cache_canister_id,
             Principal::anonymous(),
@@ -907,7 +906,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
 
     // * Alice shares the post
-    let incremented_share_count = state_machine
+    let incremented_share_count = pocket_ic
         .update_call(
             returned_post.publisher_canister_id,
             get_mock_user_alice_principal_id(),
@@ -925,7 +924,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
 
     assert_eq!(incremented_share_count, 2);
 
-    let returned_posts: Vec<PostScoreIndexItem> = state_machine
+    let returned_posts: Vec<PostScoreIndexItem> = pocket_ic
         .query_call(
             *post_cache_canister_id,
             Principal::anonymous(),
@@ -948,7 +947,7 @@ fn when_bob_charlie_dan_interact_with_alice_created_post_then_calculated_home_fe
     assert_eq!(returned_post.score, 15_366);
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
 
-    let returned_posts: Vec<PostScoreIndexItem> = state_machine
+    let returned_posts: Vec<PostScoreIndexItem> = pocket_ic
         .query_call(
             *post_cache_canister_id,
             Principal::anonymous(),

@@ -1,13 +1,13 @@
 use std::time::Duration;
 
 use candid::Principal;
-use ic_test_state_machine_client::WasmResult;
+use pocket_ic::WasmResult;
 use shared_utils::{
     canister_specific::user_index::types::args::UserIndexInitArgs,
     common::types::known_principal::KnownPrincipalType,
 };
 use test_utils::setup::{
-    env::v1::{get_initialized_env_with_provisioned_known_canisters, get_new_state_machine},
+    env::{pocket_ic_env::get_new_pocket_ic_env, pocket_ic_init::get_initialized_env_with_provisioned_known_canisters},
     test_constants::{
         get_canister_wasm, get_global_super_admin_principal_id, get_mock_user_alice_principal_id,
     },
@@ -15,16 +15,15 @@ use test_utils::setup::{
 
 #[ignore]
 #[test]
-fn when_canister_cycle_balance_is_below_the_configured_or_freezing_threshold_then_running_topup_function_in_user_index_canister_tops_up_the_canisters_that_need_it(
-) {
-    let state_machine = get_new_state_machine();
-    let known_principal_map = get_initialized_env_with_provisioned_known_canisters(&state_machine);
+fn when_canister_cycle_balance_is_below_the_configured_or_freezing_threshold_then_running_topup_function_in_user_index_canister_tops_up_the_canisters_that_need_it() {
+    let (pocket_ic, known_principal_map) = get_new_pocket_ic_env();
+    let known_principal_map = get_initialized_env_with_provisioned_known_canisters(&pocket_ic, known_principal_map);
     let user_index_canister_id = known_principal_map
         .get(&KnownPrincipalType::CanisterIdUserIndex)
         .unwrap();
     let alice_principal_id = get_mock_user_alice_principal_id();
 
-    let alice_canister_id = state_machine
+    let alice_canister_id = pocket_ic
         .update_call(
             *user_index_canister_id,
             alice_principal_id,
@@ -43,7 +42,7 @@ fn when_canister_cycle_balance_is_below_the_configured_or_freezing_threshold_the
         .unwrap()
         .unwrap();
 
-    let alice_starting_cycle_balance = state_machine
+    let alice_starting_cycle_balance = pocket_ic
         .update_call(
             alice_canister_id,
             Principal::anonymous(),
@@ -64,7 +63,7 @@ fn when_canister_cycle_balance_is_below_the_configured_or_freezing_threshold_the
         alice_starting_cycle_balance
     );
 
-    state_machine
+    pocket_ic
         .update_call(
             alice_canister_id,
             *user_index_canister_id,
@@ -73,7 +72,7 @@ fn when_canister_cycle_balance_is_below_the_configured_or_freezing_threshold_the
         )
         .unwrap();
 
-    let alice_reduced_cycle_balance = state_machine
+    let alice_reduced_cycle_balance = pocket_ic
         .update_call(
             alice_canister_id,
             Principal::anonymous(),
@@ -96,7 +95,7 @@ fn when_canister_cycle_balance_is_below_the_configured_or_freezing_threshold_the
 
     assert!(alice_starting_cycle_balance > alice_reduced_cycle_balance);
 
-    state_machine
+    pocket_ic
         .upgrade_canister(
             *user_index_canister_id,
             get_canister_wasm(KnownPrincipalType::CanisterIdUserIndex),
@@ -108,10 +107,10 @@ fn when_canister_cycle_balance_is_below_the_configured_or_freezing_threshold_the
         )
         .unwrap();
 
-    state_machine.advance_time(Duration::from_secs(30));
-    state_machine.tick();
+    pocket_ic.advance_time(Duration::from_secs(30));
+    pocket_ic.tick();
 
-    let alice_cycle_balance_after_user_index_upgrade = state_machine
+    let alice_cycle_balance_after_user_index_upgrade = pocket_ic
         .update_call(
             alice_canister_id,
             Principal::anonymous(),

@@ -1,41 +1,28 @@
 use std::time::Duration;
 
 use candid::Principal;
-use ic_test_state_machine_client::WasmResult;
+use pocket_ic::WasmResult;
 use shared_utils::{
-    canister_specific::{
-        individual_user_template::types::{
-            arg::PlaceBetArg,
-            error::BetOnCurrentlyViewingPostError,
-            hot_or_not::{BetDirection, BetOutcomeForBetMaker, BettingStatus},
-            post::PostDetailsFromFrontend,
-        },
-        user_index::types::args::UserIndexInitArgs,
-    },
-    common::types::{
-        known_principal::KnownPrincipalType,
-        top_posts::post_score_index_item::PostScoreIndexItem,
-        utility_token::token_event::{HotOrNotOutcomePayoutEvent, StakeEvent, TokenEvent},
-    },
-    types::canister_specific::{
-        individual_user_template::error_types::GetUserUtilityTokenTransactionHistoryError,
-        post_cache::error_types::TopPostsFetchError,
-    },
+    canister_specific::{individual_user_template::types::{
+        arg::PlaceBetArg,
+        error::BetOnCurrentlyViewingPostError,
+        hot_or_not::{BetDirection, BetOutcomeForBetMaker, BettingStatus},
+        post::PostDetailsFromFrontend,
+    }, user_index::types::args::UserIndexInitArgs},
+    common::types::{known_principal::KnownPrincipalType, top_posts::post_score_index_item::PostScoreIndexItem, utility_token::token_event::{HotOrNotOutcomePayoutEvent, StakeEvent, TokenEvent}}, types::canister_specific::{individual_user_template::error_types::GetUserUtilityTokenTransactionHistoryError, post_cache::error_types::TopPostsFetchError},
 };
 use test_utils::setup::{
-    env::v1::{get_initialized_env_with_provisioned_known_canisters, get_new_state_machine},
+    env::{pocket_ic_env::get_new_pocket_ic_env, pocket_ic_init::get_initialized_env_with_provisioned_known_canisters},
     test_constants::{
-        get_canister_wasm, get_global_super_admin_principal_id, get_mock_user_alice_principal_id,
-        get_mock_user_bob_principal_id, get_mock_user_charlie_principal_id,
-        get_mock_user_dan_principal_id,
+        get_canister_wasm, get_global_super_admin_principal_id, get_mock_user_alice_principal_id, get_mock_user_bob_principal_id, get_mock_user_charlie_principal_id, get_mock_user_dan_principal_id
     },
 };
 
 #[ignore]
 #[test]
 fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_occur() {
-    let state_machine = get_new_state_machine();
-    let known_principal_map = get_initialized_env_with_provisioned_known_canisters(&state_machine);
+    let (pocket_ic, known_principal_map) = get_new_pocket_ic_env();
+    let known_principal_map = get_initialized_env_with_provisioned_known_canisters(&pocket_ic, known_principal_map);
     let user_index_canister_id = *known_principal_map
         .get(&KnownPrincipalType::CanisterIdUserIndex)
         .unwrap();
@@ -55,7 +42,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
     let charlie_principal_id = get_mock_user_charlie_principal_id();
     let dan_principal_id = get_mock_user_dan_principal_id();
 
-    let alice_canister_id = state_machine
+    let alice_canister_id = pocket_ic
         .update_call(
             user_index_canister_id,
             alice_principal_id,
@@ -74,7 +61,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
         .unwrap()
         .unwrap();
 
-    let bob_canister_id = state_machine
+    let bob_canister_id = pocket_ic
         .update_call(
             user_index_canister_id,
             bob_principal_id,
@@ -95,7 +82,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
         .unwrap()
         .unwrap();
 
-    let charlie_canister_id = state_machine
+    let charlie_canister_id = pocket_ic
         .update_call(
             user_index_canister_id,
             charlie_principal_id,
@@ -114,7 +101,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
         .unwrap()
         .unwrap();
 
-    let dan_canister_id = state_machine
+    let dan_canister_id = pocket_ic
         .update_call(
             user_index_canister_id,
             dan_principal_id,
@@ -135,10 +122,10 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
 
     println!("🧪 alice_canister_id: {:?}", alice_canister_id.to_text());
 
-    let post_creation_time = state_machine.time();
+    let post_creation_time = pocket_ic.get_time();
 
     // * Post is created by Alice
-    let newly_created_post_id = state_machine
+    let newly_created_post_id = pocket_ic
         .update_call(
             alice_canister_id,
             alice_principal_id,
@@ -164,7 +151,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
 
     println!("🧪 newly_created_post_id: {:?}", newly_created_post_id);
 
-    let returned_posts: Vec<PostScoreIndexItem> = state_machine
+    let returned_posts: Vec<PostScoreIndexItem> = pocket_ic
         .query_call(
             post_cache_canister_id,
             Principal::anonymous(),
@@ -182,7 +169,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
 
     assert_eq!(returned_posts.len(), 1);
 
-    let returned_post = returned_posts.get(0).unwrap();
+    let returned_post = returned_posts.first().unwrap();
     assert_eq!(returned_post.post_id, newly_created_post_id);
     assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
 
@@ -194,7 +181,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
         bet_direction: BetDirection::Hot,
     };
 
-    let bet_status = state_machine
+    let bet_status = pocket_ic
         .update_call(
             bob_canister_id,
             get_mock_user_bob_principal_id(),
@@ -231,7 +218,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
         bet_direction: BetDirection::Not,
     };
 
-    let bet_status = state_machine
+    let bet_status = pocket_ic
         .update_call(
             charlie_canister_id,
             get_mock_user_charlie_principal_id(),
@@ -267,7 +254,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
         bet_direction: BetDirection::Hot,
     };
 
-    let bet_status = state_machine
+    let bet_status = pocket_ic
         .update_call(
             dan_canister_id,
             get_mock_user_dan_principal_id(),
@@ -296,7 +283,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
     );
 
     // * Restart their canisters
-    state_machine
+    pocket_ic
         .upgrade_canister(
             user_index_canister_id,
             get_canister_wasm(KnownPrincipalType::CanisterIdUserIndex),
@@ -308,15 +295,15 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
         )
         .unwrap();
 
-    // state_machine.advance_time(Duration::from_secs(30));
-    // state_machine.tick();
+    // pocket_ic.advance_time(Duration::from_secs(30));
+    // pocket_ic.tick();
 
     // * advance time to the end of the first slot and then 5 minutes
-    state_machine.advance_time(Duration::from_secs(60 * (60 + 5)));
-    state_machine.tick();
+    pocket_ic.advance_time(Duration::from_secs(60 * (60 + 5)));
+    pocket_ic.tick();
 
     // * Alice outcome
-    let alice_token_balance = state_machine
+    let alice_token_balance = pocket_ic
         .query_call(
             alice_canister_id,
             Principal::anonymous(),
@@ -334,7 +321,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
 
     assert_eq!(alice_token_balance, 1000 + 16);
 
-    let alice_token_transaction_history = state_machine
+    let alice_token_transaction_history = pocket_ic
         .query_call(
             alice_canister_id,
             Principal::anonymous(),
@@ -358,7 +345,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
 
     assert_eq!(alice_token_transaction_history.len(), 2);
     assert_eq!(
-        alice_token_transaction_history.get(0).unwrap().1,
+        alice_token_transaction_history.first().unwrap().1,
         TokenEvent::HotOrNotOutcomePayout {
             amount: 16,
             details: HotOrNotOutcomePayoutEvent::CommissionFromHotOrNotBet {
@@ -369,7 +356,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
                 room_pot_total_amount: 160
             },
             timestamp: if let TokenEvent::HotOrNotOutcomePayout { timestamp, .. } =
-                alice_token_transaction_history.get(0).unwrap().1.clone()
+                alice_token_transaction_history.first().unwrap().1.clone()
             {
                 timestamp
             } else {
@@ -379,7 +366,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
     );
 
     // * Bob outcome
-    let bob_token_balance = state_machine
+    let bob_token_balance = pocket_ic
         .query_call(
             bob_canister_id,
             Principal::anonymous(),
@@ -398,7 +385,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
     println!("🧪 bob_token_balance: {}", bob_token_balance);
     assert_eq!(bob_token_balance, 1000 - 50 + 90);
 
-    let bob_token_transaction_history = state_machine
+    let bob_token_transaction_history = pocket_ic
         .query_call(
             bob_canister_id,
             Principal::anonymous(),
@@ -427,7 +414,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
 
     assert_eq!(bob_token_transaction_history.len(), 3);
     assert_eq!(
-        bob_token_transaction_history.get(0).unwrap().1,
+        bob_token_transaction_history.first().unwrap().1,
         TokenEvent::HotOrNotOutcomePayout {
             amount: 90,
             details: HotOrNotOutcomePayoutEvent::WinningsEarnedFromBet {
@@ -439,7 +426,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
                 winnings_amount: 90
             },
             timestamp: if let TokenEvent::HotOrNotOutcomePayout { timestamp, .. } =
-                bob_token_transaction_history.get(0).unwrap().1.clone()
+                bob_token_transaction_history.first().unwrap().1.clone()
             {
                 timestamp
             } else {
@@ -468,7 +455,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
     );
 
     // * Charlie outcome
-    let charlie_token_balance = state_machine
+    let charlie_token_balance = pocket_ic
         .query_call(
             charlie_canister_id,
             Principal::anonymous(),
@@ -487,7 +474,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
     println!("🧪 charlie_token_balance: {}", charlie_token_balance);
     assert_eq!(charlie_token_balance, 1000 - 100);
 
-    let charlie_token_transaction_history = state_machine
+    let charlie_token_transaction_history = pocket_ic
         .query_call(
             charlie_canister_id,
             Principal::anonymous(),
@@ -516,7 +503,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
 
     assert_eq!(charlie_token_transaction_history.len(), 3);
     assert_eq!(
-        charlie_token_transaction_history.get(0).unwrap().1,
+        charlie_token_transaction_history.first().unwrap().1,
         TokenEvent::HotOrNotOutcomePayout {
             amount: 0,
             details: HotOrNotOutcomePayoutEvent::WinningsEarnedFromBet {
@@ -528,7 +515,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
                 winnings_amount: 0
             },
             timestamp: if let TokenEvent::HotOrNotOutcomePayout { timestamp, .. } =
-                charlie_token_transaction_history.get(0).unwrap().1.clone()
+                charlie_token_transaction_history.first().unwrap().1.clone()
             {
                 timestamp
             } else {
@@ -557,7 +544,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
     );
 
     // * Dan outcome
-    let dan_token_balance = state_machine
+    let dan_token_balance = pocket_ic
         .query_call(
             dan_canister_id,
             Principal::anonymous(),
@@ -576,7 +563,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
     println!("🧪 dan_token_balance: {}", dan_token_balance);
     assert_eq!(dan_token_balance, 1000 - 10 + 18);
 
-    let dan_token_transaction_history = state_machine
+    let dan_token_transaction_history = pocket_ic
         .query_call(
             dan_canister_id,
             Principal::anonymous(),
@@ -605,7 +592,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
 
     assert_eq!(dan_token_transaction_history.len(), 3);
     assert_eq!(
-        dan_token_transaction_history.get(0).unwrap().1,
+        dan_token_transaction_history.first().unwrap().1,
         TokenEvent::HotOrNotOutcomePayout {
             amount: 18,
             details: HotOrNotOutcomePayoutEvent::WinningsEarnedFromBet {
@@ -617,7 +604,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
                 winnings_amount: 18
             },
             timestamp: if let TokenEvent::HotOrNotOutcomePayout { timestamp, .. } =
-                dan_token_transaction_history.get(0).unwrap().1.clone()
+                dan_token_transaction_history.first().unwrap().1.clone()
             {
                 timestamp
             } else {

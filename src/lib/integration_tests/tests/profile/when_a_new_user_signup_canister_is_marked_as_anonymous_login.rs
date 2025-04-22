@@ -1,26 +1,24 @@
 use candid::Principal;
-use ic_test_state_machine_client::WasmResult;
+use pocket_ic::WasmResult;
 use shared_utils::{
-    canister_specific::individual_user_template::types::{
-        profile::UserProfileDetailsForFrontend, session::SessionType,
-    },
+    canister_specific::individual_user_template::types::session::SessionType,
     common::types::known_principal::KnownPrincipalType,
 };
 use test_utils::setup::{
-    env::v1::{get_initialized_env_with_provisioned_known_canisters, get_new_state_machine},
+    env::{pocket_ic_env::get_new_pocket_ic_env, pocket_ic_init::get_initialized_env_with_provisioned_known_canisters},
     test_constants::get_mock_user_alice_principal_id,
 };
 
 #[test]
-fn when_new_user_signup_canister_is_marked_as_anonymous_login() {
-    let state_machine = get_new_state_machine();
-    let known_principal_map = get_initialized_env_with_provisioned_known_canisters(&state_machine);
+fn when_a_new_user_signup_canister_is_marked_as_anonymous_login() {
+    let (pocket_ic, known_principal_map) = get_new_pocket_ic_env();
+    let known_principal_map = get_initialized_env_with_provisioned_known_canisters(&pocket_ic, known_principal_map);
     let user_index_canister_id = known_principal_map
         .get(&KnownPrincipalType::CanisterIdUserIndex)
         .unwrap();
     let alice_principal_id = get_mock_user_alice_principal_id();
 
-    let alice_canister_id = state_machine
+    let alice_canister_id = pocket_ic
         .update_call(
             *user_index_canister_id,
             alice_principal_id,
@@ -41,7 +39,7 @@ fn when_new_user_signup_canister_is_marked_as_anonymous_login() {
         .unwrap()
         .unwrap();
 
-    let session_type = state_machine
+    let session_type = pocket_ic
         .query_call(
             alice_canister_id,
             alice_principal_id,
