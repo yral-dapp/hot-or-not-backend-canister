@@ -34,6 +34,7 @@ pub mod allot_empty_canister;
 pub mod create_pool_of_available_canisters;
 pub mod delete_all_sns_creator_token_in_the_network;
 pub mod delete_all_sns_creator_token_of_an_individual_canister;
+pub mod fixup_individual_canisters_mappings;
 pub mod get_last_broadcast_call_status;
 pub mod get_subnet_available_capacity;
 pub mod get_subnet_backup_capacity;
@@ -47,11 +48,8 @@ pub mod recycle_canisters;
 pub mod request_cycles;
 pub mod reset_user_canister_ml_feed_cache;
 pub mod start_upgrades_for_individual_canisters;
-pub mod update_canisters_access_time;
 pub mod update_user_canister_restart_timers;
 pub mod upgrade_all_creator_dao_governance_canisters_in_the_network;
-pub mod fixup_individual_canisters_mappings;
-
 
 #[update]
 pub async fn get_user_canister_status(

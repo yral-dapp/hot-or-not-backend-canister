@@ -6,7 +6,9 @@ use std::borrow::BorrowMut;
 
 use crate::{data_model::memory, PUMP_N_DUMP};
 
-use shared_utils::canister_specific::individual_user_template::types::{arg::IndividualUserTemplateInitArgs, session::SessionType};
+use shared_utils::canister_specific::individual_user_template::types::{
+    arg::IndividualUserTemplateInitArgs, session::SessionType,
+};
 
 use crate::{
     api::hot_or_not_bet::reenqueue_timers_for_pending_bet_outcomes::reenqueue_timers_for_pending_bet_outcomes,
@@ -17,8 +19,8 @@ use crate::{
 fn post_upgrade() {
     restore_data_from_stable_memory();
     save_upgrade_args_to_memory();
-    migrate_excessive_tokens();
     reenqueue_timers_for_pending_bet_outcomes();
+    reconstruct_pump_and_dump_cents_token_from_participated_game_info();
 }
 
 fn restore_data_from_stable_memory() {
@@ -45,16 +47,12 @@ fn restore_data_from_stable_memory() {
     let mut pump_n_dump_data_bytes = vec![0; heap_data_len];
     upgrade_reader.read(&mut pump_n_dump_data_bytes).unwrap();
 
-    match de::from_reader(&*pump_n_dump_data_bytes) {
-        Ok(pd_data) => {
-            PUMP_N_DUMP.with_borrow_mut(|pd| {
-                *pd = pd_data;
-            });
-        },
-        Err(e) => {
-            ic_cdk::println!("WARN: pump and data not available during upgrade, assuming uninit {e}")
-        }
-    };
+    let token_bet_data = de::from_reader(&*pump_n_dump_data_bytes)
+        .expect("Failed to deserialize pump and dump heap data");
+
+    PUMP_N_DUMP.with_borrow_mut(|token_bet_game| {
+        *token_bet_game = token_bet_data;
+    });
 }
 
 fn save_upgrade_args_to_memory() {
@@ -85,27 +83,23 @@ fn save_upgrade_args_to_memory() {
         }
 
         canister_data_ref_cell.borrow_mut().version_details.version = upgrade_args.version;
-
-        if let Some(url_to_send_canister_metrics_to) = upgrade_args.url_to_send_canister_metrics_to
-        {
-            canister_data_ref_cell
-                .configuration
-                .url_to_send_canister_metrics_to = Some(url_to_send_canister_metrics_to);
-        }
     });
 }
 
-fn migrate_excessive_tokens() {
-    CANISTER_DATA.with(|canister_data_ref_cell| {
-        let mut canister_data_ref_cell = canister_data_ref_cell.borrow_mut();
-        if canister_data_ref_cell
-            .my_token_balance
-            .utility_token_balance
-            > 18_00_00_00_00_00_00_00_00_00
-        {
-            canister_data_ref_cell
-                .my_token_balance
-                .utility_token_balance = 1000;
-        }
+pub fn reconstruct_pump_and_dump_cents_token_from_participated_game_info() {
+    let should_run_reconstruct =
+        CANISTER_DATA.with_borrow(|canister_data| canister_data.profile.principal_id.is_some());
+
+    if !should_run_reconstruct {
+        return;
+    }
+
+    PUMP_N_DUMP.with_borrow_mut(|token_bet_game| {
+        token_bet_game
+            .cents
+            .reconstruct_cents_token_from_participated_game_info(
+                token_bet_game.onboarding_reward.clone(),
+                &token_bet_game.games,
+            );
     });
 }

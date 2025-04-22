@@ -4,9 +4,9 @@ use candid::{encode_one, Principal};
 use pocket_ic::WasmResult;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
-        arg::{IndividualUserTemplateInitArgs, PlaceBetArg},
+        arg::PlaceBetArg,
         error::BetOnCurrentlyViewingPostError,
-        hot_or_not::{BetDetails, BetDirection, BettingStatus},
+        hot_or_not::{BetDirection, BettingStatus},
         post::PostDetailsFromFrontend,
     },
     common::types::known_principal::KnownPrincipalType,
@@ -81,7 +81,7 @@ fn when_bet_maker_places_bet_on_a_post_it_is_assigned_a_slot_id_and_the_outcome_
         })
         .unwrap();
 
-    for i in 0..50 {
+    for _ in 0..50 {
         pocket_ic.tick();
     }
 

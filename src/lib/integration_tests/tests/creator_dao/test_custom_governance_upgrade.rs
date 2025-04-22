@@ -9,15 +9,12 @@ use shared_utils::{
 use test_utils::setup::{
     env::pocket_ic_env::get_new_pocket_ic_env,
     test_constants::{
-        get_global_super_admin_principal_id, get_mock_user_alice_principal_id,
+         get_mock_user_alice_principal_id,
         get_mock_user_charlie_principal_id,
     },
 };
 
-use crate::{
-    utils::{setup_default_sns_creator_token, setup_sns_w_canister_for_creator_dao},
-    Wasm,
-};
+use crate::utils::{setup_default_sns_creator_token, setup_sns_w_canister_for_creator_dao};
 
 #[test]
 pub fn test_skip_upgrading_creator_sns_governance_canister_if_version_is_present() {

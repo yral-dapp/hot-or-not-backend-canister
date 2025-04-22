@@ -1,14 +1,10 @@
 use ic_cdk::{call, caller};
 use ic_cdk_macros::update;
 use shared_utils::canister_specific::individual_user_template::types::{
-    profile::{self, UserCanisterDetails},
-    session::SessionType,
+    profile::UserCanisterDetails, session::SessionType,
 };
 
-use crate::{
-    api::canister_management::update_last_access_time::update_last_canister_functionality_access_time,
-    util::cycles::notify_to_recharge_canister, CANISTER_DATA,
-};
+use crate::{util::cycles::notify_to_recharge_canister, CANISTER_DATA};
 
 #[update]
 async fn update_referrer_details(referrer: UserCanisterDetails) -> Result<String, String> {
@@ -19,8 +15,6 @@ async fn update_referrer_details(referrer: UserCanisterDetails) -> Result<String
     if profile_owner.is_none() || !profile_owner.unwrap().eq(&caller()) {
         return Err("Unauthorized".into());
     }
-
-    update_last_canister_functionality_access_time();
 
     let (canister_session_type_result,): (Result<SessionType, String>,) =
         call(referrer.user_canister_id, "get_session_type", ())

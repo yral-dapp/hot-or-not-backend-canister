@@ -10,12 +10,10 @@ use serde::Serialize;
 use serde_json_any_key::*;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
-        configuration::IndividualUserConfiguration,
-        follow::{FollowData, FollowEntryDetail, FollowEntryId, FollowList},
+        follow::{FollowEntryDetail, FollowEntryId},
         hot_or_not::{
-            AggregateStats, BetDetails, BetMaker, BetMakerPrincipal, GlobalBetId, GlobalRoomId,
-            HotOrNotDetails, PlacedBetDetail, RoomDetailsV1, RoomId, SlotDetailsV1, SlotId,
-            StablePrincipal,
+            AggregateStats, BetDetails, GlobalBetId, GlobalRoomId, HotOrNotDetails,
+            PlacedBetDetail, RoomDetailsV1, SlotDetailsV1, SlotId, StablePrincipal,
         },
         migration::MigrationInfo,
         post::{FeedScore, Post, PostViewStatistics},
@@ -27,7 +25,6 @@ use shared_utils::{
         app_primitive_type::PostId,
         known_principal::KnownPrincipalMap,
         top_posts::{
-            post_score_index::PostScoreIndex,
             post_score_index_item::{PostScoreIndexItem, PostStatus},
             PublisherCanisterId, Score,
         },
@@ -58,18 +55,13 @@ pub struct CanisterDataForSnapshot {
     pub slot_details_map: BTreeMap<(PostId, SlotId), SlotDetailsV1>,
     #[serde(with = "any_key_map")]
     pub all_hot_or_not_bets_placed: BTreeMap<(CanisterId, PostId), PlacedBetDetail>,
-    pub configuration: IndividualUserConfiguration,
-    pub follow_data: FollowDataForSnapshot,
     #[serde(with = "any_key_map")]
     pub known_principal_ids: KnownPrincipalMap,
     pub my_token_balance: TokenBalanceForSnapshot,
-    pub principals_i_follow: BTreeSet<Principal>,
-    pub principals_that_follow_me: BTreeSet<Principal>,
     pub profile: UserProfile,
     pub version_details: VersionDetails,
     pub session_type: Option<SessionType>,
     pub last_access_time: Option<SystemTime>,
-    pub last_canister_functionality_access_time: Option<SystemTime>,
     pub migration_info: MigrationInfo,
 }
 
@@ -189,17 +181,6 @@ impl From<&CanisterData> for CanisterDataForSnapshot {
             lifetime_earnings: canister_data.my_token_balance.lifetime_earnings,
         };
 
-        let follow_data = FollowDataForSnapshot {
-            follower: FollowListForSnapshot {
-                sorted_index: canister_data.follow_data.follower.sorted_index.clone(),
-                members: canister_data.follow_data.follower.members.clone(),
-            },
-            following: FollowListForSnapshot {
-                sorted_index: canister_data.follow_data.following.sorted_index.clone(),
-                members: canister_data.follow_data.following.members.clone(),
-            },
-        };
-
         Self {
             all_created_posts,
             room_details_map,
@@ -207,18 +188,12 @@ impl From<&CanisterData> for CanisterDataForSnapshot {
             post_principal_map,
             slot_details_map,
             all_hot_or_not_bets_placed: canister_data.all_hot_or_not_bets_placed.clone(),
-            configuration: canister_data.configuration.clone(),
-            follow_data,
             known_principal_ids: canister_data.known_principal_ids.clone(),
             my_token_balance,
-            principals_i_follow: canister_data.principals_i_follow.clone(),
-            principals_that_follow_me: canister_data.principals_that_follow_me.clone(),
             profile: canister_data.profile.clone(),
             version_details: canister_data.version_details.clone(),
             session_type: canister_data.session_type,
             last_access_time: canister_data.last_access_time,
-            last_canister_functionality_access_time: canister_data
-                .last_canister_functionality_access_time,
             migration_info: canister_data.migration_info,
         }
     }
@@ -306,33 +281,6 @@ impl From<CanisterDataForSnapshot> for CanisterData {
                 .lifetime_earnings,
         };
 
-        let follow_data = FollowData {
-            follower: FollowList {
-                sorted_index: canister_data_for_snapshot
-                    .follow_data
-                    .follower
-                    .sorted_index
-                    .clone(),
-                members: canister_data_for_snapshot
-                    .follow_data
-                    .follower
-                    .members
-                    .clone(),
-            },
-            following: FollowList {
-                sorted_index: canister_data_for_snapshot
-                    .follow_data
-                    .following
-                    .sorted_index
-                    .clone(),
-                members: canister_data_for_snapshot
-                    .follow_data
-                    .following
-                    .members
-                    .clone(),
-            },
-        };
-
         let mut canister_data = CanisterData::default();
 
         canister_data.room_details_map = room_details_map;
@@ -341,19 +289,12 @@ impl From<CanisterDataForSnapshot> for CanisterData {
         canister_data.slot_details_map = slot_details_map;
         canister_data.all_hot_or_not_bets_placed =
             canister_data_for_snapshot.all_hot_or_not_bets_placed;
-        canister_data.configuration = canister_data_for_snapshot.configuration;
-        canister_data.follow_data = follow_data;
         canister_data.known_principal_ids = canister_data_for_snapshot.known_principal_ids;
         canister_data.my_token_balance = my_token_balance;
-        canister_data.principals_i_follow = canister_data_for_snapshot.principals_i_follow;
-        canister_data.principals_that_follow_me =
-            canister_data_for_snapshot.principals_that_follow_me;
         canister_data.profile = canister_data_for_snapshot.profile;
         canister_data.version_details = canister_data_for_snapshot.version_details;
         canister_data.session_type = canister_data_for_snapshot.session_type;
         canister_data.last_access_time = canister_data_for_snapshot.last_access_time;
-        canister_data.last_canister_functionality_access_time =
-            canister_data_for_snapshot.last_canister_functionality_access_time;
         canister_data.migration_info = canister_data_for_snapshot.migration_info;
 
         canister_data.set_all_created_posts(all_created_posts);

@@ -28,8 +28,6 @@ fn init_impl(init_args: IndividualUserTemplateInitArgs, data: &mut CanisterData)
 
     data.profile.principal_id = init_args.profile_owner;
 
-    data.configuration.url_to_send_canister_metrics_to = init_args.url_to_send_canister_metrics_to;
-
     data.version_details.version_number = init_args.upgrade_version_number.unwrap_or_default();
     data.version_details.version = init_args.version;
 }
@@ -93,11 +91,6 @@ mod test {
         assert_eq!(
             data.profile.principal_id,
             Some(get_mock_user_alice_principal_id())
-        );
-
-        assert_eq!(
-            data.configuration.url_to_send_canister_metrics_to,
-            Some("http://metrics-url.com/receive-metrics".to_string())
         );
 
         assert!(data.version_details.version.eq("v1.0.0"));

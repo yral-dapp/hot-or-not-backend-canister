@@ -14,7 +14,7 @@ use shared_utils::{
             BetDetails, BetDirection, BettingStatus, GlobalBetId, GlobalRoomId, PlacedBetDetail,
             RoomDetailsV1, SlotDetailsV1, SlotId, StablePrincipal,
         },
-        pump_n_dump::{ParticipatedGameInfo, PumpsAndDumps},
+        pump_n_dump::{ParticipatedGameInfo, ParticipatedGameInfoV0, PumpsAndDumps},
     },
     common::{types::app_primitive_type::PostId, utils::default_pump_dump_onboarding_reward},
 };
@@ -77,24 +77,6 @@ impl Default for HotOrNotGameDetails {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct PumpAndDumpGame {
-    /// Amount that has been obtained from airdrops (lifetime)
-    pub net_airdrop: Nat,
-    /// user balance
-    pub balance: Nat,
-    pub referral_reward: Nat,
-    pub onboarding_reward: Nat,
-    pub games: Vec<ParticipatedGameInfo>,
-    pub total_pumps: Nat,
-    pub total_dumps: Nat,
-    pub net_earnings: Nat,
-    // Root canister: dollr locked
-    #[serde(skip, default = "_default_lp")]
-    pub liquidity_pools: StableBTreeMap<Principal, NatStore, Memory>,
-}
-
-#[derive(Serialize, Deserialize)]
-#[serde(from = "PumpAndDumpGame")]
 pub struct TokenBetGame {
     pub referral_reward: Nat,
     pub onboarding_reward: Nat,
@@ -119,38 +101,6 @@ impl Default for TokenBetGame {
             total_dumps: 0u32.into(),
             hot_or_not_bet_details: Default::default(),
             cents: Default::default(),
-        }
-    }
-}
-
-impl From<PumpAndDumpGame> for TokenBetGame {
-    fn from(pump_and_dump_game: PumpAndDumpGame) -> Self {
-        Self {
-            referral_reward: pump_and_dump_game.referral_reward,
-            onboarding_reward: pump_and_dump_game.onboarding_reward,
-            games: pump_and_dump_game.games,
-            total_pumps: pump_and_dump_game.total_pumps,
-            total_dumps: pump_and_dump_game.total_dumps,
-            liquidity_pools: pump_and_dump_game.liquidity_pools,
-            hot_or_not_bet_details: Default::default(),
-            cents: CentsToken::default(),
-        }
-    }
-}
-
-impl Default for PumpAndDumpGame {
-    fn default() -> Self {
-        Self {
-            net_airdrop: 0u32.into(),
-            balance: 0u32.into(),
-            // 1000 gDOLLR
-            referral_reward: (1e9 as u64).into(),
-            onboarding_reward: default_pump_dump_onboarding_reward(),
-            liquidity_pools: _default_lp(),
-            games: vec![],
-            total_pumps: 0u32.into(),
-            total_dumps: 0u32.into(),
-            net_earnings: 0u32.into(),
         }
     }
 }

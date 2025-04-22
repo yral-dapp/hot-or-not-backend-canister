@@ -5,12 +5,8 @@ use pocket_ic::{PocketIc, WasmResult};
 use shared_utils::{
     canister_specific::{
         individual_user_template::types::{
-            arg::{FolloweeArg, IndividualUserTemplateInitArgs, PlaceBetArg},
-            error::{
-                BetOnCurrentlyViewingPostError, FollowAnotherUserProfileError,
-                GetPostsOfUserProfileError,
-            },
-            follow::{FollowEntryDetail, FollowEntryId},
+            arg::{IndividualUserTemplateInitArgs, PlaceBetArg},
+            error::{BetOnCurrentlyViewingPostError, GetPostsOfUserProfileError},
             hot_or_not::{BetDirection, BettingStatus, PlacedBetDetail},
             post::{PostDetailsForFrontend, PostDetailsFromFrontend},
             profile::UserProfileDetailsForFrontend,
@@ -321,140 +317,6 @@ fn download_snapshot_test() {
         })
         .unwrap();
     ic_cdk::println!("Bet status: {:?}", bet_status);
-
-    // Follow each other
-
-    // Alice follows Bob
-    let follow_arg = FolloweeArg {
-        followee_principal_id: bob_principal_id,
-        followee_canister_id: bob_individual_template_canister_id,
-    };
-    let res = pic
-        .update_call(
-            alice_individual_template_canister_id,
-            alice_principal_id,
-            "update_profiles_i_follow_toggle_list_with_specified_profile",
-            encode_one(follow_arg).unwrap(),
-        )
-        .map(|reply_payload| {
-            let bet_status: Result<bool, FollowAnotherUserProfileError> = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 place_bet failed\n"),
-            };
-            bet_status.unwrap()
-        })
-        .unwrap();
-    assert_eq!(res, true);
-
-    // Alice follows Dan
-    let follow_arg = FolloweeArg {
-        followee_principal_id: dan_principal_id,
-        followee_canister_id: dan_individual_template_canister_id,
-    };
-    let res = pic
-        .update_call(
-            alice_individual_template_canister_id,
-            alice_principal_id,
-            "update_profiles_i_follow_toggle_list_with_specified_profile",
-            encode_one(follow_arg).unwrap(),
-        )
-        .map(|reply_payload| {
-            let bet_status: Result<bool, FollowAnotherUserProfileError> = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 place_bet failed\n"),
-            };
-            bet_status.unwrap()
-        })
-        .unwrap();
-    assert_eq!(res, true);
-
-    // Bob follows Alice
-    let follow_arg = FolloweeArg {
-        followee_principal_id: alice_principal_id,
-        followee_canister_id: alice_individual_template_canister_id,
-    };
-    let res = pic
-        .update_call(
-            bob_individual_template_canister_id,
-            bob_principal_id,
-            "update_profiles_i_follow_toggle_list_with_specified_profile",
-            encode_one(follow_arg).unwrap(),
-        )
-        .map(|reply_payload| {
-            let bet_status: Result<bool, FollowAnotherUserProfileError> = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 place_bet failed\n"),
-            };
-            bet_status.unwrap()
-        })
-        .unwrap();
-    assert_eq!(res, true);
-
-    // Bob follows Dan
-    let follow_arg = FolloweeArg {
-        followee_principal_id: dan_principal_id,
-        followee_canister_id: dan_individual_template_canister_id,
-    };
-    let res = pic
-        .update_call(
-            bob_individual_template_canister_id,
-            bob_principal_id,
-            "update_profiles_i_follow_toggle_list_with_specified_profile",
-            encode_one(follow_arg).unwrap(),
-        )
-        .map(|reply_payload| {
-            let bet_status: Result<bool, FollowAnotherUserProfileError> = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 place_bet failed\n"),
-            };
-            bet_status.unwrap()
-        })
-        .unwrap();
-    assert_eq!(res, true);
-
-    // Dan follows Alice
-    let follow_arg = FolloweeArg {
-        followee_principal_id: alice_principal_id,
-        followee_canister_id: alice_individual_template_canister_id,
-    };
-    let res = pic
-        .update_call(
-            dan_individual_template_canister_id,
-            dan_principal_id,
-            "update_profiles_i_follow_toggle_list_with_specified_profile",
-            encode_one(follow_arg).unwrap(),
-        )
-        .map(|reply_payload| {
-            let bet_status: Result<bool, FollowAnotherUserProfileError> = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 place_bet failed\n"),
-            };
-            bet_status.unwrap()
-        })
-        .unwrap();
-    assert_eq!(res, true);
-
-    // Dan follows Bob
-    let follow_arg = FolloweeArg {
-        followee_principal_id: bob_principal_id,
-        followee_canister_id: bob_individual_template_canister_id,
-    };
-    let res = pic
-        .update_call(
-            dan_individual_template_canister_id,
-            dan_principal_id,
-            "update_profiles_i_follow_toggle_list_with_specified_profile",
-            encode_one(follow_arg).unwrap(),
-        )
-        .map(|reply_payload| {
-            let bet_status: Result<bool, FollowAnotherUserProfileError> = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 place_bet failed\n"),
-            };
-            bet_status.unwrap()
-        })
-        .unwrap();
-    assert_eq!(res, true);
 
     // Upgrade canister
 
@@ -767,40 +629,6 @@ fn download_snapshot_test() {
         })
         .unwrap();
     println!("Alice hot or not status for post: {:?}", fres5);
-
-    let fres6 = pic
-        .query_call(
-            alice_individual_template_canister_id,
-            alice_principal_id,
-            "get_principals_this_profile_follows_paginated",
-            candid::encode_args((0 as usize,)).unwrap(),
-        )
-        .map(|reply_payload| {
-            let profile: Vec<(FollowEntryId, FollowEntryDetail)> = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_profile failed\n"),
-            };
-            profile
-        })
-        .unwrap();
-    println!("Alice follows: {:?}", fres6);
-
-    let fres7 = pic
-        .query_call(
-            alice_individual_template_canister_id,
-            alice_principal_id,
-            "get_principals_that_follow_this_profile_paginated",
-            candid::encode_args((0 as usize,)).unwrap(),
-        )
-        .map(|reply_payload| {
-            let profile: Vec<(FollowEntryId, FollowEntryDetail)> = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_profile failed\n"),
-            };
-            profile
-        })
-        .unwrap();
-    println!("Alice followed by: {:?}", fres7);
 
     let fres8 = pic
         .query_call(
@@ -1166,42 +994,6 @@ fn download_snapshot_test() {
         .unwrap();
     println!("Alice hot or not status for post: {:?}", fres5_1);
     assert_eq!(fres5_1, fres5);
-
-    let fres6_1 = pic
-        .query_call(
-            alice2_individual_template_canister_id,
-            alice_principal_id,
-            "get_principals_this_profile_follows_paginated",
-            candid::encode_args((0 as usize,)).unwrap(),
-        )
-        .map(|reply_payload| {
-            let profile: Vec<(FollowEntryId, FollowEntryDetail)> = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_profile failed\n"),
-            };
-            profile
-        })
-        .unwrap();
-    println!("Alice follows: {:?}", fres6_1);
-    assert_eq!(fres6_1, fres6);
-
-    let fres7_1 = pic
-        .query_call(
-            alice2_individual_template_canister_id,
-            alice_principal_id,
-            "get_principals_that_follow_this_profile_paginated",
-            candid::encode_args((0 as usize,)).unwrap(),
-        )
-        .map(|reply_payload| {
-            let profile: Vec<(FollowEntryId, FollowEntryDetail)> = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_profile failed\n"),
-            };
-            profile
-        })
-        .unwrap();
-    println!("Alice followed by: {:?}", fres7_1);
-    assert_eq!(fres7_1, fres7);
 
     let fres8_1 = pic
         .query_call(

@@ -10,12 +10,12 @@ fn get_profile_details_v2() -> UserProfileDetailsForFrontendV2 {
 
         UserProfileDetailsForFrontendV2 {
             principal_id: profile.principal_id.unwrap(),
-            display_name: profile.display_name.clone(),
-            unique_user_name: profile.unique_user_name.clone(),
+            display_name: None,
+            unique_user_name: None,
             profile_picture_url: profile.profile_picture_url.clone(),
             profile_stats: profile.profile_stats,
-            followers_count: canister_data_ref_cell.follow_data.follower.len() as u64,
-            following_count: canister_data_ref_cell.follow_data.following.len() as u64,
+            followers_count: 0,
+            following_count: 0,
             lifetime_earnings: token_balance.lifetime_earnings,
             referrer_details: profile.referrer_details,
             migration_info: canister_data_ref_cell.migration_info,

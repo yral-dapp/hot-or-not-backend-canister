@@ -1,27 +1,24 @@
 use candid::Principal;
-use ic_test_state_machine_client::WasmResult;
+use pocket_ic::WasmResult;
 use shared_utils::{
-    canister_specific::individual_user_template::types::{
-        profile::UserProfileDetailsForFrontend, session::SessionType,
-    },
-    common::types::known_principal::KnownPrincipalType,
-    constant::GLOBAL_SUPER_ADMIN_USER_ID,
+    canister_specific::individual_user_template::types::session::SessionType,
+    common::types::known_principal::KnownPrincipalType, constant::GLOBAL_SUPER_ADMIN_USER_ID,
 };
 use test_utils::setup::{
-    env::v1::{get_initialized_env_with_provisioned_known_canisters, get_new_state_machine},
+    env::{pocket_ic_env::get_new_pocket_ic_env, pocket_ic_init::get_initialized_env_with_provisioned_known_canisters},
     test_constants::get_mock_user_alice_principal_id,
 };
 
 #[test]
 fn update_session_type_tests() {
-    let state_machine = get_new_state_machine();
-    let known_principal_map = get_initialized_env_with_provisioned_known_canisters(&state_machine);
+    let (pocket_ic, known_principal_map) = get_new_pocket_ic_env();
+    let known_principal_map = get_initialized_env_with_provisioned_known_canisters(&pocket_ic, known_principal_map);
     let user_index_canister_id = known_principal_map
         .get(&KnownPrincipalType::CanisterIdUserIndex)
         .unwrap();
     let alice_principal_id = get_mock_user_alice_principal_id();
 
-    let alice_canister_id = state_machine
+    let alice_canister_id = pocket_ic
         .update_call(
             *user_index_canister_id,
             alice_principal_id,
@@ -40,7 +37,7 @@ fn update_session_type_tests() {
         .unwrap()
         .unwrap();
 
-    let session_type = state_machine
+    let session_type = pocket_ic
         .query_call(
             alice_canister_id,
             alice_principal_id,
@@ -59,7 +56,7 @@ fn update_session_type_tests() {
     assert_eq!(session_type, SessionType::AnonymousSession);
 
     // user cannot update the session type
-    state_machine
+    pocket_ic
         .update_call(
             alice_canister_id,
             alice_principal_id,
@@ -68,7 +65,7 @@ fn update_session_type_tests() {
         )
         .unwrap();
 
-    let session_type = state_machine
+    let session_type = pocket_ic
         .query_call(
             alice_canister_id,
             alice_principal_id,
@@ -88,7 +85,7 @@ fn update_session_type_tests() {
     assert_eq!(session_type, SessionType::AnonymousSession);
 
     // global admin can update the session type of canister
-    state_machine
+    pocket_ic
         .update_call(
             alice_canister_id,
             Principal::from_text(GLOBAL_SUPER_ADMIN_USER_ID).unwrap(),
@@ -97,7 +94,7 @@ fn update_session_type_tests() {
         )
         .unwrap();
 
-    let session_type = state_machine
+    let session_type = pocket_ic
         .query_call(
             alice_canister_id,
             Principal::anonymous(),
@@ -117,7 +114,7 @@ fn update_session_type_tests() {
     assert_eq!(session_type, SessionType::RegisteredSession);
 
     //once set to registered session cannot update back to Anonymous Session
-    state_machine
+    pocket_ic
         .update_call(
             alice_canister_id,
             Principal::from_text(GLOBAL_SUPER_ADMIN_USER_ID).unwrap(),
@@ -126,7 +123,7 @@ fn update_session_type_tests() {
         )
         .unwrap();
 
-    let session_type = state_machine
+    let session_type = pocket_ic
         .query_call(
             alice_canister_id,
             Principal::anonymous(),

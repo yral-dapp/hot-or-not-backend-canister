@@ -15,6 +15,28 @@ pub enum GameDirection {
     Dump,
 }
 
+#[derive(Serialize, Deserialize, Clone, CandidType, Debug, PartialEq, Eq)]
+pub struct ParticipatedGameInfoV0 {
+    pub pumps: u64,
+    pub dumps: u64,
+    pub reward: Nat,
+    pub token_root: Principal,
+    pub game_direction: GameDirection,
+}
+
+impl From<ParticipatedGameInfoV0> for ParticipatedGameInfo {
+    //Safety: reward is always a positive therefore can be converted to u128
+    fn from(participated_game_info: ParticipatedGameInfoV0) -> Self {
+        ParticipatedGameInfo {
+            pumps: participated_game_info.pumps,
+            dumps: participated_game_info.dumps,
+            reward: participated_game_info.reward.0.try_into().unwrap(),
+            token_root: participated_game_info.token_root,
+            game_direction: participated_game_info.game_direction,
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, CandidType, Debug, PartialEq, Eq, Copy)]
 pub struct ParticipatedGameInfo {
     pub pumps: u64,
