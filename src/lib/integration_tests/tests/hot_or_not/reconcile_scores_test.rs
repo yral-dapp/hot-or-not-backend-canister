@@ -7,7 +7,7 @@ use shared_utils::{
         individual_user_template::types::{
             arg::{IndividualUserTemplateInitArgs, PlaceBetArg},
             error::BetOnCurrentlyViewingPostError,
-            hot_or_not::{BetDirection, BettingStatus, PlacedBetDetail},
+            hot_or_not::{BetDirection, BettingStatus,},
             post::PostDetailsFromFrontend,
             profile::UserProfileDetailsForFrontend,
         },
@@ -218,7 +218,7 @@ fn reconcile_scores_test() {
         .unwrap();
 
     // Top up Bob's account
-    let reward = pic.update_call(
+    let _ = pic.update_call(
         bob_individual_template_canister_id,
         admin_principal_id,
         "get_rewarded_for_signing_up",
@@ -226,7 +226,7 @@ fn reconcile_scores_test() {
     );
 
     // Top up Dan's account
-    let reward = pic.update_call(
+    let _ = pic.update_call(
         dan_individual_template_canister_id,
         admin_principal_id,
         "get_rewarded_for_signing_up",
@@ -234,7 +234,7 @@ fn reconcile_scores_test() {
     );
 
     // Top up Charlie's account
-    let reward = pic.update_call(
+    let _ = pic.update_call(
         charlie_individual_template_canister_id,
         admin_principal_id,
         "get_rewarded_for_signing_up",
@@ -717,7 +717,7 @@ fn reconcile_scores_test() {
         .unwrap();
 
     // Top up Alice's account
-    let reward = pic.update_call(
+    let _ = pic.update_call(
         alice_individual_template_canister_id,
         admin_principal_id,
         "get_rewarded_for_signing_up",
@@ -1080,7 +1080,7 @@ fn reconcile_scores_test() {
             alice_individual_template_canister_id,
             alice_principal_id,
             "get_hot_or_not_bet_details_for_this_post",
-            encode_one(0 as u64).unwrap(),
+            encode_one(0_u64).unwrap(),
         )
         .map(|reply_payload| {
             let bet_details: BettingStatus = match reply_payload {
@@ -1097,7 +1097,7 @@ fn reconcile_scores_test() {
             alice_individual_template_canister_id,
             alice_principal_id,
             "get_hot_or_not_bet_details_for_this_post",
-            encode_one(1 as u64).unwrap(),
+            encode_one(1_u64).unwrap(),
         )
         .map(|reply_payload| {
             let bet_details: BettingStatus = match reply_payload {
