@@ -1,3 +1,0 @@
-pub mod get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed;
-pub mod receive_top_hot_or_not_feed_posts_from_publishing_canister;
-pub mod update_post_hot_or_not_feed;

@@ -1,33 +1,21 @@
 use candid::{CandidType, Principal};
-use ic_cdk::api::{management_canister::provisional::CanisterSettings, time};
-use ic_ledger_types::{AccountIdentifier, BlockIndex, Tokens, DEFAULT_SUBACCOUNT};
-use pocket_ic::{PocketIc, PocketIcBuilder, WasmResult};
+use ic_ledger_types::{BlockIndex, Tokens};
+use pocket_ic::WasmResult;
 use serde::{Deserialize, Serialize};
-use shared_utils::{
-    canister_specific::{
-        individual_user_template,
-        platform_orchestrator::{self, types::args::PlatformOrchestratorInitArgs},
-        post_cache::types::arg::PostCacheInitArgs,
-    },
-    common::{
-        types::{
-            known_principal::{KnownPrincipalMap, KnownPrincipalType},
-            wasm::WasmType,
-        },
-        utils::system_time,
-    },
-    constant::{NNS_CYCLE_MINTING_CANISTER, NNS_LEDGER_CANISTER_ID},
-};
+use shared_utils::
+    common::
+        types::
+            known_principal::KnownPrincipalType
+        
+    
+;
 use std::{
     collections::{HashMap, HashSet},
     time::SystemTime,
 };
 use test_utils::setup::{
     env::pocket_ic_env::get_new_pocket_ic_env,
-    test_constants::{
-        get_global_super_admin_principal_id, get_mock_user_alice_canister_id,
-        get_mock_user_alice_principal_id, v1::CANISTER_INITIAL_CYCLES_FOR_SPAWNING_CANISTERS,
-    },
+    test_constants::get_mock_user_alice_principal_id,
 };
 
 pub type CanisterId = Principal;
@@ -137,7 +125,7 @@ fn when_subnet_known_principal_is_updated_it_is_reflected_in_individual_canister
         pocket_ic.tick();
     }
 
-    let post_cache_canister_id = Principal::anonymous();
+    let user_id_global_admin = Principal::anonymous();
 
     //get alice canister-id
     let alice_principal_id = get_mock_user_alice_principal_id();
@@ -159,8 +147,8 @@ fn when_subnet_known_principal_is_updated_it_is_reflected_in_individual_canister
             "update_subnet_known_principal",
             candid::encode_args((
                 subnet_orchestrator_canister_id,
-                KnownPrincipalType::CanisterIdPostCache,
-                post_cache_canister_id,
+                KnownPrincipalType::UserIdGlobalSuperAdmin,
+                user_id_global_admin,
             ))
             .unwrap(),
         )
@@ -174,12 +162,12 @@ fn when_subnet_known_principal_is_updated_it_is_reflected_in_individual_canister
         .unwrap()
         .unwrap();
 
-    let post_cache_id_from_subnet = pocket_ic
+    let super_admin = pocket_ic
         .query_call(
             subnet_orchestrator_canister_id,
             Principal::anonymous(),
             "get_well_known_principal_value",
-            candid::encode_one(KnownPrincipalType::CanisterIdPostCache).unwrap(),
+            candid::encode_one(KnownPrincipalType::UserIdGlobalSuperAdmin).unwrap(),
         )
         .map(|res| {
             let post_cache_id: Option<Principal> = match res {
@@ -190,14 +178,14 @@ fn when_subnet_known_principal_is_updated_it_is_reflected_in_individual_canister
         })
         .unwrap();
 
-    assert_eq!(post_cache_id_from_subnet, Some(Principal::anonymous()));
+    assert_eq!(super_admin, Some(Principal::anonymous()));
 
-    let post_cache_id_from_individual = pocket_ic
+    let super_admin = pocket_ic
         .query_call(
             alice_cannister_id,
             Principal::anonymous(),
             "get_well_known_principal_value",
-            candid::encode_one(KnownPrincipalType::CanisterIdPostCache).unwrap(),
+            candid::encode_one(KnownPrincipalType::UserIdGlobalSuperAdmin).unwrap(),
         )
         .map(|res| {
             let post_cache_id: Option<Principal> = match res {
@@ -208,5 +196,5 @@ fn when_subnet_known_principal_is_updated_it_is_reflected_in_individual_canister
         })
         .unwrap();
 
-    assert_eq!(post_cache_id_from_individual, Some(Principal::anonymous()))
+    assert_eq!(super_admin, Some(Principal::anonymous()))
 }

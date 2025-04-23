@@ -36,7 +36,6 @@ type KnownPrincipalType = variant {
   CanisterIdDataBackup;
   CanisterIdSnsLedger;
   CanisterIdSnsWasm;
-  CanisterIdPostCache;
   CanisterIdSNSController;
   CanisterIdSnsGovernance;
   UserIdGlobalSuperAdmin;
@@ -76,11 +75,7 @@ type UpgradeStatus = record {
   failed_canister_ids : vec record { principal; principal; text };
   successful_upgrade_count : nat32;
 };
-type WasmType = variant {
-  IndividualUserWasm;
-  PostCacheWasm;
-  SubnetOrchestratorWasm;
-};
+type WasmType = variant { IndividualUserWasm; SubnetOrchestratorWasm };
 service : (PlatformOrchestratorInitArgs) -> {
   add_principal_as_global_admin : (principal) -> ();
   clear_snapshot : () -> ();
@@ -128,7 +123,6 @@ service : (PlatformOrchestratorInitArgs) -> {
     ) -> (Result);
   recharge_subnet_orchestrator : () -> (Result);
   register_new_subnet_orchestrator : (principal, bool) -> (Result);
-  reinstall_yral_post_cache_canister : () -> ();
   remove_principal_from_global_admins : (principal) -> ();
   remove_subnet_orchestrators_from_available_list : (principal) -> (Result_1);
   report_subnet_upgrade_status : (UpgradeStatus) -> (Result);

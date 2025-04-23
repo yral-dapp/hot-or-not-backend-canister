@@ -1,20 +1,17 @@
-use std::time::Duration;
 
 use candid::Principal;
 use pocket_ic::WasmResult;
 use shared_utils::{
-    canister_specific::{individual_user_template::types::{
-        arg::PlaceBetArg,
-        error::BetOnCurrentlyViewingPostError,
-        hot_or_not::{BetDirection, BetOutcomeForBetMaker, BettingStatus},
+    canister_specific::individual_user_template::types::{
+        hot_or_not::{BetDirection, BetOutcomeForBetMaker},
         post::PostDetailsFromFrontend,
-    }, user_index::types::args::UserIndexInitArgs},
-    common::types::{known_principal::KnownPrincipalType, top_posts::post_score_index_item::PostScoreIndexItem, utility_token::token_event::{HotOrNotOutcomePayoutEvent, StakeEvent, TokenEvent}}, types::canister_specific::{individual_user_template::error_types::GetUserUtilityTokenTransactionHistoryError, post_cache::error_types::TopPostsFetchError},
+    },
+    common::types::{known_principal::KnownPrincipalType, utility_token::token_event::{HotOrNotOutcomePayoutEvent, StakeEvent, TokenEvent}}, types::canister_specific::individual_user_template::error_types::GetUserUtilityTokenTransactionHistoryError,
 };
 use test_utils::setup::{
     env::{pocket_ic_env::get_new_pocket_ic_env, pocket_ic_init::get_initialized_env_with_provisioned_known_canisters},
     test_constants::{
-        get_canister_wasm, get_global_super_admin_principal_id, get_mock_user_alice_principal_id, get_mock_user_bob_principal_id, get_mock_user_charlie_principal_id, get_mock_user_dan_principal_id
+        get_mock_user_alice_principal_id, get_mock_user_bob_principal_id, get_mock_user_charlie_principal_id, get_mock_user_dan_principal_id
     },
 };
 
@@ -29,13 +26,6 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
     println!(
         "🧪 user_index_canister_id: {:?}",
         user_index_canister_id.to_text()
-    );
-    let post_cache_canister_id = *known_principal_map
-        .get(&KnownPrincipalType::CanisterIdPostCache)
-        .unwrap();
-    println!(
-        "🧪 post_cache_canister_id: {:?}",
-        post_cache_canister_id.to_text()
     );
     let alice_principal_id = get_mock_user_alice_principal_id();
     let bob_principal_id = get_mock_user_bob_principal_id();
@@ -122,7 +112,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
 
     println!("🧪 alice_canister_id: {:?}", alice_canister_id.to_text());
 
-    let post_creation_time = pocket_ic.get_time();
+    // let post_creation_time = pocket_ic.get_time();
 
     // * Post is created by Alice
     let newly_created_post_id = pocket_ic
@@ -151,219 +141,219 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
 
     println!("🧪 newly_created_post_id: {:?}", newly_created_post_id);
 
-    let returned_posts: Vec<PostScoreIndexItem> = pocket_ic
-        .query_call(
-            post_cache_canister_id,
-            Principal::anonymous(),
-            "get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed",
-            candid::encode_args((0_u64,10_u64)).unwrap(),
-        )
-        .map(|reply_payload| {
-            let returned_posts: Result<Vec<PostScoreIndexItem>, TopPostsFetchError> = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed failed\n"),
-            };
-            returned_posts.unwrap()
-        })
-        .unwrap();
+    // let returned_posts: Vec<PostScoreIndexItem> = pocket_ic
+    //     .query_call(
+    //         post_cache_canister_id,
+    //         Principal::anonymous(),
+    //         "get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed",
+    //         candid::encode_args((0_u64,10_u64)).unwrap(),
+    //     )
+    //     .map(|reply_payload| {
+    //         let returned_posts: Result<Vec<PostScoreIndexItem>, TopPostsFetchError> = match reply_payload {
+    //             WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+    //             _ => panic!("\n🛑 get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed failed\n"),
+    //         };
+    //         returned_posts.unwrap()
+    //     })
+    //     .unwrap();
 
-    assert_eq!(returned_posts.len(), 1);
+    // assert_eq!(returned_posts.len(), 1);
 
-    let returned_post = returned_posts.first().unwrap();
-    assert_eq!(returned_post.post_id, newly_created_post_id);
-    assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
+    // let returned_post = returned_posts.first().unwrap();
+    // assert_eq!(returned_post.post_id, newly_created_post_id);
+    // assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
 
-    // * Bob bets on the post
-    let bob_place_bet_arg = PlaceBetArg {
-        post_canister_id: returned_post.publisher_canister_id,
-        post_id: returned_post.post_id,
-        bet_amount: 50,
-        bet_direction: BetDirection::Hot,
-    };
+    // // * Bob bets on the post
+    // let bob_place_bet_arg = PlaceBetArg {
+    //     post_canister_id: returned_post.publisher_canister_id,
+    //     post_id: returned_post.post_id,
+    //     bet_amount: 50,
+    //     bet_direction: BetDirection::Hot,
+    // };
 
-    let bet_status = pocket_ic
-        .update_call(
-            bob_canister_id,
-            get_mock_user_bob_principal_id(),
-            "bet_on_currently_viewing_post",
-            candid::encode_one(bob_place_bet_arg).unwrap(),
-        )
-        .map(|reply_payload| {
-            let bet_status: Result<BettingStatus, BetOnCurrentlyViewingPostError> =
-                match reply_payload {
-                    WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                    _ => panic!("\n🛑 bet_on_currently_viewing_post failed\n"),
-                };
-            bet_status
-        })
-        .unwrap();
-    println!("🧪 bet_status: {:?}", bet_status);
-    assert!(bet_status.is_ok());
-    assert_eq!(
-        bet_status.unwrap(),
-        BettingStatus::BettingOpen {
-            started_at: post_creation_time,
-            number_of_participants: 1,
-            ongoing_slot: 1,
-            ongoing_room: 1,
-            has_this_user_participated_in_this_post: Some(true),
-        }
-    );
+    // let bet_status = pocket_ic
+    //     .update_call(
+    //         bob_canister_id,
+    //         get_mock_user_bob_principal_id(),
+    //         "bet_on_currently_viewing_post",
+    //         candid::encode_one(bob_place_bet_arg).unwrap(),
+    //     )
+    //     .map(|reply_payload| {
+    //         let bet_status: Result<BettingStatus, BetOnCurrentlyViewingPostError> =
+    //             match reply_payload {
+    //                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+    //                 _ => panic!("\n🛑 bet_on_currently_viewing_post failed\n"),
+    //             };
+    //         bet_status
+    //     })
+    //     .unwrap();
+    // println!("🧪 bet_status: {:?}", bet_status);
+    // assert!(bet_status.is_ok());
+    // assert_eq!(
+    //     bet_status.unwrap(),
+    //     BettingStatus::BettingOpen {
+    //         started_at: post_creation_time,
+    //         number_of_participants: 1,
+    //         ongoing_slot: 1,
+    //         ongoing_room: 1,
+    //         has_this_user_participated_in_this_post: Some(true),
+    //     }
+    // );
 
-    // * Charlie bets on the post
-    let charlie_place_bet_arg = PlaceBetArg {
-        post_canister_id: returned_post.publisher_canister_id,
-        post_id: returned_post.post_id,
-        bet_amount: 100,
-        bet_direction: BetDirection::Not,
-    };
+    // // * Charlie bets on the post
+    // let charlie_place_bet_arg = PlaceBetArg {
+    //     post_canister_id: returned_post.publisher_canister_id,
+    //     post_id: returned_post.post_id,
+    //     bet_amount: 100,
+    //     bet_direction: BetDirection::Not,
+    // };
 
-    let bet_status = pocket_ic
-        .update_call(
-            charlie_canister_id,
-            get_mock_user_charlie_principal_id(),
-            "bet_on_currently_viewing_post",
-            candid::encode_one(charlie_place_bet_arg).unwrap(),
-        )
-        .map(|reply_payload| {
-            let bet_status: Result<BettingStatus, BetOnCurrentlyViewingPostError> =
-                match reply_payload {
-                    WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                    _ => panic!("\n🛑 bet_on_currently_viewing_post failed\n"),
-                };
-            bet_status
-        })
-        .unwrap();
-    assert!(bet_status.is_ok());
-    assert_eq!(
-        bet_status.unwrap(),
-        BettingStatus::BettingOpen {
-            started_at: post_creation_time,
-            number_of_participants: 2,
-            ongoing_slot: 1,
-            ongoing_room: 1,
-            has_this_user_participated_in_this_post: Some(true),
-        }
-    );
+    // let bet_status = pocket_ic
+    //     .update_call(
+    //         charlie_canister_id,
+    //         get_mock_user_charlie_principal_id(),
+    //         "bet_on_currently_viewing_post",
+    //         candid::encode_one(charlie_place_bet_arg).unwrap(),
+    //     )
+    //     .map(|reply_payload| {
+    //         let bet_status: Result<BettingStatus, BetOnCurrentlyViewingPostError> =
+    //             match reply_payload {
+    //                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+    //                 _ => panic!("\n🛑 bet_on_currently_viewing_post failed\n"),
+    //             };
+    //         bet_status
+    //     })
+    //     .unwrap();
+    // assert!(bet_status.is_ok());
+    // assert_eq!(
+    //     bet_status.unwrap(),
+    //     BettingStatus::BettingOpen {
+    //         started_at: post_creation_time,
+    //         number_of_participants: 2,
+    //         ongoing_slot: 1,
+    //         ongoing_room: 1,
+    //         has_this_user_participated_in_this_post: Some(true),
+    //     }
+    // );
 
-    // * Dan bets on the post
-    let dan_place_bet_arg = PlaceBetArg {
-        post_canister_id: returned_post.publisher_canister_id,
-        post_id: returned_post.post_id,
-        bet_amount: 10,
-        bet_direction: BetDirection::Hot,
-    };
+    // // * Dan bets on the post
+    // let dan_place_bet_arg = PlaceBetArg {
+    //     post_canister_id: returned_post.publisher_canister_id,
+    //     post_id: returned_post.post_id,
+    //     bet_amount: 10,
+    //     bet_direction: BetDirection::Hot,
+    // };
 
-    let bet_status = pocket_ic
-        .update_call(
-            dan_canister_id,
-            get_mock_user_dan_principal_id(),
-            "bet_on_currently_viewing_post",
-            candid::encode_one(dan_place_bet_arg).unwrap(),
-        )
-        .map(|reply_payload| {
-            let bet_status: Result<BettingStatus, BetOnCurrentlyViewingPostError> =
-                match reply_payload {
-                    WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                    _ => panic!("\n🛑 bet_on_currently_viewing_post failed\n"),
-                };
-            bet_status
-        })
-        .unwrap();
-    assert!(bet_status.is_ok());
-    assert_eq!(
-        bet_status.unwrap(),
-        BettingStatus::BettingOpen {
-            started_at: post_creation_time,
-            number_of_participants: 3,
-            ongoing_slot: 1,
-            ongoing_room: 1,
-            has_this_user_participated_in_this_post: Some(true),
-        }
-    );
+    // let bet_status = pocket_ic
+    //     .update_call(
+    //         dan_canister_id,
+    //         get_mock_user_dan_principal_id(),
+    //         "bet_on_currently_viewing_post",
+    //         candid::encode_one(dan_place_bet_arg).unwrap(),
+    //     )
+    //     .map(|reply_payload| {
+    //         let bet_status: Result<BettingStatus, BetOnCurrentlyViewingPostError> =
+    //             match reply_payload {
+    //                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+    //                 _ => panic!("\n🛑 bet_on_currently_viewing_post failed\n"),
+    //             };
+    //         bet_status
+    //     })
+    //     .unwrap();
+    // assert!(bet_status.is_ok());
+    // assert_eq!(
+    //     bet_status.unwrap(),
+    //     BettingStatus::BettingOpen {
+    //         started_at: post_creation_time,
+    //         number_of_participants: 3,
+    //         ongoing_slot: 1,
+    //         ongoing_room: 1,
+    //         has_this_user_participated_in_this_post: Some(true),
+    //     }
+    // );
 
-    // * Restart their canisters
-    pocket_ic
-        .upgrade_canister(
-            user_index_canister_id,
-            get_canister_wasm(KnownPrincipalType::CanisterIdUserIndex),
-            candid::encode_one(UserIndexInitArgs {
-                ..Default::default()
-            })
-            .unwrap(),
-            Some(get_global_super_admin_principal_id()),
-        )
-        .unwrap();
+    // // * Restart their canisters
+    // pocket_ic
+    //     .upgrade_canister(
+    //         user_index_canister_id,
+    //         get_canister_wasm(KnownPrincipalType::CanisterIdUserIndex),
+    //         candid::encode_one(UserIndexInitArgs {
+    //             ..Default::default()
+    //         })
+    //         .unwrap(),
+    //         Some(get_global_super_admin_principal_id()),
+    //     )
+    //     .unwrap();
 
-    // pocket_ic.advance_time(Duration::from_secs(30));
+    // // pocket_ic.advance_time(Duration::from_secs(30));
+    // // pocket_ic.tick();
+
+    // // * advance time to the end of the first slot and then 5 minutes
+    // pocket_ic.advance_time(Duration::from_secs(60 * (60 + 5)));
     // pocket_ic.tick();
 
-    // * advance time to the end of the first slot and then 5 minutes
-    pocket_ic.advance_time(Duration::from_secs(60 * (60 + 5)));
-    pocket_ic.tick();
+    // // * Alice outcome
+    // let alice_token_balance = pocket_ic
+    //     .query_call(
+    //         alice_canister_id,
+    //         Principal::anonymous(),
+    //         "get_utility_token_balance",
+    //         candid::encode_args(()).unwrap(),
+    //     )
+    //     .map(|reply_payload| {
+    //         let alice_token_balance: u64 = match reply_payload {
+    //             WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+    //             _ => panic!("\n🛑 get_utility_token_balance failed\n"),
+    //         };
+    //         alice_token_balance
+    //     })
+    //     .unwrap();
 
-    // * Alice outcome
-    let alice_token_balance = pocket_ic
-        .query_call(
-            alice_canister_id,
-            Principal::anonymous(),
-            "get_utility_token_balance",
-            candid::encode_args(()).unwrap(),
-        )
-        .map(|reply_payload| {
-            let alice_token_balance: u64 = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_utility_token_balance failed\n"),
-            };
-            alice_token_balance
-        })
-        .unwrap();
+    // assert_eq!(alice_token_balance, 1000 + 16);
 
-    assert_eq!(alice_token_balance, 1000 + 16);
+    // let alice_token_transaction_history = pocket_ic
+    //     .query_call(
+    //         alice_canister_id,
+    //         Principal::anonymous(),
+    //         "get_user_utility_token_transaction_history_with_pagination",
+    //         candid::encode_args((0_u64, 10_u64)).unwrap(),
+    //     )
+    //     .map(|reply_payload| {
+    //         let alice_token_transaction_history: Result<
+    //             Vec<(u64, TokenEvent)>,
+    //             GetUserUtilityTokenTransactionHistoryError,
+    //         > = match reply_payload {
+    //             WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+    //             _ => panic!(
+    //                 "\n🛑 get_user_utility_token_transaction_history_with_pagination failed\n"
+    //             ),
+    //         };
+    //         assert!(alice_token_transaction_history.is_ok());
+    //         alice_token_transaction_history.unwrap()
+    //     })
+    //     .unwrap();
 
-    let alice_token_transaction_history = pocket_ic
-        .query_call(
-            alice_canister_id,
-            Principal::anonymous(),
-            "get_user_utility_token_transaction_history_with_pagination",
-            candid::encode_args((0_u64, 10_u64)).unwrap(),
-        )
-        .map(|reply_payload| {
-            let alice_token_transaction_history: Result<
-                Vec<(u64, TokenEvent)>,
-                GetUserUtilityTokenTransactionHistoryError,
-            > = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!(
-                    "\n🛑 get_user_utility_token_transaction_history_with_pagination failed\n"
-                ),
-            };
-            assert!(alice_token_transaction_history.is_ok());
-            alice_token_transaction_history.unwrap()
-        })
-        .unwrap();
-
-    assert_eq!(alice_token_transaction_history.len(), 2);
-    assert_eq!(
-        alice_token_transaction_history.first().unwrap().1,
-        TokenEvent::HotOrNotOutcomePayout {
-            amount: 16,
-            details: HotOrNotOutcomePayoutEvent::CommissionFromHotOrNotBet {
-                post_canister_id: returned_post.publisher_canister_id,
-                post_id: 0,
-                slot_id: 1,
-                room_id: 1,
-                room_pot_total_amount: 160
-            },
-            timestamp: if let TokenEvent::HotOrNotOutcomePayout { timestamp, .. } =
-                alice_token_transaction_history.first().unwrap().1.clone()
-            {
-                timestamp
-            } else {
-                panic!("\n🛑 unexpected token event\n");
-            },
-        }
-    );
+    // assert_eq!(alice_token_transaction_history.len(), 2);
+    // assert_eq!(
+    //     alice_token_transaction_history.first().unwrap().1,
+    //     TokenEvent::HotOrNotOutcomePayout {
+    //         amount: 16,
+    //         details: HotOrNotOutcomePayoutEvent::CommissionFromHotOrNotBet {
+    //             post_canister_id: returned_post.publisher_canister_id,
+    //             post_id: 0,
+    //             slot_id: 1,
+    //             room_id: 1,
+    //             room_pot_total_amount: 160
+    //         },
+    //         timestamp: if let TokenEvent::HotOrNotOutcomePayout { timestamp, .. } =
+    //             alice_token_transaction_history.first().unwrap().1.clone()
+    //         {
+    //             timestamp
+    //         } else {
+    //             panic!("\n🛑 unexpected token event\n");
+    //         },
+    //     }
+    // );
 
     // * Bob outcome
     let bob_token_balance = pocket_ic

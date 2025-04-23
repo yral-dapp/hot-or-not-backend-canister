@@ -4440,20 +4440,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "post_cache"
-version = "0.1.0"
-dependencies = [
- "candid",
- "ic-cdk 0.15.1",
- "ic-cdk-macros 0.16.0",
- "ic-cdk-timers",
- "serde",
- "serde_json",
- "shared_utils",
- "test_utils",
-]
-
-[[package]]
 name = "powerfmt"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

@@ -8,7 +8,6 @@ pub enum KnownPrincipalType {
     UserIdGlobalSuperAdmin,
     CanisterIdConfiguration,
     CanisterIdDataBackup,
-    CanisterIdPostCache,
     CanisterIdProjectMemberIndex,
     CanisterIdRootCanister,
     CanisterIdSNSController,

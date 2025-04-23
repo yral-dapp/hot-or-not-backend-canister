@@ -1,12 +1,11 @@
-use std::{
-    collections::{HashMap, HashSet},
-    time::Duration,
-};
+use std::
+    collections::{HashMap, HashSet}
+;
 
 use candid::{encode_args, encode_one, CandidType, Principal};
-use ic_cdk::api::management_canister::main::{CanisterId, CanisterSettings};
-use ic_ledger_types::{AccountIdentifier, BlockIndex, Tokens, DEFAULT_SUBACCOUNT};
-use pocket_ic::{PocketIc, PocketIcBuilder, WasmResult};
+use ic_cdk::api::management_canister::main::CanisterId;
+use ic_ledger_types::{BlockIndex, Tokens};
+use pocket_ic::WasmResult;
 use shared_utils::{
     canister_specific::{
         individual_user_template::types::{
@@ -16,27 +15,20 @@ use shared_utils::{
             post::PostDetailsFromFrontend,
             session::SessionType,
         },
-        platform_orchestrator::types::args::PlatformOrchestratorInitArgs,
-        post_cache::types::arg::PostCacheInitArgs,
-        user_index::types::{args::UserIndexInitArgs, RecycleStatus},
+        user_index::types::RecycleStatus,
     },
-    common::types::{known_principal::KnownPrincipalType, wasm::WasmType},
-    constant::{NNS_CYCLE_MINTING_CANISTER, NNS_LEDGER_CANISTER_ID},
+    common::types::known_principal::KnownPrincipalType,
 };
 use test_utils::setup::{
     env::pocket_ic_env::get_new_pocket_ic_env,
     test_constants::{
         get_mock_user_alice_principal_id, get_mock_user_bob_principal_id,
         get_mock_user_charlie_principal_id, get_mock_user_dan_principal_id,
-        v1::CANISTER_INITIAL_CYCLES_FOR_SPAWNING_CANISTERS,
     },
 };
 
 const INDIVIDUAL_TEMPLATE_WASM_PATH: &str =
     "../../../target/wasm32-unknown-unknown/release/individual_user_template.wasm.gz";
-const POST_CACHE_WASM_PATH: &str =
-    "../../../target/wasm32-unknown-unknown/release/post_cache.wasm.gz";
-
 const USER_INDEX_WASM_PATH: &str =
     "../../../target/wasm32-unknown-unknown/release/user_index.wasm.gz";
 const PF_ORCH_WASM_PATH: &str =
@@ -50,9 +42,6 @@ fn user_index_canister_wasm() -> Vec<u8> {
     std::fs::read(USER_INDEX_WASM_PATH).unwrap()
 }
 
-fn post_cache_canister_wasm() -> Vec<u8> {
-    std::fs::read(POST_CACHE_WASM_PATH).unwrap()
-}
 
 fn pf_orch_canister_wasm() -> Vec<u8> {
     std::fs::read(PF_ORCH_WASM_PATH).unwrap()

@@ -3,15 +3,12 @@ use std::{collections::HashMap, time::Duration};
 use candid::encode_one;
 use pocket_ic::{PocketIc, WasmResult};
 use shared_utils::{
-    canister_specific::{
-        individual_user_template::types::{
+    canister_specific::individual_user_template::types::{
             arg::{IndividualUserTemplateInitArgs, PlaceBetArg},
             error::BetOnCurrentlyViewingPostError,
             hot_or_not::{BetDirection, BettingStatus},
             post::PostDetailsFromFrontend,
         },
-        post_cache::types::arg::PostCacheInitArgs,
-    },
     common::types::known_principal::KnownPrincipalType,
 };
 use test_utils::setup::test_constants::{
@@ -23,8 +20,6 @@ const OLD_INDIVIDUAL_TEMPLATE_WASM_PATH: &str =
     "../../../target/wasm32-unknown-unknown/release/individual_user_template_main_branch.wasm.gz";
 const INDIVIDUAL_TEMPLATE_WASM_PATH: &str =
     "../../../target/wasm32-unknown-unknown/release/individual_user_template.wasm.gz";
-const POST_CACHE_WASM_PATH: &str =
-    "../../../target/wasm32-unknown-unknown/release/post_cache.wasm.gz";
 
 #[cfg(feature = "bet_details_heap_to_stable_mem_upgrade")]
 #[test]
@@ -32,7 +27,7 @@ fn bet_details_heap_to_stable_mem_upgrade() {
     use std::time::SystemTime;
 
     use shared_utils::canister_specific::individual_user_template::types::ml_data::{
-        SuccessHistoryItem, SuccessHistoryItemV1, WatchHistoryItem,
+         SuccessHistoryItemV1, WatchHistoryItem,
     };
 
     let pic = PocketIc::new();
@@ -47,28 +42,10 @@ fn bet_details_heap_to_stable_mem_upgrade() {
 
     let mut known_prinicipal_values = HashMap::new();
     known_prinicipal_values.insert(
-        KnownPrincipalType::CanisterIdPostCache,
-        post_cache_canister_id,
-    );
-    known_prinicipal_values.insert(
         KnownPrincipalType::UserIdGlobalSuperAdmin,
         admin_principal_id,
     );
     known_prinicipal_values.insert(KnownPrincipalType::CanisterIdUserIndex, admin_principal_id);
-
-    let post_cache_wasm_bytes = post_cache_canister_wasm();
-    let post_cache_args = PostCacheInitArgs {
-        known_principal_ids: Some(known_prinicipal_values.clone()),
-        upgrade_version_number: Some(1),
-        version: "1".to_string(),
-    };
-    let post_cache_args_bytes = encode_one(post_cache_args).unwrap();
-    pic.install_canister(
-        post_cache_canister_id,
-        post_cache_wasm_bytes,
-        post_cache_args_bytes,
-        None,
-    );
 
     // Individual template canisters
     let individual_template_wasm_bytes = old_individual_template_canister_wasm();
@@ -751,6 +728,3 @@ fn individual_template_canister_wasm() -> Vec<u8> {
     std::fs::read(INDIVIDUAL_TEMPLATE_WASM_PATH).unwrap()
 }
 
-fn post_cache_canister_wasm() -> Vec<u8> {
-    std::fs::read(POST_CACHE_WASM_PATH).unwrap()
-}

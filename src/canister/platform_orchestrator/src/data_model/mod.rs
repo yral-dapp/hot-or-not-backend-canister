@@ -35,7 +35,6 @@ pub struct StateGuard {
 #[derive(Serialize, Deserialize)]
 pub struct CanisterData {
     pub all_subnet_orchestrator_canisters_list: HashSet<Principal>,
-    pub all_post_cache_orchestrator_list: HashSet<Principal>,
     pub subet_orchestrator_with_capacity_left: HashSet<Principal>,
     pub version_detail: VersionDetails,
     #[serde(skip, default = "_default_wasms")]
@@ -71,7 +70,6 @@ impl Default for CanisterData {
     fn default() -> Self {
         Self {
             all_subnet_orchestrator_canisters_list: Default::default(),
-            all_post_cache_orchestrator_list: Default::default(),
             subet_orchestrator_with_capacity_left: Default::default(),
             version_detail: Default::default(),
             wasms: _default_wasms(),

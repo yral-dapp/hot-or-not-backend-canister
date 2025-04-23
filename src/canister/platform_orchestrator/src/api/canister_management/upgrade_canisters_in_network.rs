@@ -104,7 +104,6 @@ async fn upgrade_subnet_canisters(upgrade_arg: UpgradeCanisterArg) {
 
     let canister_list = CANISTER_DATA.with_borrow(|canister_data| {
         match upgrade_arg.canister {
-            WasmType::PostCacheWasm => Ok(canister_data.all_post_cache_orchestrator_list.clone()),
             WasmType::SubnetOrchestratorWasm => {
                 Ok(canister_data.all_subnet_orchestrator_canisters_list.clone())
             }

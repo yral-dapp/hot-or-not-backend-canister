@@ -1,6 +1,6 @@
 use std::{collections::HashMap, time::Duration};
 
-use candid::{encode_one, Decode, Encode, Principal};
+use candid::{encode_one,  Encode, Principal};
 use pocket_ic::{PocketIc, WasmResult};
 use shared_utils::{
     canister_specific::{
@@ -12,7 +12,6 @@ use shared_utils::{
             profile::UserProfileDetailsForFrontend,
         },
         platform_orchestrator::types::args::PlatformOrchestratorInitArgs,
-        post_cache::types::arg::PostCacheInitArgs,
     },
     common::{
         types::{known_principal::KnownPrincipalType, utility_token::token_event::TokenEvent},
@@ -31,9 +30,6 @@ use test_utils::setup::{
 
 const INDIVIDUAL_TEMPLATE_WASM_PATH: &str =
     "../../../target/wasm32-unknown-unknown/release/individual_user_template.wasm.gz";
-const POST_CACHE_WASM_PATH: &str =
-    "../../../target/wasm32-unknown-unknown/release/post_cache.wasm.gz";
-
 // #[cfg(feature = "bet_details_heap_to_stable_mem_upgrade")]
 #[test]
 fn download_snapshot_test() {
@@ -49,28 +45,10 @@ fn download_snapshot_test() {
 
     let mut known_prinicipal_values = HashMap::new();
     known_prinicipal_values.insert(
-        KnownPrincipalType::CanisterIdPostCache,
-        post_cache_canister_id,
-    );
-    known_prinicipal_values.insert(
         KnownPrincipalType::UserIdGlobalSuperAdmin,
         admin_principal_id,
     );
     known_prinicipal_values.insert(KnownPrincipalType::CanisterIdUserIndex, admin_principal_id);
-
-    let post_cache_wasm_bytes = post_cache_canister_wasm();
-    let post_cache_args = PostCacheInitArgs {
-        known_principal_ids: Some(known_prinicipal_values.clone()),
-        upgrade_version_number: Some(1),
-        version: "1".to_string(),
-    };
-    let post_cache_args_bytes = encode_one(post_cache_args).unwrap();
-    pic.install_canister(
-        post_cache_canister_id,
-        post_cache_wasm_bytes,
-        post_cache_args_bytes,
-        None,
-    );
 
     // Individual template canisters
     let individual_template_wasm_bytes = individual_template_canister_wasm();
@@ -510,7 +488,7 @@ fn download_snapshot_test() {
 
     // Clear snapshot
 
-    let res = pic
+    let _: () = pic
         .update_call(
             alice_individual_template_canister_id,
             reclaim_principal_id,
@@ -518,11 +496,10 @@ fn download_snapshot_test() {
             candid::encode_args(()).unwrap(),
         )
         .map(|reply_payload| {
-            let payload: _ = match reply_payload {
+            match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
                 _ => panic!("\n🛑 place_bet failed\n"),
             };
-            payload
         })
         .unwrap();
 
@@ -667,36 +644,20 @@ fn download_snapshot_test() {
         .unwrap();
     println!("Alice token balance: {:?}", fres9);
 
-    let fres10 = pic
-        .query_call(
-            alice_individual_template_canister_id,
-            alice_principal_id,
-            "get_well_known_principal_value",
-            candid::encode_args((KnownPrincipalType::CanisterIdPostCache,)).unwrap(),
-        )
-        .map(|reply_payload| {
-            let profile: Option<Principal> = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_profile failed\n"),
-            };
-            profile
-        })
-        .unwrap();
-    println!("Alice post cache prinicpal: {:?}", fres10);
 
     // Stop canisters
 
-    let res = match pic.stop_canister(alice_individual_template_canister_id, None) {
+    match pic.stop_canister(alice_individual_template_canister_id, None) {
         Ok(_) => println!("Alice stopped"),
         Err(e) => println!("Alice stop error: {:?}", e),
     };
 
-    let res = match pic.stop_canister(bob_individual_template_canister_id, None) {
+    match pic.stop_canister(bob_individual_template_canister_id, None) {
         Ok(_) => println!("Bob stopped"),
         Err(e) => println!("Bob stop error: {:?}", e),
     };
 
-    let res = match pic.stop_canister(dan_individual_template_canister_id, None) {
+    match pic.stop_canister(dan_individual_template_canister_id, None) {
         Ok(_) => println!("Dan stopped"),
         Err(e) => println!("Dan stop error: {:?}", e),
     };
@@ -804,7 +765,7 @@ fn download_snapshot_test() {
 
     // Restore state
 
-    let res = pic
+    let res: () = pic
         .update_call(
             alice2_individual_template_canister_id,
             reclaim_principal_id,
@@ -820,7 +781,7 @@ fn download_snapshot_test() {
         })
         .unwrap();
 
-    let res = pic
+    let res: () = pic
         .update_call(
             bob2_individual_template_canister_id,
             reclaim_principal_id,
@@ -836,7 +797,7 @@ fn download_snapshot_test() {
         })
         .unwrap();
 
-    let res = pic
+    let res: () = pic
         .update_call(
             dan2_individual_template_canister_id,
             reclaim_principal_id,
@@ -854,7 +815,7 @@ fn download_snapshot_test() {
 
     // Load snapshots
 
-    let res = pic
+    let res: () = pic
         .update_call(
             alice2_individual_template_canister_id,
             reclaim_principal_id,
@@ -870,7 +831,7 @@ fn download_snapshot_test() {
         })
         .unwrap();
 
-    let res = pic
+    let res: () = pic
         .update_call(
             bob2_individual_template_canister_id,
             reclaim_principal_id,
@@ -886,7 +847,7 @@ fn download_snapshot_test() {
         })
         .unwrap();
 
-    let res = pic
+    let res: () = pic
         .update_call(
             dan2_individual_template_canister_id,
             reclaim_principal_id,
@@ -1033,33 +994,13 @@ fn download_snapshot_test() {
         .unwrap();
     println!("Alice token balance: {:?}", fres9_1);
     assert_eq!(fres9_1, fres9);
-
-    let fres10_1 = pic
-        .query_call(
-            alice2_individual_template_canister_id,
-            alice_principal_id,
-            "get_well_known_principal_value",
-            candid::encode_args((KnownPrincipalType::CanisterIdPostCache,)).unwrap(),
-        )
-        .map(|reply_payload| {
-            let profile: Option<Principal> = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_profile failed\n"),
-            };
-            profile
-        })
-        .unwrap();
-    println!("Alice post cache prinicpal: {:?}", fres10_1);
-    assert_eq!(fres10_1, fres10);
+    
 }
 
 fn individual_template_canister_wasm() -> Vec<u8> {
     std::fs::read(INDIVIDUAL_TEMPLATE_WASM_PATH).unwrap()
 }
 
-fn post_cache_canister_wasm() -> Vec<u8> {
-    std::fs::read(POST_CACHE_WASM_PATH).unwrap()
-}
 
 #[test]
 fn all_canister_snapshot_tests() {

@@ -3,26 +3,20 @@ use std::{collections::HashMap, time::Duration};
 use candid::encode_one;
 use pocket_ic::{PocketIc, WasmResult};
 use shared_utils::{
-    canister_specific::{
-        individual_user_template::types::{
+    canister_specific::individual_user_template::types::{
             arg::IndividualUserTemplateInitArgs,
             post::{Post, PostDetailsFromFrontend},
         },
-        post_cache::types::arg::PostCacheInitArgs,
-    },
     common::{types::{
         known_principal::KnownPrincipalType,
         top_posts::post_score_index_item::{PostScoreIndexItemV1, PostStatus},
     }, utils::default_pump_dump_onboarding_reward},
-    types::canister_specific::post_cache::error_types::TopPostsFetchError,
 };
 use test_utils::setup::test_constants::{
     get_mock_user_alice_principal_id, get_mock_user_bob_principal_id,
     get_mock_user_charlie_principal_id, 
 };
 
-const POST_CACHE_WASM_PATH: &str =
-    "../../../target/wasm32-unknown-unknown/release/post_cache.wasm.gz";
 const INDIVIDUAL_TEMPLATE_WASM_PATH: &str =
     "../../../target/wasm32-unknown-unknown/release/individual_user_template.wasm.gz";
 
@@ -35,34 +29,10 @@ const INDIVIDUAL_TEMPLATE_WASM_PATH: &str =
     let bob_principal_id = get_mock_user_bob_principal_id();
     let admin_principal_id = get_mock_user_charlie_principal_id();
 
-    // Init post cache canister
-
-    let post_cache_canister_id = pic.create_canister();
-    pic.add_cycles(post_cache_canister_id, 2_000_000_000_000);
-
-    let post_cache_wasm_bytes = post_cache_canister_wasm();
-    let post_cache_args = PostCacheInitArgs {
-        known_principal_ids: None,
-        upgrade_version_number: None,
-        version: "1".to_string(),
-    };
-    let post_cache_args_bytes = encode_one(post_cache_args).unwrap();
-
-    pic.install_canister(
-        post_cache_canister_id,
-        post_cache_wasm_bytes,
-        post_cache_args_bytes,
-        None,
-    );
-
     // Individual template canisters
 
     let individual_template_wasm_bytes = individual_template_canister_wasm();
     let mut known_prinicipal_values = HashMap::new();
-    known_prinicipal_values.insert(
-        KnownPrincipalType::CanisterIdPostCache,
-        post_cache_canister_id,
-    );
     known_prinicipal_values.insert(
         KnownPrincipalType::UserIdGlobalSuperAdmin,
         admin_principal_id,
@@ -168,50 +138,50 @@ const INDIVIDUAL_TEMPLATE_WASM_PATH: &str =
     // thread::sleep(Duration::from_secs(5));
 
     // Call post cache canister to get the home feed posts
-    let res = pic
-        .query_call(
-            post_cache_canister_id,
-            bob_principal_id,
-            "get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed_cursor",
-            candid::encode_args((0_u64, 10_u64)).unwrap(),
-        )
-        .map(|reply_payload| {
-            let posts: Result<Vec<PostScoreIndexItemV1>, TopPostsFetchError> = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_posts failed\n"),
-            };
-            posts
-        })
-        .unwrap();
+    // let res = pic
+    //     .query_call(
+    //         post_cache_canister_id,
+    //         bob_principal_id,
+    //         "get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed_cursor",
+    //         candid::encode_args((0_u64, 10_u64)).unwrap(),
+    //     )
+    //     .map(|reply_payload| {
+    //         let posts: Result<Vec<PostScoreIndexItemV1>, TopPostsFetchError> = match reply_payload {
+    //             WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+    //             _ => panic!("\n🛑 get_posts failed\n"),
+    //         };
+    //         posts
+    //     })
+    //     .unwrap();
 
-    let posts = res.unwrap();
-    assert_eq!(posts.len(), 3);
-    assert_eq!(posts[0].post_id, 0);
-    assert_eq!(posts[1].post_id, 1);
-    assert_eq!(posts[2].post_id, 2);
+    // let posts = res.unwrap();
+    // assert_eq!(posts.len(), 3);
+    // assert_eq!(posts[0].post_id, 0);
+    // assert_eq!(posts[1].post_id, 1);
+    // assert_eq!(posts[2].post_id, 2);
 
-    // Call post cache canister to get the hot or not feed posts
-    let res = pic
-        .query_call(
-            post_cache_canister_id,
-            bob_principal_id,
-            "get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed_cursor",
-            candid::encode_args((0_u64, 10_u64)).unwrap(),
-        )
-        .map(|reply_payload| {
-            let posts: Result<Vec<PostScoreIndexItemV1>, TopPostsFetchError> = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_posts failed\n"),
-            };
-            posts
-        })
-        .unwrap();
+    // // Call post cache canister to get the hot or not feed posts
+    // let res = pic
+    //     .query_call(
+    //         post_cache_canister_id,
+    //         bob_principal_id,
+    //         "get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed_cursor",
+    //         candid::encode_args((0_u64, 10_u64)).unwrap(),
+    //     )
+    //     .map(|reply_payload| {
+    //         let posts: Result<Vec<PostScoreIndexItemV1>, TopPostsFetchError> = match reply_payload {
+    //             WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+    //             _ => panic!("\n🛑 get_posts failed\n"),
+    //         };
+    //         posts
+    //     })
+    //     .unwrap();
 
-    let posts = res.unwrap();
-    assert_eq!(posts.len(), 3);
-    assert_eq!(posts[0].post_id, 2);
-    assert_eq!(posts[1].post_id, 0);
-    assert_eq!(posts[2].post_id, 1);
+    // let posts = res.unwrap();
+    // assert_eq!(posts.len(), 3);
+    // assert_eq!(posts[0].post_id, 2);
+    // assert_eq!(posts[1].post_id, 0);
+    // assert_eq!(posts[2].post_id, 1);
 
     // Update to redytoview
     // Alice updates the post to ready to view
@@ -250,34 +220,30 @@ const INDIVIDUAL_TEMPLATE_WASM_PATH: &str =
         .unwrap();
 
     // Call post cache canister to get the hot or not feed posts
-    let res = pic
-        .query_call(
-            post_cache_canister_id,
-            bob_principal_id,
-            "get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed_cursor",
-            candid::encode_args((0_u64, 10_u64)).unwrap(),
-        )
-        .map(|reply_payload| {
-            let posts: Result<Vec<PostScoreIndexItemV1>, TopPostsFetchError> = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_posts failed\n"),
-            };
-            posts
-        })
-        .unwrap();
+    // let res = pic
+    //     .query_call(
+    //         post_cache_canister_id,
+    //         bob_principal_id,
+    //         "get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed_cursor",
+    //         candid::encode_args((0_u64, 10_u64)).unwrap(),
+    //     )
+    //     .map(|reply_payload| {
+    //         let posts: Result<Vec<PostScoreIndexItemV1>, TopPostsFetchError> = match reply_payload {
+    //             WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+    //             _ => panic!("\n🛑 get_posts failed\n"),
+    //         };
+    //         posts
+    //     })
+    //     .unwrap();
 
-    let posts = res.unwrap();
-    assert_eq!(posts.len(), 3);
-    assert_eq!(posts[0].post_id, 2);
-    assert_eq!(posts[1].post_id, 1);
-    assert_eq!(posts[2].post_id, 0);
-    assert_eq!(posts[2].status, PostStatus::ReadyToView);
+    // let posts = res.unwrap();
+    // assert_eq!(posts.len(), 3);
+    // assert_eq!(posts[0].post_id, 2);
+    // assert_eq!(posts[1].post_id, 1);
+    // assert_eq!(posts[2].post_id, 0);
+    // assert_eq!(posts[2].status, PostStatus::ReadyToView);
 }
 
 fn individual_template_canister_wasm() -> Vec<u8> {
     std::fs::read(INDIVIDUAL_TEMPLATE_WASM_PATH).unwrap()
-}
-
-fn post_cache_canister_wasm() -> Vec<u8> {
-    std::fs::read(POST_CACHE_WASM_PATH).unwrap()
 }
