@@ -30,23 +30,24 @@
       },
       "original": {
         "owner": "ninegua",
+        "ref": "20250411",
         "repo": "ic-nix",
         "type": "github"
       }
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1718867892,
-        "narHash": "sha256-Tjk7AVWnBU+zaIg8CajI6s89R5kbFkxcUMQ67XyDPTc=",
+        "lastModified": 1745279238,
+        "narHash": "sha256-AQ7M9wTa/Pa/kK5pcGTgX/DGqMHyzsyINfN7ktsI7Fo=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "1c3a28d84f970e7774af04372ade06399add182e",
+        "rev": "9684b53175fc6c09581e94cc85f05ab77464c7e3",
         "type": "github"
       },
       "original": {
         "owner": "NixOS",
+        "ref": "nixos-24.11",
         "repo": "nixpkgs",
-        "rev": "1c3a28d84f970e7774af04372ade06399add182e",
         "type": "github"
       }
     },

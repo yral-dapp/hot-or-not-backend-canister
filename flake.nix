@@ -2,10 +2,10 @@
   description = "Hot-or-not backend canister development environment";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/1c3a28d84f970e7774af04372ade06399add182e";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
     flake-utils.url = "github:numtide/flake-utils";
     ic-nix = {
-      url = "github:ninegua/ic-nix";
+      url = "github:ninegua/ic-nix/20250411";
       flake = false;
     };
   };
@@ -17,6 +17,7 @@
       ic-nix,
       ...
     }:
+
     flake-utils.lib.eachDefaultSystem (
       system:
       let
@@ -29,6 +30,10 @@
         };
       in
       {
+        nixConfig = {
+          extra-substituters = [ "https://ninegua.cachix.com" ];
+          # trusted-public-keys = [ "my-cache.example.com:My56...Q==%" ];
+        };
         devShells.default = dfx-env.overrideAttrs (old: {
           nativeBuildInputs =
             with pkgs;
