@@ -36,6 +36,7 @@ type KnownPrincipalType = variant {
   CanisterIdDataBackup;
   CanisterIdSnsLedger;
   CanisterIdSnsWasm;
+  CanisterIdPostCache;
   CanisterIdSNSController;
   CanisterIdSnsGovernance;
   UserIdGlobalSuperAdmin;
@@ -75,7 +76,11 @@ type UpgradeStatus = record {
   failed_canister_ids : vec record { principal; principal; text };
   successful_upgrade_count : nat32;
 };
-type WasmType = variant { IndividualUserWasm; SubnetOrchestratorWasm };
+type WasmType = variant {
+  IndividualUserWasm;
+  PostCacheWasm;
+  SubnetOrchestratorWasm;
+};
 service : (PlatformOrchestratorInitArgs) -> {
   add_principal_as_global_admin : (principal) -> ();
   clear_snapshot : () -> ();

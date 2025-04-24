@@ -58,6 +58,7 @@ type KnownPrincipalType = variant {
   CanisterIdDataBackup;
   CanisterIdSnsLedger;
   CanisterIdSnsWasm;
+  CanisterIdPostCache;
   CanisterIdSNSController;
   CanisterIdSnsGovernance;
   UserIdGlobalSuperAdmin;
