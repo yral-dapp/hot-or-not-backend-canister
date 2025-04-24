@@ -23,7 +23,7 @@ use shared_utils::{
 
 use crate::{data_model::pump_n_dump::NatStore, CANISTER_DATA, PUMP_N_DUMP};
 
-async fn redeem_gdollr_inner(amount: u128, balance_fetch: impl FnOnce(&CentsToken) -> Nat) -> Result<(), String> {
+async fn process_gdolr_withdrawl(amount: u128, withdrawable_balance_checker: impl FnOnce(&CentsToken) -> Nat) -> Result<(), String> {
     let (profile_owner, user_index) = CANISTER_DATA.with_borrow(|cdata| {
         if cdata.session_type != Some(SessionType::RegisteredSession) {
             return Err("Login required".to_string());
