@@ -26,7 +26,6 @@ const INDIVIDUAL_TEMPLATE_WASM_PATH: &str =
     let pic = PocketIc::new();
 
     let alice_principal_id = get_mock_user_alice_principal_id();
-    let bob_principal_id = get_mock_user_bob_principal_id();
     let admin_principal_id = get_mock_user_charlie_principal_id();
 
     // Individual template canisters
@@ -135,56 +134,6 @@ const INDIVIDUAL_TEMPLATE_WASM_PATH: &str =
         })
         .unwrap();
 
-    // thread::sleep(Duration::from_secs(5));
-
-    // Call post cache canister to get the home feed posts
-    // let res = pic
-    //     .query_call(
-    //         post_cache_canister_id,
-    //         bob_principal_id,
-    //         "get_top_posts_aggregated_from_canisters_on_this_network_for_home_feed_cursor",
-    //         candid::encode_args((0_u64, 10_u64)).unwrap(),
-    //     )
-    //     .map(|reply_payload| {
-    //         let posts: Result<Vec<PostScoreIndexItemV1>, TopPostsFetchError> = match reply_payload {
-    //             WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-    //             _ => panic!("\n🛑 get_posts failed\n"),
-    //         };
-    //         posts
-    //     })
-    //     .unwrap();
-
-    // let posts = res.unwrap();
-    // assert_eq!(posts.len(), 3);
-    // assert_eq!(posts[0].post_id, 0);
-    // assert_eq!(posts[1].post_id, 1);
-    // assert_eq!(posts[2].post_id, 2);
-
-    // // Call post cache canister to get the hot or not feed posts
-    // let res = pic
-    //     .query_call(
-    //         post_cache_canister_id,
-    //         bob_principal_id,
-    //         "get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed_cursor",
-    //         candid::encode_args((0_u64, 10_u64)).unwrap(),
-    //     )
-    //     .map(|reply_payload| {
-    //         let posts: Result<Vec<PostScoreIndexItemV1>, TopPostsFetchError> = match reply_payload {
-    //             WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-    //             _ => panic!("\n🛑 get_posts failed\n"),
-    //         };
-    //         posts
-    //     })
-    //     .unwrap();
-
-    // let posts = res.unwrap();
-    // assert_eq!(posts.len(), 3);
-    // assert_eq!(posts[0].post_id, 2);
-    // assert_eq!(posts[1].post_id, 0);
-    // assert_eq!(posts[2].post_id, 1);
-
-    // Update to redytoview
-    // Alice updates the post to ready to view
 
      pic
         .update_call(
@@ -219,29 +168,6 @@ const INDIVIDUAL_TEMPLATE_WASM_PATH: &str =
         })
         .unwrap();
 
-    // Call post cache canister to get the hot or not feed posts
-    // let res = pic
-    //     .query_call(
-    //         post_cache_canister_id,
-    //         bob_principal_id,
-    //         "get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed_cursor",
-    //         candid::encode_args((0_u64, 10_u64)).unwrap(),
-    //     )
-    //     .map(|reply_payload| {
-    //         let posts: Result<Vec<PostScoreIndexItemV1>, TopPostsFetchError> = match reply_payload {
-    //             WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-    //             _ => panic!("\n🛑 get_posts failed\n"),
-    //         };
-    //         posts
-    //     })
-    //     .unwrap();
-
-    // let posts = res.unwrap();
-    // assert_eq!(posts.len(), 3);
-    // assert_eq!(posts[0].post_id, 2);
-    // assert_eq!(posts[1].post_id, 1);
-    // assert_eq!(posts[2].post_id, 0);
-    // assert_eq!(posts[2].status, PostStatus::ReadyToView);
 }
 
 fn individual_template_canister_wasm() -> Vec<u8> {
