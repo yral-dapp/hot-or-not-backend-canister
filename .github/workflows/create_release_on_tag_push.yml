@@ -57,17 +57,11 @@ jobs:
           nix-shell --run "dfx build user_index --network=ic"
           hash=$(sha256sum < .dfx/ic/canisters/user_index/user_index.wasm.gz)
           echo "Module Hash: ${hash}"
-      - name: Build post_cache canister
-        run: |
-          nix-shell --run "dfx build post_cache --network=ic"
-          hash=$(sha256sum < .dfx/ic/canisters/post_cache/post_cache.wasm.gz)
-          echo "Module Hash: ${hash}"
       - name: Copy candid files for release
         run: |
           cp .dfx/ic/canisters/platform_orchestrator/service.did platform_orchestrator.did
           cp .dfx/ic/canisters/individual_user_template/service.did individual_user_template.did
           cp .dfx/ic/canisters/user_index/service.did user_index.did
-          cp .dfx/ic/canisters/post_cache/service.did post_cache.did
       - name: 'Create Release'
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
@@ -108,13 +102,6 @@ jobs:
             --canister-upgrade-arg "(record {version=\"${{ github.ref_name }}\"})" \
             $NEURON_ID > "proposals/${CANISTER_NAME}/upgrade.json"
           ./quill send proposals/${CANISTER_NAME}/upgrade.json --yes
-      - name: Upgrade post_cache using platform_orchestrator
-        run: |
-          ./ic-repl-linux64 ic-repl-upgrades-proposal/upgrade_ic_repl.sh -r ic
-        env:
-          CANISTER_NAME: post_cache
-          CHANGE_SUMMARY: ${{ steps.changelog.outputs.changes}}
-          VERSION: ${{ github.ref_name }}
       - name: Upgrade subnet_orchestrator using platform_orchestrator
         run: |
           ./ic-repl-linux64 ic-repl-upgrades-proposal/upgrade_ic_repl.sh -r ic

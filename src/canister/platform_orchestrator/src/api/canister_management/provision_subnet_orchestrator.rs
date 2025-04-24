@@ -1,27 +1,24 @@
 use candid::{CandidType, Principal};
 use ic_cdk::{
     api::{
-        self, call, is_controller,
-        management_canister::{
+        self, call, management_canister::{
             main::{self, CanisterInstallMode, InstallCodeArgument},
             provisional::CanisterSettings,
         },
     },
-    call, caller, id,
+    call, id,
 };
 use ic_cdk_macros::update;
 use serde::{Deserialize, Serialize};
 use shared_utils::{
-    canister_specific::{
-        post_cache::types::arg::PostCacheInitArgs, user_index::types::args::UserIndexInitArgs,
-    },
+    canister_specific::user_index::types::args::UserIndexInitArgs,
     common::types::{
-        known_principal::{KnownPrincipalMap, KnownPrincipalType},
+        known_principal::KnownPrincipalType,
         wasm::WasmType,
     },
     constant::{
         GLOBAL_SUPER_ADMIN_USER_ID, NNS_CYCLE_MINTING_CANISTER,
-        SUBNET_ORCHESTRATOR_CANISTER_INITIAL_CYCLES, YRAL_POST_CACHE_CANISTER_ID,
+        SUBNET_ORCHESTRATOR_CANISTER_INITIAL_CYCLES, 
     },
 };
 use std::{str::FromStr, vec};
@@ -81,8 +78,6 @@ pub async fn provision_subnet_orchestrator_canister(
 
     let subnet_orchestrator_canister_id = res.unwrap();
 
-    let post_cache_canister_id = Principal::from_text(YRAL_POST_CACHE_CANISTER_ID).unwrap();
-
     let mut known_principal_map = CANISTER_DATA.with_borrow(|canister_data| {
         canister_data
             .known_principals
@@ -96,18 +91,11 @@ pub async fn provision_subnet_orchestrator_canister(
         subnet_orchestrator_canister_id,
     );
     known_principal_map.insert(
-        KnownPrincipalType::CanisterIdPostCache,
-        post_cache_canister_id,
-    );
-    known_principal_map.insert(
         KnownPrincipalType::UserIdGlobalSuperAdmin,
         Principal::from_text(GLOBAL_SUPER_ADMIN_USER_ID).unwrap(),
     );
 
     CANISTER_DATA.with_borrow_mut(|canister_data| {
-        canister_data
-            .all_post_cache_orchestrator_list
-            .insert(post_cache_canister_id);
         canister_data
             .all_subnet_orchestrator_canisters_list
             .insert(subnet_orchestrator_canister_id);

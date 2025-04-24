@@ -69,17 +69,6 @@
       "package": "platform_orchestrator",
       "type": "rust"
     },
-    "post_cache": {
-      "candid": "./src/canister/post_cache/can.did",
-      "declarations": {
-        "node_compatibility": true,
-        "output": "./export/declarations/post_cache"
-      },
-      "gzip": true,
-      "optimize": "size",
-      "package": "post_cache",
-      "type": "rust"
-    },
     "sns_governance": {
       "build": "",
       "candid": "candid/sns_governance.did",

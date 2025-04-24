@@ -128,7 +128,6 @@ service : (PlatformOrchestratorInitArgs) -> {
     ) -> (Result);
   recharge_subnet_orchestrator : () -> (Result);
   register_new_subnet_orchestrator : (principal, bool) -> (Result);
-  reinstall_yral_post_cache_canister : () -> ();
   remove_principal_from_global_admins : (principal) -> ();
   remove_subnet_orchestrators_from_available_list : (principal) -> (Result_1);
   report_subnet_upgrade_status : (UpgradeStatus) -> (Result);

@@ -21,8 +21,6 @@ while getopts "sh" arg; do
   esac
 done
 
-dfx build post_cache
-gzip -f -1 ./target/wasm32-unknown-unknown/release/post_cache.wasm
 dfx build platform_orchestrator
 gzip -f -1 ./target/wasm32-unknown-unknown/release/platform_orchestrator.wasm
 
@@ -35,9 +33,6 @@ dfx canister install platform_orchestrator --mode upgrade --argument "(record {
   version= \"v2.2.0\"
 })"
 
-dfx canister install post_cache --mode upgrade --argument "(record {
-    version= \"v1.1.0\"
-})"
 
 scripts/canisters/local_deploy/upgrade_subnet_orchestrator.sh
 

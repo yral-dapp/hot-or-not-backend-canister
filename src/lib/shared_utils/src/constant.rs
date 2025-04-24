@@ -1,4 +1,3 @@
-use std::cell::RefCell;
 
 use crate::common::types::known_principal::{KnownPrincipalMap, KnownPrincipalType};
 use candid::Principal;
@@ -8,8 +7,6 @@ pub const MAX_AMOUNT_OF_RECHARGE_FOR_INDIVIDUAL_CANISTER: u128 = 1_000_000_000_0
 
 pub const SUBNET_ORCHESTRATOR_CANISTER_INITIAL_CYCLES: u128 = 2_500_000_000_000_000; //2.5kT Cycles
 pub const SUBNET_ORCHESTRATOR_CANISTER_CYCLES_THRESHOLD: u128 = 1_000_000_000_000_000; //1kT Cycles
-pub const POST_CACHE_CANISTER_CYCLES_RECHARGE_AMOUMT: u128 = 5_000_000_000_000; //5T Cycles
-pub const POST_CACHE_CANISTER_CYCLES_THRESHOLD: u128 = 2_000_000_000_000; //2T Cycles
 pub const USER_SNS_CANISTER_INITIAL_CYCLES: u128 = 500_000_000_000; //0.5T Cycles
 pub const PAGE_SIZE_RECHARGE_DIVIDER: u128 = 500; // 500 pages (recharge by page_size/page_size_recharge_divider * recharge_amount)
 
@@ -117,7 +114,6 @@ pub fn get_individual_user_canister_subnet_batch_size() -> u64 {
 }
 
 // * Important Principal IDs
-pub const YRAL_POST_CACHE_CANISTER_ID: &str = "zyajx-3yaaa-aaaag-acoga-cai";
 pub const GOVERNANCE_CANISTER_ID: &str = "6wcax-haaaa-aaaaq-aaava-cai";
 pub const NNS_CYCLE_MINTING_CANISTER: &str = "rkp4c-7iaaa-aaaaa-aaaca-cai";
 pub const NNS_LEDGER_CANISTER_ID: &str = "ryjl3-tyaaa-aaaaa-aaaba-cai";

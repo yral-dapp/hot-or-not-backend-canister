@@ -25,7 +25,6 @@ fn get_current_list_of_all_well_known_principal_values_impl(
 mod test {
     use test_utils::setup::test_constants::{
         get_global_super_admin_principal_id,
-        get_mock_canister_id_post_cache,
         get_mock_canister_id_user_index,
     };
 
@@ -39,10 +38,6 @@ mod test {
             get_global_super_admin_principal_id(),
         );
         known_principal_ids.insert(
-            KnownPrincipalType::CanisterIdPostCache,
-            get_mock_canister_id_post_cache(),
-        );
-        known_principal_ids.insert(
             KnownPrincipalType::CanisterIdUserIndex,
             get_mock_canister_id_user_index(),
         );
@@ -52,13 +47,6 @@ mod test {
                 .contains(&(
                     KnownPrincipalType::UserIdGlobalSuperAdmin,
                     get_global_super_admin_principal_id()
-                ))
-        );
-        assert!(
-            get_current_list_of_all_well_known_principal_values_impl(&known_principal_ids)
-                .contains(&(
-                    KnownPrincipalType::CanisterIdPostCache,
-                    get_mock_canister_id_post_cache()
                 ))
         );
         assert!(

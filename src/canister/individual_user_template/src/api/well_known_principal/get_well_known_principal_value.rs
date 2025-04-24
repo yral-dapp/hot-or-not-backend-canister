@@ -21,10 +21,7 @@ fn get_well_known_principal_value_impl(
 
 #[cfg(test)]
 mod test {
-    use test_utils::setup::test_constants::{
-        get_mock_canister_id_post_cache,
-        get_mock_canister_id_user_index,
-    };
+    use test_utils::setup::test_constants::get_mock_canister_id_user_index;
 
     use crate::data_model::CanisterData;
 
@@ -34,21 +31,10 @@ mod test {
     fn test_get_well_known_principal_value_impl() {
         let mut canister_data = CanisterData::default();
         canister_data.known_principal_ids.insert(
-            KnownPrincipalType::CanisterIdPostCache,
-            get_mock_canister_id_post_cache(),
-        );
-        canister_data.known_principal_ids.insert(
             KnownPrincipalType::CanisterIdUserIndex,
             get_mock_canister_id_user_index(),
         );
 
-        assert_eq!(
-            get_well_known_principal_value_impl(
-                &KnownPrincipalType::CanisterIdPostCache,
-                &canister_data.known_principal_ids
-            ),
-            Some(get_mock_canister_id_post_cache())
-        );
         assert_eq!(
             get_well_known_principal_value_impl(
                 &KnownPrincipalType::CanisterIdUserIndex,

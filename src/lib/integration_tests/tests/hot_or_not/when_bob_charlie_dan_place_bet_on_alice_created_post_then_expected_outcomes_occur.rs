@@ -5,16 +5,16 @@ use pocket_ic::WasmResult;
 use shared_utils::{
     canister_specific::{individual_user_template::types::{
         arg::PlaceBetArg,
-        error::BetOnCurrentlyViewingPostError,
+        error::{BetOnCurrentlyViewingPostError, GetPostsOfUserProfileError},
         hot_or_not::{BetDirection, BetOutcomeForBetMaker, BettingStatus},
-        post::PostDetailsFromFrontend,
+        post::{PostDetailsForFrontend, PostDetailsFromFrontend},
     }, user_index::types::args::UserIndexInitArgs},
-    common::types::{known_principal::KnownPrincipalType, top_posts::post_score_index_item::PostScoreIndexItem, utility_token::token_event::{HotOrNotOutcomePayoutEvent, StakeEvent, TokenEvent}}, types::canister_specific::{individual_user_template::error_types::GetUserUtilityTokenTransactionHistoryError, post_cache::error_types::TopPostsFetchError},
+    common::types::{known_principal::KnownPrincipalType, utility_token::token_event::{HotOrNotOutcomePayoutEvent, StakeEvent, TokenEvent}}, types::canister_specific::individual_user_template::error_types::GetUserUtilityTokenTransactionHistoryError,
 };
 use test_utils::setup::{
     env::{pocket_ic_env::get_new_pocket_ic_env, pocket_ic_init::get_initialized_env_with_provisioned_known_canisters},
     test_constants::{
-        get_canister_wasm, get_global_super_admin_principal_id, get_mock_user_alice_principal_id, get_mock_user_bob_principal_id, get_mock_user_charlie_principal_id, get_mock_user_dan_principal_id
+        get_canister_wasm, get_mock_user_alice_principal_id, get_mock_user_bob_principal_id, get_mock_user_charlie_principal_id, get_mock_user_dan_principal_id
     },
 };
 
@@ -23,6 +23,9 @@ use test_utils::setup::{
 fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_occur() {
     let (pocket_ic, known_principal_map) = get_new_pocket_ic_env();
     let known_principal_map = get_initialized_env_with_provisioned_known_canisters(&pocket_ic, known_principal_map);
+    let platform_orchanstrator_canister_id = *known_principal_map
+        .get(&KnownPrincipalType::CanisterIdPlatformOrchestrator)
+        .unwrap();
     let user_index_canister_id = *known_principal_map
         .get(&KnownPrincipalType::CanisterIdUserIndex)
         .unwrap();
@@ -30,13 +33,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
         "🧪 user_index_canister_id: {:?}",
         user_index_canister_id.to_text()
     );
-    let post_cache_canister_id = *known_principal_map
-        .get(&KnownPrincipalType::CanisterIdPostCache)
-        .unwrap();
-    println!(
-        "🧪 post_cache_canister_id: {:?}",
-        post_cache_canister_id.to_text()
-    );
+    
     let alice_principal_id = get_mock_user_alice_principal_id();
     let bob_principal_id = get_mock_user_bob_principal_id();
     let charlie_principal_id = get_mock_user_charlie_principal_id();
@@ -122,7 +119,6 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
 
     println!("🧪 alice_canister_id: {:?}", alice_canister_id.to_text());
 
-    let post_creation_time = pocket_ic.get_time();
 
     // * Post is created by Alice
     let newly_created_post_id = pocket_ic
@@ -151,17 +147,17 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
 
     println!("🧪 newly_created_post_id: {:?}", newly_created_post_id);
 
-    let returned_posts: Vec<PostScoreIndexItem> = pocket_ic
+    let returned_posts = pocket_ic
         .query_call(
-            post_cache_canister_id,
+            alice_canister_id,
             Principal::anonymous(),
-            "get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed",
+            "get_posts_of_this_user_profile_with_pagination_cursor",
             candid::encode_args((0_u64,10_u64)).unwrap(),
         )
         .map(|reply_payload| {
-            let returned_posts: Result<Vec<PostScoreIndexItem>, TopPostsFetchError> = match reply_payload {
+            let returned_posts: Result<Vec<PostDetailsForFrontend>, GetPostsOfUserProfileError> = match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_top_posts_aggregated_from_canisters_on_this_network_for_hot_or_not_feed failed\n"),
+                _ => panic!("\n🛑 get_posts_of_this_user_profile_with_pagination_cursor failed\n"),
             };
             returned_posts.unwrap()
         })
@@ -170,13 +166,14 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
     assert_eq!(returned_posts.len(), 1);
 
     let returned_post = returned_posts.first().unwrap();
-    assert_eq!(returned_post.post_id, newly_created_post_id);
-    assert_eq!(returned_post.publisher_canister_id, alice_canister_id);
+    let post_creation_time = returned_post.created_at;
 
+    assert_eq!(returned_post.id, newly_created_post_id);
+    let publisher_canister_id = alice_canister_id;
     // * Bob bets on the post
     let bob_place_bet_arg = PlaceBetArg {
-        post_canister_id: returned_post.publisher_canister_id,
-        post_id: returned_post.post_id,
+        post_canister_id: publisher_canister_id,
+        post_id: returned_post.id,
         bet_amount: 50,
         bet_direction: BetDirection::Hot,
     };
@@ -197,7 +194,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
             bet_status
         })
         .unwrap();
-    println!("🧪 bet_status: {:?}", bet_status);
+    println!("🧪 bet_status: {:?}, post_creation_time: {:?}", bet_status, post_creation_time);
     assert!(bet_status.is_ok());
     assert_eq!(
         bet_status.unwrap(),
@@ -212,8 +209,8 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
 
     // * Charlie bets on the post
     let charlie_place_bet_arg = PlaceBetArg {
-        post_canister_id: returned_post.publisher_canister_id,
-        post_id: returned_post.post_id,
+        post_canister_id: publisher_canister_id,
+        post_id: returned_post.id,
         bet_amount: 100,
         bet_direction: BetDirection::Not,
     };
@@ -248,8 +245,8 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
 
     // * Dan bets on the post
     let dan_place_bet_arg = PlaceBetArg {
-        post_canister_id: returned_post.publisher_canister_id,
-        post_id: returned_post.post_id,
+        post_canister_id: publisher_canister_id,
+        post_id: returned_post.id,
         bet_amount: 10,
         bet_direction: BetDirection::Hot,
     };
@@ -291,7 +288,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
                 ..Default::default()
             })
             .unwrap(),
-            Some(get_global_super_admin_principal_id()),
+            Some(platform_orchanstrator_canister_id),
         )
         .unwrap();
 
@@ -349,7 +346,7 @@ fn when_bob_charlie_dan_place_bet_on_alice_created_post_then_expected_outcomes_o
         TokenEvent::HotOrNotOutcomePayout {
             amount: 16,
             details: HotOrNotOutcomePayoutEvent::CommissionFromHotOrNotBet {
-                post_canister_id: returned_post.publisher_canister_id,
+                post_canister_id: publisher_canister_id,
                 post_id: 0,
                 slot_id: 1,
                 room_id: 1,

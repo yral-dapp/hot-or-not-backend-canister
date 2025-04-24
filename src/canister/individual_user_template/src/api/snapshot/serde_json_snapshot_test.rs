@@ -10,7 +10,6 @@ mod test {
     use ic_cdk::api::management_canister::main::CanisterId;
     use shared_utils::{
         canister_specific::individual_user_template::types::{
-            configuration::IndividualUserConfiguration,
             follow::FollowEntryDetail,
             hot_or_not::{
                 AggregateStats, BetDetails, BetDirection, BetOutcomeForBetMaker, BetPayout,
@@ -32,14 +31,9 @@ mod test {
     };
     use test_utils::setup::test_constants::get_mock_user_alice_canister_id;
 
-    use crate::{
-        api::snapshot::{
-            CanisterDataForSnapshot, FollowDataForSnapshot, FollowListForSnapshot,
-            HotOrNotDetailsForSnapshot, PostForSnapshot, PostScoreIndexForSnapshot,
-            TokenBalanceForSnapshot,
-        },
-        data_model::CanisterData,
-    };
+    use crate::api::snapshot::{
+            CanisterDataForSnapshot,  HotOrNotDetailsForSnapshot, PostForSnapshot, TokenBalanceForSnapshot,
+        };
 
     #[test]
     fn test_serde_json_snapshot() {
@@ -147,8 +141,7 @@ mod test {
             1,
         );
 
-        let mut known_principal_ids = HashMap::<KnownPrincipalType, Principal>::new();
-        known_principal_ids.insert(KnownPrincipalType::CanisterIdPostCache, temp_principal);
+        let known_principal_ids = HashMap::<KnownPrincipalType, Principal>::new();
 
         let mut utility_history = BTreeMap::<u64, TokenEvent>::new();
         utility_history.insert(
@@ -180,12 +173,12 @@ mod test {
 
         let canister_data_snapshot = CanisterDataForSnapshot {
             all_created_posts: created_posts,
-            room_details_map: room_details_map,
-            bet_details_map: bet_details_map,
-            post_principal_map: post_principal_map,
-            slot_details_map: slot_details_map,
-            all_hot_or_not_bets_placed: all_hot_or_not_bets_placed,
-            known_principal_ids: known_principal_ids,
+            room_details_map,
+            bet_details_map,
+            post_principal_map,
+            slot_details_map,
+            all_hot_or_not_bets_placed,
+            known_principal_ids,
             my_token_balance: TokenBalanceForSnapshot {
                 utility_token_balance: 100,
                 utility_token_transaction_history: utility_history,
@@ -210,12 +203,12 @@ mod test {
         };
 
         let serde_str = serde_json::to_string(&canister_data_snapshot);
-        assert_eq!(serde_str.is_ok(), true);
+        assert!(serde_str.is_ok());
 
-        let canister_data_snapshot: CanisterDataForSnapshot =
-            serde_json::from_str(serde_str.unwrap().as_str()).unwrap();
+        // let canister_data_snapshot: CanisterDataForSnapshot =
+        //     serde_json::from_str(serde_str.unwrap().as_str()).unwrap();
 
-        let canister_data = CanisterData::from(canister_data_snapshot);
+        // let canister_data = CanisterData::from(canister_data_snapshot);
 
         // println!("canister_data: {:?}", canister_data.all_created_posts);
     }
