@@ -76,7 +76,7 @@ pub async fn redeem_gdollr(amount: u128) -> Result<(), String> {
 }
 
 #[update]
-pub async fn redeem_gdollr_v2(amount: u128) -> Result<(), String> {
+pub async fn redeem_gdolr_v2(amount: u128) -> Result<(), String> {
     redeem_gdollr_inner(amount, CentsToken::withdrawable_balance_v2).await
 }
 
