@@ -36,6 +36,10 @@ impl CentsToken {
         }
     }
 
+    pub fn withdrawable_balance_v2(&self) -> Nat {
+        self.balance.clone()
+    }
+
     pub fn get_net_earnings(&self) -> Nat {
         self.net_earnings.clone()
     }
