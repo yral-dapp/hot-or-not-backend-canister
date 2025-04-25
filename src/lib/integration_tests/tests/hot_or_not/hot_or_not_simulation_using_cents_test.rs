@@ -3,23 +3,17 @@ use std::{collections::HashMap, time::Duration};
 use candid::{encode_one, Principal};
 use pocket_ic::{PocketIc, WasmResult};
 use shared_utils::{
-    canister_specific::{
-        individual_user_template::types::{
+    canister_specific::individual_user_template::types::{
             arg::{IndividualUserTemplateInitArgs, PlaceBetArg},
             error::BetOnCurrentlyViewingPostError,
             hot_or_not::{
-                BetDetails, BetDirection, BetMakerInformedStatus, BetPayout, BettingStatus,
-                PlacedBetDetail,
+                BetDirection, BettingStatus,
             },
             post::{PostDetailsForFrontend, PostDetailsFromFrontend},
-            profile::UserProfileDetailsForFrontend,
             pump_n_dump::BalanceInfo,
-            token,
         },
-        post_cache::types::arg::PostCacheInitArgs,
-    },
     common::{
-        types::known_principal::{self, KnownPrincipalType},
+        types::known_principal::KnownPrincipalType,
         utils::default_pump_dump_onboarding_reward,
     },
     constant::{GDOLLR_TO_E8S, GLOBAL_SUPER_ADMIN_USER_ID_V1},
@@ -28,22 +22,16 @@ use test_utils::setup::{
     env::pocket_ic_env::get_new_pocket_ic_env,
     test_constants::{
         get_mock_user_alice_principal_id, get_mock_user_bob_principal_id,
-        get_mock_user_charlie_principal_id, get_mock_user_dan_principal_id,
+         get_mock_user_dan_principal_id,
     },
 };
 
 const INDIVIDUAL_TEMPLATE_WASM_PATH: &str =
     "../../../target/wasm32-unknown-unknown/release/individual_user_template.wasm.gz";
-const POST_CACHE_WASM_PATH: &str =
-    "../../../target/wasm32-unknown-unknown/release/post_cache.wasm.gz";
-
 fn individual_template_canister_wasm() -> Vec<u8> {
     std::fs::read(INDIVIDUAL_TEMPLATE_WASM_PATH).unwrap()
 }
 
-fn post_cache_canister_wasm() -> Vec<u8> {
-    std::fs::read(POST_CACHE_WASM_PATH).unwrap()
-}
 
 #[test]
 fn hotornot_game_simulation_test_1() {
@@ -54,33 +42,15 @@ fn hotornot_game_simulation_test_1() {
     let dan_principal_id = get_mock_user_dan_principal_id();
     let admin_principal_id = Principal::from_text(GLOBAL_SUPER_ADMIN_USER_ID_V1).unwrap();
 
-    let post_cache_canister_id = pic.create_canister();
-    pic.add_cycles(post_cache_canister_id, 2_000_000_000_000);
+    // let post_cache_canister_id = pic.create_canister();
+    // pic.add_cycles(post_cache_canister_id, 2_000_000_000_000);
 
     let mut known_prinicipal_values = HashMap::new();
-    known_prinicipal_values.insert(
-        KnownPrincipalType::CanisterIdPostCache,
-        post_cache_canister_id,
-    );
     known_prinicipal_values.insert(
         KnownPrincipalType::UserIdGlobalSuperAdmin,
         admin_principal_id,
     );
     known_prinicipal_values.insert(KnownPrincipalType::CanisterIdUserIndex, admin_principal_id);
-
-    let post_cache_wasm_bytes = post_cache_canister_wasm();
-    let post_cache_args = PostCacheInitArgs {
-        known_principal_ids: Some(known_prinicipal_values.clone()),
-        upgrade_version_number: Some(1),
-        version: "1".to_string(),
-    };
-    let post_cache_args_bytes = encode_one(post_cache_args).unwrap();
-    pic.install_canister(
-        post_cache_canister_id,
-        post_cache_wasm_bytes,
-        post_cache_args_bytes,
-        None,
-    );
 
     // Individual template canisters
     let individual_template_wasm_bytes = individual_template_canister_wasm();
@@ -223,7 +193,7 @@ fn hotornot_game_simulation_test_1() {
         .unwrap();
 
     // Top up Bob's account
-    let reward = pic.update_call(
+    let _ = pic.update_call(
         bob_individual_template_canister_id,
         admin_principal_id,
         "get_rewarded_for_signing_up",
@@ -231,7 +201,7 @@ fn hotornot_game_simulation_test_1() {
     );
 
     // Top up Dan's account
-    let reward = pic.update_call(
+    let _ = pic.update_call(
         dan_individual_template_canister_id,
         admin_principal_id,
         "get_rewarded_for_signing_up",
@@ -239,7 +209,7 @@ fn hotornot_game_simulation_test_1() {
     );
 
     // Top up Charlie's account
-    let reward = pic.update_call(
+    let _ = pic.update_call(
         charlie_individual_template_canister_id,
         admin_principal_id,
         "get_rewarded_for_signing_up",
@@ -593,7 +563,7 @@ fn hotornot_game_simulation_test_1() {
         .unwrap();
 
     // Top up Alice's account
-    let reward = pic.update_call(
+    let _ = pic.update_call(
         alice_individual_template_canister_id,
         admin_principal_id,
         "get_rewarded_for_signing_up",
@@ -833,7 +803,7 @@ fn hotornot_game_simulation_test_2() {
 
     let last_individual_template_canister_id = individual_template_canister_ids.pop().unwrap();
     let last_individual_template_principal_id =
-        Principal::self_authenticating((111 as usize).to_ne_bytes());
+        Principal::self_authenticating((111_usize).to_ne_bytes());
 
     // Create a post
 
@@ -975,7 +945,7 @@ fn hotornot_game_simulation_test_2() {
         let token_info = pic
             .query_call(
                 individual_template_canister_ids[i - 1],
-                Principal::self_authenticating((i as usize).to_ne_bytes()),
+                Principal::self_authenticating((i).to_ne_bytes()),
                 "pd_balance_info",
                 encode_one(()).unwrap(),
             )

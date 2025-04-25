@@ -3,16 +3,13 @@ use std::{collections::HashMap, time::Duration};
 use candid::encode_one;
 use pocket_ic::{PocketIc, WasmResult};
 use shared_utils::{
-    canister_specific::{
-        individual_user_template::types::{
+    canister_specific::individual_user_template::types::{
             arg::{IndividualUserTemplateInitArgs, PlaceBetArg},
             error::BetOnCurrentlyViewingPostError,
-            hot_or_not::{BetDirection, BettingStatus, PlacedBetDetail},
+            hot_or_not::{BetDirection, BettingStatus,},
             post::PostDetailsFromFrontend,
             profile::UserProfileDetailsForFrontend,
         },
-        post_cache::types::arg::PostCacheInitArgs,
-    },
     common::{types::known_principal::KnownPrincipalType, utils::default_pump_dump_onboarding_reward},
 };
 use test_utils::setup::test_constants::{
@@ -24,8 +21,6 @@ const OLD_INDIVIDUAL_TEMPLATE_WASM_PATH: &str =
     "../../../target/wasm32-unknown-unknown/release/old_individual_user_template.wasm.gz";
 const INDIVIDUAL_TEMPLATE_WASM_PATH: &str =
     "../../../target/wasm32-unknown-unknown/release/individual_user_template.wasm.gz";
-const POST_CACHE_WASM_PATH: &str =
-    "../../../target/wasm32-unknown-unknown/release/post_cache.wasm.gz";
 
 fn old_individual_template_canister_wasm() -> Vec<u8> {
     std::fs::read(OLD_INDIVIDUAL_TEMPLATE_WASM_PATH).unwrap()
@@ -33,10 +28,6 @@ fn old_individual_template_canister_wasm() -> Vec<u8> {
 
 fn individual_template_canister_wasm() -> Vec<u8> {
     std::fs::read(INDIVIDUAL_TEMPLATE_WASM_PATH).unwrap()
-}
-
-fn post_cache_canister_wasm() -> Vec<u8> {
-    std::fs::read(POST_CACHE_WASM_PATH).unwrap()
 }
 
 #[test]
@@ -54,28 +45,11 @@ fn reconcile_scores_test() {
 
     let mut known_prinicipal_values = HashMap::new();
     known_prinicipal_values.insert(
-        KnownPrincipalType::CanisterIdPostCache,
-        post_cache_canister_id,
-    );
-    known_prinicipal_values.insert(
         KnownPrincipalType::UserIdGlobalSuperAdmin,
         admin_principal_id,
     );
     known_prinicipal_values.insert(KnownPrincipalType::CanisterIdUserIndex, admin_principal_id);
 
-    let post_cache_wasm_bytes = post_cache_canister_wasm();
-    let post_cache_args = PostCacheInitArgs {
-        known_principal_ids: Some(known_prinicipal_values.clone()),
-        upgrade_version_number: Some(1),
-        version: "1".to_string(),
-    };
-    let post_cache_args_bytes = encode_one(post_cache_args).unwrap();
-    pic.install_canister(
-        post_cache_canister_id,
-        post_cache_wasm_bytes,
-        post_cache_args_bytes,
-        None,
-    );
 
     // Individual template canisters
     let individual_template_wasm_bytes = old_individual_template_canister_wasm();
@@ -218,7 +192,7 @@ fn reconcile_scores_test() {
         .unwrap();
 
     // Top up Bob's account
-    let reward = pic.update_call(
+    let _ = pic.update_call(
         bob_individual_template_canister_id,
         admin_principal_id,
         "get_rewarded_for_signing_up",
@@ -226,7 +200,7 @@ fn reconcile_scores_test() {
     );
 
     // Top up Dan's account
-    let reward = pic.update_call(
+    let _ = pic.update_call(
         dan_individual_template_canister_id,
         admin_principal_id,
         "get_rewarded_for_signing_up",
@@ -234,7 +208,7 @@ fn reconcile_scores_test() {
     );
 
     // Top up Charlie's account
-    let reward = pic.update_call(
+    let _ = pic.update_call(
         charlie_individual_template_canister_id,
         admin_principal_id,
         "get_rewarded_for_signing_up",
@@ -717,7 +691,7 @@ fn reconcile_scores_test() {
         .unwrap();
 
     // Top up Alice's account
-    let reward = pic.update_call(
+    let _ = pic.update_call(
         alice_individual_template_canister_id,
         admin_principal_id,
         "get_rewarded_for_signing_up",
@@ -1080,7 +1054,7 @@ fn reconcile_scores_test() {
             alice_individual_template_canister_id,
             alice_principal_id,
             "get_hot_or_not_bet_details_for_this_post",
-            encode_one(0 as u64).unwrap(),
+            encode_one(0_u64).unwrap(),
         )
         .map(|reply_payload| {
             let bet_details: BettingStatus = match reply_payload {
@@ -1097,7 +1071,7 @@ fn reconcile_scores_test() {
             alice_individual_template_canister_id,
             alice_principal_id,
             "get_hot_or_not_bet_details_for_this_post",
-            encode_one(1 as u64).unwrap(),
+            encode_one(1_u64).unwrap(),
         )
         .map(|reply_payload| {
             let bet_details: BettingStatus = match reply_payload {

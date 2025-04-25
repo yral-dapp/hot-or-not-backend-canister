@@ -10,7 +10,7 @@ use ic_stable_structures::{storable::Bound, Storable};
 pub enum WasmType {
     SubnetOrchestratorWasm,
     IndividualUserWasm,
-    PostCacheWasm
+    PostCacheWasm,
 }
 
 impl Storable for WasmType {

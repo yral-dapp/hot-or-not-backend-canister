@@ -2,20 +2,19 @@ use ciborium::de;
 use ic_stable_structures::{storable::Bound, StableBTreeMap, StableLog, Storable};
 use std::{
     borrow::Cow,
-    collections::{HashMap, HashSet},
+    collections::HashSet,
     time::{SystemTime, UNIX_EPOCH},
 };
 
 use candid::{CandidType, Principal};
 use serde::{Deserialize, Serialize};
 use shared_utils::{
-    canister_specific::{
-        individual_user_template::types::{cdao::DeployedCdaoCanisters, session::SessionType},
+    canister_specific::
         platform_orchestrator::types::{
             args::UpgradeCanisterArg, well_known_principal::PlatformOrchestratorKnownPrincipal,
             SubnetUpgradeReport,
-        },
-    },
+        }
+    ,
     common::types::wasm::{CanisterWasm, WasmType},
     types::creator_dao_stats::CreatorDaoTokenStats,
 };

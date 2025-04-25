@@ -1,27 +1,23 @@
 use candid::Principal;
-use ic_test_state_machine_client::WasmResult;
+use pocket_ic::WasmResult;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
         profile::{UserCanisterDetails, UserProfileDetailsForFrontend},
         session::SessionType,
-    },
-    common::types::{
+    }, common::types::{
         known_principal::KnownPrincipalType,
         utility_token::token_event::{MintEvent, TokenEvent},
-    },
-    constant::GLOBAL_SUPER_ADMIN_USER_ID,
-    types::canister_specific::individual_user_template::error_types::GetUserUtilityTokenTransactionHistoryError,
+    }, constant::GLOBAL_SUPER_ADMIN_USER_ID, types::canister_specific::individual_user_template::error_types::GetUserUtilityTokenTransactionHistoryError
 };
 use test_utils::setup::{
-    env::v1::{get_initialized_env_with_provisioned_known_canisters, get_new_state_machine},
+    env::{pocket_ic_env::get_new_pocket_ic_env, pocket_ic_init::get_initialized_env_with_provisioned_known_canisters},
     test_constants::{get_mock_user_alice_principal_id, get_mock_user_bob_principal_id},
 };
 
 #[test]
-fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousand_utility_tokens_for_signing_up_and_the_referrer_and_referee_receive_five_hundred_tokens_as_referral_rewards(
-) {
-    let state_machine = get_new_state_machine();
-    let known_principal_map = get_initialized_env_with_provisioned_known_canisters(&state_machine);
+fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousand_utility_tokens_for_signing_up_and_the_referrer_and_referee_receive_five_hundred_tokens_as_referral_rewards() {
+    let (pocket_ic, known_principal_map) = get_new_pocket_ic_env();
+    let known_principal_map = get_initialized_env_with_provisioned_known_canisters(&pocket_ic, known_principal_map);
     let user_index_canister_id = known_principal_map
         .get(&KnownPrincipalType::CanisterIdUserIndex)
         .unwrap();
@@ -29,7 +25,7 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
     let alice_principal_id = get_mock_user_alice_principal_id();
     let bob_principal_id = get_mock_user_bob_principal_id();
 
-    let alice_canister_id = state_machine
+    let alice_canister_id = pocket_ic
         .update_call(
             *user_index_canister_id,
             alice_principal_id,
@@ -48,7 +44,7 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
         .unwrap()
         .unwrap();
 
-    let alice_utility_token_balance_after_signup = state_machine
+    let alice_utility_token_balance_after_signup = pocket_ic
         .query_call(
             alice_canister_id,
             Principal::anonymous(),
@@ -67,7 +63,7 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
     assert_eq!(alice_utility_token_balance_after_signup, 1000);
 
     // check version of alice canister
-    let alice_canister_version = state_machine
+    let alice_canister_version = pocket_ic
         .query_call(
             alice_canister_id,
             Principal::anonymous(),
@@ -77,16 +73,17 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
         .map(|reply_payload| {
             let version: String = match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get_utility_token_balance failed\n"),
+                e => panic!("\n🛑 get_utility_token_balance failed\n {e:?}"),
             };
             version
         })
         .unwrap();
 
-    assert!(alice_canister_version.eq("v1.0.0"));
+
+    assert!(alice_canister_version.eq("1.0.0"));
 
     // * getting canister id again to check if token value increased
-    state_machine
+    pocket_ic
         .update_call(
             *user_index_canister_id,
             alice_principal_id,
@@ -105,7 +102,7 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
         .unwrap()
         .unwrap();
 
-    let alice_utility_token_balance_after_calling_get_canister_id_again = state_machine
+    let alice_utility_token_balance_after_calling_get_canister_id_again = pocket_ic
         .query_call(
             alice_canister_id,
             Principal::anonymous(),
@@ -137,7 +134,7 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
     );
 
     let alice_utility_token_transaction_history_after_signup: Vec<(u64, TokenEvent)> =
-        state_machine
+        pocket_ic
             .query_call(
                 alice_canister_id,
                 Principal::anonymous(),
@@ -186,7 +183,7 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
         alice_utility_token_transaction_history_after_signup
     );
 
-    state_machine
+    pocket_ic
         .update_call(
             alice_canister_id,
             global_admin_principal,
@@ -195,7 +192,7 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
         )
         .unwrap();
 
-    let bob_canister_id = state_machine
+    let bob_canister_id = pocket_ic
         .update_call(
             *user_index_canister_id,
             bob_principal_id,
@@ -214,7 +211,7 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
         .unwrap()
         .unwrap();
 
-    state_machine
+    pocket_ic
         .update_call(
             bob_canister_id,
             bob_principal_id,
@@ -227,7 +224,7 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
         )
         .unwrap();
 
-    let bob_profile_details = state_machine
+    let bob_profile_details = pocket_ic
         .query_call(
             bob_canister_id,
             Principal::anonymous(),
@@ -249,7 +246,7 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
     assert_eq!(bob_referrer_details.profile_owner, alice_principal_id);
     assert_eq!(bob_referrer_details.user_canister_id, alice_canister_id);
 
-    state_machine
+    pocket_ic
         .update_call(
             bob_canister_id,
             global_admin_principal,
@@ -258,7 +255,7 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
         )
         .unwrap();
 
-    state_machine
+    pocket_ic
         .update_call(
             *user_index_canister_id,
             Principal::from_text(GLOBAL_SUPER_ADMIN_USER_ID).unwrap(),
@@ -275,7 +272,7 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
         .unwrap()
         .unwrap();
 
-    state_machine
+    pocket_ic
         .update_call(
             *user_index_canister_id,
             Principal::from_text(GLOBAL_SUPER_ADMIN_USER_ID).unwrap(),
@@ -292,7 +289,7 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
         .unwrap()
         .unwrap();
 
-    let alice_utility_token_balance_after_referral = state_machine
+    let alice_utility_token_balance_after_referral = pocket_ic
         .query_call(
             alice_canister_id,
             Principal::anonymous(),
@@ -310,7 +307,7 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
 
     assert_eq!(alice_utility_token_balance_after_referral, 1500);
 
-    let bob_utility_token_balance_after_referral = state_machine
+    let bob_utility_token_balance_after_referral = pocket_ic
         .query_call(
             bob_canister_id,
             Principal::anonymous(),
@@ -329,7 +326,7 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
     assert_eq!(bob_utility_token_balance_after_referral, 1500);
 
     let alice_utility_token_transaction_history_after_referral: Vec<(u64, TokenEvent)> =
-        state_machine
+        pocket_ic
             .query_call(
                 alice_canister_id,
                 Principal::anonymous(),
@@ -398,7 +395,7 @@ fn when_a_new_user_signs_up_from_a_referral_then_the_new_user_is_given_a_thousan
     );
 
     let bob_utility_token_transaction_history_after_referral: Vec<(u64, TokenEvent)> =
-        state_machine
+        pocket_ic
             .query_call(
                 bob_canister_id,
                 Principal::anonymous(),

@@ -1,26 +1,25 @@
 use candid::Principal;
-use ic_test_state_machine_client::WasmResult;
+use pocket_ic::WasmResult;
 use shared_utils::{
     canister_specific::individual_user_template::types::profile::UserProfileDetailsForFrontend,
     common::types::known_principal::KnownPrincipalType,
 };
 use test_utils::setup::{
-    env::v1::{get_initialized_env_with_provisioned_known_canisters, get_new_state_machine},
+    env::{pocket_ic_env::get_new_pocket_ic_env, pocket_ic_init::get_initialized_env_with_provisioned_known_canisters},
     test_constants::get_mock_user_alice_principal_id,
 };
 
 #[ignore]
 #[test]
-fn when_setting_unique_username_then_new_username_persisted_in_personal_canister_and_updated_in_user_index(
-) {
-    let state_machine = get_new_state_machine();
-    let known_principal_map = get_initialized_env_with_provisioned_known_canisters(&state_machine);
+fn when_setting_unique_username_then_new_username_persisted_in_personal_canister_and_updated_in_user_index() {
+    let (pocket_ic, known_principal_map) = get_new_pocket_ic_env();
+    let known_principal_map = get_initialized_env_with_provisioned_known_canisters(&pocket_ic, known_principal_map);
     let user_index_canister_id = known_principal_map
         .get(&KnownPrincipalType::CanisterIdUserIndex)
         .unwrap();
     let alice_principal_id = get_mock_user_alice_principal_id();
 
-    let alice_canister_id = state_machine
+    let alice_canister_id = pocket_ic
         .update_call(
             *user_index_canister_id,
             alice_principal_id,
@@ -39,7 +38,7 @@ fn when_setting_unique_username_then_new_username_persisted_in_personal_canister
         .unwrap()
         .unwrap();
 
-    state_machine
+    pocket_ic
         .update_call(
             alice_canister_id,
             alice_principal_id,
@@ -48,7 +47,7 @@ fn when_setting_unique_username_then_new_username_persisted_in_personal_canister
         )
         .unwrap();
 
-    let profile_details_from_user_canister = state_machine
+    let profile_details_from_user_canister = pocket_ic
         .query_call(
             alice_canister_id,
             Principal::anonymous(),
@@ -70,7 +69,7 @@ fn when_setting_unique_username_then_new_username_persisted_in_personal_canister
         Some("cool_alice_1234".to_string())
     );
 
-    let is_alice_username_taken = state_machine
+    let is_alice_username_taken = pocket_ic
         .query_call(
             *user_index_canister_id,
             Principal::anonymous(),
@@ -95,7 +94,7 @@ fn when_setting_unique_username_then_new_username_persisted_in_personal_canister
 
     println!("🧪 is_alice_username_taken: {:?}", is_alice_username_taken);
 
-    let alice_canister_id_corresponding_to_username = state_machine
+    let alice_canister_id_corresponding_to_username = pocket_ic
         .query_call(
             *user_index_canister_id,
             Principal::anonymous(),
@@ -117,7 +116,7 @@ fn when_setting_unique_username_then_new_username_persisted_in_personal_canister
         alice_canister_id_corresponding_to_username
     );
 
-    let alice_canister_id_corresponding_to_principal_id = state_machine
+    let alice_canister_id_corresponding_to_principal_id = pocket_ic
         .query_call(
             *user_index_canister_id,
             Principal::anonymous(),

@@ -42,7 +42,6 @@ jobs:
       - name: Provision local canister IDs for the canisters
         run: |
           nix-shell --run "dfx canister create --no-wallet individual_user_template"
-          nix-shell --run "dfx canister create --no-wallet post_cache"
           nix-shell --run "dfx canister create --no-wallet user_index"
           nix-shell --run "dfx canister create --no-wallet platform_orchestrator"
       - name: Stop local replica
@@ -59,10 +58,6 @@ jobs:
         run: |
           nix-shell --run "dfx build user_index"
           gzip -f -1 ./target/wasm32-unknown-unknown/release/user_index.wasm
-      - name: Build post_cache canister
-        run: |
-          nix-shell --run "dfx build post_cache"
-          gzip -f -1 ./target/wasm32-unknown-unknown/release/post_cache.wasm
       - name: Run canister test suite
         env:
           POCKET_IC_BIN: ${{ github.workspace }}/pocket-ic

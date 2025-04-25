@@ -3,7 +3,6 @@ resolver = "2"
 
 members = [
     "src/canister/individual_user_template",
-    "src/canister/post_cache/",
     "src/canister/user_index",
     "src/canister/platform_orchestrator",
     "src/lib/integration_tests",

@@ -75,8 +75,6 @@ fn test_transfer_token_can_heppen_only_once_from_hot_or_not_canister_to_yral_can
         pocket_ic.tick();
     }
 
-    let post_cache_canister_id = Principal::anonymous();
-
     pocket_ic
         .update_call(
             platform_canister_id,
@@ -246,29 +244,6 @@ fn test_transfer_token_can_heppen_only_once_from_hot_or_not_canister_to_yral_can
                 _ => panic!("Canister call failed"),
             };
             canister_id
-        })
-        .unwrap()
-        .unwrap();
-
-    //update subnet known principal
-    pocket_ic
-        .update_call(
-            platform_canister_id,
-            super_admin,
-            "update_subnet_known_principal",
-            candid::encode_args((
-                hot_or_not_subnet_orchestrator_canister_id,
-                KnownPrincipalType::CanisterIdPostCache,
-                post_cache_canister_id,
-            ))
-            .unwrap(),
-        )
-        .map(|res| {
-            let update_res: Result<String, String> = match res {
-                PocketICWasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("update subnet_known_principal"),
-            };
-            update_res
         })
         .unwrap()
         .unwrap();
@@ -578,7 +553,7 @@ fn test_when_user_tries_to_misuse_to_recieve_tokens_and_posts() {
         pocket_ic.tick();
     }
 
-    let post_cache_canister_id = Principal::anonymous();
+    // let post_cache_canister_id = Principal::anonymous();
 
     pocket_ic
         .update_call(

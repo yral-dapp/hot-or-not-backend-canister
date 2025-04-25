@@ -24,7 +24,6 @@ scripts/canisters/local_deploy/setup_dollr_ledger.sh
 scripts/canisters/local_deploy/create_sns_wasm.sh
 
 dfx canister create --no-wallet individual_user_template
-dfx canister create --no-wallet post_cache
 dfx canister create --no-wallet user_index
 dfx canister create --no-wallet platform_orchestrator
 
@@ -36,7 +35,6 @@ scripts/candid_generator.sh
 
 gzip_canister individual_user_template
 gzip_canister user_index
-gzip_canister post_cache
 gzip_canister platform_orchestrator
 
 if [[ $skip_test != true ]]
@@ -49,31 +47,6 @@ dfx canister install platform_orchestrator --argument "(record {
   version = \"v1.0.0\"
 })"
 
-dfx canister install post_cache --argument "(record {
-  known_principal_ids = opt vec {
-    record {
-      variant { UserIdGlobalSuperAdmin };
-      principal \"$(dfx identity get-principal)\";
-    };
-    record {
-      variant { CanisterIdPostCache };
-      principal \"$(dfx canister id post_cache)\";
-    };
-    record {
-      variant { CanisterIdUserIndex };
-      principal \"$(dfx canister id user_index)\";
-    };
-    record {
-      variant { CanisterIdSnsWasm };
-      principal \"$(dfx canister id sns_wasm)\";
-    };
-    record {
-      variant { CanisterIdSnsLedger };
-      principal \"$(dfx canister id dollr_mock_ledger)\";
-    };
-  };
-  version= \"v1.0.0\"
-})"
 
 dfx canister install user_index --argument "(record {
   known_principal_ids = opt vec {
@@ -84,10 +57,6 @@ dfx canister install user_index --argument "(record {
     record {
       variant { UserIdGlobalSuperAdmin };
       principal \"$(dfx identity get-principal)\";
-    };
-    record {
-      variant { CanisterIdPostCache };
-      principal \"$(dfx canister id post_cache)\";
     };
     record {
       variant { CanisterIdUserIndex };
