@@ -37,7 +37,7 @@ async fn process_gdolr_withdrawl(amount: u128, withdrawable_balance_checker: imp
     })?;
 
     PUMP_N_DUMP.with_borrow_mut(|pd| {
-        if balance_fetch(&pd.cents) < amount {
+        if withdrawable_balance_checker(&pd.cents) < amount {
             return Err("Not enough balance".to_string());
         }
 
@@ -72,12 +72,12 @@ async fn process_gdolr_withdrawl(amount: u128, withdrawable_balance_checker: imp
 
 #[update]
 pub async fn redeem_gdollr(amount: u128) -> Result<(), String> {
-    redeem_gdollr_inner(amount, CentsToken::withdrawable_balance).await
+    process_gdolr_withdrawl(amount, CentsToken::withdrawable_balance).await
 }
 
 #[update]
 pub async fn redeem_gdolr_v2(amount: u128) -> Result<(), String> {
-    redeem_gdollr_inner(amount, CentsToken::withdrawable_balance_v2).await
+    process_gdolr_withdrawl(amount, CentsToken::withdrawable_balance_v2).await
 }
 
 #[update]
@@ -221,7 +221,7 @@ pub fn pd_balance_info() -> BalanceInfo {
 }
 
 #[query]
-pub fn pd_balance_info_v2() -> BalanceInfo {
+pub fn cents_token_balance_info() -> BalanceInfo {
     PUMP_N_DUMP.with_borrow(|pd| BalanceInfo {
         net_airdrop_reward: pd.cents.get_net_airdrop(),
         balance: (pd.cents.get_current_token_balance()).into(),
