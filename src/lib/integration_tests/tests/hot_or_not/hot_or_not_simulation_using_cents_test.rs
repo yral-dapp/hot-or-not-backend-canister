@@ -3,8 +3,7 @@ use std::{collections::HashMap, time::Duration};
 use candid::{encode_one, Principal};
 use pocket_ic::{PocketIc, WasmResult};
 use shared_utils::{
-    canister_specific::{
-        individual_user_template::types::{
+    canister_specific::individual_user_template::types::{
             arg::{IndividualUserTemplateInitArgs, PlaceBetArg},
             error::BetOnCurrentlyViewingPostError,
             hot_or_not::{
@@ -13,8 +12,6 @@ use shared_utils::{
             post::{PostDetailsForFrontend, PostDetailsFromFrontend},
             pump_n_dump::BalanceInfo,
         },
-        post_cache::types::arg::PostCacheInitArgs,
-    },
     common::{
         types::known_principal::KnownPrincipalType,
         utils::default_pump_dump_onboarding_reward,
@@ -31,16 +28,10 @@ use test_utils::setup::{
 
 const INDIVIDUAL_TEMPLATE_WASM_PATH: &str =
     "../../../target/wasm32-unknown-unknown/release/individual_user_template.wasm.gz";
-const POST_CACHE_WASM_PATH: &str =
-    "../../../target/wasm32-unknown-unknown/release/post_cache.wasm.gz";
-
 fn individual_template_canister_wasm() -> Vec<u8> {
     std::fs::read(INDIVIDUAL_TEMPLATE_WASM_PATH).unwrap()
 }
 
-fn post_cache_canister_wasm() -> Vec<u8> {
-    std::fs::read(POST_CACHE_WASM_PATH).unwrap()
-}
 
 #[test]
 fn hotornot_game_simulation_test_1() {
@@ -51,33 +42,15 @@ fn hotornot_game_simulation_test_1() {
     let dan_principal_id = get_mock_user_dan_principal_id();
     let admin_principal_id = Principal::from_text(GLOBAL_SUPER_ADMIN_USER_ID_V1).unwrap();
 
-    let post_cache_canister_id = pic.create_canister();
-    pic.add_cycles(post_cache_canister_id, 2_000_000_000_000);
+    // let post_cache_canister_id = pic.create_canister();
+    // pic.add_cycles(post_cache_canister_id, 2_000_000_000_000);
 
     let mut known_prinicipal_values = HashMap::new();
-    known_prinicipal_values.insert(
-        KnownPrincipalType::CanisterIdPostCache,
-        post_cache_canister_id,
-    );
     known_prinicipal_values.insert(
         KnownPrincipalType::UserIdGlobalSuperAdmin,
         admin_principal_id,
     );
     known_prinicipal_values.insert(KnownPrincipalType::CanisterIdUserIndex, admin_principal_id);
-
-    let post_cache_wasm_bytes = post_cache_canister_wasm();
-    let post_cache_args = PostCacheInitArgs {
-        known_principal_ids: Some(known_prinicipal_values.clone()),
-        upgrade_version_number: Some(1),
-        version: "1".to_string(),
-    };
-    let post_cache_args_bytes = encode_one(post_cache_args).unwrap();
-    pic.install_canister(
-        post_cache_canister_id,
-        post_cache_wasm_bytes,
-        post_cache_args_bytes,
-        None,
-    );
 
     // Individual template canisters
     let individual_template_wasm_bytes = individual_template_canister_wasm();

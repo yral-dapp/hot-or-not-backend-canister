@@ -6,9 +6,7 @@ use icrc_ledger_types::{
 };
 use shared_utils::{
     canister_specific::individual_user_template::types::{
-        pump_n_dump::{BalanceInfo, ParticipatedGameInfo, PumpNDumpStateDiff, PumpsAndDumps},
-        session::SessionType,
-        token::TokenTransactions,
+        cents::CentsToken, pump_n_dump::{BalanceInfo, ParticipatedGameInfo, PumpNDumpStateDiff, PumpsAndDumps}, session::SessionType, token::TokenTransactions
     },
     common::{
         types::{
@@ -20,14 +18,12 @@ use shared_utils::{
             system_time::get_current_system_time,
         },
     },
-    constant::GDOLLR_TO_E8S,
     pagination,
 };
 
 use crate::{data_model::pump_n_dump::NatStore, CANISTER_DATA, PUMP_N_DUMP};
 
-#[update]
-pub async fn redeem_gdollr(amount: u128) -> Result<(), String> {
+async fn process_gdolr_withdrawl(amount: u128, withdrawable_balance_checker: impl FnOnce(&CentsToken) -> Nat) -> Result<(), String> {
     let (profile_owner, user_index) = CANISTER_DATA.with_borrow(|cdata| {
         if cdata.session_type != Some(SessionType::RegisteredSession) {
             return Err("Login required".to_string());
@@ -41,7 +37,7 @@ pub async fn redeem_gdollr(amount: u128) -> Result<(), String> {
     })?;
 
     PUMP_N_DUMP.with_borrow_mut(|pd| {
-        if pd.cents.withdrawable_balance() < amount {
+        if withdrawable_balance_checker(&pd.cents) < amount {
             return Err("Not enough balance".to_string());
         }
 
@@ -56,7 +52,7 @@ pub async fn redeem_gdollr(amount: u128) -> Result<(), String> {
     let res = ic_cdk::call::<_, (Result<(), String>,)>(
         user_index,
         "redeem_gdollr",
-        (profile_owner, amount.clone()),
+        (profile_owner, amount),
     )
     .await;
 
@@ -75,6 +71,16 @@ pub async fn redeem_gdollr(amount: u128) -> Result<(), String> {
 }
 
 #[update]
+pub async fn redeem_gdollr(amount: u128) -> Result<(), String> {
+    process_gdolr_withdrawl(amount, CentsToken::withdrawable_balance).await
+}
+
+#[update]
+pub async fn redeem_gdolr_v2(amount: u128) -> Result<(), String> {
+    process_gdolr_withdrawl(amount, CentsToken::withdrawable_balance_v2).await
+}
+
+#[update]
 pub fn reconcile_user_state(games: Vec<PumpNDumpStateDiff>) -> Result<(), String> {
     CANISTER_DATA.with_borrow(|cdata| is_caller_global_admin_v2(&cdata.known_principal_ids))?;
 
@@ -86,13 +92,10 @@ pub fn reconcile_user_state(games: Vec<PumpNDumpStateDiff>) -> Result<(), String
                 pump_and_dump.cents.handle_token_event(token_event);
             }
 
-            match game {
-                PumpNDumpStateDiff::Participant(info) => {
-                    pump_and_dump.games.push(info);
-                    pump_and_dump.total_dumps += info.dumps;
-                    pump_and_dump.total_pumps += info.pumps;
-                }
-                _ => {}
+            if let PumpNDumpStateDiff::Participant(info) = game {
+                pump_and_dump.games.push(info);
+                pump_and_dump.total_dumps += info.dumps;
+                pump_and_dump.total_pumps += info.pumps;
             }
         }
 
@@ -214,6 +217,15 @@ pub fn pd_balance_info() -> BalanceInfo {
         net_airdrop_reward: pd.cents.get_net_airdrop(),
         balance: (pd.cents.get_current_token_balance()).into(),
         withdrawable: pd.cents.withdrawable_balance(),
+    })
+}
+
+#[query]
+pub fn cents_token_balance_info() -> BalanceInfo {
+    PUMP_N_DUMP.with_borrow(|pd| BalanceInfo {
+        net_airdrop_reward: pd.cents.get_net_airdrop(),
+        balance: (pd.cents.get_current_token_balance()).into(),
+        withdrawable: pd.cents.withdrawable_balance_v2(),
     })
 }
 
