@@ -22,8 +22,8 @@ use test_utils::setup::{
         get_new_pocket_ic_env,
     },
     test_constants::{
-        get_global_super_admin_principal_id, get_mock_user_alice_principal_id,
-        get_mock_user_charlie_principal_id,
+        get_mock_user_alice_principal_id,
+        get_mock_user_charlie_principal_id, get_mock_user_dan_principal_id,
     },
 };
 
@@ -54,15 +54,43 @@ impl Default for PumpNDumpHarness {
             &charlie_global_admin,
         );
 
-        let dollr_ledger = mock_ledger::deploy(&pic, charlie_global_admin);
+        let ckbtc_ledger = mock_ledger::deploy(&pic, charlie_global_admin);
         execute_update_no_res_multi(
             &pic,
             super_admin,
             platform_canister_id,
             "update_global_known_principal",
-            (KnownPrincipalType::CanisterIdSnsLedger, dollr_ledger),
+            (KnownPrincipalType::CanisterIdCkBTCLedger, ckbtc_ledger),
         );
-        known_principals.insert(KnownPrincipalType::CanisterIdSnsLedger, dollr_ledger);
+        known_principals.insert(KnownPrincipalType::CanisterIdCkBTCLedger, ckbtc_ledger);
+
+        let ckbtc_treasury = get_mock_user_dan_principal_id();
+        execute_update_no_res(
+            &pic,
+            charlie_global_admin,
+            ckbtc_ledger,
+            "icrc1_transfer",
+            &TransferArg {
+                to: Account {
+                    owner: ckbtc_treasury,
+                    subaccount: None,
+                },
+                fee: None,
+                memo: None,
+                from_subaccount: None,
+                created_at_time: None,
+                amount: (LEDGER_MINT_AMOUNT - LEDGER_FEE).into(),
+            },
+        );
+        execute_update_no_res_multi(
+            &pic,
+            super_admin,
+            platform_canister_id,
+            "update_global_known_principal",
+            (KnownPrincipalType::UserIdCkBTCTreasury, ckbtc_treasury),
+        );
+        
+        known_principals.insert(KnownPrincipalType::UserIdCkBTCTreasury, ckbtc_treasury);
 
         let app_subnets = pic.topology().get_app_subnets();
 
@@ -78,24 +106,6 @@ impl Default for PumpNDumpHarness {
         for _ in 0..50 {
             pic.tick();
         }
-
-        execute_update_no_res(
-            &pic,
-            charlie_global_admin,
-            dollr_ledger,
-            "icrc1_transfer",
-            &TransferArg {
-                to: Account {
-                    owner: subnet_orchestartor,
-                    subaccount: None,
-                },
-                fee: None,
-                memo: None,
-                from_subaccount: None,
-                created_at_time: None,
-                amount: (LEDGER_MINT_AMOUNT - LEDGER_FEE).into(),
-            },
-        );
 
         Self {
             pic,
@@ -149,7 +159,7 @@ impl PumpNDumpHarness {
         execute_query(
             &self.pic,
             Principal::anonymous(),
-            self.known_principals[&KnownPrincipalType::CanisterIdSnsLedger],
+            self.known_principals[&KnownPrincipalType::CanisterIdCkBTCLedger],
             "icrc1_balance_of",
             &Account {
                 owner: user,
@@ -214,6 +224,28 @@ impl PumpNDumpHarness {
             &new_reward,
         );
     }
+
+    pub fn ckbtc_ledger_approve(&self, from: Principal, spender: Principal, amount: u64) {
+        execute_update_no_res(
+            &self.pic,
+            from,
+            self.known_principals[&KnownPrincipalType::CanisterIdCkBTCLedger],
+            "icrc2_approve",
+            &ApproveArgs {
+                fee: None,
+                memo: None,
+                from_subaccount: None,
+                created_at_time: None,
+                amount: Nat::from(amount),
+                expected_allowance: None,
+                expires_at: None,
+                spender: Account {
+                    owner: spender,
+                    subaccount: None,
+                },
+            },
+        )
+    }
 }
 
 #[test]
@@ -231,7 +263,7 @@ fn newly_registered_user_should_have_1000_gdollr() {
 }
 
 #[test]
-fn claim_gdollr_and_stake_gdollr_should_work() {
+fn claim_sats_and_stake_sats_should_work() {
     let harness = PumpNDumpHarness::default();
 
     let alice = get_mock_user_alice_principal_id();
@@ -250,12 +282,16 @@ fn claim_gdollr_and_stake_gdollr_should_work() {
         )],
     );
 
+    let treasury = harness
+        .known_principals[&KnownPrincipalType::UserIdCkBTCTreasury];
+    let claim_amount = to_claim + LEDGER_FEE * 2;
+    harness.ckbtc_ledger_approve(treasury, alice_canister, claim_amount + LEDGER_FEE);
     execute_update::<_, Result<(), String>>(
         &harness.pic,
         global_admin,
         alice_canister,
-        "redeem_gdollr",
-        &((to_claim + LEDGER_FEE * 2) as u128),
+        "redeem_satoshis",
+        &(claim_amount as u128),
     )
     .unwrap();
 
@@ -267,33 +303,14 @@ fn claim_gdollr_and_stake_gdollr_should_work() {
     );
 
     let amount = to_claim + LEDGER_FEE;
-    execute_update_no_res(
-        &harness.pic,
-        alice,
-        harness.known_principals[&KnownPrincipalType::CanisterIdSnsLedger],
-        "icrc2_approve",
-        &ApproveArgs {
-            fee: None,
-            memo: None,
-            from_subaccount: None,
-            created_at_time: None,
-            amount: Nat::from(amount),
-            expected_allowance: None,
-            expires_at: None,
-            spender: Account {
-                owner: alice_canister,
-                subaccount: None,
-            },
-        },
-    );
-
+    harness.ckbtc_ledger_approve(alice, alice_canister, amount); 
     let past_game_bal = harness.game_balance(alice_canister);
 
     execute_update::<_, Result<(), String>>(
         &harness.pic,
         alice,
         alice_canister,
-        "stake_dollr_for_gdollr",
+        "stake_sats_for_cents",
         &(to_claim as u128),
     )
     .unwrap();

@@ -175,10 +175,12 @@ type KnownPrincipalType = variant {
   CanisterIdRootCanister;
   CanisterIdDataBackup;
   CanisterIdSnsLedger;
+  CanisterIdCkBTCLedger;
   CanisterIdSnsWasm;
   CanisterIdPostCache;
   CanisterIdSNSController;
   CanisterIdSnsGovernance;
+  UserIdCkBTCTreasury;
   UserIdGlobalSuperAdmin;
 };
 type LinearScalingCoefficient = record {
@@ -636,6 +638,7 @@ service : (IndividualUserTemplateInitArgs) -> {
   reconcile_user_state : (vec PumpNDumpStateDiff) -> (Result);
   redeem_gdollr : (nat) -> (Result);
   redeem_gdolr_v2 : (nat) -> (Result);
+  redeem_satoshis : (nat) -> (Result);
   request_airdrop : (principal, opt blob, nat, principal) -> (Result_17);
   return_cycles_to_user_index_canister : (opt nat) -> ();
   save_snapshot_json : () -> (nat32);
@@ -644,7 +647,7 @@ service : (IndividualUserTemplateInitArgs) -> {
   settle_neurons_fund_participation : (
       SettleNeuronsFundParticipationRequest,
     ) -> (SettleNeuronsFundParticipationResponse);
-  stake_dollr_for_gdollr : (nat) -> (Result);
+  stake_sats_for_cents : (nat) -> (Result);
   transfer_token_to_user_canister : (principal, principal, opt blob, nat) -> (
       Result_21,
     );

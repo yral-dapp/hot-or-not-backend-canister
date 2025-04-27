@@ -57,10 +57,12 @@ type KnownPrincipalType = variant {
   CanisterIdRootCanister;
   CanisterIdDataBackup;
   CanisterIdSnsLedger;
+  CanisterIdCkBTCLedger;
   CanisterIdSnsWasm;
   CanisterIdPostCache;
   CanisterIdSNSController;
   CanisterIdSnsGovernance;
+  UserIdCkBTCTreasury;
   UserIdGlobalSuperAdmin;
 };
 type LogVisibility = variant { controllers; public };

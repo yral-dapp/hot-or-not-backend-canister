@@ -70,14 +70,92 @@ async fn process_gdolr_withdrawl(amount: u128, withdrawable_balance_checker: imp
     }
 }
 
+#[deprecated = "Use redeem_satoshis instead"]
 #[update]
 pub async fn redeem_gdollr(amount: u128) -> Result<(), String> {
     process_gdolr_withdrawl(amount, CentsToken::withdrawable_balance).await
 }
 
+#[deprecated = "Use redeem_satoshis instead"]
 #[update]
 pub async fn redeem_gdolr_v2(amount: u128) -> Result<(), String> {
     process_gdolr_withdrawl(amount, CentsToken::withdrawable_balance_v2).await
+}
+
+#[update]
+pub async fn redeem_satoshis(amount: u128) -> Result<(), String> {
+    let (profile_owner, ckbtc_ledger, ckbtc_treasury) = CANISTER_DATA.with_borrow(|cdata| {
+        if cdata.session_type != Some(SessionType::RegisteredSession) {
+            return Err("Login required".to_string());
+        }
+        is_caller_global_admin_v2(&cdata.known_principal_ids)?;
+
+        let principal_id = cdata.profile.principal_id.ok_or("Unavailable")?;
+
+        let ckbtc_ledger = cdata
+            .known_principal_ids
+            .get(&KnownPrincipalType::CanisterIdCkBTCLedger)
+            .copied()
+            .ok_or("Unavailable")?;
+
+        let ckbtc_treasury = cdata
+            .known_principal_ids
+            .get(&KnownPrincipalType::UserIdCkBTCTreasury)
+            .copied()
+            .ok_or("Unavailable")?;
+
+        Ok((principal_id, ckbtc_ledger, ckbtc_treasury))
+    })?;
+
+    PUMP_N_DUMP.with_borrow_mut(|pd| {
+        if pd.cents.withdrawable_balance_v2() < amount {
+            return Err("Not enough balance".to_string());
+        }
+
+        pd.cents.handle_token_event(TokenEvent::Withdraw {
+            amount,
+            event_type: WithdrawEvent::WithdrawRequest,
+        });
+
+        Ok(())
+    })?;
+
+    let res = ic_cdk::call::<_, (Result<Nat, TransferFromError>,)>(
+        ckbtc_ledger,
+        "icrc2_transfer_from",
+        (TransferFromArgs {
+            spender_subaccount: None,
+            from: Account {
+                owner: ckbtc_treasury,
+                subaccount: None
+            },
+            to: Account {
+                owner: profile_owner,
+                subaccount: None,
+            },
+            amount: Nat::from(amount),
+            fee: None,
+            memo: None,
+            created_at_time: None,
+        },)
+    ).await
+    .map_err(|(_, e)| e)
+    .and_then(|res| {
+        res.0.map_err(|e| format!("{e}"))
+    });
+
+    match res {
+        Err(e) => {
+            PUMP_N_DUMP.with_borrow_mut(|pd| {
+                pd.cents.handle_token_event(TokenEvent::Withdraw {
+                    amount,
+                    event_type: WithdrawEvent::WithdrawRequestFailed,
+                })
+            });
+            Err(e)
+        }
+        Ok(_) => Ok(())
+    }
 }
 
 #[update]
@@ -122,19 +200,19 @@ pub async fn add_dollr_to_liquidity_pool(pool_root: Principal, amount: Nat) -> R
 }
 
 #[update]
-pub async fn stake_dollr_for_gdollr(amount: u128) -> Result<(), String> {
-    let (ledger_id, user_index) = CANISTER_DATA
+pub async fn stake_sats_for_cents(amount: u128) -> Result<(), String> {
+    let (ledger_id, ckbtc_treasury) = CANISTER_DATA
         .with_borrow(|cdata| {
             let ledger_id = cdata
                 .known_principal_ids
-                .get(&KnownPrincipalType::CanisterIdSnsLedger)
+                .get(&KnownPrincipalType::CanisterIdCkBTCLedger)
                 .copied()?;
-            let user_index = cdata
+            let ckbtc_treasury = cdata
                 .known_principal_ids
-                .get(&KnownPrincipalType::CanisterIdUserIndex)
+                .get(&KnownPrincipalType::UserIdCkBTCTreasury)
                 .copied()?;
 
-            Some((ledger_id, user_index))
+            Some((ledger_id, ckbtc_treasury))
         })
         .ok_or("Unavailable")?;
 
@@ -149,7 +227,7 @@ pub async fn stake_dollr_for_gdollr(amount: u128) -> Result<(), String> {
                 subaccount: None,
             },
             to: Account {
-                owner: user_index,
+                owner: ckbtc_treasury,
                 subaccount: None,
             },
             amount: Nat::from(amount),

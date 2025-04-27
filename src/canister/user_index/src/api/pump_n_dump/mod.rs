@@ -9,6 +9,7 @@ use shared_utils::common::utils::permissions::is_caller_controller;
 
 use crate::{data_model::get_sns_ledger, CANISTER_DATA};
 
+#[deprecated = "Use `redeem_satoshis` from `individual_user_template` instead"]
 #[update]
 pub async fn redeem_gdollr(to_principal: Principal, amount: Nat) -> Result<(), String> {
     let ledger_id = get_sns_ledger().ok_or("Unavailable")?;

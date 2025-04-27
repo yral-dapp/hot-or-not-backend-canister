@@ -19,6 +19,8 @@ pub enum KnownPrincipalType {
     CanisterIdHotOrNotSubnetOrchestrator,
     CanisterIdSnsWasm,
     CanisterIdSnsLedger,
+    CanisterIdCkBTCLedger,
+    UserIdCkBTCTreasury,
 }
 
 pub type KnownPrincipalMap = HashMap<KnownPrincipalType, Principal>;
