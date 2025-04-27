@@ -637,7 +637,6 @@ service : (IndividualUserTemplateInitArgs) -> {
   receive_data_from_hotornot : (principal, nat64, vec Post) -> (Result_16);
   reconcile_user_state : (vec PumpNDumpStateDiff) -> (Result);
   redeem_gdollr : (nat) -> (Result);
-  redeem_gdolr_v2 : (nat) -> (Result);
   redeem_satoshis : (nat) -> (Result);
   request_airdrop : (principal, opt blob, nat, principal) -> (Result_17);
   return_cycles_to_user_index_canister : (opt nat) -> ();

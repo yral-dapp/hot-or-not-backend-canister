@@ -76,12 +76,6 @@ pub async fn redeem_gdollr(amount: u128) -> Result<(), String> {
     process_gdolr_withdrawl(amount, CentsToken::withdrawable_balance).await
 }
 
-#[deprecated = "Use redeem_satoshis instead"]
-#[update]
-pub async fn redeem_gdolr_v2(amount: u128) -> Result<(), String> {
-    process_gdolr_withdrawl(amount, CentsToken::withdrawable_balance_v2).await
-}
-
 #[update]
 pub async fn redeem_satoshis(amount: u128) -> Result<(), String> {
     let (profile_owner, ckbtc_ledger, ckbtc_treasury) = CANISTER_DATA.with_borrow(|cdata| {
