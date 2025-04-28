@@ -32,8 +32,9 @@ mod test {
     use test_utils::setup::test_constants::get_mock_user_alice_canister_id;
 
     use crate::api::snapshot::{
-            CanisterDataForSnapshot,  HotOrNotDetailsForSnapshot, PostForSnapshot, TokenBalanceForSnapshot,
-        };
+        CanisterDataForSnapshot, HotOrNotDetailsForSnapshot, PostForSnapshot,
+        TokenBalanceForSnapshot,
+    };
 
     #[test]
     fn test_serde_json_snapshot() {
@@ -171,6 +172,19 @@ mod test {
         let mut principal_list = BTreeSet::<Principal>::new();
         principal_list.insert(temp_principal);
 
+        let mut cdao_canisters = Vec::<DeployedCdaoCanisters>::new();
+        cdao_canisters.push(DeployedCdaoCanisters {
+            governance: temp_principal,
+            ledger: temp_principal,
+            root: temp_principal,
+            swap: temp_principal,
+            index: temp_principal,
+            airdrop_info: AirdropInfo::default(),
+        });
+
+        let mut token_roots = BTreeMap::<Principal, ()>::new();
+        token_roots.insert(temp_principal, ());
+
         let canister_data_snapshot = CanisterDataForSnapshot {
             all_created_posts: created_posts,
             room_details_map,
@@ -200,16 +214,18 @@ mod test {
             session_type: Some(SessionType::RegisteredSession),
             last_access_time: Some(SystemTime::now()),
             migration_info: MigrationInfo::NotMigrated,
+            cdao_canisters,
+            token_roots,
         };
 
         let serde_str = serde_json::to_string(&canister_data_snapshot);
         assert!(serde_str.is_ok());
 
-        // let canister_data_snapshot: CanisterDataForSnapshot =
-        //     serde_json::from_str(serde_str.unwrap().as_str()).unwrap();
+        let canister_data_snapshot: CanisterDataForSnapshot =
+            serde_json::from_str(serde_str.unwrap().as_str()).unwrap();
 
-        // let canister_data = CanisterData::from(canister_data_snapshot);
+        let canister_data = CanisterData::from(canister_data_snapshot);
 
-        // println!("canister_data: {:?}", canister_data.all_created_posts);
+        println!("canister_data: {:?}", canister_data.all_created_posts);
     }
 }
