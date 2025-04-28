@@ -37,6 +37,7 @@ use shared_utils::{
 
 use crate::data_model::{
     CanisterData, _default_bet_details, _default_post_principal_map, _default_slot_details_map,
+    _default_token_list,
     pump_n_dump::{HotOrNotGameDetails, NatStore, _default_lp, _default_room_details_v2},
 };
 use crate::data_model::{_default_room_details, pump_n_dump::TokenBetGame};
@@ -220,6 +221,11 @@ impl From<&CanisterData> for CanisterDataForSnapshot {
             lifetime_earnings: canister_data.my_token_balance.lifetime_earnings,
         };
 
+        let mut token_roots: BTreeMap<Principal, ()> = BTreeMap::new();
+        canister_data.token_roots.iter().for_each(|(k, _)| {
+            token_roots.insert(k, ());
+        });
+
         Self {
             all_created_posts,
             room_details_map,
@@ -234,6 +240,8 @@ impl From<&CanisterData> for CanisterDataForSnapshot {
             session_type: canister_data.session_type,
             last_access_time: canister_data.last_access_time,
             migration_info: canister_data.migration_info,
+            cdao_canisters: canister_data.cdao_canisters.clone(),
+            token_roots,
         }
     }
 }
@@ -320,6 +328,14 @@ impl From<CanisterDataForSnapshot> for CanisterData {
                 .lifetime_earnings,
         };
 
+        let mut token_roots = _default_token_list();
+        canister_data_for_snapshot
+            .token_roots
+            .iter()
+            .for_each(|(k, _)| {
+                token_roots.insert(*k, ());
+            });
+
         let mut canister_data = CanisterData::default();
 
         canister_data.room_details_map = room_details_map;
@@ -335,6 +351,8 @@ impl From<CanisterDataForSnapshot> for CanisterData {
         canister_data.session_type = canister_data_for_snapshot.session_type;
         canister_data.last_access_time = canister_data_for_snapshot.last_access_time;
         canister_data.migration_info = canister_data_for_snapshot.migration_info;
+        canister_data.cdao_canisters = canister_data_for_snapshot.cdao_canisters;
+        canister_data.token_roots = token_roots;
 
         canister_data.set_all_created_posts(all_created_posts);
 

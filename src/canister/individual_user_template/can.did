@@ -616,6 +616,7 @@ service : (IndividualUserTemplateInitArgs) -> {
     ) query;
   http_request : (HttpRequest) -> (HttpResponse) query;
   load_snapshot : () -> ();
+  load_snapshot_v2 : () -> ();
   net_earnings : () -> (nat) query;
   once_reenqueue_timers_for_pending_bet_outcomes : () -> (Result_14);
   pd_balance_info : () -> (BalanceInfo) query;
@@ -639,6 +640,7 @@ service : (IndividualUserTemplateInitArgs) -> {
   request_airdrop : (principal, opt blob, nat, principal) -> (Result_17);
   return_cycles_to_user_index_canister : (opt nat) -> ();
   save_snapshot_json : () -> (nat32);
+  save_snapshot_json_v2 : () -> (nat32);
   send_creator_dao_stats_to_subnet_orchestrator : () -> (Result_18);
   set_controller_as_subnet_orchestrator : (principal) -> ();
   settle_neurons_fund_participation : (

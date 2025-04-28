@@ -1,6 +1,6 @@
 use std::{collections::HashMap, time::Duration};
 
-use candid::{encode_one,  Encode, Principal};
+use candid::{encode_one, Encode, Principal};
 use pocket_ic::{PocketIc, WasmResult};
 use shared_utils::{
     canister_specific::{
@@ -12,6 +12,7 @@ use shared_utils::{
             profile::UserProfileDetailsForFrontend,
         },
         platform_orchestrator::types::args::PlatformOrchestratorInitArgs,
+        user_index::types::UpgradeStatus,
     },
     common::{
         types::{known_principal::KnownPrincipalType, utility_token::token_event::TokenEvent},
@@ -30,98 +31,118 @@ use test_utils::setup::{
 
 const INDIVIDUAL_TEMPLATE_WASM_PATH: &str =
     "../../../target/wasm32-unknown-unknown/release/individual_user_template.wasm.gz";
+
+fn individual_template_canister_wasm() -> Vec<u8> {
+    std::fs::read(INDIVIDUAL_TEMPLATE_WASM_PATH).unwrap()
+}
+
 // #[cfg(feature = "bet_details_heap_to_stable_mem_upgrade")]
 #[test]
 fn download_snapshot_test() {
-    let pic = PocketIc::new();
+    let (pic, known_principals) = get_new_pocket_ic_env();
+
+    let platform_canister_id = known_principals
+        .get(&KnownPrincipalType::CanisterIdPlatformOrchestrator)
+        .cloned()
+        .unwrap();
+
+    let global_admin = known_principals
+        .get(&KnownPrincipalType::UserIdGlobalSuperAdmin)
+        .cloned()
+        .unwrap();
+
+    let application_subnets = pic.topology().get_app_subnets();
+
+    let subnet_orchestrator_canister_id = pic
+        .update_call(
+            platform_canister_id,
+            global_admin,
+            "provision_subnet_orchestrator_canister",
+            candid::encode_one(application_subnets[0]).unwrap(),
+        )
+        .map(|res| {
+            let canister_id_result: Result<Principal, String> = match res {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("Canister call failed"),
+            };
+            canister_id_result.unwrap()
+        })
+        .unwrap();
+
+    for _ in 0..50 {
+        pic.tick()
+    }
 
     let alice_principal_id = get_mock_user_alice_principal_id();
     let bob_principal_id = get_mock_user_bob_principal_id();
     let dan_principal_id = get_mock_user_dan_principal_id();
-    let admin_principal_id = get_mock_user_charlie_principal_id();
+
+    let alice2_principal_id = Principal::self_authenticating([10]);
+    let bob2_principal_id = Principal::self_authenticating([11]);
+    let dan2_principal_id = Principal::self_authenticating([12]);
 
     let post_cache_canister_id = pic.create_canister();
     pic.add_cycles(post_cache_canister_id, 2_000_000_000_000);
 
-    let mut known_prinicipal_values = HashMap::new();
-    known_prinicipal_values.insert(
-        KnownPrincipalType::UserIdGlobalSuperAdmin,
-        admin_principal_id,
-    );
-    known_prinicipal_values.insert(KnownPrincipalType::CanisterIdUserIndex, admin_principal_id);
-
-    // Individual template canisters
-    let individual_template_wasm_bytes = individual_template_canister_wasm();
-
     // Init individual template canister - alice
 
-    let alice_individual_template_canister_id = pic.create_canister();
-    pic.add_cycles(alice_individual_template_canister_id, 2_000_000_000_000);
-
-    let individual_template_args = IndividualUserTemplateInitArgs {
-        known_principal_ids: Some(known_prinicipal_values.clone()),
-        profile_owner: Some(alice_principal_id),
-        upgrade_version_number: None,
-        url_to_send_canister_metrics_to: None,
-        version: "1".to_string(),
-        pump_dump_onboarding_reward: Some(default_pump_dump_onboarding_reward()),
-    };
-    let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
-
-    pic.install_canister(
-        alice_individual_template_canister_id,
-        individual_template_wasm_bytes.clone(),
-        individual_template_args_bytes,
-        None,
-    );
+    let alice_individual_template_canister_id = pic
+        .update_call(
+            subnet_orchestrator_canister_id,
+            alice_principal_id,
+            "get_requester_principals_canister_id_create_if_not_exists",
+            candid::encode_one(()).unwrap(),
+        )
+        .map(|reply_payload| {
+            let response: Result<Principal, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 get requester principals canister id failed\n"),
+            };
+            response
+        })
+        .unwrap()
+        .unwrap();
 
     // Init individual template canister - bob
 
-    let bob_individual_template_canister_id = pic.create_canister();
-    pic.add_cycles(bob_individual_template_canister_id, 2_000_000_000_000);
-
-    let individual_template_args = IndividualUserTemplateInitArgs {
-        known_principal_ids: Some(known_prinicipal_values.clone()),
-        profile_owner: Some(bob_principal_id),
-        upgrade_version_number: None,
-        url_to_send_canister_metrics_to: None,
-        version: "1".to_string(),
-        pump_dump_onboarding_reward: Some(default_pump_dump_onboarding_reward()),
-    };
-    let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
-
-    pic.install_canister(
-        bob_individual_template_canister_id,
-        individual_template_wasm_bytes.clone(),
-        individual_template_args_bytes,
-        None,
-    );
+    let bob_individual_template_canister_id = pic
+        .update_call(
+            subnet_orchestrator_canister_id,
+            bob_principal_id,
+            "get_requester_principals_canister_id_create_if_not_exists",
+            candid::encode_one(()).unwrap(),
+        )
+        .map(|reply_payload| {
+            let response: Result<Principal, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 get requester principals canister id failed\n"),
+            };
+            response
+        })
+        .unwrap()
+        .unwrap();
 
     // Init individual template canister - dan
 
-    let dan_individual_template_canister_id = pic.create_canister();
-    pic.add_cycles(dan_individual_template_canister_id, 2_000_000_000_000);
-
-    let individual_template_args = IndividualUserTemplateInitArgs {
-        known_principal_ids: Some(known_prinicipal_values.clone()),
-        profile_owner: Some(dan_principal_id),
-        upgrade_version_number: None,
-        url_to_send_canister_metrics_to: None,
-        version: "1".to_string(),
-        pump_dump_onboarding_reward: Some(default_pump_dump_onboarding_reward()),
-    };
-    let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
-
-    pic.install_canister(
-        dan_individual_template_canister_id,
-        individual_template_wasm_bytes.clone(),
-        individual_template_args_bytes,
-        None,
-    );
+    let dan_individual_template_canister_id = pic
+        .update_call(
+            subnet_orchestrator_canister_id,
+            dan_principal_id,
+            "get_requester_principals_canister_id_create_if_not_exists",
+            candid::encode_one(()).unwrap(),
+        )
+        .map(|reply_payload| {
+            let response: Result<Principal, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 get requester principals canister id failed\n"),
+            };
+            response
+        })
+        .unwrap()
+        .unwrap();
 
     // Create posts
     // Alice creates a post
-
     let alice_post_1 = PostDetailsFromFrontend {
         is_nsfw: false,
         description: "This is a fun video to watch".to_string(),
@@ -171,7 +192,7 @@ fn download_snapshot_test() {
     // Top up Bob's account
     let reward = pic.update_call(
         bob_individual_template_canister_id,
-        admin_principal_id,
+        global_admin,
         "get_rewarded_for_signing_up",
         encode_one(()).unwrap(),
     );
@@ -179,7 +200,7 @@ fn download_snapshot_test() {
     // Top up Dan's account
     let reward = pic.update_call(
         dan_individual_template_canister_id,
-        admin_principal_id,
+        global_admin,
         "get_rewarded_for_signing_up",
         encode_one(()).unwrap(),
     );
@@ -297,72 +318,114 @@ fn download_snapshot_test() {
     ic_cdk::println!("Bet status: {:?}", bet_status);
 
     // Upgrade canister
+    // Individual template canisters
+    let individual_template_wasm_bytes = individual_template_canister_wasm();
 
-    let individual_template_args = IndividualUserTemplateInitArgs {
-        known_principal_ids: Some(known_prinicipal_values.clone()),
-        profile_owner: Some(alice_principal_id),
-        upgrade_version_number: None,
-        url_to_send_canister_metrics_to: None,
-        version: "1".to_string(),
-        pump_dump_onboarding_reward: Some(default_pump_dump_onboarding_reward()),
-    };
-    let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
-    match pic.upgrade_canister(
-        alice_individual_template_canister_id,
-        individual_template_wasm_bytes.clone(),
-        individual_template_args_bytes,
-        None,
-    ) {
-        Ok(_) => {}
-        Err(e) => {
-            println!("Error: {:?}", e);
-            panic!("Upgrade failed");
-        }
+    // let individual_template_args = IndividualUserTemplateInitArgs {
+    //     known_principal_ids: Some(known_principals.clone()),
+    //     profile_owner: Some(alice_principal_id),
+    //     upgrade_version_number: None,
+    //     url_to_send_canister_metrics_to: None,
+    //     version: "1".to_string(),
+    //     pump_dump_onboarding_reward: Some(default_pump_dump_onboarding_reward()),
+    // };
+    // let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
+    // match pic.upgrade_canister(
+    //     alice_individual_template_canister_id,
+    //     individual_template_wasm_bytes.clone(),
+    //     individual_template_args_bytes,
+    //     Some(subnet_orchestrator_canister_id),
+    // ) {
+    //     Ok(_) => {}
+    //     Err(e) => {
+    //         println!("Error: {:?}", e);
+    //         panic!("Upgrade failed");
+    //     }
+    // }
+
+    // let individual_template_args = IndividualUserTemplateInitArgs {
+    //     known_principal_ids: Some(known_principals.clone()),
+    //     profile_owner: Some(bob_principal_id),
+    //     upgrade_version_number: None,
+    //     url_to_send_canister_metrics_to: None,
+    //     version: "1".to_string(),
+    //     pump_dump_onboarding_reward: Some(default_pump_dump_onboarding_reward()),
+    // };
+    // let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
+    // match pic.upgrade_canister(
+    //     bob_individual_template_canister_id,
+    //     individual_template_wasm_bytes.clone(),
+    //     individual_template_args_bytes,
+    //     Some(subnet_orchestrator_canister_id),
+    // ) {
+    //     Ok(_) => {}
+    //     Err(e) => {
+    //         println!("Error: {:?}", e);
+    //         panic!("Upgrade failed");
+    //     }
+    // }
+
+    // let individual_template_args = IndividualUserTemplateInitArgs {
+    //     known_principal_ids: Some(known_principals.clone()),
+    //     profile_owner: Some(dan_principal_id),
+    //     upgrade_version_number: None,
+    //     url_to_send_canister_metrics_to: None,
+    //     version: "1".to_string(),
+    //     pump_dump_onboarding_reward: Some(default_pump_dump_onboarding_reward()),
+    // };
+    // let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
+    // match pic.upgrade_canister(
+    //     dan_individual_template_canister_id,
+    //     individual_template_wasm_bytes.clone(),
+    //     individual_template_args_bytes,
+    //     Some(subnet_orchestrator_canister_id),
+    // ) {
+    //     Ok(_) => {}
+    //     Err(e) => {
+    //         println!("Error: {:?}", e);
+    //         panic!("Upgrade failed");
+    //     }
+    // }
+
+    pic.update_call(
+        subnet_orchestrator_canister_id,
+        platform_canister_id,
+        "start_upgrades_for_individual_canisters",
+        candid::encode_args(("v2.2.2".to_owned(), individual_template_wasm_bytes.to_vec()))
+            .unwrap(),
+    )
+    .map(|res| {
+        let result: String = match res {
+            WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+            _ => panic!("start upgrades for individual canister failed"),
+        };
+        result
+    })
+    .unwrap();
+
+    for _ in 0..110 {
+        pic.tick()
     }
 
-    let individual_template_args = IndividualUserTemplateInitArgs {
-        known_principal_ids: Some(known_prinicipal_values.clone()),
-        profile_owner: Some(bob_principal_id),
-        upgrade_version_number: None,
-        url_to_send_canister_metrics_to: None,
-        version: "1".to_string(),
-        pump_dump_onboarding_reward: Some(default_pump_dump_onboarding_reward()),
-    };
-    let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
-    match pic.upgrade_canister(
-        bob_individual_template_canister_id,
-        individual_template_wasm_bytes.clone(),
-        individual_template_args_bytes,
-        None,
-    ) {
-        Ok(_) => {}
-        Err(e) => {
-            println!("Error: {:?}", e);
-            panic!("Upgrade failed");
-        }
-    }
+    //Check version Installed
+    let last_upgrade_status: UpgradeStatus = pic
+        .query_call(
+            subnet_orchestrator_canister_id,
+            Principal::anonymous(),
+            "get_index_details_last_upgrade_status",
+            candid::encode_one(()).unwrap(),
+        )
+        .map(|res| {
+            let upgrade_status: UpgradeStatus = match res {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("Canister call failed"),
+            };
+            upgrade_status
+        })
+        .unwrap();
 
-    let individual_template_args = IndividualUserTemplateInitArgs {
-        known_principal_ids: Some(known_prinicipal_values.clone()),
-        profile_owner: Some(dan_principal_id),
-        upgrade_version_number: None,
-        url_to_send_canister_metrics_to: None,
-        version: "1".to_string(),
-        pump_dump_onboarding_reward: Some(default_pump_dump_onboarding_reward()),
-    };
-    let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
-    match pic.upgrade_canister(
-        dan_individual_template_canister_id,
-        individual_template_wasm_bytes.clone(),
-        individual_template_args_bytes,
-        None,
-    ) {
-        Ok(_) => {}
-        Err(e) => {
-            println!("Error: {:?}", e);
-            panic!("Upgrade failed");
-        }
-    }
+    assert!(last_upgrade_status.version.eq("v2.2.2"));
+    assert_eq!(last_upgrade_status.failed_canister_ids.len(), 0);
 
     // Save snapshot
     let reclaim_principal_id = Principal::from_text(RECLAIM_CANISTER_PRINCIPAL_ID).unwrap();
@@ -377,7 +440,7 @@ fn download_snapshot_test() {
         .map(|reply_payload| {
             let bet_status: u32 = match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 place_bet failed\n"),
+                _ => panic!("\n🛑 save_snapshot_json failed\n"),
             };
             bet_status
         })
@@ -394,7 +457,7 @@ fn download_snapshot_test() {
         .map(|reply_payload| {
             let bet_status: u32 = match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 place_bet failed\n"),
+                _ => panic!("\n🛑 save_snapshot_json failed\n"),
             };
             bet_status
         })
@@ -411,7 +474,7 @@ fn download_snapshot_test() {
         .map(|reply_payload| {
             let bet_status: u32 = match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 place_bet failed\n"),
+                _ => panic!("\n🛑 save_snapshot_json failed\n"),
             };
             bet_status
         })
@@ -441,7 +504,7 @@ fn download_snapshot_test() {
             .map(|reply_payload| {
                 let payload: Vec<u8> = match reply_payload {
                     WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                    _ => panic!("\n🛑 place_bet failed\n"),
+                    _ => panic!("\n🛑 download_snapshot failed\n"),
                 };
                 payload
             })
@@ -461,7 +524,7 @@ fn download_snapshot_test() {
         .map(|reply_payload| {
             let payload: Vec<u8> = match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 place_bet failed\n"),
+                _ => panic!("\n🛑 download_snapshot failed\n"),
             };
             payload
         })
@@ -479,7 +542,7 @@ fn download_snapshot_test() {
         .map(|reply_payload| {
             let payload: Vec<u8> = match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 place_bet failed\n"),
+                _ => panic!("\n🛑 download_snapshot failed\n"),
             };
             payload
         })
@@ -517,6 +580,7 @@ fn download_snapshot_test() {
             };
             payload
         });
+    println!("Expected err res: {:?}", res);
     assert_eq!(res.is_err(), true);
 
     // Query Alice canister for info
@@ -644,94 +708,92 @@ fn download_snapshot_test() {
         .unwrap();
     println!("Alice token balance: {:?}", fres9);
 
-
     // Stop canisters
 
-    match pic.stop_canister(alice_individual_template_canister_id, None) {
+    match pic.stop_canister(
+        alice_individual_template_canister_id,
+        Some(subnet_orchestrator_canister_id),
+    ) {
         Ok(_) => println!("Alice stopped"),
         Err(e) => println!("Alice stop error: {:?}", e),
     };
 
-    match pic.stop_canister(bob_individual_template_canister_id, None) {
+    match pic.stop_canister(
+        bob_individual_template_canister_id,
+        Some(subnet_orchestrator_canister_id),
+    ) {
         Ok(_) => println!("Bob stopped"),
         Err(e) => println!("Bob stop error: {:?}", e),
     };
 
-    match pic.stop_canister(dan_individual_template_canister_id, None) {
+    match pic.stop_canister(
+        dan_individual_template_canister_id,
+        Some(subnet_orchestrator_canister_id),
+    ) {
         Ok(_) => println!("Dan stopped"),
         Err(e) => println!("Dan stop error: {:?}", e),
     };
 
     // Init 2nd gen canisters
     /// Alice 2
-    let alice2_individual_template_canister_id = pic.create_canister();
-    pic.add_cycles(alice2_individual_template_canister_id, 2_000_000_000_000);
-
-    let individual_template_args = IndividualUserTemplateInitArgs {
-        known_principal_ids: Some(known_prinicipal_values.clone()),
-        profile_owner: Some(alice_principal_id),
-        upgrade_version_number: None,
-        url_to_send_canister_metrics_to: None,
-        version: "1".to_string(),
-        pump_dump_onboarding_reward: Some(default_pump_dump_onboarding_reward()),
-    };
-    let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
-
-    pic.install_canister(
-        alice2_individual_template_canister_id,
-        individual_template_wasm_bytes.clone(),
-        individual_template_args_bytes,
-        None,
-    );
+    let alice2_individual_template_canister_id = pic
+        .update_call(
+            subnet_orchestrator_canister_id,
+            alice2_principal_id,
+            "get_requester_principals_canister_id_create_if_not_exists",
+            candid::encode_one(()).unwrap(),
+        )
+        .map(|reply_payload| {
+            let response: Result<Principal, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 get requester principals canister id failed\n"),
+            };
+            response
+        })
+        .unwrap()
+        .unwrap();
 
     /// Bob 2
-    let bob2_individual_template_canister_id = pic.create_canister();
-    pic.add_cycles(bob2_individual_template_canister_id, 2_000_000_000_000);
-
-    let individual_template_args = IndividualUserTemplateInitArgs {
-        known_principal_ids: Some(known_prinicipal_values.clone()),
-        profile_owner: Some(bob_principal_id),
-        upgrade_version_number: None,
-        url_to_send_canister_metrics_to: None,
-        version: "1".to_string(),
-        pump_dump_onboarding_reward: Some(default_pump_dump_onboarding_reward()),
-    };
-    let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
-
-    pic.install_canister(
-        bob2_individual_template_canister_id,
-        individual_template_wasm_bytes.clone(),
-        individual_template_args_bytes,
-        None,
-    );
+    let bob2_individual_template_canister_id = pic
+        .update_call(
+            subnet_orchestrator_canister_id,
+            bob2_principal_id,
+            "get_requester_principals_canister_id_create_if_not_exists",
+            candid::encode_one(()).unwrap(),
+        )
+        .map(|reply_payload| {
+            let response: Result<Principal, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 get requester principals canister id failed\n"),
+            };
+            response
+        })
+        .unwrap()
+        .unwrap();
 
     /// Dan 2
-    let dan2_individual_template_canister_id = pic.create_canister();
-    pic.add_cycles(dan2_individual_template_canister_id, 2_000_000_000_000);
-
-    let individual_template_args = IndividualUserTemplateInitArgs {
-        known_principal_ids: Some(known_prinicipal_values.clone()),
-        profile_owner: Some(dan_principal_id),
-        upgrade_version_number: None,
-        url_to_send_canister_metrics_to: None,
-        version: "1".to_string(),
-        pump_dump_onboarding_reward: Some(default_pump_dump_onboarding_reward()),
-    };
-    let individual_template_args_bytes = encode_one(individual_template_args).unwrap();
-
-    pic.install_canister(
-        dan2_individual_template_canister_id,
-        individual_template_wasm_bytes.clone(),
-        individual_template_args_bytes,
-        None,
-    );
-
+    let dan2_individual_template_canister_id = pic
+        .update_call(
+            subnet_orchestrator_canister_id,
+            dan2_principal_id,
+            "get_requester_principals_canister_id_create_if_not_exists",
+            candid::encode_one(()).unwrap(),
+        )
+        .map(|reply_payload| {
+            let response: Result<Principal, String> = match reply_payload {
+                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
+                _ => panic!("\n🛑 get requester principals canister id failed\n"),
+            };
+            response
+        })
+        .unwrap()
+        .unwrap();
     // Check new canisters
 
     let res = pic
         .query_call(
             alice2_individual_template_canister_id,
-            alice_principal_id,
+            alice2_principal_id,
             "get_posts_of_this_user_profile_with_pagination_cursor",
             candid::encode_args((0 as u64, 5 as u64)).unwrap(),
         )
@@ -745,11 +807,12 @@ fn download_snapshot_test() {
         })
         .unwrap();
     println!("Alice 2 posts: {:?}", res);
+    assert!(res.is_err());
 
     let res = pic
         .query_call(
             bob2_individual_template_canister_id,
-            bob_principal_id,
+            bob2_principal_id,
             "get_hot_or_not_bets_placed_by_this_profile_with_pagination",
             candid::encode_args((0 as usize,)).unwrap(),
         )
@@ -762,6 +825,7 @@ fn download_snapshot_test() {
         })
         .unwrap();
     println!("Bob 2 hot or not bets: {:?}", res);
+    assert!(res.is_empty());
 
     // Restore state
 
@@ -868,7 +932,7 @@ fn download_snapshot_test() {
     let fres1_1 = pic
         .query_call(
             alice2_individual_template_canister_id,
-            alice_principal_id,
+            alice2_principal_id,
             "get_profile_details",
             encode_one(()).unwrap(),
         )
@@ -886,7 +950,7 @@ fn download_snapshot_test() {
     let fres2_1 = pic
         .query_call(
             alice2_individual_template_canister_id,
-            alice_principal_id,
+            alice2_principal_id,
             "get_posts_of_this_user_profile_with_pagination_cursor",
             candid::encode_args((0 as u64, 5 as u64)).unwrap(),
         )
@@ -905,7 +969,7 @@ fn download_snapshot_test() {
     let fres3_1 = pic
         .query_call(
             bob2_individual_template_canister_id,
-            bob_principal_id,
+            bob2_principal_id,
             "get_hot_or_not_bets_placed_by_this_profile_with_pagination",
             candid::encode_args((0 as usize,)).unwrap(),
         )
@@ -923,7 +987,7 @@ fn download_snapshot_test() {
     let fres4_1 = pic
         .query_call(
             alice2_individual_template_canister_id,
-            alice_principal_id,
+            alice2_principal_id,
             "get_hot_or_not_bet_details_for_this_post",
             candid::encode_args((0 as usize,)).unwrap(),
         )
@@ -941,7 +1005,7 @@ fn download_snapshot_test() {
     let fres5_1 = pic
         .query_call(
             alice2_individual_template_canister_id,
-            alice_principal_id,
+            alice2_principal_id,
             "get_hot_or_not_bet_details_for_this_post",
             candid::encode_args((1 as usize,)).unwrap(),
         )
@@ -959,7 +1023,7 @@ fn download_snapshot_test() {
     let fres8_1 = pic
         .query_call(
             alice2_individual_template_canister_id,
-            alice_principal_id,
+            alice2_principal_id,
             "get_user_utility_token_transaction_history_with_pagination",
             candid::encode_args((0 as u64, 5 as u64)).unwrap(),
         )
@@ -980,7 +1044,7 @@ fn download_snapshot_test() {
     let fres9_1 = pic
         .query_call(
             alice2_individual_template_canister_id,
-            alice_principal_id,
+            alice2_principal_id,
             "get_utility_token_balance",
             candid::encode_args(()).unwrap(),
         )
@@ -994,13 +1058,7 @@ fn download_snapshot_test() {
         .unwrap();
     println!("Alice token balance: {:?}", fres9_1);
     assert_eq!(fres9_1, fres9);
-    
 }
-
-fn individual_template_canister_wasm() -> Vec<u8> {
-    std::fs::read(INDIVIDUAL_TEMPLATE_WASM_PATH).unwrap()
-}
-
 
 #[test]
 fn all_canister_snapshot_tests() {

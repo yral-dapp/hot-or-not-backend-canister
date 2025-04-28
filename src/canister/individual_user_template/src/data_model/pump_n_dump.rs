@@ -33,7 +33,7 @@ pub fn _default_lp() -> StableBTreeMap<Principal, NatStore, Memory> {
     StableBTreeMap::init(get_lp_memory())
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Default)]
 pub struct NatStore(pub Nat);
 
 impl Storable for NatStore {
