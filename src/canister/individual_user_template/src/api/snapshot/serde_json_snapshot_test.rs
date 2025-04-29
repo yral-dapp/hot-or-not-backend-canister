@@ -39,7 +39,10 @@ mod test {
             CanisterDataForSnapshot, HotOrNotDetailsForSnapshot, HotOrNotGameDetailsForSnapshot,
             PostForSnapshot, TokenBalanceForSnapshot, TokenBetGameForSnapshot,
         },
-        data_model::{pump_n_dump::NatStore, CanisterData},
+        data_model::{
+            pump_n_dump::{NatStore, TokenBetGame},
+            CanisterData,
+        },
     };
 
     #[test]
@@ -234,7 +237,15 @@ mod test {
         let canister_data_snapshot: CanisterDataForSnapshot =
             serde_json::from_str(serde_str.unwrap().as_str()).unwrap();
 
-        let _canister_data = CanisterData::from(canister_data_snapshot);
+        let canister_data = CanisterData::from(canister_data_snapshot.clone());
+
+        // convert back to CanisterDataForSnapshot
+        let canister_data_snapshot_2 = CanisterDataForSnapshot::from(&canister_data);
+
+        // caonvert to bytes and assert_eq
+        let canister_data_snapshot_bytes = serde_json::to_vec(&canister_data_snapshot).unwrap();
+        let canister_data_snapshot_2_bytes = serde_json::to_vec(&canister_data_snapshot_2).unwrap();
+        assert_eq!(canister_data_snapshot_bytes, canister_data_snapshot_2_bytes);
     }
 
     #[test]
@@ -330,5 +341,19 @@ mod test {
         );
 
         let _deserialized_snapshot = deserialized_snapshot_res.unwrap();
+
+        let token_bet_game = TokenBetGame::from(token_bet_game_snapshot.clone());
+
+        let token_bet_game_snapshot_2: TokenBetGameForSnapshot =
+            TokenBetGameForSnapshot::from(&token_bet_game);
+
+        // convert back to bytes and assert_eq
+        let token_bet_game_snapshot_bytes = serde_json::to_vec(&token_bet_game_snapshot).unwrap();
+        let token_bet_game_snapshot_2_bytes =
+            serde_json::to_vec(&token_bet_game_snapshot_2).unwrap();
+        assert_eq!(
+            token_bet_game_snapshot_bytes,
+            token_bet_game_snapshot_2_bytes
+        );
     }
 }

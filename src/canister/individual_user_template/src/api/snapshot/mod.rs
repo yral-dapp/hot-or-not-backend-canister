@@ -51,7 +51,7 @@ pub struct CanisterBackupSnapshot {
     pub token_bet_game_for_snapshot: TokenBetGameForSnapshot,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct CanisterDataForSnapshot {
     // Key is Post ID
     pub all_created_posts: BTreeMap<u64, PostForSnapshot>,
@@ -78,7 +78,7 @@ pub struct CanisterDataForSnapshot {
     pub token_roots: BTreeMap<Principal, ()>,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct TokenBetGameForSnapshot {
     pub referral_reward: Nat,
     pub onboarding_reward: Nat,
@@ -91,7 +91,7 @@ pub struct TokenBetGameForSnapshot {
     pub cents: CentsToken,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct HotOrNotGameDetailsForSnapshot {
     #[serde(with = "any_key_map")]
     pub room_details_map: BTreeMap<GlobalRoomId, RoomDetailsV1>,
