@@ -4,6 +4,7 @@ use shared_utils::common::utils::permissions::is_reclaim_canister_id;
 
 use super::{CanisterBackupSnapshot, CanisterDataForSnapshot, TokenBetGameForSnapshot};
 
+#[deprecated(note = "use save_snapshot_json_v2")]
 #[update(guard = "is_reclaim_canister_id")]
 fn save_snapshot_json() -> u32 {
     notify_to_recharge_canister();
@@ -84,6 +85,7 @@ fn receive_and_save_snaphot(offset: u64, state_bytes: Vec<u8>) {
     });
 }
 
+#[deprecated(note = "use load_snapshot_v2")]
 #[update(guard = "is_reclaim_canister_id")]
 fn load_snapshot() {
     let state_bytes =
