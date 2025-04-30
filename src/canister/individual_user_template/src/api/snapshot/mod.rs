@@ -1,15 +1,16 @@
 use std::{
-    borrow::Borrow,
-    collections::{BTreeMap, BTreeSet, HashMap, HashSet},
+    collections::{BTreeMap, HashMap, HashSet},
     time::SystemTime,
 };
 
-use candid::{CandidType, Deserialize, Principal};
+use candid::{CandidType, Deserialize, Nat, Principal};
 use ic_cdk::api::management_canister::provisional::CanisterId;
 use serde::Serialize;
 use serde_json_any_key::*;
 use shared_utils::{
     canister_specific::individual_user_template::types::{
+        cdao::DeployedCdaoCanisters,
+        cents::CentsToken,
         follow::{FollowEntryDetail, FollowEntryId},
         hot_or_not::{
             AggregateStats, BetDetails, GlobalBetId, GlobalRoomId, HotOrNotDetails,
@@ -18,6 +19,7 @@ use shared_utils::{
         migration::MigrationInfo,
         post::{FeedScore, Post, PostViewStatistics},
         profile::UserProfile,
+        pump_n_dump::ParticipatedGameInfo,
         session::SessionType,
         token::TokenBalance,
     },
@@ -33,15 +35,23 @@ use shared_utils::{
     },
 };
 
-use crate::data_model::_default_room_details;
 use crate::data_model::{
     CanisterData, _default_bet_details, _default_post_principal_map, _default_slot_details_map,
+    _default_token_list,
+    pump_n_dump::{HotOrNotGameDetails, NatStore, _default_lp, _default_room_details_v2},
 };
+use crate::data_model::{_default_room_details, pump_n_dump::TokenBetGame};
 
 pub mod get_snapshot;
 pub mod serde_json_snapshot_test;
 
 #[derive(Deserialize, Serialize)]
+pub struct CanisterBackupSnapshot {
+    pub canister_data_for_snapshot: CanisterDataForSnapshot,
+    pub token_bet_game_for_snapshot: TokenBetGameForSnapshot,
+}
+
+#[derive(Deserialize, Serialize, Clone)]
 pub struct CanisterDataForSnapshot {
     // Key is Post ID
     pub all_created_posts: BTreeMap<u64, PostForSnapshot>,
@@ -63,6 +73,36 @@ pub struct CanisterDataForSnapshot {
     pub session_type: Option<SessionType>,
     pub last_access_time: Option<SystemTime>,
     pub migration_info: MigrationInfo,
+    pub cdao_canisters: Vec<DeployedCdaoCanisters>,
+    #[serde(with = "any_key_map")]
+    pub token_roots: BTreeMap<Principal, ()>,
+}
+
+#[derive(Deserialize, Serialize, Clone)]
+pub struct TokenBetGameForSnapshot {
+    pub referral_reward: Nat,
+    pub onboarding_reward: Nat,
+    pub games: Vec<ParticipatedGameInfo>,
+    pub total_dumps: Nat,
+    pub total_pumps: Nat,
+    #[serde(with = "any_key_map")]
+    pub liquidity_pools: BTreeMap<Principal, NatStore>,
+    pub hot_or_not_bet_details_for_snapshot: HotOrNotGameDetailsForSnapshot,
+    pub cents: CentsToken,
+}
+
+#[derive(Deserialize, Serialize, Clone)]
+pub struct HotOrNotGameDetailsForSnapshot {
+    #[serde(with = "any_key_map")]
+    pub room_details_map: BTreeMap<GlobalRoomId, RoomDetailsV1>,
+    #[serde(with = "any_key_map")]
+    pub slot_details_map: BTreeMap<(PostId, SlotId), SlotDetailsV1>,
+    #[serde(with = "any_key_map")]
+    pub post_principal_map: BTreeMap<(PostId, StablePrincipal), ()>,
+    #[serde(with = "any_key_map")]
+    pub bet_details_map: BTreeMap<GlobalBetId, BetDetails>,
+    #[serde(with = "any_key_map")]
+    pub all_hot_or_not_bets_placed: BTreeMap<(CanisterId, PostId), PlacedBetDetail>,
 }
 
 #[derive(CandidType, Clone, Deserialize, Debug, Serialize)]
@@ -163,8 +203,8 @@ impl From<&CanisterData> for CanisterDataForSnapshot {
         });
 
         let mut post_principal_map: BTreeMap<(PostId, StablePrincipal), ()> = BTreeMap::new();
-        canister_data.post_principal_map.iter().for_each(|(k, v)| {
-            post_principal_map.insert(k, v.clone());
+        canister_data.post_principal_map.iter().for_each(|(k, _)| {
+            post_principal_map.insert(k.clone(), ());
         });
 
         let mut slot_details_map: BTreeMap<(PostId, SlotId), SlotDetailsV1> = BTreeMap::new();
@@ -181,6 +221,11 @@ impl From<&CanisterData> for CanisterDataForSnapshot {
             lifetime_earnings: canister_data.my_token_balance.lifetime_earnings,
         };
 
+        let mut token_roots: BTreeMap<Principal, ()> = BTreeMap::new();
+        canister_data.token_roots.iter().for_each(|(k, _)| {
+            token_roots.insert(k, ());
+        });
+
         Self {
             all_created_posts,
             room_details_map,
@@ -195,6 +240,8 @@ impl From<&CanisterData> for CanisterDataForSnapshot {
             session_type: canister_data.session_type,
             last_access_time: canister_data.last_access_time,
             migration_info: canister_data.migration_info,
+            cdao_canisters: canister_data.cdao_canisters.clone(),
+            token_roots,
         }
     }
 }
@@ -233,7 +280,7 @@ impl From<CanisterDataForSnapshot> for CanisterData {
                     slots_left_to_be_computed: v.slots_left_to_be_computed.clone(),
                 };
 
-                all_created_posts.insert(k.clone(), post_details);
+                all_created_posts.insert(*k, post_details);
             });
 
         let mut room_details_map = _default_room_details();
@@ -256,8 +303,8 @@ impl From<CanisterDataForSnapshot> for CanisterData {
         canister_data_for_snapshot
             .post_principal_map
             .iter()
-            .for_each(|(k, v)| {
-                post_principal_map.insert(k.clone(), v.clone());
+            .for_each(|(k, _)| {
+                post_principal_map.insert(k.clone(), ());
             });
 
         let mut slot_details_map = _default_slot_details_map();
@@ -281,6 +328,14 @@ impl From<CanisterDataForSnapshot> for CanisterData {
                 .lifetime_earnings,
         };
 
+        let mut token_roots = _default_token_list();
+        canister_data_for_snapshot
+            .token_roots
+            .iter()
+            .for_each(|(k, _)| {
+                token_roots.insert(*k, ());
+            });
+
         let mut canister_data = CanisterData::default();
 
         canister_data.room_details_map = room_details_map;
@@ -296,9 +351,147 @@ impl From<CanisterDataForSnapshot> for CanisterData {
         canister_data.session_type = canister_data_for_snapshot.session_type;
         canister_data.last_access_time = canister_data_for_snapshot.last_access_time;
         canister_data.migration_info = canister_data_for_snapshot.migration_info;
+        canister_data.cdao_canisters = canister_data_for_snapshot.cdao_canisters;
+        canister_data.token_roots = token_roots;
 
         canister_data.set_all_created_posts(all_created_posts);
 
         canister_data
+    }
+}
+
+impl From<&TokenBetGame> for TokenBetGameForSnapshot {
+    fn from(token_bet_game: &TokenBetGame) -> Self {
+        let mut liquidity_pools: BTreeMap<Principal, NatStore> = BTreeMap::new();
+        token_bet_game.liquidity_pools.iter().for_each(|(k, v)| {
+            liquidity_pools.insert(k, v.clone());
+        });
+
+        let mut room_details_map: BTreeMap<GlobalRoomId, RoomDetailsV1> = BTreeMap::new();
+        token_bet_game
+            .hot_or_not_bet_details
+            .room_details_map
+            .iter()
+            .for_each(|(k, v)| {
+                room_details_map.insert(k, v.clone());
+            });
+
+        let mut slot_details_map: BTreeMap<(PostId, SlotId), SlotDetailsV1> = BTreeMap::new();
+        token_bet_game
+            .hot_or_not_bet_details
+            .slot_details_map
+            .iter()
+            .for_each(|(k, v)| {
+                slot_details_map.insert(k, v.clone());
+            });
+
+        let mut post_principal_map: BTreeMap<(PostId, StablePrincipal), ()> = BTreeMap::new();
+        token_bet_game
+            .hot_or_not_bet_details
+            .post_principal_map
+            .iter()
+            .for_each(|(k, v)| {
+                post_principal_map.insert(k, v);
+            });
+
+        let mut bet_details_map: BTreeMap<GlobalBetId, BetDetails> = BTreeMap::new();
+        token_bet_game
+            .hot_or_not_bet_details
+            .bet_details_map
+            .iter()
+            .for_each(|(k, v)| {
+                bet_details_map.insert(k.clone(), v.clone());
+            });
+        let hot_or_not_bet_details_for_snapshot = HotOrNotGameDetailsForSnapshot {
+            room_details_map,
+            slot_details_map,
+            post_principal_map,
+            bet_details_map,
+            all_hot_or_not_bets_placed: token_bet_game
+                .hot_or_not_bet_details
+                .all_hot_or_not_bets_placed
+                .clone(),
+        };
+
+        Self {
+            liquidity_pools,
+            hot_or_not_bet_details_for_snapshot,
+            cents: token_bet_game.cents.clone(),
+            referral_reward: token_bet_game.referral_reward.clone(),
+            onboarding_reward: token_bet_game.onboarding_reward.clone(),
+            games: token_bet_game.games.clone(),
+            total_dumps: token_bet_game.total_dumps.clone(),
+            total_pumps: token_bet_game.total_pumps.clone(),
+        }
+    }
+}
+
+impl From<TokenBetGameForSnapshot> for TokenBetGame {
+    fn from(token_bet_game_for_snapshot: TokenBetGameForSnapshot) -> Self {
+        let mut liquidity_pools = _default_lp();
+        token_bet_game_for_snapshot
+            .liquidity_pools
+            .iter()
+            .for_each(|(k, v)| {
+                liquidity_pools.insert(*k, v.clone());
+            });
+
+        let mut room_details_map = _default_room_details_v2();
+        token_bet_game_for_snapshot
+            .hot_or_not_bet_details_for_snapshot
+            .room_details_map
+            .iter()
+            .for_each(|(k, v)| {
+                room_details_map.insert(*k, v.clone());
+            });
+
+        let mut slot_details_map = _default_slot_details_map();
+        token_bet_game_for_snapshot
+            .hot_or_not_bet_details_for_snapshot
+            .slot_details_map
+            .iter()
+            .for_each(|(k, v)| {
+                slot_details_map.insert(*k, v.clone());
+            });
+
+        let mut post_principal_map = _default_post_principal_map();
+        token_bet_game_for_snapshot
+            .hot_or_not_bet_details_for_snapshot
+            .post_principal_map
+            .iter()
+            .for_each(|(k, _)| {
+                post_principal_map.insert(k.clone(), ());
+            });
+
+        let mut bet_details_map = _default_bet_details();
+        token_bet_game_for_snapshot
+            .hot_or_not_bet_details_for_snapshot
+            .bet_details_map
+            .iter()
+            .for_each(|(k, v)| {
+                bet_details_map.insert(k.clone(), v.clone());
+            });
+
+        let hot_or_not_bet_details = HotOrNotGameDetails {
+            room_details_map,
+            slot_details_map,
+            post_principal_map,
+            bet_details_map,
+            all_hot_or_not_bets_placed: token_bet_game_for_snapshot
+                .hot_or_not_bet_details_for_snapshot
+                .all_hot_or_not_bets_placed
+                .clone(),
+        };
+
+        TokenBetGame {
+            liquidity_pools,
+            hot_or_not_bet_details,
+            cents: token_bet_game_for_snapshot.cents.clone(),
+            referral_reward: token_bet_game_for_snapshot.referral_reward.clone(),
+            onboarding_reward: token_bet_game_for_snapshot.onboarding_reward.clone(),
+            games: token_bet_game_for_snapshot.games.clone(),
+            total_dumps: token_bet_game_for_snapshot.total_dumps.clone(),
+            total_pumps: token_bet_game_for_snapshot.total_pumps.clone(),
+        }
     }
 }

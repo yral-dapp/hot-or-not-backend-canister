@@ -1,17 +1,10 @@
-use crate::{
-    data_model::memory::{self, MEMORY_MANAGER},
-    util::cycles::notify_to_recharge_canister,
-    CANISTER_DATA, SNAPSHOT_DATA,
-};
-use candid::Principal;
-use ic_cdk::api::stable;
+use crate::{util::cycles::notify_to_recharge_canister, CANISTER_DATA, PUMP_N_DUMP, SNAPSHOT_DATA};
 use ic_cdk_macros::{query, update};
-use ic_stable_structures::{memory_manager::MemoryId, writer::Writer, Memory};
 use shared_utils::common::utils::permissions::is_reclaim_canister_id;
-use shared_utils::constant::RECLAIM_CANISTER_PRINCIPAL_ID;
 
-use super::CanisterDataForSnapshot;
+use super::{CanisterBackupSnapshot, CanisterDataForSnapshot, TokenBetGameForSnapshot};
 
+#[deprecated(note = "use save_snapshot_json_v2")]
 #[update(guard = "is_reclaim_canister_id")]
 fn save_snapshot_json() -> u32 {
     notify_to_recharge_canister();
@@ -24,6 +17,37 @@ fn save_snapshot_json() -> u32 {
         let serde_str = serde_json::to_string(&canister_data_snapshot).unwrap();
         state_bytes = serde_str.as_bytes().to_vec();
     });
+
+    let len = state_bytes.len() as u32;
+
+    SNAPSHOT_DATA.with(|snapshot_data_ref_cell| {
+        *snapshot_data_ref_cell.borrow_mut() = state_bytes;
+    });
+
+    len
+}
+
+#[update(guard = "is_reclaim_canister_id")]
+fn save_snapshot_json_v2() -> u32 {
+    notify_to_recharge_canister();
+
+    let canister_data_for_snapshot = CANISTER_DATA.with(|canister_data_ref_cell| {
+        let canister_data = &*canister_data_ref_cell.borrow();
+        CanisterDataForSnapshot::from(canister_data)
+    });
+
+    let token_bet_game_for_snapshot = PUMP_N_DUMP.with(|pump_n_dump_ref_cell| {
+        let pump_n_dump = &*pump_n_dump_ref_cell.borrow();
+        TokenBetGameForSnapshot::from(pump_n_dump)
+    });
+
+    let canister_backup_snapshot = CanisterBackupSnapshot {
+        canister_data_for_snapshot,
+        token_bet_game_for_snapshot,
+    };
+
+    let serde_str = serde_json::to_string(&canister_backup_snapshot).unwrap();
+    let state_bytes = serde_str.as_bytes().to_vec();
 
     let len = state_bytes.len() as u32;
 
@@ -61,6 +85,7 @@ fn receive_and_save_snaphot(offset: u64, state_bytes: Vec<u8>) {
     });
 }
 
+#[deprecated(note = "use load_snapshot_v2")]
 #[update(guard = "is_reclaim_canister_id")]
 fn load_snapshot() {
     let state_bytes =
@@ -71,6 +96,25 @@ fn load_snapshot() {
 
     CANISTER_DATA.with(|canister_data_ref_cell| {
         *canister_data_ref_cell.borrow_mut() = canister_data_snapshot.into();
+    });
+}
+
+#[update(guard = "is_reclaim_canister_id")]
+fn load_snapshot_v2() {
+    let state_bytes =
+        SNAPSHOT_DATA.with(|snapshot_data_ref_cell| snapshot_data_ref_cell.borrow().clone());
+
+    let canister_backup_snapshot: CanisterBackupSnapshot =
+        serde_json::from_str(std::str::from_utf8(&state_bytes).unwrap()).unwrap();
+
+    CANISTER_DATA.with(|canister_data_ref_cell| {
+        *canister_data_ref_cell.borrow_mut() =
+            canister_backup_snapshot.canister_data_for_snapshot.into();
+    });
+
+    PUMP_N_DUMP.with(|pump_n_dump_ref_cell| {
+        *pump_n_dump_ref_cell.borrow_mut() =
+            canister_backup_snapshot.token_bet_game_for_snapshot.into();
     });
 }
 

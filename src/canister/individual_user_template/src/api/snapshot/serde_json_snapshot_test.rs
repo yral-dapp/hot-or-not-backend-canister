@@ -6,10 +6,12 @@ mod test {
         time::SystemTime,
     };
 
-    use candid::Principal;
+    use candid::{Nat, Principal};
     use ic_cdk::api::management_canister::main::CanisterId;
     use shared_utils::{
         canister_specific::individual_user_template::types::{
+            cdao::{AirdropInfo, ClaimStatus, DeployedCdaoCanisters},
+            cents::CentsToken,
             follow::FollowEntryDetail,
             hot_or_not::{
                 AggregateStats, BetDetails, BetDirection, BetOutcomeForBetMaker, BetPayout,
@@ -19,6 +21,7 @@ mod test {
             migration::MigrationInfo,
             post::{FeedScore, PostViewStatistics},
             profile::{UserProfile, UserProfileGlobalStats},
+            pump_n_dump::{GameDirection, ParticipatedGameInfo},
             session::SessionType,
         },
         common::types::{
@@ -31,12 +34,19 @@ mod test {
     };
     use test_utils::setup::test_constants::get_mock_user_alice_canister_id;
 
-    use crate::api::snapshot::{
-            CanisterDataForSnapshot,  HotOrNotDetailsForSnapshot, PostForSnapshot, TokenBalanceForSnapshot,
-        };
+    use crate::{
+        api::snapshot::{
+            CanisterDataForSnapshot, HotOrNotDetailsForSnapshot, HotOrNotGameDetailsForSnapshot,
+            PostForSnapshot, TokenBalanceForSnapshot, TokenBetGameForSnapshot,
+        },
+        data_model::{
+            pump_n_dump::{NatStore, TokenBetGame},
+            CanisterData,
+        },
+    };
 
     #[test]
-    fn test_serde_json_snapshot() {
+    fn test_serde_json_snapshot_canister_data() {
         let mut created_posts = BTreeMap::<u64, PostForSnapshot>::new();
 
         let temp_principal = get_mock_user_alice_canister_id();
@@ -171,6 +181,23 @@ mod test {
         let mut principal_list = BTreeSet::<Principal>::new();
         principal_list.insert(temp_principal);
 
+        let mut airdrop_info = AirdropInfo::default();
+        airdrop_info
+            .principals_who_successfully_claimed
+            .insert(temp_principal, ClaimStatus::Claimed);
+
+        let cdao_canisters = vec![DeployedCdaoCanisters {
+            governance: temp_principal,
+            ledger: temp_principal,
+            root: temp_principal,
+            swap: temp_principal,
+            index: temp_principal,
+            airdrop_info,
+        }];
+
+        let mut token_roots = BTreeMap::<Principal, ()>::new();
+        token_roots.insert(temp_principal, ());
+
         let canister_data_snapshot = CanisterDataForSnapshot {
             all_created_posts: created_posts,
             room_details_map,
@@ -200,16 +227,133 @@ mod test {
             session_type: Some(SessionType::RegisteredSession),
             last_access_time: Some(SystemTime::now()),
             migration_info: MigrationInfo::NotMigrated,
+            cdao_canisters,
+            token_roots,
         };
 
         let serde_str = serde_json::to_string(&canister_data_snapshot);
         assert!(serde_str.is_ok());
 
-        // let canister_data_snapshot: CanisterDataForSnapshot =
-        //     serde_json::from_str(serde_str.unwrap().as_str()).unwrap();
+        let canister_data_snapshot: CanisterDataForSnapshot =
+            serde_json::from_str(serde_str.unwrap().as_str()).unwrap();
 
-        // let canister_data = CanisterData::from(canister_data_snapshot);
+        let canister_data = CanisterData::from(canister_data_snapshot.clone());
 
-        // println!("canister_data: {:?}", canister_data.all_created_posts);
+        // convert back to CanisterDataForSnapshot
+        let canister_data_snapshot_2 = CanisterDataForSnapshot::from(&canister_data);
+
+        // caonvert to bytes and assert_eq
+        let canister_data_snapshot_bytes = serde_json::to_vec(&canister_data_snapshot).unwrap();
+        let canister_data_snapshot_2_bytes = serde_json::to_vec(&canister_data_snapshot_2).unwrap();
+        assert_eq!(canister_data_snapshot_bytes, canister_data_snapshot_2_bytes);
+    }
+
+    #[test]
+    fn test_serde_json_snapshot_token_bet_game() {
+        let mut room_details_map: BTreeMap<GlobalRoomId, RoomDetailsV1> = BTreeMap::new();
+        let global_room_id = GlobalRoomId(1, 1, 1);
+        room_details_map.insert(
+            global_room_id,
+            RoomDetailsV1 {
+                bet_outcome: RoomBetPossibleOutcomes::HotWon,
+                room_bets_total_pot: 15000,
+                total_hot_bets: 40,
+                total_not_bets: 35,
+            },
+        );
+
+        let temp_principal = get_mock_user_alice_canister_id();
+        let mut bet_details_map: BTreeMap<GlobalBetId, BetDetails> = BTreeMap::new();
+        let global_bet_id = GlobalBetId(global_room_id, StablePrincipal(temp_principal));
+        bet_details_map.insert(
+            global_bet_id,
+            BetDetails {
+                amount: 200,
+                bet_direction: BetDirection::Hot,
+                payout: BetPayout::Calculated(2000),
+                bet_maker_canister_id: temp_principal,
+                bet_maker_informed_status: None,
+            },
+        );
+
+        let mut post_principal_map: BTreeMap<(PostId, StablePrincipal), ()> = BTreeMap::new();
+        post_principal_map.insert((1, StablePrincipal(temp_principal)), ());
+
+        let mut slot_details_map: BTreeMap<(PostId, SlotId), SlotDetailsV1> = BTreeMap::new();
+        slot_details_map.insert((1, 1), SlotDetailsV1 { active_room_id: 2 });
+
+        let mut all_hot_or_not_bets_placed: BTreeMap<(CanisterId, PostId), PlacedBetDetail> =
+            BTreeMap::new();
+        all_hot_or_not_bets_placed.insert(
+            (temp_principal, 1),
+            PlacedBetDetail {
+                canister_id: temp_principal,
+                post_id: 1,
+                slot_id: 1,
+                room_id: 1,
+                amount_bet: 200,
+                bet_direction: BetDirection::Hot,
+                bet_placed_at: SystemTime::now(),
+                outcome_received: BetOutcomeForBetMaker::Won(20),
+            },
+        );
+
+        let hot_or_not_bet_details_for_snapshot = HotOrNotGameDetailsForSnapshot {
+            room_details_map,
+            slot_details_map,
+            post_principal_map,
+            bet_details_map,
+            all_hot_or_not_bets_placed,
+        };
+
+        let mut liquidity_pools: BTreeMap<Principal, NatStore> = BTreeMap::new();
+        liquidity_pools.insert(temp_principal, NatStore::default());
+
+        let games = vec![ParticipatedGameInfo {
+            pumps: 10,
+            dumps: 25,
+            reward: 1000,
+            token_root: temp_principal,
+            game_direction: GameDirection::Pump,
+        }];
+
+        let token_bet_game_snapshot = TokenBetGameForSnapshot {
+            referral_reward: Nat::from(1000u32),
+            onboarding_reward: Nat::from(500u32),
+            games,
+            total_dumps: Nat::from(10u32),
+            total_pumps: Nat::from(25u32),
+            liquidity_pools,
+            hot_or_not_bet_details_for_snapshot,
+            cents: CentsToken::default(),
+        };
+
+        let serde_str_res = serde_json::to_string(&token_bet_game_snapshot);
+        assert!(serde_str_res.is_ok(), "Serialization failed");
+        let serde_str = serde_str_res.unwrap();
+
+        let deserialized_snapshot_res: Result<TokenBetGameForSnapshot, _> =
+            serde_json::from_str(&serde_str);
+        assert!(
+            deserialized_snapshot_res.is_ok(),
+            "Deserialization failed: {:?}",
+            deserialized_snapshot_res.err()
+        );
+
+        let _deserialized_snapshot = deserialized_snapshot_res.unwrap();
+
+        let token_bet_game = TokenBetGame::from(token_bet_game_snapshot.clone());
+
+        let token_bet_game_snapshot_2: TokenBetGameForSnapshot =
+            TokenBetGameForSnapshot::from(&token_bet_game);
+
+        // convert back to bytes and assert_eq
+        let token_bet_game_snapshot_bytes = serde_json::to_vec(&token_bet_game_snapshot).unwrap();
+        let token_bet_game_snapshot_2_bytes =
+            serde_json::to_vec(&token_bet_game_snapshot_2).unwrap();
+        assert_eq!(
+            token_bet_game_snapshot_bytes,
+            token_bet_game_snapshot_2_bytes
+        );
     }
 }

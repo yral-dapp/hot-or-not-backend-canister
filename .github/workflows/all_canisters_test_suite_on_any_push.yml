@@ -13,6 +13,10 @@ jobs:
     name: Run canister test suite
     runs-on: ubuntu-latest
     steps:
+      - name: Set Swap Space
+        uses: pierotofy/set-swap-space@master
+        with:
+          swap-size-gb: 8
       - name: Checkout repo
         uses: actions/checkout@v3
       - name: Cache install Nix packages
@@ -61,4 +65,4 @@ jobs:
       - name: Run canister test suite
         env:
           POCKET_IC_BIN: ${{ github.workspace }}/pocket-ic
-        run: nix-shell --run "cargo test -- --test-threads=2"
+        run: nix-shell --run "cargo test"
