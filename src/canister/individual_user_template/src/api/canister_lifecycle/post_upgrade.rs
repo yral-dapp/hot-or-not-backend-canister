@@ -74,10 +74,6 @@ fn save_upgrade_args_to_memory() {
             canister_data_ref_cell.known_principal_ids = known_principal_ids;
         }
 
-        if let Some(profile_owner) = upgrade_args.profile_owner {
-            canister_data_ref_cell.profile.principal_id = Some(profile_owner);
-        }
-
         if let Some(upgrade_version_number) = upgrade_args.upgrade_version_number {
             canister_data_ref_cell.version_details.version_number = upgrade_version_number;
         }

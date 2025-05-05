@@ -2,11 +2,11 @@ use ic_cdk_macros::update;
 use shared_utils::common::utils::task::run_task_concurrently;
 
 use crate::{
-    guard::is_caller::is_caller_global_admin_or_controller,
+    guard::is_caller::is_caller_platform_global_admin_or_controller,
     utils::registered_subnet_orchestrator::RegisteredSubnetOrchestrator, CANISTER_DATA,
 };
 
-#[update(guard = "is_caller_global_admin_or_controller")]
+#[update(guard = "is_caller_platform_global_admin_or_controller")]
 pub async fn delete_all_sns_creator_token_in_the_network() {
     let subnet_orchestrator_canister_ids = CANISTER_DATA
         .with_borrow(|canister_data| canister_data.all_subnet_orchestrator_canisters_list.clone());

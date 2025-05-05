@@ -5,7 +5,7 @@ use crate::common::types::known_principal::KnownPrincipalMap;
 
 use super::hot_or_not::BetDirection;
 
-#[derive(Deserialize, CandidType)]
+#[derive(Deserialize, CandidType, Clone)]
 pub struct IndividualUserTemplateInitArgs {
     pub known_principal_ids: Option<KnownPrincipalMap>,
     pub profile_owner: Option<Principal>,

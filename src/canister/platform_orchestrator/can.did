@@ -156,6 +156,12 @@ service : (PlatformOrchestratorInitArgs) -> {
       Result,
     );
   upgrade_specific_individual_canister : (principal) -> ();
+  upgrade_specific_individual_canister_with_version : (principal, text) -> (
+      Result,
+    );
+  upgrade_specific_individual_canister_with_wasm : (principal, text, blob) -> (
+      Result,
+    );
   upgrade_subnet_orchestrator_canister_with_latest_wasm : (principal) -> (
       Result,
     );
