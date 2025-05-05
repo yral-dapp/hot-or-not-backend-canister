@@ -151,7 +151,9 @@ impl RegisteredSubnetOrchestrator {
     }
 
     pub async fn fixup_individual_cansiters_mapping(&self) -> Result<(), String> {
-        ic_cdk::call::<_, ()>(self.canister_id, "fixup_individual_canisters_mapping", ()).await.map_err(|e| e.1)
+        ic_cdk::call::<_, ()>(self.canister_id, "fixup_individual_canisters_mapping", ())
+            .await
+            .map_err(|e| e.1)
     }
 
     pub async fn make_individual_canister_logs_private(
@@ -256,5 +258,21 @@ impl RegisteredSubnetOrchestrator {
             (individual_canister_id, wasm_module),
         )
         .map_err(|e| format!("Notify to subnet orchestrator failed {:?}", e))
+    }
+
+    pub async fn upgrade_specific_individual_canister_with_wasm_version(
+        &self,
+        individual_canister_id: Principal,
+        version: String,
+        wasm_module: Vec<u8>,
+    ) -> Result<(), String> {
+        ic_cdk::call::<_, (Result<(), String>,)>(
+            self.canister_id,
+            "upgrade_specific_individual_canister_with_wasm_version",
+            (individual_canister_id, version, wasm_module),
+        )
+        .await
+        .map_err(|e| format!("{:?} {}", e.0, e.1))?
+        .0
     }
 }

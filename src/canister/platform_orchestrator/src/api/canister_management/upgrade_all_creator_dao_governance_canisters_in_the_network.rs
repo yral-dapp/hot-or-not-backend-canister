@@ -1,9 +1,9 @@
 use ic_cdk_macros::update;
 use shared_utils::common::{types::wasm, utils::task::run_task_concurrently};
 
-use crate::{guard::is_caller::is_caller_global_admin_or_controller, CANISTER_DATA};
+use crate::{guard::is_caller::is_caller_platform_global_admin_or_controller, CANISTER_DATA};
 
-#[update(guard = "is_caller_global_admin_or_controller")]
+#[update(guard = "is_caller_platform_global_admin_or_controller")]
 pub fn upgrade_all_creator_dao_governance_canisters_in_the_network(wasm_module: Vec<u8>) {
     let subnet_orchestrators = CANISTER_DATA
         .with_borrow(|canister_data| canister_data.all_subnet_orchestrator_canisters_list.clone());

@@ -3,11 +3,11 @@ use ic_cdk::api::management_canister::main::{canister_info, CanisterInfoRequest}
 use ic_cdk_macros::update;
 
 use crate::{
-    guard::is_caller::is_caller_global_admin_or_controller,
+    guard::is_caller::is_caller_platform_global_admin_or_controller,
     utils::registered_subnet_orchestrator::RegisteredSubnetOrchestrator,
 };
 
-#[update(guard = "is_caller_global_admin_or_controller")]
+#[update(guard = "is_caller_platform_global_admin_or_controller")]
 pub async fn notify_specific_individual_canister_to_upgrade_creator_dao_governance_canisters(
     individual_canister_id: Principal,
     wasm_module: Vec<u8>,

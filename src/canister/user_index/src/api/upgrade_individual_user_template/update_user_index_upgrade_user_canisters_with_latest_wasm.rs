@@ -1,15 +1,12 @@
 use std::time::SystemTime;
 
 use candid::Principal;
-use ic_cdk::{
-    api::management_canister::main::{canister_info, CanisterInfoRequest, CanisterInstallMode},
-    call, notify,
-};
+use ic_cdk::{api::management_canister::main::CanisterSettings, call};
 
 use shared_utils::{
     canister_specific::{
-        individual_user_template::types::arg::IndividualUserTemplateInitArgs,
-        platform_orchestrator, user_index::types::UpgradeStatus,
+        individual_user_template::{self, types::arg::IndividualUserTemplateInitArgs},
+        user_index::types::UpgradeStatus,
     },
     common::{
         types::known_principal::KnownPrincipalType,
@@ -18,9 +15,7 @@ use shared_utils::{
 };
 
 use crate::{
-    data_model::{configuration::Configuration, CanisterData},
-    util::canister_management::{self, recharge_canister_for_installing_wasm},
-    CANISTER_DATA,
+    data_model::CanisterData, util::canister_management::recharge_and_upgrade, CANISTER_DATA,
 };
 
 const MAX_CONCURRENCY: usize = 11;
@@ -61,6 +56,18 @@ pub async fn upgrade_user_canisters_with_latest_wasm(
     let configuration = CANISTER_DATA
         .with(|canister_data_ref_cell| canister_data_ref_cell.borrow().configuration.clone());
 
+    let token_bet_game_onboarding_reward = CANISTER_DATA
+        .with_borrow_mut(|canister_data| canister_data.pump_dump_onboarding_reward.clone());
+
+    let individual_user_template_upgrade_args = IndividualUserTemplateInitArgs {
+        known_principal_ids: Some(configuration.known_principal_ids.clone()),
+        profile_owner: None,
+        upgrade_version_number: Some(saved_upgrade_status.version_number + 1),
+        url_to_send_canister_metrics_to: Some(configuration.url_to_send_canister_metrics_to),
+        version: saved_upgrade_status.version.clone(),
+        pump_dump_onboarding_reward: Some(token_bet_game_onboarding_reward),
+    };
+
     let upgrade_individual_canister_futures =
         user_principal_id_to_canister_id_vec
             .iter()
@@ -68,10 +75,8 @@ pub async fn upgrade_user_canisters_with_latest_wasm(
                 recharge_and_upgrade(
                     *user_canister_id,
                     *user_principal_id,
-                    saved_upgrade_status.version_number,
-                    configuration.clone(),
-                    saved_upgrade_status.version.clone(),
                     individual_user_wasm.clone(),
+                    individual_user_template_upgrade_args.clone(),
                 )
             });
 
@@ -149,85 +154,6 @@ async fn send_upgrade_report_to_platform_orchestrator(subnet_upgrade_status: Upg
         (subnet_upgrade_status,),
     )
     .await;
-}
-
-async fn recharge_and_upgrade(
-    user_canister_id: Principal,
-    user_principal_id: Principal,
-    version_number: u64,
-    configuration: Configuration,
-    version: String,
-    individual_user_wasm: Vec<u8>,
-) -> Result<(Principal, Principal), ((Principal, Principal), String)> {
-    check_controller_and_update_controller(user_canister_id)
-        .await
-        .map_err(|e| ((user_principal_id, user_canister_id), e))?;
-
-    recharge_canister_for_installing_wasm(user_canister_id)
-        .await
-        .map_err(|e| ((user_principal_id, user_canister_id), e))?;
-
-    upgrade_user_canister(
-        user_canister_id,
-        &configuration,
-        version,
-        individual_user_wasm,
-    )
-    .await
-    .map_err(|s| ((user_principal_id, user_canister_id), s))?;
-
-    Ok((user_principal_id, user_canister_id))
-}
-
-async fn check_controller_and_update_controller(canister_id: Principal) -> Result<(), String> {
-    let (canister_info,) = canister_info(CanisterInfoRequest {
-        canister_id,
-        num_requested_changes: None,
-    })
-    .await
-    .map_err(|e| e.1)?;
-
-    if canister_info.controllers.contains(&ic_cdk::id()) {
-        return Ok(());
-    }
-
-    let (_canister_version,) = call::<_, (String,)>(canister_id, "get_version", ())
-        .await
-        .map_err(|e| e.1)?;
-
-    call::<_, ()>(
-        canister_info.controllers[0],
-        "set_controller_as_subnet_orchestrator",
-        (canister_id,),
-    )
-    .await
-    .map_err(|e| e.1)
-}
-
-async fn upgrade_user_canister(
-    canister_id: Principal,
-    configuration: &Configuration,
-    version: String,
-    individual_user_wasm: Vec<u8>,
-) -> Result<(), String> {
-    let pump_dump_onboarding_reward =
-        Some(CANISTER_DATA.with_borrow(|cdata| cdata.pump_dump_onboarding_reward.clone()));
-
-    canister_management::upgrade_individual_user_canister(
-        canister_id,
-        CanisterInstallMode::Upgrade(None),
-        IndividualUserTemplateInitArgs {
-            known_principal_ids: Some(configuration.known_principal_ids.clone()),
-            profile_owner: None,
-            upgrade_version_number: None,
-            url_to_send_canister_metrics_to: None,
-            version,
-            pump_dump_onboarding_reward,
-        },
-        individual_user_wasm,
-    )
-    .await
-    .map_err(|e| e.1)
 }
 
 fn update_upgrade_status(

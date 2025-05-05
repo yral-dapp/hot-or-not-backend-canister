@@ -1,8 +1,8 @@
 use ic_cdk_macros::update;
 
-use crate::{guard::is_caller::is_caller_global_admin_or_controller, CANISTER_DATA};
+use crate::{guard::is_caller::is_caller_platform_global_admin_or_controller, CANISTER_DATA};
 
-#[update(guard = "is_caller_global_admin_or_controller")]
+#[update(guard = "is_caller_platform_global_admin_or_controller")]
 fn start_reclaiming_cycles_from_individual_canisters() -> Result<String, String> {
     CANISTER_DATA.with_borrow(|canister_data| {
         canister_data

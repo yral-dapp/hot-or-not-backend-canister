@@ -7,9 +7,9 @@ use ic_cdk_macros::update;
 use ic_stable_structures::Storable;
 use shared_utils::common::types::wasm::WasmType;
 
-use crate::{guard::is_caller::is_caller_global_admin_or_controller, CANISTER_DATA};
+use crate::{guard::is_caller::is_caller_platform_global_admin_or_controller, CANISTER_DATA};
 
-#[update(guard = "is_caller_global_admin_or_controller")]
+#[update(guard = "is_caller_platform_global_admin_or_controller")]
 async fn register_new_subnet_orchestrator(
     new_subnet_orchestrator_caniter_id: Principal,
     subnet_is_available_for_provisioning_individual_canister: bool,

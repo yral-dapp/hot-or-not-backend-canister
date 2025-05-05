@@ -1,9 +1,9 @@
 use ic_cdk::{api::call::CallResult, call};
 use ic_cdk_macros::update;
 
-use crate::{guard::is_caller::is_caller_global_admin_or_controller, CANISTER_DATA};
+use crate::{guard::is_caller::is_caller_platform_global_admin_or_controller, CANISTER_DATA};
 
-#[update(guard = "is_caller_global_admin_or_controller")]
+#[update(guard = "is_caller_platform_global_admin_or_controller")]
 async fn reset_canisters_ml_feed_cache() -> Result<String, String> {
     let subnet_orchestrator_list = CANISTER_DATA
         .with_borrow(|canister_data| canister_data.all_subnet_orchestrator_canisters_list.clone());
