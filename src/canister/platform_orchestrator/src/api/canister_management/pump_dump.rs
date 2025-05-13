@@ -2,9 +2,9 @@ use candid::Nat;
 use futures::{stream, StreamExt};
 use ic_cdk::update;
 
-use crate::{CANISTER_DATA, guard::is_caller::is_caller_global_admin_or_controller};
+use crate::{guard::is_caller::is_caller_platform_global_admin_or_controller, CANISTER_DATA};
 
-#[update(guard = "is_caller_global_admin_or_controller")]
+#[update(guard = "is_caller_platform_global_admin_or_controller")]
 pub fn update_pd_onboarding_reward_for_all_subnets(new_reward: Nat) -> Result<(), String> {
     let mut update_futs = CANISTER_DATA.with_borrow(|cdata| {
         let update_futs = cdata
@@ -15,7 +15,7 @@ pub fn update_pd_onboarding_reward_for_all_subnets(new_reward: Nat) -> Result<()
                 ic_cdk::call::<_, ()>(
                     can,
                     "update_pd_onboarding_reward_for_all_individual_users",
-                    (new_reward.clone(),)
+                    (new_reward.clone(),),
                 )
             });
         let stream = stream::iter(update_futs);

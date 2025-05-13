@@ -1,7 +1,8 @@
 use candid::{CandidType, Principal};
 use ic_cdk::{
     api::{
-        self, call, management_canister::{
+        self, call,
+        management_canister::{
             main::{self, CanisterInstallMode, InstallCodeArgument},
             provisional::CanisterSettings,
         },
@@ -12,18 +13,15 @@ use ic_cdk_macros::update;
 use serde::{Deserialize, Serialize};
 use shared_utils::{
     canister_specific::user_index::types::args::UserIndexInitArgs,
-    common::types::{
-        known_principal::KnownPrincipalType,
-        wasm::WasmType,
-    },
+    common::types::{known_principal::KnownPrincipalType, wasm::WasmType},
     constant::{
         GLOBAL_SUPER_ADMIN_USER_ID, NNS_CYCLE_MINTING_CANISTER,
-        SUBNET_ORCHESTRATOR_CANISTER_INITIAL_CYCLES, 
+        SUBNET_ORCHESTRATOR_CANISTER_INITIAL_CYCLES,
     },
 };
 use std::{str::FromStr, vec};
 
-use crate::{guard::is_caller::is_caller_global_admin_or_controller, CANISTER_DATA};
+use crate::{guard::is_caller::is_caller_platform_global_admin_or_controller, CANISTER_DATA};
 
 #[derive(CandidType, Serialize)]
 enum SubnetType {
@@ -55,7 +53,7 @@ struct CreateCanisterCmcArgument {
     subnet_type: Option<String>,
 }
 
-#[update(guard = "is_caller_global_admin_or_controller")]
+#[update(guard = "is_caller_platform_global_admin_or_controller")]
 pub async fn provision_subnet_orchestrator_canister(
     subnet: Principal,
 ) -> Result<Principal, String> {

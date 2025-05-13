@@ -10,12 +10,12 @@ use shared_utils::{
 
 use crate::{
     data_model::CanisterUpgradeStatus,
-    guard::is_caller::is_caller_global_admin_or_controller,
+    guard::is_caller::is_caller_platform_global_admin_or_controller,
     utils::{recharge_and_upgrade_subnet_orchestrator, recharge_subnet_orchestrator_if_needed},
     CANISTER_DATA,
 };
 
-#[update(guard = "is_caller_global_admin_or_controller")]
+#[update(guard = "is_caller_platform_global_admin_or_controller")]
 pub async fn upgrade_canisters_in_network(
     upgrade_arg: UpgradeCanisterArg,
 ) -> Result<String, String> {
@@ -84,6 +84,13 @@ async fn upgrade_individual_canisters(upgrade_arg: UpgradeCanisterArg) {
             canister_data.last_subnet_canister_upgrade_status.count += 1;
         })
     }
+
+    CANISTER_DATA.with_borrow_mut(|canister_data| {
+        canister_data
+            .subnet_canister_upgrade_log
+            .append(&canister_data.last_subnet_canister_upgrade_status)
+            .expect("Could not write into subnet upgrade log");
+    });
 }
 
 async fn upgrade_subnet_canisters(upgrade_arg: UpgradeCanisterArg) {

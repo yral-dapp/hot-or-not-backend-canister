@@ -5,7 +5,7 @@ use shared_utils::common::{
     types::known_principal::KnownPrincipalType, utils::task::run_task_concurrently,
 };
 
-use crate::{guard::is_caller::is_caller_global_admin_or_controller, CANISTER_DATA};
+use crate::{guard::is_caller::is_caller_platform_global_admin_or_controller, CANISTER_DATA};
 
 #[query]
 fn get_global_known_principal(known_principal_type: KnownPrincipalType) -> Principal {
@@ -28,7 +28,7 @@ fn get_subnet_known_principal(
     })
 }
 
-#[update(guard = "is_caller_global_admin_or_controller")]
+#[update(guard = "is_caller_platform_global_admin_or_controller")]
 fn update_global_known_principal(
     known_principal_type: KnownPrincipalType,
     value: Principal,
@@ -47,7 +47,7 @@ fn update_global_known_principal(
     Ok("Success".into())
 }
 
-#[update(guard = "is_caller_global_admin_or_controller")]
+#[update(guard = "is_caller_platform_global_admin_or_controller")]
 async fn update_subnet_known_principal(
     subnet_id: Principal,
     know_principal_type: KnownPrincipalType,

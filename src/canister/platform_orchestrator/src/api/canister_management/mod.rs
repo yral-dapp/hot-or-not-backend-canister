@@ -34,6 +34,8 @@ pub mod upgrade_all_creator_dao_governance_canisters_in_the_network;
 pub mod upgrade_canisters_in_network;
 mod upgrade_individual_canisters_in_a_subnet_with_latest_wasm;
 mod upgrade_specific_individual_canister;
+mod upgrade_specific_individual_canister_with_version;
+mod upgrade_specific_individual_canister_with_wasm;
 pub mod upgrade_subnet_orchestrator_canister_with_latest_wasm;
 pub mod upload_wasms;
 

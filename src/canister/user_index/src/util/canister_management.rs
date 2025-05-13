@@ -7,8 +7,8 @@ use ic_cdk::{
         canister_balance128,
         management_canister::{
             main::{
-                self, canister_info, canister_status, CanisterInstallMode, CreateCanisterArgument,
-                InstallCodeArgument, WasmModule,
+                self, canister_info, canister_status, CanisterInfoRequest, CanisterInstallMode,
+                CreateCanisterArgument, InstallCodeArgument, WasmModule,
             },
             provisional::{CanisterIdRecord, CanisterSettings},
         },
@@ -29,7 +29,7 @@ use shared_utils::{
     cycles::calculate_required_cycles_for_upgrading,
 };
 
-use crate::CANISTER_DATA;
+use crate::{data_model::configuration::Configuration, CANISTER_DATA};
 
 #[derive(
     CandidType, Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone,
@@ -117,8 +117,8 @@ pub async fn install_canister_wasm(
     let configuration = CANISTER_DATA
         .with(|canister_data_ref_cell| canister_data_ref_cell.borrow().configuration.clone());
 
-    let pump_dump_onboarding_reward = Some(CANISTER_DATA
-        .with_borrow(|cdata| cdata.pump_dump_onboarding_reward.clone()));
+    let pump_dump_onboarding_reward =
+        Some(CANISTER_DATA.with_borrow(|cdata| cdata.pump_dump_onboarding_reward.clone()));
 
     let individual_user_tempalate_init_args = IndividualUserTemplateInitArgs {
         profile_owner,
@@ -161,8 +161,8 @@ pub async fn reinstall_canister_wasm(
     let configuration = CANISTER_DATA
         .with(|canister_data_ref_cell| canister_data_ref_cell.borrow().configuration.clone());
 
-    let pump_dump_onboarding_reward = Some(CANISTER_DATA
-        .with_borrow(|cdata| cdata.pump_dump_onboarding_reward.clone()));
+    let pump_dump_onboarding_reward =
+        Some(CANISTER_DATA.with_borrow(|cdata| cdata.pump_dump_onboarding_reward.clone()));
 
     let individual_user_tempalate_init_args = IndividualUserTemplateInitArgs {
         profile_owner,
@@ -197,25 +197,6 @@ pub async fn reinstall_canister_wasm(
         Ok(_) => Ok(canister_id),
         Err(err) => Err(err.1),
     }
-}
-
-pub async fn upgrade_individual_user_canister(
-    canister_id: Principal,
-    install_mode: CanisterInstallMode,
-    arg: IndividualUserTemplateInitArgs,
-    individual_user_wasm: Vec<u8>,
-) -> Result<(), (RejectionCode, String)> {
-    let serialized_arg =
-        candid::encode_args((arg,)).expect("Failed to serialize the install argument.");
-
-    let install_code_argument = InstallCodeArgument {
-        mode: install_mode,
-        canister_id,
-        wasm_module: individual_user_wasm,
-        arg: serialized_arg,
-    };
-
-    upgrade_canister_util(install_code_argument).await
 }
 
 pub async fn check_and_request_cycles_from_platform_orchestrator() -> Result<(), String> {
@@ -265,7 +246,9 @@ pub async fn recharge_canister(
     result
 }
 
-pub async fn recharge_canister_for_installing_wasm(canister_id: Principal) -> Result<(), String> {
+pub(crate) async fn recharge_canister_for_installing_wasm(
+    canister_id: Principal,
+) -> Result<(), String> {
     recharge_canister_for_installing_wasm_with_retries(canister_id, None, 1).await
 }
 
@@ -310,4 +293,88 @@ fn recharge_canister_for_installing_wasm_with_retries(
         }
     }
     .boxed()
+}
+
+async fn upgrade_individual_user_canister(
+    canister_id: Principal,
+    install_mode: CanisterInstallMode,
+    arg: IndividualUserTemplateInitArgs,
+    individual_user_wasm: Vec<u8>,
+) -> Result<(), (RejectionCode, String)> {
+    let serialized_arg =
+        candid::encode_args((arg,)).expect("Failed to serialize the install argument.");
+
+    let install_code_argument = InstallCodeArgument {
+        mode: install_mode,
+        canister_id,
+        wasm_module: individual_user_wasm,
+        arg: serialized_arg,
+    };
+
+    upgrade_canister_util(install_code_argument).await
+}
+
+pub(crate) async fn recharge_and_upgrade(
+    user_canister_id: Principal,
+    user_principal_id: Principal,
+    individual_user_wasm: Vec<u8>,
+    individual_user_tempalte_args: IndividualUserTemplateInitArgs,
+) -> Result<(Principal, Principal), ((Principal, Principal), String)> {
+    check_controller_and_update_controller(user_canister_id)
+        .await
+        .map_err(|e| ((user_principal_id, user_canister_id), e))?;
+
+    recharge_canister_for_installing_wasm(user_canister_id)
+        .await
+        .map_err(|e| ((user_principal_id, user_canister_id), e))?;
+
+    upgrade_user_canister(
+        user_canister_id,
+        individual_user_tempalte_args,
+        individual_user_wasm,
+    )
+    .await
+    .map_err(|s| ((user_principal_id, user_canister_id), s))?;
+
+    Ok((user_principal_id, user_canister_id))
+}
+
+async fn check_controller_and_update_controller(canister_id: Principal) -> Result<(), String> {
+    let (canister_info,) = canister_info(CanisterInfoRequest {
+        canister_id,
+        num_requested_changes: None,
+    })
+    .await
+    .map_err(|e| e.1)?;
+
+    if canister_info.controllers.contains(&ic_cdk::id()) {
+        return Ok(());
+    }
+
+    let (_canister_version,) = call::<_, (String,)>(canister_id, "get_version", ())
+        .await
+        .map_err(|e| e.1)?;
+
+    call::<_, ()>(
+        canister_info.controllers[0],
+        "set_controller_as_subnet_orchestrator",
+        (canister_id,),
+    )
+    .await
+    .map_err(|e| e.1)
+}
+
+async fn upgrade_user_canister(
+    canister_id: Principal,
+    individual_user_tempalte_args: IndividualUserTemplateInitArgs,
+    individual_user_wasm: Vec<u8>,
+) -> Result<(), String> {
+    upgrade_individual_user_canister(
+        canister_id,
+        CanisterInstallMode::Upgrade(None),
+        individual_user_tempalte_args,
+        individual_user_wasm,
+    )
+    .await
+    .map_err(|e| e.1)
 }

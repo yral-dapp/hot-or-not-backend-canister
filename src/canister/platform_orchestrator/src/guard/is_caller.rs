@@ -12,7 +12,7 @@ pub(crate) fn is_caller_global_admin() -> Result<(), String> {
     })
 }
 
-pub(crate) fn is_caller_global_admin_or_controller() -> Result<(), String> {
+pub(crate) fn is_caller_platform_global_admin_or_controller() -> Result<(), String> {
     CANISTER_DATA.with_borrow(|canister_data| {
         match canister_data.platform_global_admins.contains(&caller()) || is_controller(&caller()) {
             true => Ok(()),

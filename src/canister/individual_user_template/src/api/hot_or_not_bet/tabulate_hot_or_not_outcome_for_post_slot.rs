@@ -218,7 +218,7 @@ async fn receive_bet_winnings_when_distributed(
         ic_cdk::println!(
             "Informing bet maker canister {} failed {:?}",
             bet_maker_canister_id,
-            e.1
+            e
         );
     }
 

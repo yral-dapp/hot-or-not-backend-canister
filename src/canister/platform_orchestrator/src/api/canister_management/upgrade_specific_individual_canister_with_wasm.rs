@@ -8,25 +8,27 @@ use crate::{
 };
 
 #[update(guard = "is_caller_platform_global_admin_or_controller")]
-pub async fn make_individual_canister_logs_private(
+async fn upgrade_specific_individual_canister_with_wasm(
     individual_canister_id: Principal,
+    version: String,
+    individual_user_wasm: Vec<u8>,
 ) -> Result<(), String> {
-    let (individual_canister_info,) = canister_info(CanisterInfoRequest {
+    let individual_canister_info = canister_info(CanisterInfoRequest {
         canister_id: individual_canister_id,
         num_requested_changes: None,
     })
     .await
-    .map_err(|e| e.1)?;
-
-    let subnet_orchestrator_canister_id = individual_canister_info
-        .controllers
-        .get(0)
-        .ok_or("Subnet Orchestartor not found in canister controller")?;
+    .map_err(|e| format!("{:?} {}", e.0, e.1))?
+    .0;
 
     let registered_subnet_orchestrator =
-        RegisteredSubnetOrchestrator::new(*subnet_orchestrator_canister_id)?;
+        RegisteredSubnetOrchestrator::new(individual_canister_info.controllers[0])?;
 
     registered_subnet_orchestrator
-        .make_individual_canister_logs_private(individual_canister_id)
+        .upgrade_specific_individual_canister_with_wasm_version(
+            individual_canister_id,
+            version,
+            individual_user_wasm,
+        )
         .await
 }

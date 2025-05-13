@@ -5,18 +5,10 @@ use ic_cdk::api::management_canister::main::{
 use ic_cdk_macros::update;
 use shared_utils::{
     canister_specific::individual_user_template::types::arg::IndividualUserTemplateInitArgs,
-    common::{
-        types::{known_principal::KnownPrincipalType, wasm::WasmType},
-        utils::permissions::is_caller_controller,
-    },
+    common::{types::wasm::WasmType, utils::permissions::is_caller_controller},
 };
 
-use crate::{
-    util::canister_management::{self, recharge_canister_for_installing_wasm},
-    CANISTER_DATA,
-};
-
-// * dfx canister call user_index upgrade_specific_individual_user_canister_with_latest_wasm '(principal "", principal "", null)' --network ic
+use crate::{util::canister_management::recharge_and_upgrade, CANISTER_DATA};
 
 #[update(guard = "is_caller_controller")]
 async fn upgrade_specific_individual_user_canister_with_latest_wasm(
@@ -49,24 +41,21 @@ async fn upgrade_specific_individual_user_canister_with_latest_wasm(
             .unwrap()
     });
 
-    let pump_dump_onboarding_reward = Some(CANISTER_DATA.with_borrow(|cdata| {
-        cdata.pump_dump_onboarding_reward.clone()
-    }));
+    let pump_dump_onboarding_reward = CANISTER_DATA
+        .with_borrow_mut(|canister_data| canister_data.pump_dump_onboarding_reward.clone());
 
-    recharge_canister_for_installing_wasm(user_canister_id).await?;
-
-    match canister_management::upgrade_individual_user_canister(
+    match recharge_and_upgrade(
         user_canister_id,
-        upgrade_mode.unwrap_or(CanisterInstallMode::Upgrade(None)),
+        user_principal_id.unwrap_or(Principal::anonymous()),
+        individual_canister_wasm.wasm_blob,
         IndividualUserTemplateInitArgs {
             known_principal_ids: Some(known_principal_ids.clone()),
-            profile_owner: user_principal_id,
+            profile_owner: None,
             upgrade_version_number: Some(saved_upgrade_status.version_number + 1),
             url_to_send_canister_metrics_to: Some(configuration.url_to_send_canister_metrics_to),
             version: individual_canister_wasm.version,
-            pump_dump_onboarding_reward,
+            pump_dump_onboarding_reward: Some(pump_dump_onboarding_reward),
         },
-        individual_canister_wasm.wasm_blob,
     )
     .await
     {

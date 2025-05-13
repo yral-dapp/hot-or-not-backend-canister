@@ -4,9 +4,9 @@ use ic_cdk::{
     update,
 };
 
-use crate::guard::is_caller::is_caller_global_admin_or_controller;
+use crate::guard::is_caller::is_caller_platform_global_admin_or_controller;
 
-#[update(guard = "is_caller_global_admin_or_controller")]
+#[update(guard = "is_caller_platform_global_admin_or_controller")]
 async fn deposit_cycles_to_canister(
     canister_id: Principal,
     cycles: u128,
