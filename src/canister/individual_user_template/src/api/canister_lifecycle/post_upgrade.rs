@@ -20,7 +20,6 @@ fn post_upgrade() {
     restore_data_from_stable_memory();
     save_upgrade_args_to_memory();
     reenqueue_timers_for_pending_bet_outcomes();
-    reconstruct_pump_and_dump_cents_token_from_participated_game_info();
 }
 
 fn restore_data_from_stable_memory() {
@@ -79,23 +78,5 @@ fn save_upgrade_args_to_memory() {
         }
 
         canister_data_ref_cell.borrow_mut().version_details.version = upgrade_args.version;
-    });
-}
-
-pub fn reconstruct_pump_and_dump_cents_token_from_participated_game_info() {
-    let should_run_reconstruct =
-        CANISTER_DATA.with_borrow(|canister_data| canister_data.profile.principal_id.is_some());
-
-    if !should_run_reconstruct {
-        return;
-    }
-
-    PUMP_N_DUMP.with_borrow_mut(|token_bet_game| {
-        token_bet_game
-            .cents
-            .reconstruct_cents_token_from_participated_game_info(
-                token_bet_game.onboarding_reward.clone(),
-                &token_bet_game.games,
-            );
     });
 }
