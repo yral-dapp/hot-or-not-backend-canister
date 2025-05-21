@@ -6,20 +6,14 @@ use std::borrow::BorrowMut;
 
 use crate::{data_model::memory, PUMP_N_DUMP};
 
-use shared_utils::canister_specific::individual_user_template::types::{
-    arg::IndividualUserTemplateInitArgs, session::SessionType,
-};
+use shared_utils::canister_specific::individual_user_template::types::arg::IndividualUserTemplateInitArgs;
 
-use crate::{
-    api::hot_or_not_bet::reenqueue_timers_for_pending_bet_outcomes::reenqueue_timers_for_pending_bet_outcomes,
-    CANISTER_DATA,
-};
+use crate::CANISTER_DATA;
 
 #[post_upgrade]
 fn post_upgrade() {
     restore_data_from_stable_memory();
     save_upgrade_args_to_memory();
-    reenqueue_timers_for_pending_bet_outcomes();
 }
 
 fn restore_data_from_stable_memory() {

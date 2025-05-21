@@ -26,7 +26,7 @@ pub struct UserProfileDetailsForFrontend {
     pub principal_id: Principal,
     pub profile_picture_url: Option<String>,
     pub profile_stats: UserProfileGlobalStats,
-    pub lifetime_earnings: u64,
+    pub lifetime_earnings: u64, //Todo: This field should be removed
     pub unique_user_name: Option<String>,
     pub referrer_details: Option<UserCanisterDetails>,
 }

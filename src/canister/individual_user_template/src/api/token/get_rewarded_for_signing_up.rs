@@ -34,30 +34,6 @@ fn get_rewarded_for_signing_up() {
 
     let mut user_principal = Principal::anonymous();
 
-    CANISTER_DATA.with(|canister_data_ref_cell| {
-        let mut canister_data_ref = canister_data_ref_cell.borrow_mut();
-        let my_principal_id = canister_data_ref.profile.principal_id.unwrap();
-        user_principal = my_principal_id;
-        let my_token_balance = &mut canister_data_ref.my_token_balance;
-
-        let signup_reward_amount =
-            TokenEvent::get_token_amount_for_token_event(&TokenEvent::Mint {
-                amount: 0,
-                details: MintEvent::NewUserSignup {
-                    new_user_principal_id: my_principal_id,
-                },
-                timestamp: current_time,
-            });
-
-        my_token_balance.handle_token_event(TokenEvent::Mint {
-            amount: signup_reward_amount,
-            details: MintEvent::NewUserSignup {
-                new_user_principal_id: my_principal_id,
-            },
-            timestamp: current_time,
-        });
-    });
-
     PUMP_N_DUMP.with_borrow_mut(|pd| {
         let onboarding_reward = pd.onboarding_reward.clone();
         pd.cents.handle_token_event(TokenEvent::Mint {
