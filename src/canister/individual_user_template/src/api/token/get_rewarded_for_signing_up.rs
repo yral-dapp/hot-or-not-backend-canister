@@ -34,6 +34,12 @@ fn get_rewarded_for_signing_up() {
 
     let mut user_principal = Principal::anonymous();
 
+    CANISTER_DATA.with(|canister_data_ref_cell| {
+        let canister_data_ref = canister_data_ref_cell.borrow_mut();
+        let my_principal_id = canister_data_ref.profile.principal_id.unwrap();
+        user_principal = my_principal_id;
+    });
+
     PUMP_N_DUMP.with_borrow_mut(|pd| {
         let onboarding_reward = pd.onboarding_reward.clone();
         pd.cents.handle_token_event(TokenEvent::Mint {
