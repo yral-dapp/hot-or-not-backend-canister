@@ -32,29 +32,6 @@ fn get_rewarded_for_referral(referrer: Principal, referree: Principal) {
 
     let current_time = system_time::get_current_system_time_from_ic();
 
-    CANISTER_DATA.with_borrow_mut(|cdata| {
-        let my_token_balance = &mut cdata.my_token_balance;
-
-        let referral_reward_amount =
-            TokenEvent::get_token_amount_for_token_event(&TokenEvent::Mint {
-                amount: 0,
-                details: MintEvent::Referral {
-                    referrer_user_principal_id: referrer,
-                    referee_user_principal_id: referree,
-                },
-                timestamp: current_time,
-            });
-
-        my_token_balance.handle_token_event(TokenEvent::Mint {
-            amount: referral_reward_amount,
-            details: MintEvent::Referral {
-                referrer_user_principal_id: referrer,
-                referee_user_principal_id: referree,
-            },
-            timestamp: current_time,
-        });
-    });
-
     PUMP_N_DUMP.with_borrow_mut(|pump_and_dump| {
         let referral_reward = pump_and_dump.referral_reward.clone();
         pump_and_dump.cents.handle_token_event(TokenEvent::Mint {

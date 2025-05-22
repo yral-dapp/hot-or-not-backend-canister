@@ -5,7 +5,6 @@ use crate::CANISTER_DATA;
 
 pub mod get_last_access_time;
 pub mod get_session_type;
-pub mod migrate_hotornot_user_to_yral;
 pub mod set_controller_as_subnet_orchestrator;
 pub mod update_last_access_time;
 pub mod update_profile_owner;

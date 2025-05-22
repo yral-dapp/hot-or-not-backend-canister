@@ -36,7 +36,6 @@ fn update_profile_display_details(
     Ok(CANISTER_DATA.with(|canister_data_ref_cell| {
         let canister_data = canister_data_ref_cell.borrow();
         let profile = &canister_data.profile;
-        let lifetime_earnings = &canister_data.my_token_balance.lifetime_earnings;
 
         UserProfileDetailsForFrontend {
             principal_id: profile.principal_id.unwrap(),
@@ -46,7 +45,7 @@ fn update_profile_display_details(
             profile_stats: profile.profile_stats,
             followers_count: 0,
             following_count: 0,
-            lifetime_earnings: *lifetime_earnings,
+            lifetime_earnings: 0,
             referrer_details: profile.referrer_details.clone(),
         }
     }))

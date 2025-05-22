@@ -1,8 +1,3 @@
-type AggregateStats = record {
-  total_number_of_not_bets : nat64;
-  total_amount_bet : nat64;
-  total_number_of_hot_bets : nat64;
-};
 type AirdropDistribution = record { airdrop_neurons : vec NeuronDistribution };
 type AirdropError = variant {
   NoBalance;
@@ -21,31 +16,6 @@ type BalanceInfo = record {
   withdrawable : nat;
   net_airdrop_reward : nat;
 };
-type BetDetails = record {
-  bet_direction : BetDirection;
-  bet_maker_canister_id : principal;
-  bet_maker_informed_status : opt BetMakerInformedStatus;
-  amount : nat64;
-  payout : BetPayout;
-};
-type BetDirection = variant { Hot; Not };
-type BetMakerInformedStatus = variant { InformedSuccessfully; Failed : text };
-type BetOnCurrentlyViewingPostError = variant {
-  UserPrincipalNotSet;
-  InsufficientBalance;
-  UserAlreadyParticipatedInThisPost;
-  BettingClosed;
-  Unauthorized;
-  PostCreatorCanisterCallFailed;
-  UserNotLoggedIn;
-};
-type BetOutcomeForBetMaker = variant {
-  Won : nat64;
-  Draw : nat64;
-  Lost;
-  AwaitingResult;
-};
-type BetPayout = variant { NotCalculatedYet; Calculated : nat64 };
 type BettingStatus = variant {
   BettingOpen : record {
     number_of_participants : nat8;
@@ -96,11 +66,6 @@ type DeployedCdaoCanisters = record {
 type DeveloperDistribution = record {
   developer_neurons : vec NeuronDistribution;
 };
-type FeedScore = record {
-  current_score : nat64;
-  last_synchronized_at : SystemTime;
-  last_synchronized_score : nat64;
-};
 type FractionalDeveloperVotingPower = record {
   treasury_distribution : opt TreasuryDistribution;
   developer_distribution : opt DeveloperDistribution;
@@ -114,28 +79,6 @@ type GetPostsOfUserProfileError = variant {
   ExceededMaxNumberOfItemsAllowedInOneRequest;
 };
 type GovernanceError = record { error_message : text; error_type : int32 };
-type HotOrNotDetails = record {
-  hot_or_not_feed_score : FeedScore;
-  aggregate_stats : AggregateStats;
-  slot_history : vec record { nat8; SlotDetails };
-};
-type HotOrNotOutcomePayoutEvent = variant {
-  WinningsEarnedFromBet : record {
-    slot_id : nat8;
-    post_id : nat64;
-    room_id : nat64;
-    post_canister_id : principal;
-    winnings_amount : nat64;
-    event_outcome : BetOutcomeForBetMaker;
-  };
-  CommissionFromHotOrNotBet : record {
-    slot_id : nat8;
-    post_id : nat64;
-    room_pot_total_amount : nat64;
-    room_id : nat64;
-    post_canister_id : principal;
-  };
-};
 type HttpRequest = record {
   url : text;
   method : text;
@@ -188,32 +131,10 @@ type LinearScalingCoefficient = record {
   slope_denominator : opt nat64;
   to_direct_participation_icp_e8s : opt nat64;
 };
-type MigrationErrors = variant {
-  InvalidToCanister;
-  InvalidFromCanister;
-  MigrationInfoNotFound;
-  UserNotRegistered;
-  RequestCycleFromUserIndexFailed : text;
-  UserIndexCanisterIdNotFound;
-  Unauthorized;
-  TransferToCanisterCallFailed : text;
-  HotOrNotSubnetCanisterIdNotFound;
-  AlreadyUsedForMigration;
-  CanisterInfoFailed;
-  AlreadyMigrated;
-};
 type MigrationInfo = variant {
   MigratedFromHotOrNot : record { account_principal : principal };
   NotMigrated;
   MigratedToYral : record { account_principal : principal };
-};
-type MintEvent = variant {
-  Airdrop : record { amount : nat64 };
-  NewUserSignup : record { new_user_principal_id : principal };
-  Referral : record {
-    referrer_user_principal_id : principal;
-    referee_user_principal_id : principal;
-  };
 };
 type NeuronBasketConstructionParameters = record {
   dissolve_delay_interval_seconds : nat64;
@@ -252,22 +173,6 @@ type ParticipatedGameInfo = record {
   dumps : nat64;
   token_root : principal;
 };
-type PlaceBetArg = record {
-  bet_amount : nat64;
-  post_id : nat64;
-  bet_direction : BetDirection;
-  post_canister_id : principal;
-};
-type PlacedBetDetail = record {
-  outcome_received : BetOutcomeForBetMaker;
-  slot_id : nat8;
-  post_id : nat64;
-  room_id : nat64;
-  canister_id : principal;
-  bet_direction : BetDirection;
-  amount_bet : nat64;
-  bet_placed_at : SystemTime;
-};
 type Post = record {
   id : nat64;
   is_nsfw : bool;
@@ -278,10 +183,7 @@ type Post = record {
   created_at : SystemTime;
   likes : vec principal;
   video_uid : text;
-  home_feed_score : FeedScore;
-  slots_left_to_be_computed : blob;
   view_stats : PostViewStatistics;
-  hot_or_not_details : opt HotOrNotDetails;
 };
 type PostDetailsForFrontend = record {
   id : nat64;
@@ -331,13 +233,6 @@ type PostViewStatistics = record {
   threshold_view_count : nat64;
 };
 type Principals = record { principals : vec principal };
-type PumpDumpOutcomePayoutEvent = variant {
-  CreatorRewardFromPumpDumpGame;
-  RewardFromPumpDumpGame : record {
-    game_direction : GameDirection;
-    token_root_canister_id : principal;
-  };
-};
 type PumpNDumpStateDiff = variant {
   Participant : ParticipatedGameInfo;
   CreatorReward : nat;
@@ -354,55 +249,33 @@ type RejectionCode = variant {
 };
 type Result = variant { Ok; Err : text };
 type Result_1 = variant { Ok : nat64; Err : text };
-type Result_10 = variant { Ok : vec SuccessHistoryItemV1; Err : text };
-type Result_11 = variant { Ok : vec principal; Err : PaginationError };
-type Result_12 = variant {
-  Ok : vec record { nat64; TokenEvent };
-  Err : PaginationError;
-};
-type Result_13 = variant { Ok : vec WatchHistoryItem; Err : text };
-type Result_14 = variant { Ok : vec record { nat64; nat8 }; Err : text };
-type Result_15 = variant { Ok : vec ParticipatedGameInfo; Err : text };
-type Result_16 = variant { Ok; Err : MigrationErrors };
-type Result_17 = variant { Ok; Err : AirdropError };
-type Result_18 = variant { Ok : IndividualUserCreatorDaoEntry; Err : text };
-type Result_19 = variant { Committed : Committed; Aborted : record {} };
-type Result_2 = variant { Ok : bool; Err : CdaoTokenError };
-type Result_20 = variant { Ok : Ok; Err : GovernanceError };
-type Result_21 = variant { Ok; Err : CdaoTokenError };
-type Result_22 = variant { Ok : text; Err : text };
-type Result_23 = variant {
+type Result_10 = variant { Ok; Err : AirdropError };
+type Result_11 = variant { Ok : IndividualUserCreatorDaoEntry; Err : text };
+type Result_12 = variant { Committed : Committed; Aborted : record {} };
+type Result_13 = variant { Ok : Ok; Err : GovernanceError };
+type Result_14 = variant { Ok; Err : CdaoTokenError };
+type Result_15 = variant { Ok : text; Err : text };
+type Result_16 = variant {
   Ok : UserProfileDetailsForFrontend;
   Err : UpdateProfileDetailsError;
 };
-type Result_3 = variant {
-  Ok : BettingStatus;
-  Err : BetOnCurrentlyViewingPostError;
-};
-type Result_4 = variant { Ok : DeployedCdaoCanisters; Err : CdaoDeployError };
-type Result_5 = variant { Ok : BetDetails; Err : text };
-type Result_6 = variant { Ok : Post; Err };
-type Result_7 = variant { Ok : SystemTime; Err : text };
-type Result_8 = variant {
+type Result_2 = variant { Ok : bool; Err : CdaoTokenError };
+type Result_3 = variant { Ok : DeployedCdaoCanisters; Err : CdaoDeployError };
+type Result_4 = variant { Ok : Post; Err };
+type Result_5 = variant { Ok : SystemTime; Err : text };
+type Result_6 = variant {
   Ok : vec PostDetailsForFrontend;
   Err : GetPostsOfUserProfileError;
 };
-type Result_9 = variant { Ok : SessionType; Err : text };
-type RoomBetPossibleOutcomes = variant { HotWon; BetOngoing; Draw; NotWon };
-type RoomDetails = record {
-  total_hot_bets : nat64;
-  bets_made : vec record { principal; BetDetails };
-  total_not_bets : nat64;
-  room_bets_total_pot : nat64;
-  bet_outcome : RoomBetPossibleOutcomes;
-};
+type Result_7 = variant { Ok : SessionType; Err : text };
+type Result_8 = variant { Ok : vec principal; Err : PaginationError };
+type Result_9 = variant { Ok : vec ParticipatedGameInfo; Err : text };
 type SessionType = variant { AnonymousSession; RegisteredSession };
 type SettleNeuronsFundParticipationRequest = record {
-  result : opt Result_19;
+  result : opt Result_12;
   nns_proposal_id : opt nat64;
 };
-type SettleNeuronsFundParticipationResponse = record { result : opt Result_20 };
-type SlotDetails = record { room_details : vec record { nat64; RoomDetails } };
+type SettleNeuronsFundParticipationResponse = record { result : opt Result_13 };
 type SnsInitPayload = record {
   url : opt text;
   max_dissolve_delay_seconds : opt nat64;
@@ -443,23 +316,6 @@ type SnsInitPayload = record {
   min_icp_e8s : opt nat64;
   max_direct_participation_icp_e8s : opt nat64;
 };
-type StakeEvent = variant {
-  BetOnHotOrNotPost : PlaceBetArg;
-  BetOnPumpDump : record {
-    root_canister_id : principal;
-    pumps : nat64;
-    dumps : nat64;
-  };
-  BetFailureRefund : PlaceBetArg;
-};
-type SuccessHistoryItemV1 = record {
-  post_id : nat64;
-  percentage_watched : float32;
-  item_type : text;
-  publisher_canister_id : principal;
-  cf_video_id : text;
-  interacted_at : SystemTime;
-};
 type SwapDistribution = record {
   total_e8s : nat64;
   initial_swap_amount_e8s : nat64;
@@ -467,35 +323,6 @@ type SwapDistribution = record {
 type SystemTime = record {
   nanos_since_epoch : nat32;
   secs_since_epoch : nat64;
-};
-type TokenEvent = variant {
-  Withdraw : record { amount : nat; event_type : WithdrawEvent };
-  Stake : record {
-    timestamp : SystemTime;
-    details : StakeEvent;
-    amount : nat64;
-  };
-  Burn;
-  Mint : record { timestamp : SystemTime; details : MintEvent; amount : nat64 };
-  PumpDumpOutcomePayout : record {
-    payout_type : PumpDumpOutcomePayoutEvent;
-    amount : nat;
-  };
-  Transfer : record {
-    to_account : principal;
-    timestamp : SystemTime;
-    amount : nat64;
-  };
-  HotOrNotOutcomePayout : record {
-    timestamp : SystemTime;
-    details : HotOrNotOutcomePayoutEvent;
-    amount : nat64;
-  };
-  Receive : record {
-    from_account : principal;
-    timestamp : SystemTime;
-    amount : nat64;
-  };
 };
 type TransferError = variant {
   GenericError : record { message : text; error_code : nat };
@@ -544,73 +371,35 @@ type UserProfileUpdateDetailsFromFrontend = record {
   profile_picture_url : opt text;
   display_name : opt text;
 };
-type WatchHistoryItem = record {
-  post_id : nat64;
-  viewed_at : SystemTime;
-  percentage_watched : float32;
-  publisher_canister_id : principal;
-  cf_video_id : text;
-};
-type WithdrawEvent = variant { WithdrawRequest; WithdrawRequestFailed };
 service : (IndividualUserTemplateInitArgs) -> {
   add_dollr_to_liquidity_pool : (principal, nat) -> (Result);
   add_post_v2 : (PostDetailsFromFrontend) -> (Result_1);
   add_token : (principal) -> (Result_2);
-  bet_on_currently_viewing_post : (PlaceBetArg) -> (Result_3);
-  bet_on_currently_viewing_post_v1 : (PlaceBetArg) -> (Result_3);
   cents_token_balance_info : () -> (BalanceInfo) query;
   clear_snapshot : () -> ();
   delete_all_creator_token : () -> ();
   delete_post : (nat64) -> (Result);
-  deploy_cdao_sns : (SnsInitPayload, nat64) -> (Result_4);
+  deploy_cdao_sns : (SnsInitPayload, nat64) -> (Result_3);
   deployed_cdao_canisters : () -> (vec DeployedCdaoCanisters) query;
   download_snapshot : (nat64, nat64) -> (blob) query;
-  get_bet_details_for_a_user_on_a_post : (principal, nat64) -> (Result_5) query;
-  get_bet_details_for_a_user_on_a_post_v1 : (principal, nat64) -> (
-      Result_5,
-    ) query;
-  get_entire_individual_post_detail_by_id : (nat64) -> (Result_6) query;
-  get_hot_or_not_bet_details_for_this_post : (nat64) -> (BettingStatus) query;
-  get_hot_or_not_bet_details_for_this_post_v1 : (nat64) -> (
-      BettingStatus,
-    ) query;
-  get_hot_or_not_bets_placed_by_this_profile_with_pagination : (nat64) -> (
-      vec PlacedBetDetail,
-    ) query;
-  get_hot_or_not_bets_placed_by_this_profile_with_pagination_v1 : (nat64) -> (
-      vec PlacedBetDetail,
-    ) query;
-  get_individual_hot_or_not_bet_placed_by_this_profile : (principal, nat64) -> (
-      opt PlacedBetDetail,
-    ) query;
-  get_individual_hot_or_not_bet_placed_by_this_profile_v1 : (
-      principal,
-      nat64,
-    ) -> (opt PlacedBetDetail) query;
+  get_entire_individual_post_detail_by_id : (nat64) -> (Result_4) query;
   get_individual_post_details_by_id : (nat64) -> (PostDetailsForFrontend) query;
-  get_last_access_time : () -> (Result_7) query;
+  get_last_access_time : () -> (Result_5) query;
   get_posts_of_this_user_profile_with_pagination_cursor : (nat64, nat64) -> (
-      Result_8,
+      Result_6,
     ) query;
   get_profile_details : () -> (UserProfileDetailsForFrontend) query;
   get_profile_details_v2 : () -> (UserProfileDetailsForFrontendV2) query;
   get_rewarded_for_referral : (principal, principal) -> ();
   get_rewarded_for_signing_up : () -> ();
-  get_session_type : () -> (Result_9) query;
+  get_session_type : () -> (Result_7) query;
   get_stable_memory_size : () -> (nat64) query;
-  get_success_history : () -> (Result_10) query;
   get_token_roots_of_this_user_with_pagination_cursor : (nat64, nat64) -> (
-      Result_11,
+      Result_8,
     ) query;
   get_user_caniser_cycle_balance : () -> (nat) query;
-  get_user_utility_token_transaction_history_with_pagination : (
-      nat64,
-      nat64,
-    ) -> (Result_12) query;
-  get_utility_token_balance : () -> (nat64) query;
   get_version : () -> (text) query;
   get_version_number : () -> (nat64) query;
-  get_watch_history : () -> (Result_13) query;
   get_well_known_principal_value : (KnownPrincipalType) -> (
       opt principal,
     ) query;
@@ -618,40 +407,28 @@ service : (IndividualUserTemplateInitArgs) -> {
   load_snapshot : () -> ();
   load_snapshot_v2 : () -> ();
   net_earnings : () -> (nat) query;
-  once_reenqueue_timers_for_pending_bet_outcomes : () -> (Result_14);
   pd_balance_info : () -> (BalanceInfo) query;
   played_game_count : () -> (nat64) query;
-  played_game_info_with_pagination_cursor : (nat64, nat64) -> (Result_15) query;
+  played_game_info_with_pagination_cursor : (nat64, nat64) -> (Result_9) query;
   pumps_and_dumps : () -> (PumpsAndDumps) query;
   receive_and_save_snaphot : (nat64, blob) -> ();
-  receive_bet_from_bet_makers_canister : (PlaceBetArg, principal) -> (Result_3);
-  receive_bet_from_bet_makers_canister_v1 : (PlaceBetArg, principal) -> (
-      Result_3,
-    );
-  receive_bet_winnings_when_distributed : (nat64, BetOutcomeForBetMaker) -> ();
-  receive_bet_winnings_when_distributed_v1 : (
-      nat64,
-      BetOutcomeForBetMaker,
-    ) -> ();
-  receive_data_from_hotornot : (principal, nat64, vec Post) -> (Result_16);
   reconcile_user_state : (vec PumpNDumpStateDiff) -> (Result);
   redeem_gdollr : (nat) -> (Result);
   redeem_gdolr_v2 : (nat) -> (Result);
-  request_airdrop : (principal, opt blob, nat, principal) -> (Result_17);
+  request_airdrop : (principal, opt blob, nat, principal) -> (Result_10);
   return_cycles_to_user_index_canister : (opt nat) -> ();
   save_snapshot_json : () -> (nat32);
   save_snapshot_json_v2 : () -> (nat32);
-  send_creator_dao_stats_to_subnet_orchestrator : () -> (Result_18);
+  send_creator_dao_stats_to_subnet_orchestrator : () -> (Result_11);
   set_controller_as_subnet_orchestrator : (principal) -> ();
   settle_neurons_fund_participation : (
       SettleNeuronsFundParticipationRequest,
     ) -> (SettleNeuronsFundParticipationResponse);
   stake_dollr_for_gdollr : (nat) -> (Result);
   transfer_token_to_user_canister : (principal, principal, opt blob, nat) -> (
-      Result_21,
+      Result_14,
     );
-  transfer_tokens_and_posts : (principal, principal) -> (Result_16);
-  update_last_access_time : () -> (Result_22);
+  update_last_access_time : () -> (Result_15);
   update_pd_onboarding_reward : (nat) -> (Result);
   update_post_add_view_details : (nat64, PostViewDetailsFromFrontend) -> ();
   update_post_as_ready_to_view : (nat64) -> ();
@@ -659,13 +436,11 @@ service : (IndividualUserTemplateInitArgs) -> {
   update_post_status : (nat64, PostStatus) -> ();
   update_post_toggle_like_status_by_caller : (nat64) -> (bool);
   update_profile_display_details : (UserProfileUpdateDetailsFromFrontend) -> (
-      Result_23,
+      Result_16,
     );
   update_profile_owner : (opt principal) -> (Result);
-  update_referrer_details : (UserCanisterDetails) -> (Result_22);
-  update_session_type : (SessionType) -> (Result_22);
-  update_success_history : (SuccessHistoryItemV1) -> (Result_22);
-  update_watch_history : (WatchHistoryItem) -> (Result_22);
+  update_referrer_details : (UserCanisterDetails) -> (Result_15);
+  update_session_type : (SessionType) -> (Result_15);
   update_well_known_principal : (KnownPrincipalType, principal) -> ();
   upgrade_creator_dao_governance_canisters : (blob) -> (Result);
 }

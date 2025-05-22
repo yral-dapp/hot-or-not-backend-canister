@@ -62,10 +62,7 @@ mod test {
                 likes: HashSet::new(),
                 share_count: 0,
                 view_stats: PostViewStatistics::default(),
-                home_feed_score: FeedScore::default(),
-                hot_or_not_details: None,
                 is_nsfw: false,
-                slots_left_to_be_computed: (1..=48).collect(),
             },
             Post {
                 id: 2,
@@ -77,10 +74,7 @@ mod test {
                 likes: HashSet::new(),
                 share_count: 0,
                 view_stats: PostViewStatistics::default(),
-                home_feed_score: FeedScore::default(),
-                hot_or_not_details: None,
                 is_nsfw: false,
-                slots_left_to_be_computed: (1..=48).collect(),
             },
             Post {
                 id: 3,
@@ -92,10 +86,7 @@ mod test {
                 likes: HashSet::new(),
                 share_count: 0,
                 view_stats: PostViewStatistics::default(),
-                home_feed_score: FeedScore::default(),
-                hot_or_not_details: None,
                 is_nsfw: false,
-                slots_left_to_be_computed: (1..=48).collect(),
             },
             Post {
                 id: 4,
@@ -107,10 +98,7 @@ mod test {
                 likes: HashSet::new(),
                 share_count: 0,
                 view_stats: PostViewStatistics::default(),
-                home_feed_score: FeedScore::default(),
-                hot_or_not_details: None,
                 is_nsfw: false,
-                slots_left_to_be_computed: (1..=48).collect(),
             },
             Post {
                 id: 5,
@@ -122,10 +110,7 @@ mod test {
                 likes: HashSet::new(),
                 share_count: 0,
                 view_stats: PostViewStatistics::default(),
-                home_feed_score: FeedScore::default(),
-                hot_or_not_details: None,
                 is_nsfw: false,
-                slots_left_to_be_computed: (1..=48).collect(),
             },
             Post {
                 id: 6,
@@ -137,10 +122,7 @@ mod test {
                 likes: HashSet::new(),
                 share_count: 0,
                 view_stats: PostViewStatistics::default(),
-                home_feed_score: FeedScore::default(),
-                hot_or_not_details: None,
                 is_nsfw: false,
-                slots_left_to_be_computed: (1..=48).collect(),
             },
             Post {
                 id: 7,
@@ -152,10 +134,7 @@ mod test {
                 likes: HashSet::new(),
                 share_count: 0,
                 view_stats: PostViewStatistics::default(),
-                home_feed_score: FeedScore::default(),
-                hot_or_not_details: None,
                 is_nsfw: false,
-                slots_left_to_be_computed: (1..=48).collect(),
             },
         ];
 
