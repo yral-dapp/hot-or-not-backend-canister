@@ -35,7 +35,7 @@ fn get_rewarded_for_signing_up() {
     let mut user_principal = Principal::anonymous();
 
     CANISTER_DATA.with(|canister_data_ref_cell| {
-        let canister_data_ref = canister_data_ref_cell.borrow_mut();
+        let canister_data_ref = canister_data_ref_cell.borrow();
         let my_principal_id = canister_data_ref.profile.principal_id.unwrap();
         user_principal = my_principal_id;
     });

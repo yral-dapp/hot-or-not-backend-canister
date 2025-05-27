@@ -77,20 +77,6 @@ pub struct TokenBetGameForSnapshot {
     pub cents: CentsToken,
 }
 
-#[derive(Deserialize, Serialize, Clone)]
-pub struct HotOrNotGameDetailsForSnapshot {
-    #[serde(with = "any_key_map")]
-    pub room_details_map: BTreeMap<GlobalRoomId, RoomDetailsV1>,
-    #[serde(with = "any_key_map")]
-    pub slot_details_map: BTreeMap<(PostId, SlotId), SlotDetailsV1>,
-    #[serde(with = "any_key_map")]
-    pub post_principal_map: BTreeMap<(PostId, StablePrincipal), ()>,
-    #[serde(with = "any_key_map")]
-    pub bet_details_map: BTreeMap<GlobalBetId, BetDetails>,
-    #[serde(with = "any_key_map")]
-    pub all_hot_or_not_bets_placed: BTreeMap<(CanisterId, PostId), PlacedBetDetail>,
-}
-
 #[derive(CandidType, Clone, Deserialize, Debug, Serialize)]
 pub struct PostForSnapshot {
     pub id: u64,
