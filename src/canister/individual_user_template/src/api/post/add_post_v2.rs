@@ -6,13 +6,7 @@ use shared_utils::{
     common::utils::system_time,
 };
 
-use crate::{
-    api::hot_or_not_bet::tabulate_hot_or_not_outcome_for_post_slot::{
-        tabulate_hot_or_not_outcome_for_post_slot, tabulate_hot_or_not_outcome_for_post_slot_v1,
-    },
-    util::cycles::notify_to_recharge_canister,
-    CANISTER_DATA,
-};
+use crate::{util::cycles::notify_to_recharge_canister, CANISTER_DATA};
 
 /// #### Access Control
 /// Only the user whose profile details are stored in this canister can create a post.
@@ -39,22 +33,6 @@ fn add_post_v2(post_details: PostDetailsFromFrontend) -> Result<u64, String> {
     });
 
     let post_id = response;
-
-    (1..=48).for_each(|slot_number: u8| {
-        ic_cdk_timers::set_timer(
-            Duration::from_secs(slot_number as u64 * 60 * 60),
-            move || {
-                ic_cdk::spawn(tabulate_hot_or_not_outcome_for_post_slot(
-                    post_id,
-                    slot_number,
-                ));
-                ic_cdk::spawn(tabulate_hot_or_not_outcome_for_post_slot_v1(
-                    post_id,
-                    slot_number,
-                ));
-            },
-        );
-    });
 
     Ok(post_id)
 }
