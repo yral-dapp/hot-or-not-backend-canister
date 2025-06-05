@@ -120,7 +120,7 @@ fn test_upgrading_specific_individual_canister_with_version() {
         .map(|reply_payload| {
             let version: String = match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                e => panic!("\n🛑 get_utility_token_balance failed\n {e:?}"),
+                e => panic!("\n🛑 get_version failed\n {e:?}"),
             };
             version
         })
@@ -157,7 +157,7 @@ fn test_upgrading_specific_individual_canister_with_version() {
         .map(|reply_payload| {
             let version: String = match reply_payload {
                 WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                e => panic!("\n🛑 get_utility_token_balance failed\n {e:?}"),
+                e => panic!("\n🛑 get_version failed\n {e:?}"),
             };
             version
         })

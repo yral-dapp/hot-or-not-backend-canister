@@ -6,7 +6,6 @@ use shared_utils::canister_specific::individual_user_template::types::profile::U
 fn get_profile_details_v2() -> UserProfileDetailsForFrontendV2 {
     CANISTER_DATA.with_borrow(|canister_data_ref_cell| {
         let profile = canister_data_ref_cell.profile.clone();
-        let token_balance = &canister_data_ref_cell.my_token_balance;
 
         UserProfileDetailsForFrontendV2 {
             principal_id: profile.principal_id.unwrap(),
@@ -16,7 +15,7 @@ fn get_profile_details_v2() -> UserProfileDetailsForFrontendV2 {
             profile_stats: profile.profile_stats,
             followers_count: 0,
             following_count: 0,
-            lifetime_earnings: token_balance.lifetime_earnings,
+            lifetime_earnings: 0,
             referrer_details: profile.referrer_details,
             migration_info: canister_data_ref_cell.migration_info,
         }

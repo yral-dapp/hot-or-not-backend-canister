@@ -14,12 +14,12 @@ mod test {
             cents::CentsToken,
             follow::FollowEntryDetail,
             hot_or_not::{
-                AggregateStats, BetDetails, BetDirection, BetOutcomeForBetMaker, BetPayout,
-                GlobalBetId, GlobalRoomId, PlacedBetDetail, RoomBetPossibleOutcomes, RoomDetailsV1,
+                BetDetails, BetDirection, BetOutcomeForBetMaker, BetPayout, GlobalBetId,
+                GlobalRoomId, PlacedBetDetail, RoomBetPossibleOutcomes, RoomDetailsV1,
                 SlotDetailsV1, SlotId, StablePrincipal,
             },
             migration::MigrationInfo,
-            post::{FeedScore, PostViewStatistics},
+            post::PostViewStatistics,
             profile::{UserProfile, UserProfileGlobalStats},
             pump_n_dump::{GameDirection, ParticipatedGameInfo},
             session::SessionType,
@@ -35,10 +35,7 @@ mod test {
     use test_utils::setup::test_constants::get_mock_user_alice_canister_id;
 
     use crate::{
-        api::snapshot::{
-            CanisterDataForSnapshot, HotOrNotDetailsForSnapshot, HotOrNotGameDetailsForSnapshot,
-            PostForSnapshot, TokenBalanceForSnapshot, TokenBetGameForSnapshot,
-        },
+        api::snapshot::{CanisterDataForSnapshot, PostForSnapshot, TokenBetGameForSnapshot},
         data_model::{
             pump_n_dump::{NatStore, TokenBetGame},
             CanisterData,
@@ -65,25 +62,7 @@ mod test {
                 threshold_view_count: 12,
                 average_watch_percentage: 21,
             },
-            home_feed_score: FeedScore {
-                current_score: 1200,
-                last_synchronized_score: 1200,
-                last_synchronized_at: SystemTime::now(),
-            },
-            hot_or_not_details: Some(HotOrNotDetailsForSnapshot {
-                hot_or_not_feed_score: FeedScore {
-                    current_score: 1200,
-                    last_synchronized_score: 1200,
-                    last_synchronized_at: SystemTime::now(),
-                },
-                aggregate_stats: AggregateStats {
-                    total_number_of_hot_bets: 31,
-                    total_number_of_not_bets: 30,
-                    total_amount_bet: 12000,
-                },
-            }),
             is_nsfw: false,
-            slots_left_to_be_computed: (1..=48).collect(),
         };
         created_posts.insert(1, post1);
 
@@ -200,17 +179,7 @@ mod test {
 
         let canister_data_snapshot = CanisterDataForSnapshot {
             all_created_posts: created_posts,
-            room_details_map,
-            bet_details_map,
-            post_principal_map,
-            slot_details_map,
-            all_hot_or_not_bets_placed,
             known_principal_ids,
-            my_token_balance: TokenBalanceForSnapshot {
-                utility_token_balance: 100,
-                utility_token_transaction_history: utility_history,
-                lifetime_earnings: 1200,
-            },
             profile: UserProfile {
                 principal_id: Some(temp_principal),
                 profile_picture_url: Some("dadfk".to_string()),
@@ -298,14 +267,6 @@ mod test {
             },
         );
 
-        let hot_or_not_bet_details_for_snapshot = HotOrNotGameDetailsForSnapshot {
-            room_details_map,
-            slot_details_map,
-            post_principal_map,
-            bet_details_map,
-            all_hot_or_not_bets_placed,
-        };
-
         let mut liquidity_pools: BTreeMap<Principal, NatStore> = BTreeMap::new();
         liquidity_pools.insert(temp_principal, NatStore::default());
 
@@ -324,7 +285,6 @@ mod test {
             total_dumps: Nat::from(10u32),
             total_pumps: Nat::from(25u32),
             liquidity_pools,
-            hot_or_not_bet_details_for_snapshot,
             cents: CentsToken::default(),
         };
 
