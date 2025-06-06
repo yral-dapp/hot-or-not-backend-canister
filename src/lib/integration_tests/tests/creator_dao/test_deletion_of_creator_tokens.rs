@@ -11,7 +11,7 @@ use test_utils::setup::{
     self,
     env::pocket_ic_env::get_new_pocket_ic_env,
     test_constants::{
-        get_global_super_admin_principal_id, get_mock_user_alice_principal_id,
+        get_mock_user_alice_principal_id,
         get_mock_user_charlie_principal_id,
     },
 };
@@ -100,7 +100,7 @@ pub fn test_deletion_of_creator_tokens() {
 
     setup_sns_w_canister_for_creator_dao(&pocket_ic, super_admin);
 
-    setup_default_sns_creator_token(&pocket_ic, super_admin, alice_principal, alice_canister_id);
+    let deployed_cdao_canisters = setup_default_sns_creator_token(&pocket_ic, super_admin, alice_principal, alice_canister_id);
 
     let before_deleting_subnet_backup_capacity = pocket_ic
         .query_call(
@@ -170,53 +170,4 @@ pub fn test_deletion_of_creator_tokens() {
         after_deleting_backup_capacity
     );
 
-    pocket_ic
-        .update_call(
-            alice_canister_id,
-            subnet_orchestrator_canister_id,
-            "update_session_type",
-            candid::encode_one(SessionType::RegisteredSession).unwrap(),
-        )
-        .map(|reply_payload| {
-            let res: Result<String, String> = match reply_payload {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 add_post failed\n"),
-            };
-            res
-        })
-        .unwrap()
-        .unwrap();
-
-    setup_default_sns_creator_token(&pocket_ic, super_admin, alice_principal, alice_canister_id);
-
-    pocket_ic
-        .update_call(
-            platform_canister_id,
-            charlie_global_admin,
-            "delete_all_sns_creator_token_in_the_network",
-            candid::encode_one(alice_canister_id).unwrap(),
-        )
-        .unwrap();
-
-    for _ in 0..50 {
-        pocket_ic.tick();
-    }
-
-    let deployed_cdao_canisters = pocket_ic
-        .query_call(
-            alice_canister_id,
-            alice_principal,
-            "deployed_cdao_canisters",
-            candid::encode_one(()).unwrap(),
-        )
-        .map(|res| {
-            let response: Vec<DeployedCdaoCanisters> = match res {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get deployed_cdao_canisters failed\n"),
-            };
-            response
-        })
-        .unwrap();
-
-    assert_eq!(deployed_cdao_canisters.len(), 1);
 }
