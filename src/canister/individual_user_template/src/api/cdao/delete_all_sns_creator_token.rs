@@ -33,7 +33,7 @@ pub fn delete_all_creator_token() {
 pub fn update_or_delete_sns_creator_token(deployed_canisters: DeployedCdaoCanisters) {
     let canister_ids = deployed_canisters.get_canister_ids();
 
-    const UNINSTALL_RECHARGE_AMOUNT: u128 = 300_000_000_000;
+    const UNINSTALL_RECHARGE_AMOUNT: u128 = 600_000_000_000;
 
     ic_cdk::spawn(async move {
         let _ = request_cycles_from_subnet_orchestrator(5 * UNINSTALL_RECHARGE_AMOUNT).await;
