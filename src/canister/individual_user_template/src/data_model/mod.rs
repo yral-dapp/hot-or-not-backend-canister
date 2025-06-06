@@ -213,6 +213,10 @@ impl AllotedEmptyCanister {
         Ok(canister_ids)
     }
 
+    pub fn get_empty_canisters(&self) -> Vec<Principal> {
+        self.canister_ids.iter().copied().collect()
+    }
+
     pub fn insert_empty_canister(&mut self, canister_id: Principal) -> bool {
         self.canister_ids.insert(canister_id)
     }

@@ -24,7 +24,7 @@ pub(crate) async fn uninstall_code_and_return_empty_canisters_to_subnet_backup_p
                 canister_id: *canister_id,
             })
             .await
-            .map_err(|e| (*canister_id, e.1))
+            .map_err(|e| (*canister_id, format!("{:?}", e)))
         });
 
         let uninstall_callback = |uninstall_result: Result<(), (Principal, String)>| {

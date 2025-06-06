@@ -382,6 +382,7 @@ service : (IndividualUserTemplateInitArgs) -> {
   deploy_cdao_sns : (SnsInitPayload, nat64) -> (Result_3);
   deployed_cdao_canisters : () -> (vec DeployedCdaoCanisters) query;
   download_snapshot : (nat64, nat64) -> (blob) query;
+  get_alloted_empty_canisters : () -> (vec principal) query;
   get_entire_individual_post_detail_by_id : (nat64) -> (Result_4) query;
   get_individual_post_details_by_id : (nat64) -> (PostDetailsForFrontend) query;
   get_last_access_time : () -> (Result_5) query;

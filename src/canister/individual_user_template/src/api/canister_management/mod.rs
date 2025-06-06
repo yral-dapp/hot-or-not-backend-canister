@@ -1,3 +1,4 @@
+use candid::Principal;
 use ic_cdk::api::stable::stable_size;
 use ic_cdk_macros::query;
 
@@ -9,6 +10,15 @@ pub mod set_controller_as_subnet_orchestrator;
 pub mod update_last_access_time;
 pub mod update_profile_owner;
 pub mod update_session_type;
+
+#[query]
+pub fn get_alloted_empty_canisters() -> Vec<Principal> {
+    CANISTER_DATA.with_borrow(|canister_data| {
+        canister_data
+            .empty_canisters
+            .get_empty_canisters()
+    })
+}
 
 #[query]
 pub fn get_stable_memory_size() -> u64 {
