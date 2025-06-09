@@ -273,7 +273,7 @@ pub fn setup_default_sns_creator_token(
         )),
     };
 
-    let creator_cdao_deploy_cans_result = pocket_ic
+    let deployed_cdao_canisters = pocket_ic
         .update_call(
             user_canister_id,
             user_principal,
@@ -290,40 +290,13 @@ pub fn setup_default_sns_creator_token(
             };
             response
         })
+        .unwrap()
         .unwrap();
 
-    assert!(creator_cdao_deploy_cans_result.is_ok());
-
-    let deployed_canisters = pocket_ic
-        .query_call(
-            user_canister_id,
-            user_principal,
-            "deployed_cdao_canisters",
-            candid::encode_one(()).unwrap(),
-        )
-        .map(|res| {
-            let response: Vec<DeployedCdaoCanisters> = match res {
-                WasmResult::Reply(payload) => candid::decode_one(&payload).unwrap(),
-                _ => panic!("\n🛑 get requester principals canister id failed\n"),
-            };
-            response
-        })
-        .unwrap();
-    ic_cdk::println!("🧪 Result: {:?}", deployed_canisters);
-    for can in &deployed_canisters {
-        ic_cdk::println!("🧪 Gov Canister ID: {:?}", can.governance.to_string());
-        ic_cdk::println!("🧪 Ind Canister ID: {:?}", can.index.to_string());
-        ic_cdk::println!("🧪 Ldg Canister ID: {:?}", can.ledger.to_string());
-        ic_cdk::println!("🧪 Rrt Canister ID: {:?}", can.root.to_string());
-        ic_cdk::println!("🧪 Swp Canister ID: {:?}", can.swap.to_string());
-    }
-
-    assert!(deployed_canisters.len() == 1);
-    let res = deployed_canisters[0].clone();
-    let root_canister = res.root;
-    let swap_canister = res.swap;
-    let gov_canister = res.governance;
-    let ledger_canister = res.ledger;
+    let root_canister = deployed_cdao_canisters.root;
+    let swap_canister = deployed_cdao_canisters.swap;
+    let gov_canister = deployed_cdao_canisters.governance;
+    let ledger_canister = deployed_cdao_canisters.ledger;
 
     ic_cdk::println!("🧪🧪🧪 Swap Canister ID: {:?}", swap_canister.to_string());
 
@@ -557,5 +530,5 @@ pub fn setup_default_sns_creator_token(
     let expected_balance = Nat::from(60_000_000_000 - tx_fee);
     ic_cdk::println!("🧪 Expected Balance: {:?}", expected_balance);
 
-    deployed_canisters[0].clone()
+    deployed_cdao_canisters.clone()
 }

@@ -1,4 +1,3 @@
-
 use crate::common::types::known_principal::{KnownPrincipalMap, KnownPrincipalType};
 use candid::Principal;
 pub const BASE_INDIVIDUAL_USER_CANISTER_RECHARGE_AMOUNT: u128 = 300_000_000_000; // 0.3T Cycles

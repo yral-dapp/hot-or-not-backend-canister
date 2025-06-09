@@ -16,7 +16,7 @@ pub async fn upgrade_canister_util(arg: InstallCodeArgument) -> CallResult<()> {
     install_code_result
 }
 
-fn try_stopping_canister_with_retries(
+pub fn try_stopping_canister_with_retries(
     canister_id: Principal,
     max_retries: u64,
 ) -> BoxFuture<'static, CallResult<()>> {

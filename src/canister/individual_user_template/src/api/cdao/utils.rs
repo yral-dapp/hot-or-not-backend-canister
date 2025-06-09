@@ -1,6 +1,8 @@
 use candid::Principal;
 use ic_cdk::api::management_canister::main::{uninstall_code, CanisterIdRecord};
-use shared_utils::common::utils::task::run_task_concurrently;
+use shared_utils::common::utils::{
+    task::run_task_concurrently, upgrade_canister::try_stopping_canister_with_retries,
+};
 
 use crate::CANISTER_DATA;
 
@@ -20,6 +22,9 @@ pub(crate) async fn uninstall_code_and_return_empty_canisters_to_subnet_backup_p
 
     if let Ok(subnet_orchestrator) = subnet_orchestrator_res {
         let uninstall_code_tasks = canister_ids.iter().map(|canister_id| async {
+            try_stopping_canister_with_retries(*canister_id, 3)
+                .await
+                .map_err(|e| (*canister_id, format!("{:?}", e)))?;
             uninstall_code(CanisterIdRecord {
                 canister_id: *canister_id,
             })
