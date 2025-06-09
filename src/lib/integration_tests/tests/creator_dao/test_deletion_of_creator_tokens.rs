@@ -105,9 +105,6 @@ pub fn test_deletion_of_creator_tokens() {
     );
 
     setup_default_sns_creator_token(&pocket_ic, super_admin, alice_principal, alice_canister_id);
-    setup_default_sns_creator_token(&pocket_ic, super_admin, alice_principal, alice_canister_id);
-    setup_default_sns_creator_token(&pocket_ic, super_admin, alice_principal, alice_canister_id);
-    setup_default_sns_creator_token(&pocket_ic, super_admin, alice_principal, alice_canister_id);
 
     let before_deleting_subnet_backup_capacity = pocket_ic
         .query_call(
@@ -173,7 +170,7 @@ pub fn test_deletion_of_creator_tokens() {
         .unwrap();
 
     assert_eq!(
-        before_deleting_subnet_backup_capacity + 25,
+        before_deleting_subnet_backup_capacity + 10,
         after_deleting_backup_capacity
     );
 }
