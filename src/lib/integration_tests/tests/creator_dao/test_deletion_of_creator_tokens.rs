@@ -10,10 +10,7 @@ use shared_utils::{
 use test_utils::setup::{
     self,
     env::pocket_ic_env::get_new_pocket_ic_env,
-    test_constants::{
-        get_mock_user_alice_principal_id,
-        get_mock_user_charlie_principal_id,
-    },
+    test_constants::{get_mock_user_alice_principal_id, get_mock_user_charlie_principal_id},
 };
 
 use crate::utils::{setup_default_sns_creator_token, setup_sns_w_canister_for_creator_dao};
@@ -100,7 +97,17 @@ pub fn test_deletion_of_creator_tokens() {
 
     setup_sns_w_canister_for_creator_dao(&pocket_ic, super_admin);
 
-    let deployed_cdao_canisters = setup_default_sns_creator_token(&pocket_ic, super_admin, alice_principal, alice_canister_id);
+    let deployed_cdao_canisters = setup_default_sns_creator_token(
+        &pocket_ic,
+        super_admin,
+        alice_principal,
+        alice_canister_id,
+    );
+
+    setup_default_sns_creator_token(&pocket_ic, super_admin, alice_principal, alice_canister_id);
+    setup_default_sns_creator_token(&pocket_ic, super_admin, alice_principal, alice_canister_id);
+    setup_default_sns_creator_token(&pocket_ic, super_admin, alice_principal, alice_canister_id);
+    setup_default_sns_creator_token(&pocket_ic, super_admin, alice_principal, alice_canister_id);
 
     let before_deleting_subnet_backup_capacity = pocket_ic
         .query_call(
@@ -166,8 +173,7 @@ pub fn test_deletion_of_creator_tokens() {
         .unwrap();
 
     assert_eq!(
-        before_deleting_subnet_backup_capacity + 5,
+        before_deleting_subnet_backup_capacity + 25,
         after_deleting_backup_capacity
     );
-
 }

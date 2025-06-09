@@ -124,12 +124,6 @@ async fn deploy_cdao_sns(
         )
     });
 
-    if limit_hit {
-        return Err(CdaoDeployError::TokenLimit(
-            MAX_LIMIT_FOR_CREATOR_DAO_SNS_TOKEN,
-        ));
-    }
-
     // Alloting 0.5T more to the user canister to be on safer side while deploying canisters
     request_cycles_from_subnet_orchestrator(6 * USER_SNS_CANISTER_INITIAL_CYCLES)
         .await
